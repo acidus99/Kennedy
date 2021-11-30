@@ -46,32 +46,6 @@ namespace GemiCrawler
             //}
         }
 
-        static void UrlTests()
-        {
-            string[] urls = new string[]
-            {
-                "gemini://billy.flounder.online/tech-links.gmi?kitty%20cats",
-                "gemini://marginalia.nu:1965/log",
-                "gemini://mozz.us/jetforce/logo.jpg",
-                "gemini://gemini.circumlunar.space/docs/faq.gmi",
-                "gemini://capsule.ghislainmary.fr/photo/",
-                "gemini://billy.flounder.online/cats/fat/index.gmi",
-                "gemini://billy.flounder.online/cats/../../../fat/../index.gmi",
-                "gemini://mozz.us",
-                "gemini://mozz.us:1977"
-            };
-
-            foreach(string url in urls)
-            {
-                GemiUrl gurl = new GemiUrl(url);
-                var path = DocumentStore.GetSavePath(gurl);
-                Console.WriteLine($"====\nString:\t'{url}'\nURL:\t'{gurl}'\nPath:\t'{path}'");
-            }
-
-
-
-        }
-
     }
 
     
