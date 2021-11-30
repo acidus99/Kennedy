@@ -44,7 +44,13 @@ namespace GemiCrawler
 
 
         private static bool IsValidGemiUrl(string foundUrl)
-            => !foundUrl.Contains("://") || foundUrl.StartsWith("gemini://");
+        {
+            if (foundUrl.StartsWith("mailto:"))
+            {
+                return false;
+            }
+            return !foundUrl.Contains("://") || foundUrl.StartsWith("gemini://");
+        }
 
         
 
