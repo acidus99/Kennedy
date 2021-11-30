@@ -26,7 +26,7 @@ namespace GemiCrawler
 
         public Crawler()
         {
-            queue = new CrawlQueue(500);
+            queue = new CrawlQueue(5000);
             DocumentStore.InitStore();
         }
 
@@ -65,7 +65,6 @@ namespace GemiCrawler
             logOut.WriteLine(msg);
             Console.WriteLine($"\t{msg}");
         }
-
 
         public void DoCrawl()
         {
