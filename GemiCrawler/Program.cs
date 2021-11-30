@@ -13,9 +13,9 @@ namespace GemiCrawler
             //var url = "gemini://gemini.circumlunar.space/docs/faq.gmi";
             //var url = "gemini://capsule.ghislainmary.fr/photo/";
             //var url = "gemini://billy.flounder.online/index.gmi";
-            //var url = "gemini://mozz.us/";
+            var url = "gemini://mozz.us/";
             //var url = "gemini://marginalia.nu:1965/log";
-            var url = "gemini://geminispace.info/known-hosts";
+            //var url = "gemini://geminispace.info/known-hosts";
 
 
 
