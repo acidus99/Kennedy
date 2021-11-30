@@ -11,23 +11,27 @@ namespace GemiCrawler
 {
     public class Crawler
     {
-        const string outputBase = "/Users/billy/Code/gemini-play/crawl-out/";
+        readonly string outputBase = $"/Users/billy/Code/gemini-play/crawl-out/{DateTime.Now.ToString("yyyy-MM-dd (mm)")}/";
 
         /// <summary>
         /// how long should we wait between requests
         /// </summary>
         const int delayMs = 1000;
+        ThreadedFileWriter errorOut;
+        ThreadedFileWriter logOut;
 
-
-        ThreadedFileWriter errorOut = new ThreadedFileWriter(outputBase + "errors.txt", 1);
-        ThreadedFileWriter logOut = new ThreadedFileWriter(outputBase + "log.tsv", 20);
 
         CrawlQueue queue;
+        DocumentStore docStore;
 
         public Crawler()
         {
             queue = new CrawlQueue(5000);
-            DocumentStore.InitStore();
+
+            Directory.CreateDirectory(outputBase);
+            docStore = new DocumentStore(outputBase + "page-store/");
+            errorOut = new ThreadedFileWriter(outputBase + "errors.txt", 1);
+            logOut = new ThreadedFileWriter(outputBase + "log.tsv", 20);
         }
 
         public void AddSeed(string url)
@@ -92,7 +96,7 @@ namespace GemiCrawler
                         var foundLinks = LinkFinder.ExtractUrls(url, resp);
                         queue.EnqueueUrls(foundLinks);
                         LogPage(url, resp, foundLinks);
-                        if(!DocumentStore.Store(url, resp))
+                        if(!docStore.Store(url, resp))
                         {
                             LogWarn($"Could not save document for '{url}' to disk");
                         }

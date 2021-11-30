@@ -6,42 +6,46 @@ using Gemi.Net;
 
 namespace GemiCrawler
 {
-    public static class DocumentStore
+    public class DocumentStore
     {
 
-        const string pageStorageDir = "/Users/billy/Code/gemini-play/crawl-out/saved-pages/";
+        string pageStorageDir;
 
-        public static void InitStore()
+        public DocumentStore(string path)
         {
-            DirectoryInfo di = new DirectoryInfo(pageStorageDir);
-
-            foreach (FileInfo file in di.EnumerateFiles())
+            pageStorageDir = path;
+            if (Directory.Exists(pageStorageDir))
             {
-                file.Delete();
-            }
-            foreach (DirectoryInfo dir in di.EnumerateDirectories())
-            {
-                dir.Delete(true);
-            }
+                DirectoryInfo di = new DirectoryInfo(pageStorageDir);
 
-            Directory.Delete(pageStorageDir);
+                foreach (FileInfo file in di.EnumerateFiles())
+                {
+                    file.Delete();
+                }
+                foreach (DirectoryInfo dir in di.EnumerateDirectories())
+                {
+                    dir.Delete(true);
+                }
+
+                Directory.Delete(pageStorageDir);
+            }
         }
 
 
-        public static string GetStorageFilename(GemiUrl url)
+        public string GetStorageFilename(GemiUrl url)
         {
             var filename = Path.GetFileName(url.Path);
             return (filename.Length > 0) ? filename : "index.gmi";
         }
 
-        public static string GetSavePath(GemiUrl url)
+        public string GetSavePath(GemiUrl url)
         {
             var dir = GetStorageDirectory(url);
             var file = GetStorageFilename(url);
             return dir + file;
         }
 
-        public static string GetStorageDirectory(GemiUrl url)
+        public string GetStorageDirectory(GemiUrl url)
         {
             string hostDir = (url.Port == 1965) ? url.Hostname : $"{url.Hostname} ({url.Port})";
 
@@ -55,10 +59,10 @@ namespace GemiCrawler
                 path += "/";
             }
 
-            return $"/Users/billy/Code/gemini-play/crawl-out/saved-pages/{hostDir}{path}";
+            return $"{pageStorageDir}{hostDir}{path}";
         }
 
-        public static bool Store(GemiUrl url, GemiResponse resp)
+        public bool Store(GemiUrl url, GemiResponse resp)
         {
             if(!resp.IsSuccess)
             {
