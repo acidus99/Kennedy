@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.810.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GemiCrawler", "GemiCrawler\GemiCrawler.csproj", "{AECC7950-9DCA-45A3-AC72-0B7E1AD0F5D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gemi.Net", "Gemi.Net\Gemi.Net.csproj", "{608B3727-DF1D-4B7F-BA84-067E1E91B14A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AECC7950-9DCA-45A3-AC72-0B7E1AD0F5D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AECC7950-9DCA-45A3-AC72-0B7E1AD0F5D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AECC7950-9DCA-45A3-AC72-0B7E1AD0F5D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AECC7950-9DCA-45A3-AC72-0B7E1AD0F5D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{608B3727-DF1D-4B7F-BA84-067E1E91B14A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{608B3727-DF1D-4B7F-BA84-067E1E91B14A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{608B3727-DF1D-4B7F-BA84-067E1E91B14A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{608B3727-DF1D-4B7F-BA84-067E1E91B14A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {793F3374-39EF-4946-9322-B72389525220}
+	EndGlobalSection
+EndGlobal
