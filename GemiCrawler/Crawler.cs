@@ -74,7 +74,7 @@ namespace GemiCrawler
 
         private void LogPage(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
         {
-            var msg = $"{resp.StatusCode}\t{resp.MimeType}\t{url}\t{resp.SizeInfo()}\t{foundLinks.Count}";
+            var msg = $"{resp.StatusCode}\t{resp.MimeType}\t{url}\t{resp.BodySize}\t{resp.ConnectTime}\t{resp.DownloadTime}\t{foundLinks.Count}";
             logOut.WriteLine(msg);
         }
 
