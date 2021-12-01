@@ -64,33 +64,32 @@ namespace GemiCrawler
 
         public bool Store(GemiUrl url, GemiResponse resp)
         {
-            if(!resp.IsSuccess)
+            if (resp.IsSuccess & resp.HasBody)
             {
-                return true;
-            }
-            var dir = GetStorageDirectory(url);
-            var file = GetStorageFilename(url);
-            var path = dir + file;
+                var dir = GetStorageDirectory(url);
+                var file = GetStorageFilename(url);
+                var path = dir + file;
 
-
-            try
-            {
-                Directory.CreateDirectory(dir);
-            } catch(Exception)
-            { }
-
-            try
-            {
-                //if for some reason the file already exists, don't do anything
-                if (!File.Exists(path))
+                try
                 {
-                    File.WriteAllBytes(path, resp.ResponseBytes);
-                    return true;
+                    Directory.CreateDirectory(dir);
                 }
-            }
-            catch (Exception)
-            {
-                return false;
+                catch (Exception)
+                { }
+
+                try
+                {
+                    //if for some reason the file already exists, don't do anything
+                    if (!File.Exists(path))
+                    {
+                        File.WriteAllBytes(path, resp.BodyBytes);
+                        return true;
+                    }
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
             }
                 
             return true;

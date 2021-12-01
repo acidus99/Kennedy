@@ -10,14 +10,15 @@ namespace Gemi.Net
 
         public string ResponseLine { get; private set; }
 
-
         public int StatusCode { get; private set; }
 
         public ConnectStatus ConnectStatus { get; internal set; }
 
-        public byte[] ResponseBytes { get; private set; }
+        public byte[] BodyBytes { get; private set; }
 
-        public string ResponseText { get; private set; }
+        public string BodyText { get; private set; }
+
+        public bool HasBody => (BodyBytes?.Length > 0);
 
         /// <summary>
         /// The complete MIME Type, sent by the server for 2x responses
@@ -60,7 +61,7 @@ namespace Gemi.Net
         private bool InStatusRange(int low)
             => (StatusCode >= low && StatusCode<= low + 9);
 
-        public int Size => ResponseBytes?.Length ?? 0;
+        public int BodySize => HasBody ? BodyBytes.Length : 0;
 
         internal GemiResponse()
         {
@@ -120,12 +121,12 @@ namespace Gemi.Net
         {
             if (body.Length > 0)
             {
-                ResponseBytes = body;
+                BodyBytes = body;
 
                 if (IsTextResponse)
                 {
                     //TODO add charset parsing here
-                    ResponseText = Encoding.UTF8.GetString(ResponseBytes);
+                    BodyText = Encoding.UTF8.GetString(BodyBytes);
                 }
             }
         }
@@ -137,10 +138,10 @@ namespace Gemi.Net
             {
                 if (IsTextResponse)
                 {
-                    s += "\n" + ResponseText;
+                    s += "\n" + BodyText;
                 } else
                 {
-                    s += $"\nBinary data ({ResponseBytes.Length} bytes)";
+                    s += $"\nBinary data ({BodyBytes.Length} bytes)";
                 }
             }
             return s;

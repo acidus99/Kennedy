@@ -65,7 +65,7 @@ namespace GemiCrawler
         {
             if(resp != null && resp.IsTextResponse)
             {
-                File.WriteAllText($"{outputDir}{host}.gmi", resp.ResponseText);
+                File.WriteAllText($"{outputDir}{host}.gmi", resp.BodyText);
             }
         }
 
