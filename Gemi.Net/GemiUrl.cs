@@ -34,10 +34,16 @@ namespace Gemi.Net
             => NormalizedUrl;
 
         public static GemiUrl MakeUrl(GemiUrl request, string foundUrl)
-            => foundUrl.StartsWith("gemini://") ?
-                new GemiUrl(foundUrl) :
-                new GemiUrl(new Uri(request._url, foundUrl));
-
-
+        {
+            Uri newUrl = null;
+            try
+            {
+                newUrl = new Uri(request._url, foundUrl);
+            } catch(Exception)
+            {
+                return null;
+            }
+            return (newUrl.Scheme == "gemini") ? new GemiUrl(newUrl) : null;
+        }
     }
 }

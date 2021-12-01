@@ -21,16 +21,12 @@ namespace GemiCrawler
         /// </summary>
         Dictionary<string, bool> SeenUrls;
 
-        int stopAfterUrls = int.MaxValue;
-        int totalUrlsProcessed = 0;
 
-
-        public CrawlQueue(int stopAfter = 10000)
+        public CrawlQueue()
         {
             queue = new Queue<GemiUrl>();
             SeenUrls = new Dictionary<string, bool>();
             locker = new object();
-            stopAfterUrls = stopAfter;
         }
 
         public void EnqueueUrls(List<GemiUrl> urls)
@@ -45,7 +41,7 @@ namespace GemiCrawler
             }
             if (count > 0)
             {
-                Console.WriteLine($"\tAdded {count} URLs. Queue Length: {Count}");
+                //Console.WriteLine($"\tAdded {count} URLs. Queue Length: {Count}");
             }
         }
 
@@ -60,7 +56,7 @@ namespace GemiCrawler
                 string normalizedUrl = url.NormalizedUrl;
                 if(!SeenUrls.ContainsKey(normalizedUrl))
                 {
-                    Console.WriteLine($"\tAdding new URL '{normalizedUrl}'");
+                    //Console.WriteLine($"\tAdding new URL '{normalizedUrl}'");
                     SeenUrls.Add(normalizedUrl, true);
                     queue.Enqueue(url);
                     return true;
@@ -71,16 +67,13 @@ namespace GemiCrawler
 
         public GemiUrl DequeueUrl()
         {
+            GemiUrl ret = null;
+
             lock (locker)
             {
-                totalUrlsProcessed++;
-                if(totalUrlsProcessed >= stopAfterUrls)
-                {
-                    Console.WriteLine("Crawl Limit reached! Dequeuing no more URLs!");
-                    return null;
-                }
-                return (queue.Count > 0) ? queue.Dequeue() : null;
+                ret = (queue.Count > 0) ? queue.Dequeue() : null;
             }
+            return ret;
         }
 
         public int Count

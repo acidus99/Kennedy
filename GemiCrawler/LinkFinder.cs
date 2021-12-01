@@ -20,39 +20,21 @@ namespace GemiCrawler
             if(resp.IsRedirect)
             {
                 urls.Add(resp.Redirect);
-            } else if(resp.IsSuccess && resp.MimeType.StartsWith("text/gemini"))
+            } else if(resp.IsSuccess && resp.MimeType.StartsWith("text/gemini") && resp.ResponseText?.Length > 0)
             {
 
                 var foundLinks =
                             (from line in resp.ResponseText.Split("\n")
                              let match = linkLine.Match(line)
                              where match.Success
-                             where IsValidGemiUrl(match.Groups[1].Value)
-                             select new
-                             {
-                                 url = match.Groups[1].Value
-                             })
-                             .AsEnumerable().Select(x => GemiUrl.MakeUrl(request, x.url));
-
-
+                             let gurl = GemiUrl.MakeUrl(request, match.Groups[1].Value)
+                             where gurl != null
+                             select gurl);
                 urls.AddRange(foundLinks);
             }
 
-
             return urls;
         }
-
-
-        private static bool IsValidGemiUrl(string foundUrl)
-        {
-            if (foundUrl.StartsWith("mailto:"))
-            {
-                return false;
-            }
-            return !foundUrl.Contains("://") || foundUrl.StartsWith("gemini://");
-        }
-
-        
 
     }
 

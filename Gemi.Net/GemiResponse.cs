@@ -56,7 +56,7 @@ namespace Gemi.Net
         public string SizeInfo()
             
         {
-            if (IsSuccess)
+            if (IsSuccess && ResponseBytes?.Length > 0)
             {
                 if (IsTextResponse)
                 {
