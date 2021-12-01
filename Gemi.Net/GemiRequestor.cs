@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System.Linq;
 using Gemi.Net.Utils;
+using System.Diagnostics;
 
 
 namespace Gemi.Net
@@ -28,12 +29,16 @@ namespace Gemi.Net
             }
 
             var ret = new GemiResponse();
+            var connectTimer = new Stopwatch();
+            var downloadTimer = new Stopwatch();
+            byte[] fullBytes = null;
             LastException = null;
+
             try
             {
 
                 var sock = new TimeoutSocket();
-
+                connectTimer.Start();
                 var client = sock.Connect(url.Hostname, url.Port, 10000);
 
                 using (SslStream sslStream = new SslStream(client.GetStream(), false,
@@ -41,17 +46,18 @@ namespace Gemi.Net
                 {
 
                     sslStream.ReadTimeout = 15000; //wait 15 sec
-
                     sslStream.AuthenticateAsClient(url.Hostname);
+                    connectTimer.Stop();
+
                     sslStream.Write(MakeRequestBytes(url));
-
-                    byte[] fullBytes = null;
-
+                    downloadTimer = new Stopwatch();
+                    
                     //TODO: probably shouldn't grab everything 
                     using (var ms = new MemoryStream())
                     {
                         sslStream.CopyTo(ms);
                         sslStream.Close();
+                        downloadTimer.Stop();
                         fullBytes = ms.ToArray();
                     }
 
@@ -61,7 +67,11 @@ namespace Gemi.Net
 
                     byte[] bodyBytes = fullBytes.Skip(respLineBytes.Length + 2).ToArray();
 
-                    ret = new GemiResponse(url, respLine);
+                    ret = new GemiResponse(url, respLine)
+                    {
+                        ConnectTime = (int)connectTimer.ElapsedMilliseconds,
+                        DownloadTime = (int)downloadTimer.ElapsedMilliseconds
+                    };
                     ret.ParseBody(bodyBytes);
                 }
                 client.Close();

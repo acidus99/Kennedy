@@ -11,9 +11,9 @@ namespace Gemi.Net
         public string ResponseLine { get; private set; }
 
 
-        public int StatusCode { get; private set; } = 0;
+        public int StatusCode { get; private set; }
 
-        public ConnectStatus ConnectStatus { get; internal set; } = ConnectStatus.Unknown;
+        public ConnectStatus ConnectStatus { get; internal set; }
 
         public byte[] ResponseBytes { get; private set; }
 
@@ -22,7 +22,7 @@ namespace Gemi.Net
         /// <summary>
         /// The complete MIME Type, sent by the server for 2x responses
         /// </summary>
-        public string MimeType { get; private set; } = "";
+        public string MimeType { get; private set; }
         
         /// <summary>
         /// The prompt, sent by the server for 1x responses, if any
@@ -40,6 +40,13 @@ namespace Gemi.Net
         /// </summary>
         public string ErrorMessage { get; internal set; }
 
+        /// <summary>
+        /// Latency of the request/resp, in ms
+        /// </summary>
+        public int ConnectTime { get; internal set; }
+
+        public int DownloadTime { get; internal set; }
+
 
         public bool IsTextResponse => MimeType.StartsWith("text/");
 
@@ -53,29 +60,15 @@ namespace Gemi.Net
         private bool InStatusRange(int low)
             => (StatusCode >= low && StatusCode<= low + 9);
 
-        public string SizeInfo()
-            
-        {
-            if (IsSuccess && ResponseBytes?.Length > 0)
-            {
-                if (IsTextResponse)
-                {
-                    return "Text Length: " + ResponseText.Length; 
-                }
-                else
-                {
-                    return $"Binary data ({ResponseBytes.Length} bytes)";
-                }
-            } else
-            {
-                return "No Body";
-            }
-            
-        }
+        public int Size => ResponseBytes?.Length ?? 0;
 
         internal GemiResponse()
         {
             ConnectStatus = ConnectStatus.Error;
+            StatusCode = 0;
+            MimeType = "";
+            ConnectTime = 0;
+            DownloadTime = 0;
         }
 
 
