@@ -20,7 +20,7 @@ namespace GemiCrawler
             if(resp.IsRedirect)
             {
                 urls.Add(resp.Redirect);
-            } else if(resp.IsSuccess && resp.MimeType.StartsWith("text/gemini"))
+            } else if(resp.IsSuccess && resp.MimeType.StartsWith("text/gemini") && resp.ResponseText?.Length > 0)
             {
 
                 var foundLinks =
