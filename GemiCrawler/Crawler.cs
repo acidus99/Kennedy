@@ -1,32 +1,38 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Gemi.Net;
 using System.Collections.Generic;
 using System.Threading;
-
+using System.Diagnostics;
 
 namespace GemiCrawler
 {
-    public class Crawler
+    public class Crawler : ICrawler
     {
-        readonly string outputBase = $"/Users/billy/Code/gemini-play/crawl-out/{DateTime.Now.ToString("yyyy-MM-dd (mm)")}/";
+        readonly string outputBase = $"/Users/billy/Code/gemini-play/crawl-out/{DateTime.Now.ToString("yyyy-MM-dd (hhmmss)")}/";
 
-        /// <summary>
-        /// how long should we wait between requests
-        /// </summary>
-        const int delayMs = 1000;
+        const int threadCount = 16;
+
         ThreadedFileWriter errorOut;
         ThreadedFileWriter logOut;
 
+        int stopAfterUrls = int.MaxValue;
+
+        ThreadSafeCounter totalUrlsRequested;
 
         CrawlQueue queue;
         DocumentStore docStore;
 
+        ThreadSafeCounter workInFlight;
+
         public Crawler()
         {
-            queue = new CrawlQueue(5000);
+            stopAfterUrls = 50000;
+
+            queue = new CrawlQueue();
+
+            workInFlight = new ThreadSafeCounter();
+            totalUrlsRequested = new ThreadSafeCounter();
 
             Directory.CreateDirectory(outputBase);
             docStore = new DocumentStore(outputBase + "page-store/");
@@ -35,7 +41,11 @@ namespace GemiCrawler
         }
 
         public void AddSeed(string url)
-            => queue.EnqueueUrl(new GemiUrl(url));
+        {
+            queue.EnqueueUrl(new GemiUrl(url));
+        }
+
+        #region Log Stuff
 
         private void LogError(Exception ex, GemiUrl url)
         {
@@ -64,58 +74,109 @@ namespace GemiCrawler
 
         private void LogPage(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
         {
-
             var msg = $"{resp.StatusCode}\t{resp.MimeType}\t{url}\t{resp.SizeInfo()}\t{foundLinks.Count}";
             logOut.WriteLine(msg);
-            Console.WriteLine($"\t{msg}");
+        }
+
+        #endregion
+
+        private void SpawnWorker(int workerNum)
+        {
+            var worker = new CrawlWorker(this);
+
+            var threadDelegate = new ThreadStart(worker.DoWork);
+            var newThread = new Thread(threadDelegate);
+            newThread.Name = $"Worker {workerNum}";
+            newThread.Start();
         }
 
         public void DoCrawl()
         {
+            Stopwatch watcher = new Stopwatch();
 
+            watcher.Start();
 
-            var requestor = new GemiRequestor();
+            for (int i = 1; i <= threadCount; i++)
+            {
+                SpawnWorker(i);
+            }
 
-            GemiUrl url = null;
             do
             {
-                url = queue.DequeueUrl();
-                if (url != null)
-                {
-                    Console.WriteLine($"Queue Len:{queue.Count}\tRequesting '{url}'");
+                Thread.Sleep(500);
+                Console.WriteLine($"Main Thread Sleeping\tTotal Requested: {totalUrlsRequested.Count}");
 
-                    var resp = requestor.Request(url);
+            } while (KeepWorkersAlive);
+            watcher.Stop();
 
-                    if (resp.ConnectStatus != ConnectStatus.Success)
-                    {
-                        LogError(requestor.LastException, url);
-                        
-                    }
-                    else if (resp != null)
-                    {
-                        var foundLinks = LinkFinder.ExtractUrls(url, resp);
-                        queue.EnqueueUrls(foundLinks);
-                        LogPage(url, resp, foundLinks);
-                        if(!docStore.Store(url, resp))
-                        {
-                            LogWarn($"Could not save document for '{url}' to disk");
-                        }
-                    }
-                } else
-                {
-                    Console.WriteLine("Queue was empty...");
-                }
-
-                Thread.Sleep(delayMs);
-
-            } while (url != null);
-            Console.WriteLine("Complete!");
+            Console.WriteLine($"Complete! {watcher.Elapsed.TotalSeconds}");
             CloseLogs();
             int x = 4;
         }
 
+        public GemiUrl GetNextUrl()
+        {
+            if(HitUrlLimit)
+            {
+                return null;
+            }
+
+            var url = queue.DequeueUrl();
+            if (url != null)
+            {
+                totalUrlsRequested.Increment();
+                workInFlight.Increment();
+            }
+            return url;
+        }
+
+        public void ProcessResult(GemiUrl url, GemiResponse resp, Exception ex)
+        {
+            if (resp.ConnectStatus != ConnectStatus.Success)
+            {
+                LogError(ex, url);
+            }
+            else if (resp != null)
+            {
+                var foundLinks = LinkFinder.ExtractUrls(url, resp);
+                queue.EnqueueUrls(foundLinks);
+                LogPage(url, resp, foundLinks);
+                if (!docStore.Store(url, resp))
+                {
+                    LogWarn($"Could not save document for '{url}' to disk");
+                }
+
+            }
+            //note the work is complete
+            workInFlight.Decrement();
+        }
+
+
+        public bool HitUrlLimit
+            => (totalUrlsRequested.Count >= stopAfterUrls);
+
+        /// <summary>
+        /// Is there pending work in our queue?
+        /// </summary>
+        public bool HasUrlsToFetch
+        {
+            get {
+                if (HitUrlLimit)
+                {
+                    return false;
+                }
+                return (queue.Count > 0);
+            }
+        }
+
+        /// <summary>
+        /// Is there work being done
+        /// </summary>
+        public bool WorkInFlight
+            => (workInFlight.Count > 0);
+
+        public bool KeepWorkersAlive
+            => HasUrlsToFetch || WorkInFlight;
+
     }
-
-
-
 }
