@@ -20,11 +20,11 @@ namespace GemiCrawler
             if(resp.IsRedirect)
             {
                 urls.Add(resp.Redirect);
-            } else if(resp.IsSuccess && resp.MimeType.StartsWith("text/gemini") && resp.ResponseText?.Length > 0)
+            } else if(resp.IsSuccess && resp.MimeType.StartsWith("text/gemini") && resp.BodyText?.Length > 0)
             {
 
                 var foundLinks =
-                            (from line in resp.ResponseText.Split("\n")
+                            (from line in resp.BodyText.Split("\n")
                              let match = linkLine.Match(line)
                              where match.Success
                              let gurl = GemiUrl.MakeUrl(request, match.Groups[1].Value)
