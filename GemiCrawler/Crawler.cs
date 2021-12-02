@@ -11,12 +11,12 @@ namespace GemiCrawler
     {
         readonly string outputBase = $"/Users/billy/Code/gemini-play/crawl-out/{DateTime.Now.ToString("yyyy-MM-dd (hhmmss)")}/";
 
-        const int threadCount = 16;
+        public int CrawlerThreadCount { get; set; }
 
         ThreadedFileWriter errorOut;
         ThreadedFileWriter logOut;
 
-        int stopAfterUrls = int.MaxValue;
+        public int StopAfterUrlCount { get; set; }
 
         ThreadSafeCounter totalUrlsRequested;
 
@@ -27,7 +27,9 @@ namespace GemiCrawler
 
         public Crawler()
         {
-            stopAfterUrls = 50000;
+            CrawlerThreadCount = 8;
+
+            StopAfterUrlCount = int.MaxValue;
 
             queue = new CrawlQueue();
 
@@ -96,7 +98,7 @@ namespace GemiCrawler
 
             watcher.Start();
 
-            for (int i = 1; i <= threadCount; i++)
+            for (int i = 1; i <= CrawlerThreadCount; i++)
             {
                 SpawnWorker(i);
             }
@@ -124,8 +126,9 @@ namespace GemiCrawler
             var url = queue.DequeueUrl();
             if (url != null)
             {
-                totalUrlsRequested.Increment();
                 workInFlight.Increment();
+                totalUrlsRequested.Increment();
+                
             }
             return url;
         }
@@ -153,7 +156,7 @@ namespace GemiCrawler
 
 
         public bool HitUrlLimit
-            => (totalUrlsRequested.Count >= stopAfterUrls);
+            => (totalUrlsRequested.Count >= StopAfterUrlCount);
 
         /// <summary>
         /// Is there pending work in our queue?
