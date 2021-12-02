@@ -8,4 +8,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Gemi.Net\Gemi.Net.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Modules\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Modules\" />
+  </ItemGroup>
 </Project>

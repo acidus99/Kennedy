@@ -4,6 +4,8 @@ using Gemi.Net;
 using System.Collections.Generic;
 using System.Threading;
 using System.Diagnostics;
+using GemiCrawler.Modules;
+using System.Linq;
 
 namespace GemiCrawler
 {
@@ -20,10 +22,13 @@ namespace GemiCrawler
 
         ThreadSafeCounter totalUrlsRequested;
 
-        CrawlQueue queue;
+        UrlFrontier queue;
         DocumentStore docStore;
 
         ThreadSafeCounter workInFlight;
+
+
+        SeenUrlModule seenUrlModule;
 
         public Crawler()
         {
@@ -31,10 +36,12 @@ namespace GemiCrawler
 
             StopAfterUrlCount = int.MaxValue;
 
-            queue = new CrawlQueue();
+            queue = new UrlFrontier();
 
             workInFlight = new ThreadSafeCounter();
             totalUrlsRequested = new ThreadSafeCounter();
+
+            seenUrlModule = new SeenUrlModule();
 
             Directory.CreateDirectory(outputBase);
             docStore = new DocumentStore(outputBase + "page-store/");
@@ -42,10 +49,7 @@ namespace GemiCrawler
             logOut = new ThreadedFileWriter(outputBase + "log.tsv", 20);
         }
 
-        public void AddSeed(string url)
-        {
-            queue.EnqueueUrl(new GemiUrl(url));
-        }
+
 
         #region Log Stuff
 
@@ -133,6 +137,26 @@ namespace GemiCrawler
             return url;
         }
 
+        public void AddSeed(string url)
+            => ProcessProspectiveUrl(new GemiUrl(url));
+
+        private void ProcessProspectiveUrl(GemiUrl url)
+        {
+            //Modules that process URLs
+
+            //TODO: URL passes filters (user supplied and from Robots
+
+            if(!seenUrlModule.CheckAndRecord(url))
+            {
+                queue.EnqueueUrl(url);
+            }
+        }
+
+        private void ProcessProspectiveUrls(List<GemiUrl> urls)
+        {
+            urls.ForEach(x => ProcessProspectiveUrl(x));
+        }
+
         public void ProcessResult(GemiUrl url, GemiResponse resp, Exception ex)
         {
             if (resp.ConnectStatus != ConnectStatus.Success)
@@ -141,17 +165,30 @@ namespace GemiCrawler
             }
             else if (resp != null)
             {
-                var foundLinks = LinkFinder.ExtractUrls(url, resp);
-                queue.EnqueueUrls(foundLinks);
-                LogPage(url, resp, foundLinks);
-                if (!docStore.Store(url, resp))
-                {
-                    LogWarn($"Could not save document for '{url}' to disk");
-                }
+                //Modules
 
+                //TODO: Have we seen this content before?
+                //if so stop
+                var foundLinks = LinkFinder.ExtractUrls(url, resp);
+
+                ProcessProspectiveUrls(foundLinks);
+                StoreStatsAndDocument(url, resp, foundLinks);
             }
             //note the work is complete
             workInFlight.Decrement();
+        }
+
+        /// <summary>
+        /// Saves stats and documents or content about this result
+        /// for later processing...
+        /// </summary>
+        private void StoreStatsAndDocument(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
+        {
+            LogPage(url, resp, foundLinks);
+            if (!docStore.Store(url, resp))
+            {
+                LogWarn($"Could not save document for '{url}' to disk");
+            }
         }
 
 

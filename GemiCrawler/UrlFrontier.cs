@@ -7,7 +7,7 @@ namespace GemiCrawler
     /// <summary>
     /// Manages our queue of URLs to crawl. URL that have already been added are ignored
     /// </summary>
-    public class CrawlQueue
+    public class UrlFrontier
     {
         object locker;
 
@@ -16,53 +16,19 @@ namespace GemiCrawler
         /// </summary>
         Queue<GemiUrl> queue;
 
-        /// <summary>
-        /// Lookup table of URLs we have seen before
-        /// </summary>
-        Dictionary<string, bool> SeenUrls;
-
-
-        public CrawlQueue()
+        public UrlFrontier()
         {
             queue = new Queue<GemiUrl>();
-            SeenUrls = new Dictionary<string, bool>();
             locker = new object();
-        }
-
-        public void EnqueueUrls(List<GemiUrl> urls)
-        {
-            int count = 0;
-            foreach(var url in urls)
-            {
-                if(EnqueueUrl(url))
-                {
-                    count++;
-                }
-            }
-            if (count > 0)
-            {
-                //Console.WriteLine($"\tAdded {count} URLs. Queue Length: {Count}");
-            }
         }
 
         /// <summary>
         /// Adds a URL to the queue only if we haven't see it before
         /// </summary>
         /// <param name="url"></param>
-        public bool EnqueueUrl(GemiUrl url)
+        public void EnqueueUrl(GemiUrl url)
         {
-            lock(locker)
-            {
-                string normalizedUrl = url.NormalizedUrl;
-                if(!SeenUrls.ContainsKey(normalizedUrl))
-                {
-                    //Console.WriteLine($"\tAdding new URL '{normalizedUrl}'");
-                    SeenUrls.Add(normalizedUrl, true);
-                    queue.Enqueue(url);
-                    return true;
-                }
-            }
-            return false;
+            queue.Enqueue(url);
         }
 
         public GemiUrl DequeueUrl()

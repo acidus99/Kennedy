@@ -18,14 +18,10 @@ namespace GemiCrawler
             //var url = "gemini://geminispace.info/known-hosts";
 
 
-            RobotsFetcher.DoIt();
-
-
-
             var crawler = new Crawler
             {
-                CrawlerThreadCount = 8,
-                StopAfterUrlCount = 1000,
+                CrawlerThreadCount = 4,
+                StopAfterUrlCount = 300,
             };
 
             crawler.AddSeed(url);
