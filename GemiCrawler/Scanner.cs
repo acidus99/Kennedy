@@ -46,7 +46,7 @@ namespace GemiCrawler
                     outLine = $"EXCEPTION {gemiRequestor.LastException.Message} on '{host}'";
                 } else if (resp != null)
                 {
-                    outLine = $"{t}\t{fullUrl}\t{resp.ResponseLine}\t{resp.SizeInfo()}";
+                    outLine = $"{t}\t{fullUrl}\t{resp.ResponseLine}\t{resp.BodySize()}";
                     SaveFile(host, resp);
                 }
 
