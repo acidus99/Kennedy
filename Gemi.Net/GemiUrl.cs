@@ -15,6 +15,10 @@ namespace Gemi.Net
             {
                 throw new ApplicationException("URL was not absolute!");
             }
+            if(_url.Scheme != "gemini")
+            {
+                throw new ApplicationException("Attempting to create a non-Gemini URL!");
+            }
 
             //TODO: Add URL normalization logic per RFC 3986
             //TODO: add URL restrictions in Gemini spec (no userinfo, etc)
