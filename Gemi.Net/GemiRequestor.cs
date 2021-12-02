@@ -50,7 +50,7 @@ namespace Gemi.Net
                     connectTimer.Stop();
 
                     sslStream.Write(MakeRequestBytes(url));
-                    downloadTimer = new Stopwatch();
+                    downloadTimer.Start();
                     
                     //TODO: probably shouldn't grab everything 
                     using (var ms = new MemoryStream())
