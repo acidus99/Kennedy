@@ -49,7 +49,7 @@ namespace Gemi.Net
         public int DownloadTime { get; internal set; }
 
 
-        public bool IsTextResponse => MimeType.StartsWith("text/");
+        public bool IsTextResponse => HasBody && MimeType.StartsWith("text/");
 
         public bool IsInput => InStatusRange(10);
         public bool IsSuccess => InStatusRange(20);
