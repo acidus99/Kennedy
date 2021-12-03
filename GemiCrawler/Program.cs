@@ -15,21 +15,13 @@ namespace GemiCrawler
             //var url = "gemini://billy.flounder.online/index.gmi";
             var url = "gemini://mozz.us/";
             //var url = "gemini://marginalia.nu:1965/log";
-            //var url = "gemini://geminispace.info/known-hosts";
 
 
-            var crawler = new Crawler
-            {
-                CrawlerThreadCount = 4,
-                StopAfterUrlCount = 300,
-            };
+            var crawler = new Crawler(50,3000);
 
 
             crawler.AddSeed(url);
-            crawler.AddSeed("gemini://billy.flounder.online/index.gmi");
-            crawler.AddSeed("gemini://billy.flounder.online/");
-            crawler.AddSeed("gemini://billy.flounder.online:1965/");
-
+            crawler.AddSeed("gemini://geminispace.info/known-hosts");
             crawler.DoCrawl();
 
             return;

@@ -12,7 +12,7 @@ namespace GemiCrawler
         /// <summary>
         /// how long should we wait between requests to the same authority
         /// </summary>
-        const int delayMs = 1000;
+        const int delayMs = 2000;
 
         public ICrawler Crawler;
         public int CrawlerID;
@@ -44,6 +44,9 @@ namespace GemiCrawler
                     var resp = requestor.Request(url);
                     Crawler.ProcessResult(url, resp, requestor.LastException);
                     //Console.WriteLine($"{Name} has processed '{url}'");
+                } else
+                {
+                    Thread.Sleep(10000);
                 }
                 Thread.Sleep(delayMs);
             } while (Crawler.KeepWorkersAlive);

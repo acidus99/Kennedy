@@ -26,6 +26,8 @@ namespace Gemi.Net
 
         public int Port => (_url.Port > 0) ? _url.Port : 1965;
 
+        public string Authority => $"{Hostname}:{Port}";
+
         //TODO: handle punycode/IDN
         public string Hostname => _url.DnsSafeHost;
 
