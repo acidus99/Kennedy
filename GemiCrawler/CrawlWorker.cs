@@ -15,11 +15,13 @@ namespace GemiCrawler
         const int delayMs = 1000;
 
         public ICrawler Crawler;
+        public int CrawlerID;
 
         // The constructor obtains the state information.
-        public CrawlWorker(ICrawler crawler)
+        public CrawlWorker(ICrawler crawler, int id)
         {
             Crawler = crawler;
+            CrawlerID = id;
         }
 
         public string Name
@@ -35,7 +37,7 @@ namespace GemiCrawler
 
             do
             {
-                url =  Crawler.GetNextUrl();
+                url =  Crawler.GetNextUrl(CrawlerID);
                 if (url != null)
                 {
                     //Console.WriteLine($"{Name} is fetching '{url}'");

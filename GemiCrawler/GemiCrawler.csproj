@@ -12,10 +12,12 @@
     <None Remove="Modules\" />
     <None Remove="HashDepot" />
     <None Remove="Utils\" />
+    <None Remove="UrlFrontiers\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
     <Folder Include="Utils\" />
+    <Folder Include="UrlFrontiers\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HashDepot" Version="2.0.3" />

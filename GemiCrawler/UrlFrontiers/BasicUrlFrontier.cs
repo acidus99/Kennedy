@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using Gemi.Net;
 
-namespace GemiCrawler
+namespace GemiCrawler.UrlFrontiers
 {
     /// <summary>
     /// Manages our queue of URLs to crawl. URL that have already been added are ignored
     /// </summary>
-    public class UrlFrontier
+    public class BasicUrlFrontier :IUrlFrontier
     {
         object locker;
 
@@ -16,22 +16,21 @@ namespace GemiCrawler
         /// </summary>
         Queue<GemiUrl> queue;
 
-        public UrlFrontier()
+        public BasicUrlFrontier()
         {
             queue = new Queue<GemiUrl>();
             locker = new object();
         }
 
-        /// <summary>
-        /// Adds a URL to the queue only if we haven't see it before
-        /// </summary>
-        /// <param name="url"></param>
-        public void EnqueueUrl(GemiUrl url)
+        public void AddUrl(GemiUrl url)
         {
             queue.Enqueue(url);
         }
 
-        public GemiUrl DequeueUrl()
+        public int GetCount()
+            => queue.Count;
+
+        public GemiUrl GetUrl(int crawlerID = 0)
         {
             GemiUrl ret = null;
 
@@ -42,8 +41,6 @@ namespace GemiCrawler
             return ret;
         }
 
-        public int Count
-            => queue.Count;
 
     }
 }

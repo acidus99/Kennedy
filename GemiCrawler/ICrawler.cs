@@ -7,7 +7,7 @@ namespace GemiCrawler
 
         bool KeepWorkersAlive { get; }
 
-        GemiUrl GetNextUrl();
+        GemiUrl GetNextUrl(int crawlerID = 0);
 
         void ProcessResult(GemiUrl url, GemiResponse resp, Exception ex);
     }

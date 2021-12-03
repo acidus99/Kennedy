@@ -7,6 +7,7 @@ using System.Diagnostics;
 using GemiCrawler.Modules;
 using System.Linq;
 using GemiCrawler.Utils;
+using GemiCrawler.UrlFrontiers;
 
 namespace GemiCrawler
 {
@@ -23,11 +24,10 @@ namespace GemiCrawler
 
         ThreadSafeCounter totalUrlsRequested;
 
-        UrlFrontier queue;
+        IUrlFrontier urlFrontier;
         DocumentStore docStore;
 
         ThreadSafeCounter workInFlight;
-
 
         SeenUrlModule seenUrlModule;
         SeenContentModule seenContentModule;
@@ -38,7 +38,7 @@ namespace GemiCrawler
 
             StopAfterUrlCount = int.MaxValue;
 
-            queue = new UrlFrontier();
+            urlFrontier = new BasicUrlFrontier();
 
             workInFlight = new ThreadSafeCounter();
             totalUrlsRequested = new ThreadSafeCounter();
@@ -51,8 +51,6 @@ namespace GemiCrawler
             errorOut = new ThreadedFileWriter(outputBase + "errors.txt", 1);
             logOut = new ThreadedFileWriter(outputBase + "log.tsv", 20);
         }
-
-
 
         #region Log Stuff
 
@@ -91,7 +89,7 @@ namespace GemiCrawler
 
         private void SpawnWorker(int workerNum)
         {
-            var worker = new CrawlWorker(this);
+            var worker = new CrawlWorker(this, workerNum);
 
             var threadDelegate = new ThreadStart(worker.DoWork);
             var newThread = new Thread(threadDelegate);
@@ -105,7 +103,7 @@ namespace GemiCrawler
 
             watcher.Start();
 
-            for (int i = 1; i <= CrawlerThreadCount; i++)
+            for (int i = 0; i < CrawlerThreadCount; i++)
             {
                 SpawnWorker(i);
             }
@@ -123,14 +121,14 @@ namespace GemiCrawler
             int x = 4;
         }
 
-        public GemiUrl GetNextUrl()
+        public GemiUrl GetNextUrl(int crawlerID = 0)
         {
             if(HitUrlLimit)
             {
                 return null;
             }
 
-            var url = queue.DequeueUrl();
+            var url = urlFrontier.GetUrl(crawlerID);
             if (url != null)
             {
                 workInFlight.Increment();
@@ -151,7 +149,7 @@ namespace GemiCrawler
 
             if(!seenUrlModule.CheckAndRecord(url))
             {
-                queue.EnqueueUrl(url);
+                urlFrontier.AddUrl(url);
             }
         }
 
@@ -194,7 +192,6 @@ namespace GemiCrawler
             }
         }
 
-
         public bool HitUrlLimit
             => (totalUrlsRequested.Count >= StopAfterUrlCount);
 
@@ -208,7 +205,7 @@ namespace GemiCrawler
                 {
                     return false;
                 }
-                return (queue.Count > 0);
+                return (urlFrontier.GetCount() > 0);
             }
         }
 
