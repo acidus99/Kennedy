@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Gemi.Net;
-using GemiCrawler.Utils;ß
+using GemiCrawler.Utils;
 
 namespace GemiCrawler
 {
