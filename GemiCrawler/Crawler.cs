@@ -6,6 +6,7 @@ using System.Threading;
 using System.Diagnostics;
 using GemiCrawler.Modules;
 using System.Linq;
+using GemiCrawler.Utils;
 
 namespace GemiCrawler
 {
