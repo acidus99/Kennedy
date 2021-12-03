@@ -10,8 +10,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Modules\" />
+    <None Remove="HashDepot" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="HashDepot" Version="2.0.3" />
   </ItemGroup>
 </Project>

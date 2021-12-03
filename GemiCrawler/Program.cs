@@ -24,7 +24,12 @@ namespace GemiCrawler
                 StopAfterUrlCount = 300,
             };
 
+
             crawler.AddSeed(url);
+            crawler.AddSeed("gemini://billy.flounder.online/index.gmi");
+            crawler.AddSeed("gemini://billy.flounder.online/");
+            crawler.AddSeed("gemini://billy.flounder.online:1965/");
+
             crawler.DoCrawl();
 
             return;

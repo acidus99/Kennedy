@@ -29,6 +29,7 @@ namespace GemiCrawler
 
 
         SeenUrlModule seenUrlModule;
+        SeenContentModule seenContentModule;
 
         public Crawler()
         {
@@ -42,6 +43,7 @@ namespace GemiCrawler
             totalUrlsRequested = new ThreadSafeCounter();
 
             seenUrlModule = new SeenUrlModule();
+            seenContentModule = new SeenContentModule();
 
             Directory.CreateDirectory(outputBase);
             docStore = new DocumentStore(outputBase + "page-store/");
@@ -166,13 +168,13 @@ namespace GemiCrawler
             else if (resp != null)
             {
                 //Modules
+                if (!seenContentModule.CheckAndRecord(resp))
+                {
+                    var foundLinks = LinkFinder.ExtractUrls(url, resp);
 
-                //TODO: Have we seen this content before?
-                //if so stop
-                var foundLinks = LinkFinder.ExtractUrls(url, resp);
-
-                ProcessProspectiveUrls(foundLinks);
-                StoreStatsAndDocument(url, resp, foundLinks);
+                    ProcessProspectiveUrls(foundLinks);
+                    StoreStatsAndDocument(url, resp, foundLinks);
+                }
             }
             //note the work is complete
             workInFlight.Decrement();
