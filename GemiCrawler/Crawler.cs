@@ -13,6 +13,9 @@ namespace GemiCrawler
 {
     public class Crawler : ICrawler
     {
+
+        public const string DataDirectory = "/Users/billy/Code/gemini-play/crawler-data-files/";
+
         readonly string outputBase = $"/Users/billy/Code/gemini-play/crawl-out/{DateTime.Now.ToString("yyyy-MM-dd (hhmmss)")}/";
 
         int crawlerThreadCount;
