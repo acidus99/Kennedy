@@ -80,7 +80,6 @@ namespace Gemi.Net
                 ret.ConnectStatus = ConnectStatus.Error;
                 ret.ErrorMessage = ex.Message;
                 LastException = ex;
-                Console.WriteLine($"EXCEPTION {ex.Message} on '{url._url.AbsoluteUri}'");
             }
             return ret;
         }
