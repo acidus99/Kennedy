@@ -34,6 +34,7 @@ namespace GemiCrawler
 
         SeenUrlModule seenUrlModule;
         SeenContentModule seenContentModule;
+        RobotsFilterModule robotsModule;
 
         public Crawler(int threadCount, int stopAfterCount)
         {
@@ -48,6 +49,7 @@ namespace GemiCrawler
 
             seenUrlModule = new SeenUrlModule();
             seenContentModule = new SeenContentModule();
+            robotsModule = new RobotsFilterModule($"/{Crawler.DataDirectory}/robots/");
 
             Directory.CreateDirectory(outputBase);
             docStore = new DocumentStore(outputBase + "page-store/");
@@ -147,8 +149,10 @@ namespace GemiCrawler
         private void ProcessProspectiveUrl(GemiUrl url)
         {
             //Modules that process URLs
-
-            //TODO: URL passes filters (user supplied and from Robots
+            if(!robotsModule.IsUrlAllowed(url))
+            {
+                return;
+            }
 
             if(!seenUrlModule.CheckAndRecord(url))
             {
