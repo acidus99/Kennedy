@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Gemi.Net;
 using GemiCrawler.Utils;
@@ -16,12 +15,11 @@ namespace GemiCrawler
     /// </summary>
     public static class RobotsFetcher
     {
-        //list of domains
-        const string targets = "/Users/billy/Code/gemini-play/capsules-to-scan.txt";
+        
+        static readonly string domainsFile = $"{Crawler.DataDirectory}capsules-to-scan.txt";
 
         //folder to output robots.txt into
-        const string outputDir = "/Users/billy/Code/gemini-play/robots/";
-
+        static  readonly string outputDir = $"/{Crawler.DataDirectory}/robots/";
 
         static ThreadSafeCounter requestCounter = new ThreadSafeCounter();
         static ThreadSafeCounter foundCounter = new ThreadSafeCounter();
@@ -30,25 +28,25 @@ namespace GemiCrawler
         public static void DoIt()
         {
 
-            string[] hosts = File.ReadAllLines(targets);
+            string[] domains = File.ReadAllLines(domainsFile);
 
-            int total = hosts.Length;
+            int total = domains.Length;
 
             int parallelThreadsCount = 16;
 
-            Parallel.ForEach(hosts, new ParallelOptions { MaxDegreeOfParallelism = parallelThreadsCount }, host =>
+            Parallel.ForEach(domains, new ParallelOptions { MaxDegreeOfParallelism = parallelThreadsCount }, domain =>
             {
                 int t = requestCounter.Increment();
 
                 GemiRequestor gemiRequestor = new GemiRequestor();
 
-                var fullUrl = $"gemini://{host}/robots.txt";
+                var fullUrl = $"gemini://{domain}/robots.txt";
 
                 var resp = gemiRequestor.Request(fullUrl);
 
                 if(gemiRequestor.LastException == null && IsValidRobotsResp(resp))
                 {
-                    SaveFile(host, resp.BodyText);
+                    SaveFile(domain, resp.BodyText);
                 }
 
                 Console.WriteLine($"Progress:\t{t}\t of {total}\tHits:\t{foundCounter.Count}");
@@ -72,9 +70,14 @@ namespace GemiCrawler
 
         private static void SaveFile(string host, string text)
         {
+            //prepand the host/port in a comment
+            text = $"#{host}\n" + text;
+            //and replace : from a host:port with an @
+            host = host.Replace(":", "@");
             int count = foundCounter.Increment();
             Console.WriteLine($"\tHIT on Host '{host}'");
-            File.WriteAllText($"{outputDir}{host}-robots.txt", text);
+
+            File.WriteAllText($"{outputDir}{host}!robots.txt", text);
         }
 
     }
