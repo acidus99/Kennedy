@@ -40,13 +40,13 @@ namespace GemiCrawler
 
                 GemiRequestor gemiRequestor = new GemiRequestor();
 
-                var fullUrl = $"gemini://{domain}/robots.txt";
+                GemiUrl url = new GemiUrl($"gemini://{domain}/robots.txt");
 
-                var resp = gemiRequestor.Request(fullUrl);
+                var resp = gemiRequestor.Request(url);
 
                 if(gemiRequestor.LastException == null && IsValidRobotsResp(resp))
                 {
-                    SaveFile(domain, resp.BodyText);
+                    SaveFile(url, resp.BodyText);
                 }
 
                 Console.WriteLine($"Progress:\t{t}\t of {total}\tHits:\t{foundCounter.Count}");
@@ -68,16 +68,14 @@ namespace GemiCrawler
             return false;
         }
 
-        private static void SaveFile(string host, string text)
+        private static void SaveFile(GemiUrl url, string text)
         {
             //prepand the host/port in a comment
-            text = $"#{host}\n" + text;
+            text = $"#{url.Authority}\n" + text;
             //and replace : from a host:port with an @
-            host = host.Replace(":", "@");
-            int count = foundCounter.Increment();
-            Console.WriteLine($"\tHIT on Host '{host}'");
-
-            File.WriteAllText($"{outputDir}{host}!robots.txt", text);
+            var filteredAuthority = url.Authority.Replace(":", "@");
+            foundCounter.Increment();
+            File.WriteAllText($"{outputDir}{filteredAuthority}!robots.txt", text);
         }
 
     }
