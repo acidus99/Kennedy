@@ -14,14 +14,16 @@
     <None Remove="Utils\" />
     <None Remove="UrlFrontiers\" />
     <None Remove="Com.Bekijkhet.RobotsTxt" />
+    <None Remove="RobotsTxt" />
+    <None Remove="RobotsTxt\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
     <Folder Include="Utils\" />
     <Folder Include="UrlFrontiers\" />
+    <Folder Include="RobotsTxt\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HashDepot" Version="2.0.3" />
-    <PackageReference Include="Com.Bekijkhet.RobotsTxt" Version="1.0.0" />
   </ItemGroup>
 </Project>
