@@ -1,9 +1,12 @@
 ﻿using System;
-using Com.Bekijkhet.RobotsTxt;
+//using Com.Bekijkhet.RobotsTxt;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Gemi.Net;
+using GemiCrawler.RobotsTxt;
+
+using GemiCrawler.Utils;
 
 namespace GemiCrawler.Modules
 {
@@ -11,12 +14,16 @@ namespace GemiCrawler.Modules
     {
 
         Dictionary<string, Robots> rulesCache;
+        ThreadSafeCounter rejectedCounter;
+
 
         public RobotsFilterModule(string dataDirectory)
             : base("ROBOTS-FILTER")
         {
             rulesCache = new Dictionary<string, Robots>();
             LoadFromFolder(dataDirectory);
+
+            rejectedCounter = new ThreadSafeCounter();
         }
         
         public bool IsUrlAllowed(GemiUrl url)
@@ -25,7 +32,12 @@ namespace GemiCrawler.Modules
             {
                 return true;
             }
-            return rulesCache[url.Authority].IsPathAllowed("indexer", url.Path);
+            bool result = rulesCache[url.Authority].IsPathAllowed("indexer", url.Path);
+            if(!result)
+            {
+                rejectedCounter.Increment();
+            }
+            return result;
         }
 
         private void LoadFromFolder(string dataDir)
@@ -45,7 +57,14 @@ namespace GemiCrawler.Modules
                 string authority = GetAuthority(contents);
                 if(!rulesCache.ContainsKey(authority))
                 {
-                    rulesCache[authority] = new Robots(contents);
+                    var robots = new Robots(contents);
+                    if(robots.IsMalformed)
+                    {
+                        Console.WriteLine(CreateLogLine($"ERROR! Malformed Robots.txt '{file.FullName}'"));
+                    } else
+                    {
+                        rulesCache[authority] = robots;
+                    }
                 } else
                 {
                     Console.WriteLine(CreateLogLine($"Warning! Duplicate robots.txt detected for '{authority}'"));
@@ -63,5 +82,10 @@ namespace GemiCrawler.Modules
         /// <returns></returns>
         private string GetAuthority(string contents)
             =>contents.Split("\n").First().Substring(1);
+
+        public override void OutputStatus(string outputFile)
+        {
+            File.AppendAllText(outputFile, CreateLogLine($"Urls Rejected: {rejectedCounter.Count}\n"));
+        }
     }
 }

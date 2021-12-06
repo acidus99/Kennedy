@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using HashDepot;
 
 using Gemi.Net;
+using GemiCrawler.Utils;
+using System.IO;
 
 namespace GemiCrawler.Modules
 {
@@ -12,12 +14,14 @@ namespace GemiCrawler.Modules
         Dictionary<uint, bool> seenHashes;
         object locker;
 
+        ThreadSafeCounter duplicateCounter;
 
         public SeenContentModule()
             : base("SEEN-CONTENT")
         {
             seenHashes = new Dictionary<uint, bool>();
             locker = new object();
+            duplicateCounter = new ThreadSafeCounter();
         }
 
         /// <summary>
@@ -30,6 +34,7 @@ namespace GemiCrawler.Modules
             //TODO could only do this for gemini texts if I really cared to
             if (resp.HasBody)
             {
+                processedCounter.Increment();
                 uint hash = XXHash.Hash32(resp.BodyBytes);
                 lock (locker)
                 {
@@ -37,6 +42,9 @@ namespace GemiCrawler.Modules
                     {
                         seenHashes[hash] = true;
                         return false;
+                    } else
+                    {
+                        duplicateCounter.Increment();
                     }
                 }
             } else
@@ -45,6 +53,11 @@ namespace GemiCrawler.Modules
                 return false;
             }
             return true;
+        }
+
+        public override void OutputStatus(string outputFile)
+        {
+            File.AppendAllText(outputFile, CreateLogLine($"Responses w/ Bodies: {processedCounter.Count} Duplicates: {duplicateCounter.Count}\n"));
         }
     }
 }

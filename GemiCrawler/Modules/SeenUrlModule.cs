@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using Gemi.Net;
 
+using GemiCrawler.Utils;
+using System.IO;
+
 namespace GemiCrawler.Modules
 {
     public class SeenUrlModule : AbstractModule
@@ -13,6 +16,7 @@ namespace GemiCrawler.Modules
         Dictionary<string, bool> SeenUrls;
 
         object locker;
+        ThreadSafeCounter seenCounter = new ThreadSafeCounter();
 
         public SeenUrlModule()
             : base("SEENURL")
@@ -29,6 +33,7 @@ namespace GemiCrawler.Modules
         public bool CheckAndRecord(GemiUrl url)
         {
             var normalizedUrl = url.NormalizedUrl;
+            processedCounter.Increment();
             lock(locker)
             {
                 if(!SeenUrls.ContainsKey(normalizedUrl))
@@ -37,7 +42,13 @@ namespace GemiCrawler.Modules
                     return false;
                 }
             }
+            seenCounter.Increment();
             return true;
+        }
+
+        public override void OutputStatus(string outputFile)
+        {
+            File.AppendAllText(outputFile, CreateLogLine($"Urls seen: {processedCounter.Count} Seen Before: {seenCounter.Count}\n"));
         }
 
     }

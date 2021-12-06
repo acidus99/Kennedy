@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using Gemi.Net;
-using HashDepot;
+using GemiCrawler.Modules;
+using System.IO;
 
 namespace GemiCrawler.UrlFrontiers
 {
     /// <summary>
     /// Manages our queue of URLs to crawl
     /// </summary>
-    public class BalancedUrlFrontier : IUrlFrontier
+    public class BalancedUrlFrontier : AbstractModule, IUrlFrontier
     {
         object locker;
 
@@ -20,6 +21,7 @@ namespace GemiCrawler.UrlFrontiers
         int totalWorkerThreads;
 
         public BalancedUrlFrontier(int totalWorkers)
+            : base("URL-FRONTIER")
         {
             locker = new object();
             totalWorkerThreads = totalWorkers;
@@ -61,6 +63,28 @@ namespace GemiCrawler.UrlFrontiers
                 ret = (queues[crawlerID].Count > 0) ? queues[crawlerID].Dequeue() : null;
             }
             return ret;
+        }
+
+        public override void OutputStatus(string outputFile)
+        {
+            File.AppendAllText(outputFile, CreateLogLine($"Total Queue Size: {GetCount()}\n"));
+        }
+
+        public void SaveSnapshot(string outputFile)
+        {
+            var fout = new StreamWriter(outputFile, false, System.Text.Encoding.UTF8);
+            lock (locker)
+            {
+                for (int i = 0; i < totalWorkerThreads; i++)
+                {
+                    fout.WriteLine($"============ Queue:{i} Size:{queues[i].Count}");
+                    foreach (GemiUrl url in queues[i])
+                    {
+                        fout.WriteLine(url);
+                    }
+                }
+                fout.Close();
+            }
         }
     }
 }

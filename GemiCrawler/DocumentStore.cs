@@ -3,16 +3,24 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Gemi.Net;
+using GemiCrawler.Utils;
+
+using GemiCrawler.Modules;
 
 namespace GemiCrawler
 {
-    public class DocumentStore
+    public class DocumentStore : AbstractModule
     {
 
         string pageStorageDir;
+        ThreadSafeCounter failedCounter;
+        
 
         public DocumentStore(string path)
+            :base("Document-Store")
         {
+            failedCounter = new ThreadSafeCounter();
+
             pageStorageDir = path;
             if (Directory.Exists(pageStorageDir))
             {
@@ -66,6 +74,8 @@ namespace GemiCrawler
         {
             if (resp.IsSuccess & resp.HasBody)
             {
+                
+
                 var dir = GetStorageDirectory(url);
                 var file = GetStorageFilename(url);
                 var path = dir + file;
@@ -83,16 +93,22 @@ namespace GemiCrawler
                     if (!File.Exists(path))
                     {
                         File.WriteAllBytes(path, resp.BodyBytes);
+                        processedCounter.Increment();
                         return true;
                     }
                 }
                 catch (Exception)
                 {
+                    failedCounter.Increment();
                     return false;
                 }
             }
-                
             return true;
+        }
+
+        public override void OutputStatus(string outputFile)
+        {
+            File.AppendAllText(outputFile, CreateLogLine($"Successully Stored: {processedCounter.Count} Failed: {failedCounter.Count}\n"));
         }
 
     }

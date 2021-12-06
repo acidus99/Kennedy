@@ -13,5 +13,6 @@ namespace GemiCrawler
 
         GemiUrl GetUrl(int crawlerID = 0);
 
+        void OutputStatus(string outputFile);
     }
 }
