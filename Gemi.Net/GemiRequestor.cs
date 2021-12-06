@@ -39,13 +39,13 @@ namespace Gemi.Net
 
                 var sock = new TimeoutSocket();
                 connectTimer.Start();
-                var client = sock.Connect(url.Hostname, url.Port, 10000);
+                var client = sock.Connect(url.Hostname, url.Port, 30000);
 
                 using (SslStream sslStream = new SslStream(client.GetStream(), false,
                     new RemoteCertificateValidationCallback(ProcessServerCertificate), null))
                 {
 
-                    sslStream.ReadTimeout = 15000; //wait 15 sec
+                    sslStream.ReadTimeout = 45000; //wait 15 sec
                     sslStream.AuthenticateAsClient(url.Hostname);
                     connectTimer.Stop();
 
