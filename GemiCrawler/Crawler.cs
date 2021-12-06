@@ -40,6 +40,7 @@ namespace GemiCrawler
         SeenUrlModule seenUrlModule;
         SeenContentModule seenContentModule;
         RobotsFilterModule robotsModule;
+        ExcludedUrlModule excludedUrlModule;
 
         Stopwatch crawlStopwatch;
 
@@ -67,6 +68,7 @@ namespace GemiCrawler
             seenUrlModule = new SeenUrlModule();
             seenContentModule = new SeenContentModule();
             robotsModule = new RobotsFilterModule($"/{Crawler.DataDirectory}/robots/");
+            excludedUrlModule = new ExcludedUrlModule($"/{Crawler.DataDirectory}/block-list.txt");
 
             Directory.CreateDirectory(outputBase);
             Directory.CreateDirectory(SnapshotDirectory);
@@ -105,6 +107,7 @@ namespace GemiCrawler
             seenUrlModule.OutputStatus($"{outputBase}log-seen-urls.txt");
             seenContentModule.OutputStatus($"{outputBase}log-seen-content.txt");
             docStore.OutputStatus($"{outputBase}log-doc-store.txt");
+            excludedUrlModule.OutputStatus($"{outputBase}log-blocked-urls.txt");
         }
 
         #region Log Stuff
@@ -204,6 +207,11 @@ namespace GemiCrawler
         {
             //Modules that process URLs
             if(!robotsModule.IsUrlAllowed(url))
+            {
+                return;
+            }
+
+            if(!excludedUrlModule.IsUrlAllowed(url))
             {
                 return;
             }

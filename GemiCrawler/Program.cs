@@ -21,6 +21,7 @@ namespace GemiCrawler
 
             crawler.AddSeed(url);
             crawler.AddSeed("gemini://geminispace.info/known-hosts");
+        
             crawler.DoCrawl();
 
             return;
