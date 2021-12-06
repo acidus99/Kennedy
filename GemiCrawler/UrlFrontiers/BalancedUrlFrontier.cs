@@ -16,7 +16,7 @@ namespace GemiCrawler.UrlFrontiers
         /// <summary>
         /// our queue of URLs to crawl
         /// </summary>
-        Queue<GemiUrl> [] queues;
+        PriorityQueue [] queues;
 
         int totalWorkerThreads;
 
@@ -26,10 +26,10 @@ namespace GemiCrawler.UrlFrontiers
             locker = new object();
             totalWorkerThreads = totalWorkers;
 
-            queues = new Queue<GemiUrl>[totalWorkerThreads];
+            queues = new PriorityQueue[totalWorkerThreads];
             for(int i = 0; i< totalWorkerThreads; i++)
             {
-                queues[i] = new Queue<GemiUrl>();
+                queues[i] = new PriorityQueue();
             }
         }
 
@@ -41,7 +41,7 @@ namespace GemiCrawler.UrlFrontiers
         public void AddUrl(GemiUrl url)
         {
             int queueID = queueForUrl(url);
-            queues[queueID].Enqueue(url);
+            queues[queueID].AddUrl(url);
         }
 
         public int GetCount()
@@ -49,42 +49,17 @@ namespace GemiCrawler.UrlFrontiers
             int totalCount = 0;
             for(int i=0;i<totalWorkerThreads; i++)
             {
-                totalCount += queues[i].Count;
+                totalCount += queues[i].GetCount();
             }
             return totalCount;
-        }   
+        }
 
         public GemiUrl GetUrl(int crawlerID = 0)
-        {
-            GemiUrl ret = null;
-
-            lock (locker)
-            {
-                ret = (queues[crawlerID].Count > 0) ? queues[crawlerID].Dequeue() : null;
-            }
-            return ret;
-        }
+            => queues[crawlerID].GetUrl();
 
         public override void OutputStatus(string outputFile)
         {
             File.AppendAllText(outputFile, CreateLogLine($"Total Queue Size: {GetCount()}\n"));
-        }
-
-        public void SaveSnapshot(string outputFile)
-        {
-            var fout = new StreamWriter(outputFile, false, System.Text.Encoding.UTF8);
-            lock (locker)
-            {
-                for (int i = 0; i < totalWorkerThreads; i++)
-                {
-                    fout.WriteLine($"============ Queue:{i} Size:{queues[i].Count}");
-                    foreach (GemiUrl url in queues[i])
-                    {
-                        fout.WriteLine(url);
-                    }
-                }
-                fout.Close();
-            }
         }
     }
 }

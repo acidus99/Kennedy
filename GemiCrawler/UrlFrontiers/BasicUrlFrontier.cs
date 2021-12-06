@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Gemi.Net;
+using System.IO;
 
 namespace GemiCrawler.UrlFrontiers
 {
@@ -41,6 +42,10 @@ namespace GemiCrawler.UrlFrontiers
             return ret;
         }
 
+        public void OutputStatus(string outputFile)
+        {
+            File.AppendAllText(outputFile, $"Total Queue Size: {GetCount()}\n");
+        }
 
     }
 }

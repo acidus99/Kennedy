@@ -33,6 +33,18 @@ namespace Gemi.Net
 
         public string Path => _url.AbsolutePath;
 
+        public string Filename => System.IO.Path.GetFileName(Path);
+
+        public string FileExtension
+        {
+            get
+            {
+                var ext = System.IO.Path.GetExtension(Path);
+                return (ext.Length > 1) ? ext.Substring(1) : ext;
+            }
+        }
+            
+
         public string NormalizedUrl
             => $"gemini://{Hostname}:{Port}{Path}";
 

@@ -16,7 +16,6 @@ namespace GemiCrawler
             var url = "gemini://mozz.us/";
             //var url = "gemini://marginalia.nu:1965/log";
 
-            //RobotsFetcher.DoSingle("gemini://aaoth.xyz:1965/robots.txt");
 
             var crawler = new Crawler(80,300000);
 

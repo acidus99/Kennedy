@@ -94,7 +94,7 @@ namespace GemiCrawler
         {
             var now = DateTime.Now;
 
-            urlFrontier.SaveSnapshot($"{SnapshotDirectory}{now.ToString("dd (hhmmss)")}-url-frontiers.txt");
+            //urlFrontier.SaveSnapshot($"{SnapshotDirectory}{now.ToString("dd (hhmmss)")}-url-frontiers.txt");
         }
 
         private void StatusTimer_Elapsed(object sender, ElapsedEventArgs e)
