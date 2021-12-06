@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Gemi.Net;
 using GemiCrawler.Utils;
+using GemiCrawler.RobotsTxt;
 
 namespace GemiCrawler
 {
@@ -56,6 +57,21 @@ namespace GemiCrawler
 
         }
 
+        public static void DoSingle(string surl)
+        {
+            GemiUrl url = new GemiUrl(surl);
+
+            GemiRequestor gemiRequestor = new GemiRequestor();
+
+            
+            var resp = gemiRequestor.Request(url);
+
+            if (gemiRequestor.LastException == null && IsValidRobotsResp(resp))
+            {
+                SaveFile(url, resp.BodyText);
+            }
+        }
+
         private static bool IsValidRobotsResp(GemiResponse resp)
         {
             if(resp != null && resp.IsSuccess && resp.IsTextResponse)
@@ -70,11 +86,22 @@ namespace GemiCrawler
 
         private static void SaveFile(GemiUrl url, string text)
         {
+
+            Robots robot = new Robots(text);
+
+            if (robot.IsMalformed)
+            {
+
+                int x = 5;
+            }
+
+            foundCounter.Increment();
+
             //prepand the host/port in a comment
             text = $"#{url.Authority}\n" + text;
             //and replace : from a host:port with an @
             var filteredAuthority = url.Authority.Replace(":", "@");
-            foundCounter.Increment();
+
             File.WriteAllText($"{outputDir}{filteredAuthority}!robots.txt", text);
         }
 
