@@ -11,7 +11,5 @@ namespace GemiCrawler.UrlFrontiers
         int GetCount();
 
         GemiUrl GetUrl(int crawlerID = 0);
-
-        void OutputStatus(string outputFile);
     }
 }

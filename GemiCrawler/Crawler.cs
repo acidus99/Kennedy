@@ -42,6 +42,8 @@ namespace GemiCrawler
         RobotsFilterModule robotsModule;
         ExcludedUrlModule excludedUrlModule;
 
+        List<AbstractModule> Modules;
+
         Stopwatch crawlStopwatch;
 
         System.Timers.Timer statusTimer;
@@ -63,12 +65,6 @@ namespace GemiCrawler
             totalUrlsRequested = new ThreadSafeCounter();
 
             crawlStopwatch = new Stopwatch();
-            
-
-            seenUrlModule = new SeenUrlModule();
-            seenContentModule = new SeenContentModule();
-            robotsModule = new RobotsFilterModule($"/{Crawler.DataDirectory}/robots/");
-            excludedUrlModule = new ExcludedUrlModule($"/{Crawler.DataDirectory}/block-list.txt");
 
             Directory.CreateDirectory(outputBase);
             Directory.CreateDirectory(SnapshotDirectory);
@@ -76,6 +72,19 @@ namespace GemiCrawler
             errorOut = new ThreadedFileWriter(outputBase + "errors.txt", 1);
             logOut = new ThreadedFileWriter(outputBase + "log-responses.tsv", 20);
 
+            Modules = new List<AbstractModule>();
+
+            seenUrlModule = new SeenUrlModule();
+            seenContentModule = new SeenContentModule();
+            robotsModule = new RobotsFilterModule($"/{Crawler.DataDirectory}/robots/");
+            excludedUrlModule = new ExcludedUrlModule($"/{Crawler.DataDirectory}/block-list.txt");
+
+            SetupStatusLog(seenUrlModule, "seen-urls");
+            SetupStatusLog(seenContentModule, "seen-content");
+            SetupStatusLog(robotsModule, "robots-filter");
+            SetupStatusLog(excludedUrlModule, "url-filter");
+            SetupStatusLog(docStore, "doc-store");
+            SetupStatusLog(this, "crawler");
 
             statusTimer = new System.Timers.Timer(StatusIntervalDisk)
             {
@@ -101,13 +110,16 @@ namespace GemiCrawler
 
         private void StatusTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            OutputStatus($"{outputBase}log-crawler.txt");
-            urlFrontier.OutputStatus($"{outputBase}log-url-frontier.txt");
-            robotsModule.OutputStatus($"{outputBase}log-robots.txt");
-            seenUrlModule.OutputStatus($"{outputBase}log-seen-urls.txt");
-            seenContentModule.OutputStatus($"{outputBase}log-seen-content.txt");
-            docStore.OutputStatus($"{outputBase}log-doc-store.txt");
-            excludedUrlModule.OutputStatus($"{outputBase}log-blocked-urls.txt");
+            foreach(var module in Modules)
+            {
+                module.OutputStatus();
+            }
+        }
+
+        private void SetupStatusLog(AbstractModule module, string logName)
+        {
+            module.LogFilename = $"{outputBase}log-{logName}.txt";
+            Modules.Add(module);
         }
 
         #region Log Stuff
@@ -123,7 +135,6 @@ namespace GemiCrawler
             var msg = $"WARNING! {what}";
             errorOut.WriteLine($"{DateTime.Now}\t{msg}");
         }
-
 
         private void CloseLogs()
         {
@@ -263,10 +274,8 @@ namespace GemiCrawler
             }
         }
 
-        public override void OutputStatus(string outputFile)
-        {
-            File.AppendAllText(outputFile, CreateLogLine($"Elapsed: {crawlStopwatch.Elapsed}\tTotal Requested: {totalUrlsRequested.Count}\tTotal Processed: {processedCounter.Count}\n"));
-        }
+        protected override string GetStatusMesssage()
+            => $"Elapsed: {crawlStopwatch.Elapsed}\tTotal Requested: {totalUrlsRequested.Count}\tTotal Processed: {processedCounter.Count}";
 
         public bool HitUrlLimit
             => (totalUrlsRequested.Count >= stopAfterUrlCount);

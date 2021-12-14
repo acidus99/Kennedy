@@ -57,9 +57,7 @@ namespace GemiCrawler.UrlFrontiers
         public GemiUrl GetUrl(int crawlerID = 0)
             => queues[crawlerID].GetUrl();
 
-        public override void OutputStatus(string outputFile)
-        {
-            File.AppendAllText(outputFile, CreateLogLine($"Total Queue Size: {GetCount()}\n"));
-        }
+        protected override string GetStatusMesssage()
+            => $"Total Queue Size: {GetCount()}";
     }
 }

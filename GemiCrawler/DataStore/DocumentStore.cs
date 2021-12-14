@@ -106,10 +106,7 @@ namespace GemiCrawler
             return true;
         }
 
-        public override void OutputStatus(string outputFile)
-        {
-            File.AppendAllText(outputFile, CreateLogLine($"Successully Stored: {processedCounter.Count} Failed: {failedCounter.Count}\n"));
-        }
-
+        protected override string GetStatusMesssage()
+            => $"Successully Stored: {processedCounter.Count} Failed: {failedCounter.Count}";
     }
 }

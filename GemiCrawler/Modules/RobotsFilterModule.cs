@@ -47,7 +47,7 @@ namespace GemiCrawler.Modules
             var files = d.GetFiles("*.txt");
             if (files.Length < 1)
             {
-                Console.WriteLine(CreateLogLine("Warning! No Robots.txt Loaded!"));
+                Console.WriteLine($"{CreatePrefix()}Warning! No Robots.txt Loaded!");
                 return;
             }
 
@@ -60,14 +60,14 @@ namespace GemiCrawler.Modules
                     var robots = new Robots(contents);
                     if(robots.IsMalformed)
                     {
-                        Console.WriteLine(CreateLogLine($"ERROR! Malformed Robots.txt '{file.FullName}'"));
+                        Console.WriteLine($"{CreatePrefix()}ERROR! Malformed Robots.txt '{file.FullName}'");
                     } else
                     {
                         rulesCache[authority] = robots;
                     }
                 } else
                 {
-                    Console.WriteLine(CreateLogLine($"Warning! Duplicate robots.txt detected for '{authority}'"));
+                    Console.WriteLine($"{CreatePrefix()}Warning! Duplicate robots.txt detected for '{authority}'");
                     return;
                 }
             }
@@ -83,9 +83,7 @@ namespace GemiCrawler.Modules
         private string GetAuthority(string contents)
             =>contents.Split("\n").First().Substring(1);
 
-        public override void OutputStatus(string outputFile)
-        {
-            File.AppendAllText(outputFile, CreateLogLine($"Urls Rejected: {rejectedCounter.Count}\n"));
-        }
+        protected override string GetStatusMesssage()
+            => $"Urls Rejected: {rejectedCounter.Count}";
     }
 }

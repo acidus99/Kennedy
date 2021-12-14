@@ -55,9 +55,7 @@ namespace GemiCrawler.Modules
             return true;
         }
 
-        public override void OutputStatus(string outputFile)
-        {
-            File.AppendAllText(outputFile, CreateLogLine($"Responses w/ Bodies: {processedCounter.Count} Duplicates: {duplicateCounter.Count}\n"));
-        }
+        protected override string GetStatusMesssage()
+            => $"Responses w/ Bodies: {processedCounter.Count} Duplicates: {duplicateCounter.Count}";
     }
 }

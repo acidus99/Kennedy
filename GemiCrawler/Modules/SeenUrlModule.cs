@@ -46,10 +46,7 @@ namespace GemiCrawler.Modules
             return true;
         }
 
-        public override void OutputStatus(string outputFile)
-        {
-            File.AppendAllText(outputFile, CreateLogLine($"Urls seen: {processedCounter.Count} Seen Before: {seenCounter.Count}\n"));
-        }
-
+        protected override string GetStatusMesssage()
+            => $"Urls seen: {processedCounter.Count} Seen Before: {seenCounter.Count}";
     }
 }
