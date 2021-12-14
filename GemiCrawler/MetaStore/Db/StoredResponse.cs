@@ -33,9 +33,7 @@ namespace GemiCrawler.MetaStore.Db
         /// </summary>
         public string MetaLine { get; set; }
 
-        public int? BodySize { get; set; }
-
-        public Byte[] BodyBytes { get; set; }
+        public int BodySize { get; set; }
 
         /// <summary>
         /// Latency of the request/resp, in ms
@@ -53,8 +51,6 @@ namespace GemiCrawler.MetaStore.Db
         public string Language { get; set; }
 
         #endregion
-
-        public string BodyText { get; set; }
 
     }
 }
