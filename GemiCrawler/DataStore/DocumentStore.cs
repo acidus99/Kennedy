@@ -40,20 +40,20 @@ namespace GemiCrawler
         }
 
 
-        public string GetStorageFilename(GemiUrl url)
+        private string GetStorageFilename(GemiUrl url)
         {
             var filename = Path.GetFileName(url.Path);
             return (filename.Length > 0) ? filename : "index.gmi";
         }
 
-        public string GetSavePath(GemiUrl url)
+        private string GetSavePath(GemiUrl url)
         {
             var dir = GetStorageDirectory(url);
             var file = GetStorageFilename(url);
             return dir + file;
         }
 
-        public string GetStorageDirectory(GemiUrl url)
+        private string GetStorageDirectory(GemiUrl url)
         {
             string hostDir = (url.Port == 1965) ? url.Hostname : $"{url.Hostname} ({url.Port})";
 

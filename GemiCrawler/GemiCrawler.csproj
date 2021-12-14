@@ -16,14 +16,25 @@
     <None Remove="Com.Bekijkhet.RobotsTxt" />
     <None Remove="RobotsTxt" />
     <None Remove="RobotsTxt\" />
+    <None Remove="DataStore\" />
+    <None Remove="Microsoft.EntityFrameworkCore" />
+    <None Remove="Microsoft.EntityFrameworkCore.Design" />
+    <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
     <Folder Include="Utils\" />
     <Folder Include="UrlFrontiers\" />
     <Folder Include="RobotsTxt\" />
+    <Folder Include="DataStore\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HashDepot" Version="2.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.12">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.12" />
   </ItemGroup>
 </Project>
