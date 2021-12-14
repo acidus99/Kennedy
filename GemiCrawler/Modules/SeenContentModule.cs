@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using HashDepot;
-
 using Gemi.Net;
 using GemiCrawler.Utils;
-using System.IO;
 
 namespace GemiCrawler.Modules
 {

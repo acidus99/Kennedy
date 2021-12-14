@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Gemi.Net;
 
 using GemiCrawler.Utils;
-using System.IO;
 
 namespace GemiCrawler.Modules
 {

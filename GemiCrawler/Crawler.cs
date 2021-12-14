@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Diagnostics;
 using GemiCrawler.Modules;
-using System.Linq;
 using GemiCrawler.Utils;
 using GemiCrawler.UrlFrontiers;
 using System.Timers;

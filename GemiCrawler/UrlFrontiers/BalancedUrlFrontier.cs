@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using Gemi.Net;
 using GemiCrawler.Modules;
-using System.IO;
 
 namespace GemiCrawler.UrlFrontiers
 {
