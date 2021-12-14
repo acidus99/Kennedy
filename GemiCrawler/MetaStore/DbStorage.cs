@@ -1,6 +1,4 @@
-﻿using System;
-using Gemi.Net;
-using GemiCrawler.Modules;
+﻿using Gemi.Net;
 using GemiCrawler.MetaStore.Db;
 using System.Collections.Generic;
 
@@ -18,6 +16,11 @@ namespace GemiCrawler.MetaStore
             StoragePath = storagePath;
             db = new CrawlDbContext(storagePath);
             locker = new object();
+        }
+
+        public void Close()
+        {
+            //nop
         }
 
         public void StoreMetaData(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
@@ -42,7 +45,6 @@ namespace GemiCrawler.MetaStore
                 db.Responses.Add(storedResp);
                 db.SaveChanges();
             }
-            return true;
         }
     }
 }

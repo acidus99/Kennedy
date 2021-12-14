@@ -9,17 +9,13 @@ using GemiCrawler.Modules;
 
 namespace GemiCrawler.DocumentStore
 {
-    public class DocumentStore : AbstractModule
+    public class DocStore : IDocumentStore
     {
 
         string pageStorageDir;
-        ThreadSafeCounter failedCounter;
-        
 
-        public DocumentStore(string path)
-            :base("Document-Store")
+        public DocStore(string path)            
         {
-            failedCounter = new ThreadSafeCounter();
 
             pageStorageDir = path;
             if (Directory.Exists(pageStorageDir))
@@ -70,13 +66,15 @@ namespace GemiCrawler.DocumentStore
             return $"{pageStorageDir}{hostDir}{path}";
         }
 
-        public bool Store(GemiUrl url, GemiResponse resp)
+        public string StoreDocument(GemiUrl url, GemiResponse resp)
         {
+            var path = "";
+
             if (resp.IsSuccess & resp.HasBody)
             {
                 var dir = GetStorageDirectory(url);
                 var file = GetStorageFilename(url);
-                var path = dir + file;
+                path = dir + file;
 
                 try
                 {
@@ -91,20 +89,13 @@ namespace GemiCrawler.DocumentStore
                     if (!File.Exists(path))
                     {
                         File.WriteAllBytes(path, resp.BodyBytes);
-                        processedCounter.Increment();
-                        return true;
                     }
                 }
                 catch (Exception)
                 {
-                    failedCounter.Increment();
-                    return false;
                 }
             }
-            return true;
+            return path;
         }
-
-        protected override string GetStatusMesssage()
-            => $"Successully Stored: {processedCounter.Count} Failed: {failedCounter.Count}";
     }
 }

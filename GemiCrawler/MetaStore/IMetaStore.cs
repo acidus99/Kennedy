@@ -9,5 +9,7 @@ namespace GemiCrawler.MetaStore
     public interface IMetaStore
     {
         void StoreMetaData(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks);
+
+        void Close();
     }
 }

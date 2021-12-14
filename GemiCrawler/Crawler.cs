@@ -28,14 +28,13 @@ namespace GemiCrawler
         int crawlerThreadCount;
 
         ThreadedFileWriter errorOut;
-        ThreadedFileWriter logOut;
 
         int stopAfterUrlCount { get; set; }
 
         ThreadSafeCounter totalUrlsRequested;
 
         BalancedUrlFrontier urlFrontier;
-        DbStorage crawlStore;
+        
 
         ThreadSafeCounter workInFlight;
 
@@ -43,6 +42,9 @@ namespace GemiCrawler
         SeenContentModule seenContentModule;
         RobotsFilterModule robotsModule;
         ExcludedUrlModule excludedUrlModule;
+
+        IMetaStore metaStore;
+        IDocumentStore docStore;
 
         List<AbstractModule> Modules;
 
@@ -61,18 +63,20 @@ namespace GemiCrawler
 
             stopAfterUrlCount = stopAfterCount;
 
+            InitOutputDirectories();
+
             urlFrontier = new BalancedUrlFrontier(crawlerThreadCount);
 
             workInFlight = new ThreadSafeCounter();
             totalUrlsRequested = new ThreadSafeCounter();
-
             crawlStopwatch = new Stopwatch();
 
-            Directory.CreateDirectory(outputBase);
-            Directory.CreateDirectory(SnapshotDirectory);
-            crawlStore = new DbStorage(outputBase);
+            // init modules
+            metaStore = new LogStorage(outputBase);
+            docStore = new DocStore(outputBase + "page-store/");
+
+            //init errorlog
             errorOut = new ThreadedFileWriter(outputBase + "errors.txt", 1);
-            logOut = new ThreadedFileWriter(outputBase + "log-responses.tsv", 20);
 
             Modules = new List<AbstractModule>();
 
@@ -81,12 +85,15 @@ namespace GemiCrawler
             robotsModule = new RobotsFilterModule($"/{Crawler.DataDirectory}/robots/");
             excludedUrlModule = new ExcludedUrlModule($"/{Crawler.DataDirectory}/block-list.txt");
 
+            SetupStatusLog(urlFrontier, "url-frontier");
             SetupStatusLog(seenUrlModule, "seen-urls");
             SetupStatusLog(seenContentModule, "seen-content");
             SetupStatusLog(robotsModule, "robots-filter");
             SetupStatusLog(excludedUrlModule, "url-filter");
-            SetupStatusLog(crawlStore, "crawl-store");
             SetupStatusLog(this, "crawler");
+
+
+            //Init Timers
 
             statusTimer = new System.Timers.Timer(StatusIntervalDisk)
             {
@@ -102,6 +109,13 @@ namespace GemiCrawler
             };
             snapshotTimer.Elapsed += SnapshotTimer_Elapsed;
         }
+
+        private void InitOutputDirectories()
+        {
+            Directory.CreateDirectory(outputBase);
+            Directory.CreateDirectory(SnapshotDirectory);
+        }
+
 
         private void SnapshotTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
@@ -141,13 +155,7 @@ namespace GemiCrawler
         private void CloseLogs()
         {
             errorOut.Close();
-            logOut.Close();
-        }
-
-        private void LogPage(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
-        {
-            var msg = $"{resp.StatusCode}\t{resp.MimeType}\t{url}\t{resp.BodySize}\t{resp.ConnectTime}\t{resp.DownloadTime}\t{foundLinks.Count}";
-            logOut.WriteLine(msg);
+            metaStore.Close();
         }
 
         #endregion
@@ -256,24 +264,12 @@ namespace GemiCrawler
                     var foundLinks = LinkFinder.ExtractUrls(url, resp);
 
                     ProcessProspectiveUrls(foundLinks);
-                    StoreStatsAndDocument(url, resp, foundLinks);
+                    metaStore.StoreMetaData(url, resp, foundLinks);
+                    docStore.StoreDocument(url, resp);
                 }
             }
             //note the work is complete
             workInFlight.Decrement();
-        }
-
-        /// <summary>
-        /// Saves stats and documents or content about this result
-        /// for later processing...
-        /// </summary>
-        private void StoreStatsAndDocument(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
-        {
-            LogPage(url, resp, foundLinks);
-            if (!crawlStore.Store(url, resp))
-            {
-                LogWarn($"Could not save document for '{url}' to disk");
-            }
         }
 
         protected override string GetStatusMesssage()
