@@ -5,7 +5,7 @@ using Gemi.Net;
 using GemiCrawler.Utils;
 using GemiCrawler.RobotsTxt;
 
-namespace GemiCrawler
+namespace GemiCrawler.Support
 {
 
     /// <summary>

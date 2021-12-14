@@ -20,6 +20,7 @@
     <None Remove="Microsoft.EntityFrameworkCore" />
     <None Remove="Microsoft.EntityFrameworkCore.Design" />
     <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
+    <None Remove="Support\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
@@ -27,6 +28,7 @@
     <Folder Include="UrlFrontiers\" />
     <Folder Include="RobotsTxt\" />
     <Folder Include="DataStore\" />
+    <Folder Include="Support\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HashDepot" Version="2.0.3" />
