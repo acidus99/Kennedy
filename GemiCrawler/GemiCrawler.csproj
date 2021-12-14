@@ -21,14 +21,16 @@
     <None Remove="Microsoft.EntityFrameworkCore.Design" />
     <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
     <None Remove="Support\" />
+    <None Remove="DocumentStore\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
     <Folder Include="Utils\" />
     <Folder Include="UrlFrontiers\" />
     <Folder Include="RobotsTxt\" />
-    <Folder Include="DataStore\" />
+    <Folder Include="MetaStore\" />
     <Folder Include="Support\" />
+    <Folder Include="DocumentStore\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HashDepot" Version="2.0.3" />

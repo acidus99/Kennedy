@@ -8,7 +8,9 @@ using GemiCrawler.Modules;
 using GemiCrawler.Utils;
 using GemiCrawler.UrlFrontiers;
 using System.Timers;
-using GemiCrawler.DataStore;
+using GemiCrawler.MetaStore;
+using GemiCrawler.DocumentStore;
+
 
 namespace GemiCrawler
 {
@@ -33,7 +35,7 @@ namespace GemiCrawler
         ThreadSafeCounter totalUrlsRequested;
 
         BalancedUrlFrontier urlFrontier;
-        CrawlStore crawlStore;
+        DbStorage crawlStore;
 
         ThreadSafeCounter workInFlight;
 
@@ -68,7 +70,7 @@ namespace GemiCrawler
 
             Directory.CreateDirectory(outputBase);
             Directory.CreateDirectory(SnapshotDirectory);
-            crawlStore = new CrawlStore(outputBase);
+            crawlStore = new DbStorage(outputBase);
             errorOut = new ThreadedFileWriter(outputBase + "errors.txt", 1);
             logOut = new ThreadedFileWriter(outputBase + "log-responses.tsv", 20);
 

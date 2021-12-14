@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Gemi.Net;
 
 
-namespace GemiCrawler.DataStore
+namespace GemiCrawler.MetaStore
 {
     [Table("StoreResponse")]
     public class StoredResponse

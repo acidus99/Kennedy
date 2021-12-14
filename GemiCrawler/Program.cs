@@ -1,6 +1,5 @@
 ﻿using System;
 using Gemi.Net;
-using GemiCrawler.DataStore;
 
 namespace GemiCrawler
 {

@@ -7,7 +7,7 @@ using GemiCrawler.Utils;
 
 using GemiCrawler.Modules;
 
-namespace GemiCrawler.DataStore
+namespace GemiCrawler.DocumentStore
 {
     public class DocumentStore : AbstractModule
     {
@@ -74,8 +74,6 @@ namespace GemiCrawler.DataStore
         {
             if (resp.IsSuccess & resp.HasBody)
             {
-                
-
                 var dir = GetStorageDirectory(url);
                 var file = GetStorageFilename(url);
                 var path = dir + file;

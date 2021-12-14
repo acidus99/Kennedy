@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
 
-namespace GemiCrawler.DataStore
+namespace GemiCrawler.MetaStore
 {
     public class CrawlDbContext : DbContext
     {

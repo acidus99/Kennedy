@@ -2,16 +2,16 @@
 using Gemi.Net;
 using GemiCrawler.Modules;
 
-namespace GemiCrawler.DataStore
+namespace GemiCrawler.MetaStore
 {
-    public class CrawlStore : AbstractModule, IDataStore
+    public class DbStorage : AbstractModule
     {
         string StoragePath;
         CrawlDbContext db;
         object locker;
 
 
-        public CrawlStore(string storagePath)
+        public DbStorage(string storagePath)
             :base("DB-STORE")
         {
             StoragePath = storagePath;
