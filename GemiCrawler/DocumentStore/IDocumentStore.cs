@@ -10,6 +10,6 @@ namespace GemiCrawler.DocumentStore
         /// <summary>
         /// Returns the key used to store the resp
         /// </summary>
-        string Store(GemiUrl url, GemiResponse resp);
+        string StoreDocument(GemiUrl url, GemiResponse resp);
     }
 }

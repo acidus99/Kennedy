@@ -1,10 +1,12 @@
 ﻿using System;
 using Gemi.Net;
 using GemiCrawler.Modules;
+using GemiCrawler.MetaStore.Db;
+using System.Collections.Generic;
 
 namespace GemiCrawler.MetaStore
 {
-    public class DbStorage : AbstractModule
+    public class DbStorage : IMetaStore
     {
         string StoragePath;
         CrawlDbContext db;
@@ -12,16 +14,14 @@ namespace GemiCrawler.MetaStore
 
 
         public DbStorage(string storagePath)
-            :base("DB-STORE")
         {
             StoragePath = storagePath;
             db = new CrawlDbContext(storagePath);
             locker = new object();
         }
 
-        public bool Store(GemiUrl url, GemiResponse resp)
+        public void StoreMetaData(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
         {
-            
             var storedResp = new StoredResponse
             {
                 Url = resp.RequestUrl.NormalizedUrl,
@@ -31,7 +31,6 @@ namespace GemiCrawler.MetaStore
                 ConnectStatus = resp.ConnectStatus,
                 MetaLine = resp.ResponseLine,
                 BodySize = resp.BodySize,
-                BodyBytes = resp.BodyBytes,
 
                 ConnectTime = resp.ConnectTime,
                 DownloadTime = resp.DownloadTime,
@@ -45,8 +44,5 @@ namespace GemiCrawler.MetaStore
             }
             return true;
         }
-
-        protected override string GetStatusMesssage()
-            => $"Successully Stored: {processedCounter.Count}";
     }
 }

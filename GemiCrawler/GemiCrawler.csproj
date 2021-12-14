@@ -22,6 +22,7 @@
     <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
     <None Remove="Support\" />
     <None Remove="DocumentStore\" />
+    <None Remove="MetaStore\Db\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
@@ -31,6 +32,7 @@
     <Folder Include="MetaStore\" />
     <Folder Include="Support\" />
     <Folder Include="DocumentStore\" />
+    <Folder Include="MetaStore\Db\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HashDepot" Version="2.0.3" />
