@@ -7,7 +7,7 @@ using GemiCrawler.Utils;
 
 using GemiCrawler.Modules;
 
-namespace GemiCrawler
+namespace GemiCrawler.DataStore
 {
     public class DocumentStore : AbstractModule
     {

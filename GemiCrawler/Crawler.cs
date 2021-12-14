@@ -8,6 +8,7 @@ using GemiCrawler.Modules;
 using GemiCrawler.Utils;
 using GemiCrawler.UrlFrontiers;
 using System.Timers;
+using GemiCrawler.DataStore;
 
 namespace GemiCrawler
 {
@@ -32,7 +33,7 @@ namespace GemiCrawler
         ThreadSafeCounter totalUrlsRequested;
 
         BalancedUrlFrontier urlFrontier;
-        DocumentStore docStore;
+        CrawlStore crawlStore;
 
         ThreadSafeCounter workInFlight;
 
@@ -67,7 +68,7 @@ namespace GemiCrawler
 
             Directory.CreateDirectory(outputBase);
             Directory.CreateDirectory(SnapshotDirectory);
-            docStore = new DocumentStore(outputBase + "page-store/");
+            crawlStore = new CrawlStore(outputBase);
             errorOut = new ThreadedFileWriter(outputBase + "errors.txt", 1);
             logOut = new ThreadedFileWriter(outputBase + "log-responses.tsv", 20);
 
@@ -82,7 +83,7 @@ namespace GemiCrawler
             SetupStatusLog(seenContentModule, "seen-content");
             SetupStatusLog(robotsModule, "robots-filter");
             SetupStatusLog(excludedUrlModule, "url-filter");
-            SetupStatusLog(docStore, "doc-store");
+            SetupStatusLog(crawlStore, "crawl-store");
             SetupStatusLog(this, "crawler");
 
             statusTimer = new System.Timers.Timer(StatusIntervalDisk)
@@ -267,7 +268,7 @@ namespace GemiCrawler
         private void StoreStatsAndDocument(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
         {
             LogPage(url, resp, foundLinks);
-            if (!docStore.Store(url, resp))
+            if (!crawlStore.Store(url, resp))
             {
                 LogWarn($"Could not save document for '{url}' to disk");
             }

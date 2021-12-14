@@ -10,7 +10,5 @@ namespace GemiCrawler.DataStore
     public interface IDataStore
     {
         bool Store(GemiUrl url, GemiResponse resp);
-
-        void OutputStatus(string outputFile);
     }
 }
