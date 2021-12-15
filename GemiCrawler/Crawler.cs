@@ -42,6 +42,7 @@ namespace GemiCrawler
         SeenContentModule seenContentModule;
         RobotsFilterModule robotsModule;
         ExcludedUrlModule excludedUrlModule;
+        DomainLimiterModule domainLimiter;
 
         IMetaStore metaStore;
         IDocumentStore docStore;
@@ -84,12 +85,14 @@ namespace GemiCrawler
             seenContentModule = new SeenContentModule();
             robotsModule = new RobotsFilterModule($"/{Crawler.DataDirectory}/robots/");
             excludedUrlModule = new ExcludedUrlModule($"/{Crawler.DataDirectory}/block-list.txt");
+            domainLimiter = new DomainLimiterModule();
 
             SetupStatusLog(urlFrontier, "url-frontier");
             SetupStatusLog(seenUrlModule, "seen-urls");
             SetupStatusLog(seenContentModule, "seen-content");
             SetupStatusLog(robotsModule, "robots-filter");
             SetupStatusLog(excludedUrlModule, "url-filter");
+            SetupStatusLog(excludedUrlModule, "domain-limiter");
             SetupStatusLog(this, "crawler");
 
 
