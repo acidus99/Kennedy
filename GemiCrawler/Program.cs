@@ -17,7 +17,7 @@ namespace GemiCrawler
             //var url = "gemini://marginalia.nu:1965/log";
 
 
-            var crawler = new Crawler(80,300000);
+            var crawler = new Crawler(120,500000);
 
             crawler.AddSeed(url);
             crawler.AddSeed("gemini://geminispace.info/known-hosts");
