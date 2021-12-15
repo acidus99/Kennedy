@@ -10,7 +10,7 @@ using GemiCrawler.Utils;
 
 namespace GemiCrawler.Modules
 {
-    public class RobotsFilterModule : AbstractModule
+    public class RobotsFilterModule : AbstractUrlModule
     {
 
         Dictionary<string, Robots> rulesCache;
@@ -26,7 +26,7 @@ namespace GemiCrawler.Modules
             rejectedCounter = new ThreadSafeCounter();
         }
         
-        public bool IsUrlAllowed(GemiUrl url)
+        public override bool IsUrlAllowed(GemiUrl url)
         {
             if (!rulesCache.ContainsKey(url.Authority))
             {

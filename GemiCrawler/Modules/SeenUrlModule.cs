@@ -6,7 +6,7 @@ using GemiCrawler.Utils;
 
 namespace GemiCrawler.Modules
 {
-    public class SeenUrlModule : AbstractModule
+    public class SeenUrlModule : AbstractUrlModule
     {
         /// <summary>
         /// Lookup table of URLs we have seen before
@@ -25,24 +25,24 @@ namespace GemiCrawler.Modules
         }
 
         /// <summary>
-        /// Checks if we a URL has been seen before. If not, it also adds it to our list
+        /// checks if we have not seen a URL before
         /// </summary>
         /// <param name="url"></param>
-        /// <returns>the URL has been seen before<returns>
-        public bool CheckAndRecord(GemiUrl url)
+        /// <returns>URL has not been seen before during this crawl</returns>
+        public override bool IsUrlAllowed(GemiUrl url)
         {
             var normalizedUrl = url.NormalizedUrl;
             processedCounter.Increment();
-            lock(locker)
+            lock (locker)
             {
-                if(!SeenUrls.ContainsKey(normalizedUrl))
+                if (!SeenUrls.ContainsKey(normalizedUrl))
                 {
                     SeenUrls[normalizedUrl] = true;
-                    return false;
+                    return true;
                 }
             }
             seenCounter.Increment();
-            return true;
+            return false;
         }
 
         protected override string GetStatusMesssage()

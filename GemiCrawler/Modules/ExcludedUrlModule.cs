@@ -6,7 +6,7 @@ using System.IO;
 
 namespace GemiCrawler.Modules
 {
-    public class ExcludedUrlModule : AbstractModule
+    public class ExcludedUrlModule : AbstractUrlModule
     {
         /// <summary>
         /// table to URLs prefixes to exclide, sorted by URL authority
@@ -36,11 +36,11 @@ namespace GemiCrawler.Modules
         }
 
         /// <summary>
-        /// Checks if we a URL has been seen before. If not, it also adds it to our list
+        /// Checks a URL against a list of deny patterns
         /// </summary>
         /// <param name="url"></param>
-        /// <returns>the URL has been seen before<returns>
-        public bool IsUrlAllowed(GemiUrl url)
+        /// <returns>Is this URL not blocked by a deny pattern<returns>
+        public override bool IsUrlAllowed(GemiUrl url)
         {
             processedCounter.Increment();
             if(!excludedUrls.ContainsKey(url.Authority))
@@ -48,7 +48,7 @@ namespace GemiCrawler.Modules
                 return true;
             }
             var normalized = url.NormalizedUrl;
-            foreach( string urlPrefix in excludedUrls[url.Authority])
+            foreach(string urlPrefix in excludedUrls[url.Authority])
             {
                 if(normalized.StartsWith(urlPrefix))
                 {

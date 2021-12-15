@@ -10,6 +10,7 @@ using GemiCrawler.UrlFrontiers;
 using System.Timers;
 using GemiCrawler.MetaStore;
 using GemiCrawler.DocumentStore;
+using System.Linq;
 
 
 namespace GemiCrawler
@@ -48,6 +49,7 @@ namespace GemiCrawler
         IDocumentStore docStore;
 
         List<AbstractModule> Modules;
+        List<AbstractUrlModule> UrlModeles;
 
         Stopwatch crawlStopwatch;
 
@@ -92,9 +94,10 @@ namespace GemiCrawler
             SetupStatusLog(seenContentModule, "seen-content");
             SetupStatusLog(robotsModule, "robots-filter");
             SetupStatusLog(excludedUrlModule, "url-filter");
-            SetupStatusLog(excludedUrlModule, "domain-limiter");
+            SetupStatusLog(domainLimiter, "domain-limiter");
             SetupStatusLog(this, "crawler");
 
+            UrlModeles = new List<AbstractUrlModule>(Modules.Where(x => x is AbstractUrlModule).Select(x => (AbstractUrlModule)x).ToList());
 
             //Init Timers
 
@@ -118,7 +121,6 @@ namespace GemiCrawler
             Directory.CreateDirectory(outputBase);
             Directory.CreateDirectory(SnapshotDirectory);
         }
-
 
         private void SnapshotTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
@@ -212,21 +214,14 @@ namespace GemiCrawler
 
         private void ProcessProspectiveUrl(GemiUrl url)
         {
-            //Modules that process URLs
-            if(!robotsModule.IsUrlAllowed(url))
+            foreach(var urlModule in UrlModeles)
             {
-                return;
+                if(!urlModule.IsUrlAllowed(url))
+                {
+                    return;
+                }
             }
-
-            if(!excludedUrlModule.IsUrlAllowed(url))
-            {
-                return;
-            }
-
-            if(!seenUrlModule.CheckAndRecord(url))
-            {
-                urlFrontier.AddUrl(url);
-            }
+            urlFrontier.AddUrl(url);
         }
 
         private void ProcessProspectiveUrls(List<GemiUrl> urls)
