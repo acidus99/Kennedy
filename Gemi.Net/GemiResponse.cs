@@ -14,6 +14,8 @@ namespace Gemi.Net
 
         public ConnectStatus ConnectStatus { get; internal set; }
 
+        public bool BodySkipped { get; internal set; }
+
         public byte[] BodyBytes { get; private set; }
 
         public string BodyText { get; private set; }
@@ -70,6 +72,7 @@ namespace Gemi.Net
             MimeType = "";
             ConnectTime = 0;
             DownloadTime = 0;
+            BodySkipped = false;
         }
 
 

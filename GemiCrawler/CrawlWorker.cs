@@ -33,7 +33,12 @@ namespace GemiCrawler
         {
             GemiUrl url = null;
 
-            GemiRequestor requestor = new GemiRequestor();
+            GemiRequestor requestor = new GemiRequestor
+            {
+                OnlyDownloadText = true,
+                AbortTimeout = 45000,
+                MaxResponseSize = 1024 * 10124,
+            };
 
             do
             {
