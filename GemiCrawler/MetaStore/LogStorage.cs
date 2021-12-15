@@ -24,7 +24,7 @@ namespace GemiCrawler.MetaStore
 
         public void StoreMetaData(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
         {
-            var msg = $"{resp.StatusCode}\t{resp.MimeType}\t{url}\t{resp.BodySize}\t{resp.ConnectTime}\t{resp.DownloadTime}\t{foundLinks.Count}";
+            var msg = $"{resp.StatusCode}\t{resp.MimeType}\t{url}\t{resp.BodySize}\t{resp.ConnectTime}\t{resp.DownloadTime}\t{foundLinks.Count}\t{resp.BodySkipped}";
             logOut.WriteLine(msg);
         }
     }
