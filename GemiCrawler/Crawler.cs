@@ -27,7 +27,7 @@ namespace GemiCrawler
 
         int crawlerThreadCount;
 
-        ThreadedFileWriter errorOut;
+        ErrorLog errorLog;
 
         int stopAfterUrlCount { get; set; }
 
@@ -76,7 +76,7 @@ namespace GemiCrawler
             docStore = new DocStore(outputBase + "page-store/");
 
             //init errorlog
-            errorOut = new ThreadedFileWriter(outputBase + "errors.txt", 1);
+            errorLog = new ErrorLog(outputBase);
 
             Modules = new List<AbstractModule>();
 
@@ -138,27 +138,11 @@ namespace GemiCrawler
             Modules.Add(module);
         }
 
-        #region Log Stuff
-
-        private void LogError(Exception ex, GemiUrl url)
+        private void FinalizeCrawl()
         {
-            var msg = $"EXCEPTION {ex.Message} on '{url}'";
-            errorOut.WriteLine($"{DateTime.Now}\t{msg}");
-        }
-
-        private void LogWarn(string what)
-        {
-            var msg = $"WARNING! {what}";
-            errorOut.WriteLine($"{DateTime.Now}\t{msg}");
-        }
-
-        private void CloseLogs()
-        {
-            errorOut.Close();
+            errorLog.Close();
             metaStore.Close();
         }
-
-        #endregion
 
         private void SpawnWorker(int workerNum)
         {
@@ -200,8 +184,7 @@ namespace GemiCrawler
             crawlStopwatch.Stop();
 
             Console.WriteLine($"Complete! {crawlStopwatch.Elapsed.TotalSeconds}");
-            CloseLogs();
-            int x = 4;
+            FinalizeCrawl();
         }
 
         public GemiUrl GetNextUrl(int crawlerID = 0)
@@ -250,11 +233,10 @@ namespace GemiCrawler
 
         public void ProcessResult(GemiUrl url, GemiResponse resp, Exception ex)
         {
-
             processedCounter.Increment();
             if (resp.ConnectStatus != ConnectStatus.Success)
             {
-                LogError(ex, url);
+                errorLog.LogError(ex, url.NormalizedUrl);
             }
             else if (resp != null)
             {
