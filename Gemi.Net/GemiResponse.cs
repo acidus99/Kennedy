@@ -75,7 +75,6 @@ namespace Gemi.Net
             BodySkipped = false;
         }
 
-
         public GemiResponse(GemiUrl url, string responseLine)
         {
             RequestUrl = url;
