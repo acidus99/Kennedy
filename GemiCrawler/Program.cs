@@ -7,21 +7,12 @@ namespace GemiCrawler
     {
         static void Main(string[] args)
         {
-
-            //var url = "gemini://billy.flounder.online/tech-links.gmi";
-            //var url = "gemini://mozz.us/jetforce/logo.jpg";
-            //var url = "gemini://gemini.circumlunar.space/docs/faq.gmi";
-            //var url = "gemini://capsule.ghislainmary.fr/photo/";
-            //var url = "gemini://billy.flounder.online/index.gmi";
-            var url = "gemini://mozz.us/";
-            //var url = "gemini://marginalia.nu:1965/log";
-
-
             var crawler = new Crawler(120,500000);
 
-            crawler.AddSeed(url);
+            crawler.AddSeed("gemini://tlgs.one/known-hosts");
+            crawler.AddSeed("gemini://gemini.bortzmeyer.org/software/lupa/lupa-capsules.gmi");
             crawler.AddSeed("gemini://geminispace.info/known-hosts");
-        
+
             crawler.DoCrawl();
 
             return;
