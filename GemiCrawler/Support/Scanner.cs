@@ -21,8 +21,6 @@ namespace GemiCrawler.Support
             ThreadSafeCounter counter = new ThreadSafeCounter();
             ThreadedFileWriter logOut = new ThreadedFileWriter("/Users/billy/Code/gemini-play/capture-log.tsv", 1);
 
-
-
             string[] hosts = File.ReadAllLines(targets);
 
             int total = hosts.Length;
