@@ -22,9 +22,9 @@ namespace GemiCrawler.MetaStore
             logOut.Close();
         }
 
-        public void StoreMetaData(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
+        public void StoreMetaData(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks, string storageKey)
         {
-            var msg = $"{resp.StatusCode}\t{resp.MimeType}\t{url}\t{resp.BodySize}\t{resp.ConnectTime}\t{resp.DownloadTime}\t{foundLinks.Count}\t{resp.BodySkipped}";
+            var msg = $"{resp.StatusCode}\t{resp.MimeType}\t{url}\t{resp.BodySize}\t{resp.ConnectTime}\t{resp.DownloadTime}\t{foundLinks.Count}\t{resp.BodySkipped}\t{storageKey}";
             logOut.WriteLine(msg);
         }
     }

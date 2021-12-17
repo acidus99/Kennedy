@@ -35,6 +35,8 @@ namespace GemiCrawler.MetaStore.Db
 
         public int BodySize { get; set; }
 
+        public string StorageKey { get; set; }
+
         /// <summary>
         /// Latency of the request/resp, in ms
         /// </summary>

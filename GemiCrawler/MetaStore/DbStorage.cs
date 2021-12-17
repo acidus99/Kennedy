@@ -23,7 +23,7 @@ namespace GemiCrawler.MetaStore
             //nop
         }
 
-        public void StoreMetaData(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
+        public void StoreMetaData(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks, string storageKey)
         {
             var storedResp = new StoredResponse
             {
