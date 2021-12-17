@@ -26,6 +26,10 @@ namespace GemiCrawler.Modules
         {
             foreach(string line in File.ReadAllLines(dataFile))
             {
+                if(line.StartsWith("#"))
+                {
+                    continue;
+                }
                 GemiUrl url = new GemiUrl(line);
                 if(!excludedUrls.ContainsKey(url.Authority))
                 {
