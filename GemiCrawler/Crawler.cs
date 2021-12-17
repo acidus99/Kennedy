@@ -47,6 +47,7 @@ namespace GemiCrawler
 
         IMetaStore metaStore;
         IDocumentStore docStore;
+        LinkStorage linkStore;
 
         List<AbstractModule> Modules;
         List<AbstractUrlModule> UrlModeles;
@@ -77,6 +78,7 @@ namespace GemiCrawler
             // init modules
             metaStore = new LogStorage(outputBase);
             docStore = new DocStore(outputBase + "page-store/");
+            linkStore = new LinkStorage(outputBase);
 
             //init errorlog
             errorLog = new ErrorLog(outputBase);
@@ -242,10 +244,10 @@ namespace GemiCrawler
                 if (!seenContentModule.CheckAndRecord(resp))
                 {
                     var foundLinks = LinkFinder.ExtractUrls(url, resp);
-
                     ProcessProspectiveUrls(foundLinks);
-                    metaStore.StoreMetaData(url, resp, foundLinks);
-                    docStore.StoreDocument(url, resp);
+                    var storeKey = docStore.StoreDocument(url, resp);
+                    metaStore.StoreMetaData(url, resp, foundLinks, storeKey);
+                    linkStore.StoreLinks(url, foundLinks);
                 }
             }
             //note the work is complete
