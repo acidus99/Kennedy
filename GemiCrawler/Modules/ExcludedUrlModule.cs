@@ -24,9 +24,10 @@ namespace GemiCrawler.Modules
 
         private void LoadExclusions(string dataFile)
         {
-            foreach(string line in File.ReadAllLines(dataFile))
+            foreach(string l in File.ReadAllLines(dataFile))
             {
-                if(line.StartsWith("#"))
+                var line = l.Trim();
+                if(line.Length < 1 || line[0] == '#')
                 {
                     continue;
                 }
