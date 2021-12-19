@@ -149,6 +149,7 @@ namespace GemiCrawler
         {
             errorLog.Close();
             metaStore.Close();
+            linkStore.Close();
         }
 
         private void SpawnWorker(int workerNum)

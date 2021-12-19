@@ -15,7 +15,7 @@ namespace GemiCrawler.MetaStore
 
         public LinkStorage(string outputDir)
         {
-            logOut = new ThreadedFileWriter(outputDir + "log-links.tsv", 20);
+            logOut = new ThreadedFileWriter(outputDir + "log-links.tsv", 200);
         }
 
         public void Close()
@@ -23,7 +23,7 @@ namespace GemiCrawler.MetaStore
             logOut.Close();
         }
 
-        public void StoreMetaData(GemiUrl sourcePage, List<GemiUrl> links)
+        public void StoreLinks(GemiUrl sourcePage, List<GemiUrl> links)
         {
             foreach(var link in links)
             {
