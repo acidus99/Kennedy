@@ -9,8 +9,31 @@ namespace GemiCrawler.MetaStore.Db
     [Table("StoreResponse")]
     public class StoredResponse
     {
+        /// <summary>
+        /// Just the autoincrement ID. not actually used by use
+        /// </summary>
         [Key]
-        public int Id { get; set; }
+        public int Rowid { get; set; }
+
+
+        /// <summary>
+        /// the actual unique ID for a document/URL. We are using ulong
+        /// since we are hashing our
+        /// </summary>
+        [NotMapped]
+        public ulong DocID { get; set; }
+
+
+        /// <summary>
+        /// the ID we are using in the DB for the DocID. DocID is a ulong,
+        /// but Sqlite3 doesn't support UInt64s, so we use a Int64 here and doing
+        /// some unchecked casting with overflow to handle it
+        /// </summary>
+        public long DBDocID { get; set; }
+
+        public DateTime FirstSeen { get; set; }
+
+        public DateTime? LastVisit { get; set; }
 
         [MaxLength(1024)]
         [Required]
@@ -37,6 +60,8 @@ namespace GemiCrawler.MetaStore.Db
 
         public string StorageKey { get; set; }
 
+        public uint? BodyHash { get; set; }
+
         /// <summary>
         /// Latency of the request/resp, in ms
         /// </summary>
@@ -54,5 +79,10 @@ namespace GemiCrawler.MetaStore.Db
 
         #endregion
 
+        public long toLong(ulong ulongValue)
+            => unchecked((long)ulongValue);
+
+        public ulong toULong(long longValue)
+            => unchecked((ulong)longValue);
     }
 }
