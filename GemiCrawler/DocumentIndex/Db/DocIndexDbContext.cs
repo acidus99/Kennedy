@@ -5,30 +5,15 @@ using System.Linq;
 
 namespace GemiCrawler.DocumentIndex.Db
 {
-    public class DocIndexDbContext : DbContext
+    public class DocIndexDbContext : AbstractSqlLiteDbContext
     {
-        private string StorageDirectory;
 
-        public DocIndexDbContext(string storageDir = "")
-        {
-            StorageDirectory = storageDir;
-            Database.EnsureCreated();
-        }
+        public DocIndexDbContext(string storageDir)
+            :base(storageDir)
+        { }
 
-        public DbSet<StoredDocEntry> Responses { get; set; }
+        public DbSet<StoredDocEntry> DocEntries { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder options)
-        {
-            string source = $"Data Source='{StorageDirectory}doc-index.db'";
-            options.UseSqlite(source);
-        }
-
-        #region Required
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-        }
-        #endregion
-
+        protected override string DbFilename => "doc-index.db";
     }
 }
