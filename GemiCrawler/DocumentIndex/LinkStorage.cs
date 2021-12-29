@@ -2,6 +2,8 @@
 using GemiCrawler.Utils;
 using Gemi.Net;
 using System.Collections.Generic;
+using GemiCrawler.DocumentIndex.Db;
+using System.Linq;
 
 namespace GemiCrawler.DocumentIndex
 {
@@ -11,23 +13,41 @@ namespace GemiCrawler.DocumentIndex
     /// </summary>
     public class LinkStorage
     {
-        ThreadedFileWriter logOut;
+        string StoragePath;
+        LinkIndexDbContext db;
 
-        public LinkStorage(string outputDir)
+        public LinkStorage(string storagePath)
         {
-            logOut = new ThreadedFileWriter(outputDir + "log-links.tsv", 200);
+            StoragePath = storagePath;
+            //create and distory a DBContext to force the DB to be there
+            var db = new LinkIndexDbContext(storagePath);
+            
         }
 
         public void Close()
         {
-            logOut.Close();
+            //nop since we are not caching any writes
         }
+
+        private long toLong(ulong ulongValue)
+            => unchecked((long)ulongValue);
+
+        private ulong toULong(long longValue)
+            => unchecked((ulong)longValue);
 
         public void StoreLinks(GemiUrl sourcePage, List<GemiUrl> links)
         {
-            foreach(var link in links)
+
+            using (var db = new LinkIndexDbContext(StoragePath))
             {
-                logOut.WriteLine($"{sourcePage.NormalizedUrl}\t{link.NormalizedUrl}");
+                db.LinkEntries.AddRange(links.Distinct().Select(target => new StoredLinkEntry
+                {
+                    DBSourceDocID = toLong(sourcePage.DocID),
+                    DBTargetDocID = toLong(target.DocID),
+                    LinkText = "Some magic text!"
+                }));
+
+                db.SaveChanges();
             }
         }
     }
