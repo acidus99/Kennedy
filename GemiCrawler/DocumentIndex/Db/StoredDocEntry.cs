@@ -4,10 +4,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Gemi.Net;
 
 
-namespace GemiCrawler.MetaStore.Db
+namespace GemiCrawler.DocumentIndex.Db
 {
-    [Table("StoreResponse")]
-    public class StoredResponse
+    [Table("Documents")]
+    public class StoredDocEntry
     {
         /// <summary>
         /// Just the autoincrement ID. not actually used by use

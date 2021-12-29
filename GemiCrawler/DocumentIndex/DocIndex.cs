@@ -1,20 +1,20 @@
 ﻿using Gemi.Net;
-using GemiCrawler.MetaStore.Db;
+using GemiCrawler.DocumentIndex.Db;
 using System.Collections.Generic;
 
-namespace GemiCrawler.MetaStore
+namespace GemiCrawler.DocumentIndex
 {
-    public class DbStorage : IMetaStore
+    public class DocIndex : IMetaStore
     {
         string StoragePath;
-        CrawlDbContext db;
+        DocIndexDbContext db;
         object locker;
 
 
-        public DbStorage(string storagePath)
+        public DocIndex(string storagePath)
         {
             StoragePath = storagePath;
-            db = new CrawlDbContext(storagePath);
+            db = new DocIndexDbContext(storagePath);
             locker = new object();
         }
 
@@ -25,7 +25,7 @@ namespace GemiCrawler.MetaStore
 
         public void StoreMetaData(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks, string storageKey)
         {
-            var storedResp = new StoredResponse
+            var storedResp = new StoredDocEntry
             {
                 Url = resp.RequestUrl.NormalizedUrl,
                 Domain = resp.RequestUrl.Hostname,

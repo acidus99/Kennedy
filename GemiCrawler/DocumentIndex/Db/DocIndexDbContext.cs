@@ -3,19 +3,19 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
 
-namespace GemiCrawler.MetaStore.Db
+namespace GemiCrawler.DocumentIndex.Db
 {
-    public class CrawlDbContext : DbContext
+    public class DocIndexDbContext : DbContext
     {
         private string StorageDirectory;
 
-        public CrawlDbContext(string storageDir = "")
+        public DocIndexDbContext(string storageDir = "")
         {
             StorageDirectory = storageDir;
             Database.EnsureCreated();
         }
 
-        public DbSet<StoredResponse> Responses { get; set; }
+        public DbSet<StoredDocEntry> Responses { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Gemi.Net;
 using System.Collections.Generic;
-namespace GemiCrawler.MetaStore
+namespace GemiCrawler.DocumentIndex
 {
     /// <summary>
     /// Generic interface for storing meta data about requests/responses

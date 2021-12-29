@@ -29,10 +29,10 @@
     <Folder Include="Utils\" />
     <Folder Include="UrlFrontiers\" />
     <Folder Include="RobotsTxt\" />
-    <Folder Include="MetaStore\" />
+    <Folder Include="DocumentIndex\" />
     <Folder Include="Support\" />
     <Folder Include="DocumentStore\" />
-    <Folder Include="MetaStore\Db\" />
+    <Folder Include="DocumentIndex\Db\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HashDepot" Version="2.0.3" />

@@ -3,7 +3,7 @@ using GemiCrawler.Utils;
 using Gemi.Net;
 using System.Collections.Generic;
 
-namespace GemiCrawler.MetaStore
+namespace GemiCrawler.DocumentIndex
 {
 
     /// <summary>

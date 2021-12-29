@@ -8,7 +8,7 @@ using GemiCrawler.Modules;
 using GemiCrawler.Utils;
 using GemiCrawler.UrlFrontiers;
 using System.Timers;
-using GemiCrawler.MetaStore;
+using GemiCrawler.DocumentIndex;
 using GemiCrawler.DocumentStore;
 using System.Linq;
 
