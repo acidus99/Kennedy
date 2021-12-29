@@ -76,7 +76,7 @@ namespace GemiCrawler
             crawlStopwatch = new Stopwatch();
 
             // init modules
-            metaStore = new LogStorage(outputBase);
+            metaStore = new DocIndex(Crawler.DataDirectory);
             docStore = new DocStore(outputBase + "page-store/");
             linkStore = new LinkStorage(outputBase);
 
