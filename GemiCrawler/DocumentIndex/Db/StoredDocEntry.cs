@@ -10,25 +10,18 @@ namespace GemiCrawler.DocumentIndex.Db
     public class StoredDocEntry
     {
         /// <summary>
-        /// Just the autoincrement ID. not actually used by use
-        /// </summary>
-        [Key]
-        public int Rowid { get; set; }
-
-
-        /// <summary>
         /// the actual unique ID for a document/URL. We are using ulong
         /// since we are hashing our
         /// </summary>
         [NotMapped]
         public ulong DocID { get; set; }
 
-
         /// <summary>
         /// the ID we are using in the DB for the DocID. DocID is a ulong,
         /// but Sqlite3 doesn't support UInt64s, so we use a Int64 here and doing
         /// some unchecked casting with overflow to handle it
         /// </summary>
+        [Key]
         public long DBDocID { get; set; }
 
         public DateTime FirstSeen { get; set; }
@@ -78,11 +71,5 @@ namespace GemiCrawler.DocumentIndex.Db
         public string Language { get; set; }
 
         #endregion
-
-        public long toLong(ulong ulongValue)
-            => unchecked((long)ulongValue);
-
-        public ulong toULong(long longValue)
-            => unchecked((ulong)longValue);
     }
 }
