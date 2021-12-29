@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using HashDepot;
 
 namespace Gemi.Net
 {
@@ -17,6 +18,9 @@ namespace Gemi.Net
         public bool BodySkipped { get; internal set; }
 
         public byte[] BodyBytes { get; private set; }
+
+        public uint BodyHash
+            => (HasBody) ? XXHash.Hash32(BodyBytes) : 0;
 
         public string BodyText { get; private set; }
 

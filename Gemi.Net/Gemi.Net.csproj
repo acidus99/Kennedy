@@ -8,8 +8,12 @@
 
   <ItemGroup>
     <None Remove="Utils\" />
+    <None Remove="HashDepot" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utils\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="HashDepot" Version="2.0.3" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,7 @@
 ﻿using System;
+using HashDepot;
+using System.Text;
+
 namespace Gemi.Net
 {
     public class GemiUrl
@@ -24,6 +27,23 @@ namespace Gemi.Net
             //TODO: add URL restrictions in Gemini spec (no userinfo, etc)
         }
 
+        private ulong? docID;
+
+        /// <summary>
+        /// Get DocID from a URL. This happens by normalizing the URL and hashing it
+        /// </summary>
+        public ulong DocID
+        {
+            get
+            {
+                if (!docID.HasValue)
+                {
+                    docID = XXHash.Hash64(Encoding.UTF8.GetBytes(NormalizedUrl));
+                }
+                return docID.Value;
+            }
+        }
+
         public int Port => (_url.Port > 0) ? _url.Port : 1965;
 
         public string Authority => $"{Hostname}:{Port}";
@@ -43,7 +63,6 @@ namespace Gemi.Net
                 return (ext.Length > 1) ? ext.Substring(1) : ext;
             }
         }
-            
 
         public string NormalizedUrl
             => $"gemini://{Hostname}:{Port}{Path}";
@@ -51,6 +70,7 @@ namespace Gemi.Net
         public override string ToString()
             => NormalizedUrl;
 
+        //Handles resolving relative URLs
         public static GemiUrl MakeUrl(GemiUrl request, string foundUrl)
         {
             Uri newUrl = null;
