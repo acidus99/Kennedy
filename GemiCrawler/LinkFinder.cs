@@ -11,7 +11,7 @@ namespace GemiCrawler
     /// </summary>
     public static class LinkFinder
     {
-        static readonly Regex linkLine = new Regex(@"^=>\s([^\s]+)\s*(.*)", RegexOptions.Compiled);
+        static readonly Regex linkLine = new Regex(@"^=>\s+([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
         public static List<GemiUrl> ExtractUrls(GemiUrl request, GemiResponse resp)
         {
