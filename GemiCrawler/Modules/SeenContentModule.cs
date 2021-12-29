@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using HashDepot;
 using Gemi.Net;
 using GemiCrawler.Utils;
 
@@ -33,7 +32,7 @@ namespace GemiCrawler.Modules
             if (resp.HasBody)
             {
                 processedCounter.Increment();
-                uint hash = XXHash.Hash32(resp.BodyBytes);
+                uint hash = IDGenerator.GetBodyHash(resp);
                 lock (locker)
                 {
                     if (!seenHashes.ContainsKey(hash))
