@@ -32,7 +32,7 @@ namespace GemiCrawler.Modules
             if (resp.HasBody)
             {
                 processedCounter.Increment();
-                uint hash = IDGenerator.GetBodyHash(resp);
+                uint hash = resp.BodyHash;
                 lock (locker)
                 {
                     if (!seenHashes.ContainsKey(hash))
