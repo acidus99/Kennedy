@@ -19,7 +19,7 @@ namespace GemiCrawler.DocumentIndex.Db
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            string source = $"Data Source='{StorageDirectory}crawl.db'";
+            string source = $"Data Source='{StorageDirectory}doc-index.db'";
             options.UseSqlite(source);
         }
 
