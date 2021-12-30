@@ -7,10 +7,10 @@ using System.Diagnostics;
 using GemiCrawler.Modules;
 using GemiCrawler.Utils;
 using GemiCrawler.UrlFrontiers;
-using System.Timers;
 using GemiCrawler.DocumentIndex;
 using GemiCrawler.DocumentStore;
 using System.Linq;
+using System.Timers;
 
 
 namespace GemiCrawler
@@ -35,7 +35,6 @@ namespace GemiCrawler
         ThreadSafeCounter totalUrlsRequested;
 
         BalancedUrlFrontier urlFrontier;
-        
 
         ThreadSafeCounter workInFlight;
 
@@ -45,9 +44,8 @@ namespace GemiCrawler
         ExcludedUrlModule excludedUrlModule;
         DomainLimiterModule domainLimiter;
 
-        IMetaStore metaStore;
+        DocIndex docIndex;
         IDocumentStore docStore;
-        LinkStorage linkStore;
 
         List<AbstractModule> Modules;
         List<AbstractUrlModule> UrlModeles;
@@ -75,10 +73,9 @@ namespace GemiCrawler
             totalUrlsRequested = new ThreadSafeCounter();
             crawlStopwatch = new Stopwatch();
 
-            // init modules
-            metaStore = new DocIndex(Crawler.DataDirectory);
+            // init document repository and data bases
+            docIndex = new DocIndex(Crawler.DataDirectory);
             docStore = new DocStore(outputBase + "page-store/");
-            linkStore = new LinkStorage(outputBase);
 
             //init errorlog
             errorLog = new ErrorLog(outputBase);
@@ -133,7 +130,7 @@ namespace GemiCrawler
 
         private void StatusTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            foreach(var module in Modules)
+            foreach (var module in Modules)
             {
                 module.OutputStatus();
             }
@@ -148,8 +145,7 @@ namespace GemiCrawler
         private void FinalizeCrawl()
         {
             errorLog.Close();
-            metaStore.Close();
-            linkStore.Close();
+            docIndex.Close();
         }
 
         private void SpawnWorker(int workerNum)
@@ -182,7 +178,7 @@ namespace GemiCrawler
             do
             {
                 Thread.Sleep(StatusIntervalScreen);
-                
+
                 int currRequested = totalUrlsRequested.Count;
                 string speed = ComputeSpeed((double)currRequested, (double)prevRequested, (double)StatusIntervalScreen);
                 Console.WriteLine($"Elapsed: {crawlStopwatch.Elapsed}\tSpeed: {speed}\tTotal Requested: {currRequested}\tTotal Processed: {processedCounter.Count}");
@@ -197,7 +193,7 @@ namespace GemiCrawler
 
         public GemiUrl GetNextUrl(int crawlerID = 0)
         {
-            if(HitUrlLimit)
+            if (HitUrlLimit)
             {
                 return null;
             }
@@ -207,7 +203,7 @@ namespace GemiCrawler
             {
                 workInFlight.Increment();
                 totalUrlsRequested.Increment();
-                
+
             }
             return url;
         }
@@ -217,9 +213,9 @@ namespace GemiCrawler
 
         private void ProcessProspectiveUrl(GemiUrl url)
         {
-            foreach(var urlModule in UrlModeles)
+            foreach (var urlModule in UrlModeles)
             {
-                if(!urlModule.IsUrlAllowed(url))
+                if (!urlModule.IsUrlAllowed(url))
                 {
                     return;
                 }
@@ -246,9 +242,9 @@ namespace GemiCrawler
                 {
                     var foundLinks = LinkFinder.ExtractUrls(url, resp);
                     ProcessProspectiveUrls(foundLinks);
-                    var storeKey = docStore.StoreDocument(url, resp);
-                    metaStore.StoreMetaData(url, resp, foundLinks, storeKey);
-                    linkStore.StoreLinks(url, foundLinks);
+                    docIndex.StoreMetaData(url, resp, foundLinks);
+                    docIndex.StoreLinks(url, foundLinks);
+                    docStore.StoreDocument(url, resp);
                 }
             }
             //note the work is complete
@@ -266,7 +262,8 @@ namespace GemiCrawler
         /// </summary>
         public bool HasUrlsToFetch
         {
-            get {
+            get
+            {
                 if (HitUrlLimit)
                 {
                     return false;
