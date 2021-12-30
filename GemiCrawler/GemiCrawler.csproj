@@ -12,6 +12,7 @@
     <None Remove="Microsoft.EntityFrameworkCore" />
     <None Remove="Microsoft.EntityFrameworkCore.Design" />
     <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
+    <None Remove="Links\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
@@ -22,6 +23,7 @@
     <Folder Include="Support\" />
     <Folder Include="DocumentStore\" />
     <Folder Include="DocumentIndex\Db\" />
+    <Folder Include="Links\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HashDepot" Version="2.0.3" />
