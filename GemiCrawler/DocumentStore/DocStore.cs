@@ -7,7 +7,7 @@ namespace GemiCrawler.DocumentStore
     /// <summary>
     /// Document store implemented using an Object Store, backed onto a disk
     /// </summary>
-    public class DocStore : IDocumentStore
+    public class DocStore
     {
         ObjectStore store;
 
@@ -16,11 +16,11 @@ namespace GemiCrawler.DocumentStore
             store = new ObjectStore(outputDir);
         }
 
-        public void StoreDocument(GemiUrl url, GemiResponse resp)
+        public void StoreDocument(GemiResponse resp)
         {
             if (resp.IsSuccess & resp.HasBody)
             {
-                var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(url.DocID))).ToLower();
+                var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(resp.RequestUrl.DocID))).ToLower();
                 if(!store.StoreObject(key, resp.BodyBytes))
                 {
                     throw new ApplicationException("Failed to store resp!");
