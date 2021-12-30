@@ -13,13 +13,13 @@ namespace GemiCrawler.GemText
     {
         static readonly Regex linkLine = new Regex(@"^=>\s+([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
-        public static List<FoundLink> ExtractLinks(GemiUrl request, GemiResponse resp)
+        public static List<FoundLink> ExtractLinks(GemiResponse resp)
         {
             var links = new List<FoundLink>();
 
             if(resp.IsRedirect)
             {
-                var foundLink = Create(request, resp.Meta);
+                var foundLink = Create(resp.RequestUrl, resp.Meta);
                 if(foundLink != null)
                 {
                     links.Add(foundLink);
@@ -31,7 +31,7 @@ namespace GemiCrawler.GemText
                             (from line in resp.BodyText.Split("\n")
                              let match = linkLine.Match(line)
                              where match.Success
-                             let link = Create(request, match)
+                             let link = Create(resp.RequestUrl, match)
                              where link != null
                              select link);
                 links.AddRange(foundLinks);
