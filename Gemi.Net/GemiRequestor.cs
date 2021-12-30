@@ -94,7 +94,7 @@ namespace Gemi.Net
             } catch(Exception ex)
             {
                 ret.ConnectStatus = ConnectStatus.Error;
-                ret.ErrorMessage = ex.Message;
+                ret.Meta = ex.Message;
                 LastException = ex;
             }
             return ret;

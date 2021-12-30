@@ -43,8 +43,9 @@ namespace Gemi.Net
         /// 2x = Mimetype
         /// 3x = Redirection URL
         /// 4x, 5x, or 6x = Error Message
+        /// Also gets set if we hit a connection error
         /// </summary>
-        public string Meta { get; private set; }
+        public string Meta { get; internal set; }
 
         /// <summary>
         /// Latency of the request/resp, in ms
