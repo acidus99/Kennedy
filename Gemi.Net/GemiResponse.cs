@@ -9,12 +9,18 @@ namespace Gemi.Net
 
         public GemiUrl RequestUrl { get; private set; }
 
+        /// <summary>
+        /// The full raw response line from the server. [status][0x20][meta][CR][LF]
+        /// </summary>
         public string ResponseLine { get; private set; }
 
         public int StatusCode { get; private set; }
 
         public ConnectStatus ConnectStatus { get; internal set; }
 
+        /// <summary>
+        /// Did we deliberately skip the body?
+        /// </summary>
         public bool BodySkipped { get; internal set; }
 
         public byte[] BodyBytes { get; private set; }
@@ -30,22 +36,15 @@ namespace Gemi.Net
         /// The complete MIME Type, sent by the server for 2x responses
         /// </summary>
         public string MimeType { get; private set; }
-        
-        /// <summary>
-        /// The prompt, sent by the server for 1x responses, if any
-        /// </summary>
-        public string Prompt { get; private set; }
 
         /// <summary>
-        /// The redirect URL, sent by the server for 3x responses, if any
+        /// Data about the response, whose meaning is status dependent
+        /// 1x = Prompt to display user for input
+        /// 2x = Mimetype
+        /// 3x = Redirection URL
+        /// 4x, 5x, or 6x = Error Message
         /// </summary>
-        public GemiUrl Redirect { get; private set; }
-
-
-        /// <summary>
-        /// The error message, sent by the server for 4x, 5x, or 6x responses, if any
-        /// </summary>
-        public string ErrorMessage { get; internal set; }
+        public string Meta { get; private set; }
 
         /// <summary>
         /// Latency of the request/resp, in ms
@@ -74,6 +73,7 @@ namespace Gemi.Net
             ConnectStatus = ConnectStatus.Error;
             StatusCode = 0;
             MimeType = "";
+            Meta = "";
             ConnectTime = 0;
             DownloadTime = 0;
             BodySkipped = false;
@@ -108,18 +108,10 @@ namespace Gemi.Net
 
         private void ParseMeta(string extraData)
         {
-            if(IsInput)
+            Meta = extraData;
+            if(IsSuccess)
             {
-                Prompt = extraData;
-            } else if(IsSuccess)
-            {
-                MimeType = extraData;
-            } else if(IsRedirect)
-            {
-                Redirect = GemiUrl.MakeUrl(RequestUrl, extraData);
-            } else
-            {
-                ErrorMessage = extraData;
+                MimeType = Meta;
             }
         }
 
@@ -154,7 +146,6 @@ namespace Gemi.Net
         }
 
     }
-    
 
     /// <summary>
     /// Status of the network connection made for a Gemini request.
