@@ -50,6 +50,7 @@ namespace GemiCrawler.DocumentIndex
                 Meta = resp.Meta,
 
                 MimeType = resp.MimeType,
+                BodySkipped = resp.BodySkipped,
                 BodySize = resp.BodySize,
                 BodyHash = resp.BodyHash,
 
