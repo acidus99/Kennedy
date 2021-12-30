@@ -72,6 +72,8 @@ namespace GemiCrawler.DocumentIndex.Db
 
         #region Computed Fields that make it easier to query
 
+        public string Title { get; set; }
+
         public string MimeType { get; set; }
 
         public string Language { get; set; }

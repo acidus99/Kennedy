@@ -53,6 +53,7 @@ namespace GemiCrawler.DocumentIndex
                 BodySkipped = resp.BodySkipped,
                 BodySize = resp.BodySize,
                 BodyHash = resp.BodyHash,
+                Title = TitleFinder.ExtractTitle(resp),
 
                 ConnectTime = resp.ConnectTime,
                 DownloadTime = resp.DownloadTime,
