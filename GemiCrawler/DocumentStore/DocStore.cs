@@ -16,18 +16,16 @@ namespace GemiCrawler.DocumentStore
             store = new ObjectStore(outputDir);
         }
 
-        public string StoreDocument(GemiUrl url, GemiResponse resp)
+        public void StoreDocument(GemiUrl url, GemiResponse resp)
         {
-            var key = "";
             if (resp.IsSuccess & resp.HasBody)
             {
-                key = Convert.ToHexString(MD5.HashData(resp.BodyBytes)).ToLower();
+                var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(url.DocID))).ToLower();
                 if(!store.StoreObject(key, resp.BodyBytes))
                 {
                     throw new ApplicationException("Failed to store resp!");
                 }
             }
-            return key;
         }
     }
 }

@@ -8,8 +8,8 @@ namespace GemiCrawler.DocumentStore
     public interface IDocumentStore
     {
         /// <summary>
-        /// Returns the key used to store the resp
+        /// stores the document in the respository
         /// </summary>
-        string StoreDocument(GemiUrl url, GemiResponse resp);
+        void StoreDocument(GemiUrl url, GemiResponse resp);
     }
 }
