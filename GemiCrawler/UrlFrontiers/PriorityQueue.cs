@@ -38,10 +38,16 @@ namespace GemiCrawler.UrlFrontiers
         {
             if (IsHighPriority(url))
             {
-                highQueue.Enqueue(url);
+                lock (locker)
+                {
+                    highQueue.Enqueue(url);
+                }
             } else
             {
-                lowQueue.Enqueue(url);
+                lock (locker)
+                {
+                    lowQueue.Enqueue(url);
+                }
             }
         }
 
