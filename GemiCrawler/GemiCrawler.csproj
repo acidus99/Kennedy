@@ -23,7 +23,7 @@
     <Folder Include="Support\" />
     <Folder Include="DocumentStore\" />
     <Folder Include="DocumentIndex\Db\" />
-    <Folder Include="Links\" />
+    <Folder Include="GemText\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HashDepot" Version="2.0.3" />

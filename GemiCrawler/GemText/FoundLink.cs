@@ -1,6 +1,6 @@
 ﻿using System;
 using Gemi.Net;
-namespace GemiCrawler.Links
+namespace GemiCrawler.GemText
 {
     public class FoundLink : IEquatable<FoundLink>
     {

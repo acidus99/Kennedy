@@ -9,7 +9,7 @@ using System.Threading;
 using Gemi.Net;
 using GemiCrawler.DocumentIndex;
 using GemiCrawler.DocumentStore;
-using GemiCrawler.Links;
+using GemiCrawler.GemText;
 using GemiCrawler.Modules;
 using GemiCrawler.Utils;
 using GemiCrawler.UrlFrontiers;

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Gemi.Net;
 using System.Linq;
 
-namespace GemiCrawler.Links
+namespace GemiCrawler.GemText
 {
     /// <summary>
     /// Finds hyperlinks in Gemini Text Documents
@@ -13,7 +13,7 @@ namespace GemiCrawler.Links
     {
         static readonly Regex linkLine = new Regex(@"^=>\s+([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
-        public static List<FoundLink> ExtractLinks(GemiUrl request, GemiResponse resp)
+        public static IEnumerable<FoundLink> ExtractLinks(GemiUrl request, GemiResponse resp)
         {
             var links = new List<FoundLink>();
 

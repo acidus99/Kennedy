@@ -6,7 +6,7 @@ using EFCore.BulkExtensions;
 
 using Gemi.Net;
 using GemiCrawler.DocumentIndex.Db;
-using GemiCrawler.Links;
+using GemiCrawler.GemText;
 
 namespace GemiCrawler.DocumentIndex
 {
