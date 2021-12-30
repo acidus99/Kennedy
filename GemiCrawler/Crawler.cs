@@ -1,17 +1,18 @@
 ﻿using System;
-using System.IO;
-using Gemi.Net;
 using System.Collections.Generic;
-using System.Threading;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Timers;
+using System.Threading;
+
+using Gemi.Net;
+using GemiCrawler.DocumentIndex;
+using GemiCrawler.DocumentStore;
+using GemiCrawler.Links;
 using GemiCrawler.Modules;
 using GemiCrawler.Utils;
 using GemiCrawler.UrlFrontiers;
-using GemiCrawler.DocumentIndex;
-using GemiCrawler.DocumentStore;
-using System.Linq;
-using System.Timers;
-
 
 namespace GemiCrawler
 {
@@ -223,11 +224,6 @@ namespace GemiCrawler
             urlFrontier.AddUrl(url);
         }
 
-        private void ProcessProspectiveUrls(List<GemiUrl> urls)
-        {
-            urls.ForEach(x => ProcessProspectiveUrl(x));
-        }
-
         public void ProcessResult(GemiUrl url, GemiResponse resp, Exception ex)
         {
             processedCounter.Increment();
@@ -240,9 +236,10 @@ namespace GemiCrawler
                 //Modules
                 if (!seenContentModule.CheckAndRecord(resp))
                 {
-                    var foundLinks = LinkFinder.ExtractUrls(url, resp);
-                    ProcessProspectiveUrls(foundLinks);
-                    docIndex.StoreMetaData(url, resp, foundLinks);
+                    var foundLinks = LinkFinder.ExtractLinks(url, resp);
+                    foundLinks.ForEach(x => ProcessProspectiveUrl(x.Url));
+
+                    docIndex.StoreMetaData(url, resp, foundLinks.Count);
                     docIndex.StoreLinks(url, foundLinks);
                     docStore.StoreDocument(url, resp);
                 }
