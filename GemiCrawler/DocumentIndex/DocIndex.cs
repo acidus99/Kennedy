@@ -80,7 +80,6 @@ namespace GemiCrawler.DocumentIndex
                 }).ToList());
 
                 db.SaveChanges();
-                //7102968342834367033
             }
         }
 
