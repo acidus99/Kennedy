@@ -9,20 +9,9 @@
     <ProjectReference Include="..\Gemi.Net\Gemi.Net.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Modules\" />
-    <None Remove="HashDepot" />
-    <None Remove="Utils\" />
-    <None Remove="UrlFrontiers\" />
-    <None Remove="Com.Bekijkhet.RobotsTxt" />
-    <None Remove="RobotsTxt" />
-    <None Remove="RobotsTxt\" />
-    <None Remove="DataStore\" />
     <None Remove="Microsoft.EntityFrameworkCore" />
     <None Remove="Microsoft.EntityFrameworkCore.Design" />
     <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
-    <None Remove="Support\" />
-    <None Remove="DocumentStore\" />
-    <None Remove="MetaStore\Db\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
@@ -42,5 +31,6 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.12" />
+    <PackageReference Include="EFCore.BulkExtensions" Version="5.4.1" />
   </ItemGroup>
 </Project>
