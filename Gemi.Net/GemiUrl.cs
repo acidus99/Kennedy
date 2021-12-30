@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Gemi.Net
 {
-    public class GemiUrl
+    public class GemiUrl :IEquatable<GemiUrl>
     {
         public Uri _url;
 
@@ -84,11 +84,12 @@ namespace Gemi.Net
             return (newUrl.Scheme == "gemini") ? new GemiUrl(newUrl) : null;
         }
 
+        //ultimately 2 URLs are equal if their DocID is equal
+        public bool Equals(GemiUrl other)
+            => other != null && DocID.Equals(other.DocID);
+
         public override bool Equals(object obj)
-        {
-            GemiUrl other = obj as GemiUrl;
-            return other != null && DocID.Equals(DocID);
-        }
+            => Equals(obj as GemiUrl);
 
         public override int GetHashCode()
             => DocID.GetHashCode();
