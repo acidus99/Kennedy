@@ -1,12 +1,14 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 using Gemi.Net;
 
 
 namespace GemiCrawler.DocumentIndex.Db
 {
     [Table("Documents")]
+    [Index(nameof(Status))]
     public class StoredDocEntry
     {
         /// <summary>
@@ -47,11 +49,13 @@ namespace GemiCrawler.DocumentIndex.Db
         /// <summary>
         /// everything after the status code
         /// </summary>
-        public string MetaLine { get; set; }
+        public string Meta { get; set; }
 
         public int BodySize { get; set; }
 
         public uint? BodyHash { get; set; }
+
+        public int OutboundLinks { get; set; }
 
         /// <summary>
         /// Latency of the request/resp, in ms
