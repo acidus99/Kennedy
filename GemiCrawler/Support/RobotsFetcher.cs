@@ -88,13 +88,6 @@ namespace GemiCrawler.Support
         {
 
             Robots robot = new Robots(text);
-
-            if (robot.IsMalformed)
-            {
-
-                int x = 5;
-            }
-
             foundCounter.Increment();
 
             //prepand the host/port in a comment
