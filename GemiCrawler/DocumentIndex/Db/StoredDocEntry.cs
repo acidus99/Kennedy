@@ -51,8 +51,6 @@ namespace GemiCrawler.DocumentIndex.Db
 
         public int BodySize { get; set; }
 
-        public string StorageKey { get; set; }
-
         public uint? BodyHash { get; set; }
 
         /// <summary>
