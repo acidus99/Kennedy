@@ -13,7 +13,7 @@ namespace GemiCrawler.GemText
     {
         static readonly Regex linkLine = new Regex(@"^=>\s+([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
-        public static IEnumerable<FoundLink> ExtractLinks(GemiUrl request, GemiResponse resp)
+        public static List<FoundLink> ExtractLinks(GemiUrl request, GemiResponse resp)
         {
             var links = new List<FoundLink>();
 
