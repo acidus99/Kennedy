@@ -83,5 +83,14 @@ namespace Gemi.Net
             }
             return (newUrl.Scheme == "gemini") ? new GemiUrl(newUrl) : null;
         }
+
+        public override bool Equals(object obj)
+        {
+            GemiUrl other = obj as GemiUrl;
+            return other != null && DocID.Equals(DocID);
+        }
+
+        public override int GetHashCode()
+            => DocID.GetHashCode();
     }
 }
