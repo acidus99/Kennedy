@@ -15,9 +15,9 @@ namespace GemiCrawler.GemText
             if (resp.IsSuccess && resp.HasBody && resp.MimeType.StartsWith("text/gemini"))
             {
                 var t = resp.BodyText.Split("\n")
-                    .Where(x => x.TrimStart().StartsWith("# ") && x.TrimStart().Length > 2)
-                    .FirstOrDefault().Substring(2);
-                return t;
+                    .Where(x => x.StartsWith("# ") && x.Length > 2)
+                    .FirstOrDefault();
+                return t == null ? "" : t.Substring(2);
             }
 
             return "";
