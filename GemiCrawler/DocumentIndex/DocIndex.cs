@@ -1,8 +1,12 @@
-﻿using System.Data;
+﻿
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using EFCore.BulkExtensions;
+
 using Gemi.Net;
 using GemiCrawler.DocumentIndex.Db;
-using System.Collections.Generic;
-using EFCore.BulkExtensions;
+using GemiCrawler.Links;
 
 namespace GemiCrawler.DocumentIndex
 {
@@ -29,7 +33,7 @@ namespace GemiCrawler.DocumentIndex
         private ulong toULong(long longValue)
             => unchecked((ulong)longValue);
 
-        public void StoreMetaData(GemiUrl url, GemiResponse resp, List<GemiUrl> foundLinks)
+        public void StoreMetaData(GemiUrl url, GemiResponse resp, int outboundLinkCount)
         {
             var entry = new StoredDocEntry
             {
@@ -37,19 +41,21 @@ namespace GemiCrawler.DocumentIndex
                 FirstSeen = System.DateTime.Now,
                 LastVisit = System.DateTime.Now,
 
-                BodyHash = resp.BodyHash,
-
                 Url = resp.RequestUrl.NormalizedUrl,
                 Domain = resp.RequestUrl.Hostname,
                 Port = resp.RequestUrl.Port,
 
                 ConnectStatus = resp.ConnectStatus,
-                MetaLine = resp.ResponseLine,
+                Status = resp.StatusCode,
+                Meta = resp.Meta,
+
+                MimeType = resp.MimeType,
                 BodySize = resp.BodySize,
+                BodyHash = resp.BodyHash,
 
                 ConnectTime = resp.ConnectTime,
                 DownloadTime = resp.DownloadTime,
-                MimeType = resp.MimeType
+                OutboundLinks = outboundLinkCount
             };
 
             using (var db = new DocIndexDbContext(StoragePath))
@@ -59,17 +65,16 @@ namespace GemiCrawler.DocumentIndex
             }
         }
 
-        public void StoreLinks(GemiUrl sourcePage, List<GemiUrl> links)
+        public void StoreLinks(GemiUrl sourcePage, List<FoundLink> links)
         {
             using (var db = new DocIndexDbContext(StoragePath))
             {
-                db.BulkInsert(links.Distinct().Select(target => new StoredLinkEntry
+                db.BulkInsert(links.Distinct().Select(link => new StoredLinkEntry
                 {
-                    SourceURL = sourcePage.NormalizedUrl,
-                    TargetURL = target.NormalizedUrl,
                     DBSourceDocID = toLong(sourcePage.DocID),
-                    DBTargetDocID = toLong(target.DocID),
-                    LinkText = "Some magic text!"
+                    DBTargetDocID = toLong(link.Url.DocID),
+                    IsExternal = link.IsExternal,
+                    LinkText = link.LinkText
                 }).ToList());
 
                 db.SaveChanges();
