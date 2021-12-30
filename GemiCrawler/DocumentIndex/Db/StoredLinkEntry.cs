@@ -15,9 +15,9 @@ namespace GemiCrawler.DocumentIndex.Db
         /// some unchecked casting with overflow to handle it
         /// </summary>
         public long DBSourceDocID { get; set; }
-
         public long DBTargetDocID { get; set; }
 
+        public bool IsExternal { get; set; }
         public string LinkText { get; set; }
 
     }
