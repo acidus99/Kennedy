@@ -8,7 +8,7 @@ namespace GemiCrawler.UrlFrontiers
     /// <summary>
     /// Manages our queue of URLs to crawl
     /// </summary>
-    public class BalancedUrlFrontier : AbstractModule, IUrlFrontier
+    public class BalancedUrlFrontier : AbstractModule
     {
         object locker;
 
