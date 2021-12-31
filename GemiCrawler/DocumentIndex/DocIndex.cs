@@ -60,12 +60,31 @@ namespace GemiCrawler.DocumentIndex
                 OutboundLinks = outboundLinkCount
             };
 
+            if (IsError(resp))
+            {
+                entry.ErrorCount++;
+            }
+            else
+            {
+                entry.ErrorCount = 0;
+                entry.LastSuccessfulVisit = entry.LastVisit;
+            }
+
             using (var db = new DocIndexDbContext(StoragePath))
             {
                 db.DocEntries.Add(entry);
                 db.SaveChanges();
             }
         }
+
+        /// <summary>
+        /// does this response represent an error?
+        /// </summary>
+        /// <param name="resp"></param>
+        /// <returns></returns>
+        private bool IsError(GemiResponse resp)
+            => (resp.ConnectStatus != ConnectStatus.Success) ||
+                resp.IsTempFail || resp.IsPermFail;
 
         public void StoreLinks(GemiUrl sourcePage, List<FoundLink> links)
         {

@@ -46,7 +46,7 @@ namespace GemiCrawler
         DomainLimiterModule domainLimiter;
 
         DocIndex docIndex;
-        IDocumentStore docStore;
+        DocStore docStore;
 
         List<AbstractModule> Modules;
         List<AbstractUrlModule> UrlModeles;
@@ -236,12 +236,12 @@ namespace GemiCrawler
                 //Modules
                 if (!seenContentModule.CheckAndRecord(resp))
                 {
-                    var foundLinks = LinkFinder.ExtractLinks(url, resp);
+                    var foundLinks = LinkFinder.ExtractLinks(resp);
                     foundLinks.ForEach(x => ProcessProspectiveUrl(x.Url));
 
                     docIndex.StoreMetaData(url, resp, foundLinks.Count);
                     docIndex.StoreLinks(url, foundLinks);
-                    docStore.StoreDocument(url, resp);
+                    docStore.StoreDocument(resp);
                 }
             }
             //note the work is complete
