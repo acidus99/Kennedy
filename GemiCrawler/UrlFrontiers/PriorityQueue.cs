@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Gemi.Net;
 using GemiCrawler.Utils;
@@ -89,5 +90,14 @@ namespace GemiCrawler.UrlFrontiers
             }
             return ret;
         }
+
+        public List<GemiUrl> GetSnapshot()
+        {
+            var ret = new List<GemiUrl>();
+            ret.AddRange(highQueue);
+            ret.AddRange(lowQueue);
+            return ret;
+        }
+
     }
 }

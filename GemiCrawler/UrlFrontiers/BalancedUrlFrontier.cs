@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Gemi.Net;
 using GemiCrawler.Modules;
 
@@ -57,5 +58,16 @@ namespace GemiCrawler.UrlFrontiers
 
         protected override string GetStatusMesssage()
             => $"Total Queue Size: {GetCount()}";
+
+        public List<GemiUrl> GetSnapshot()
+        {
+            var ret = new List<GemiUrl>();
+            foreach(var queue in queues)
+            {
+                ret.AddRange(queue.GetSnapshot());
+            }
+            return ret;
+        }
+
     }
 }
