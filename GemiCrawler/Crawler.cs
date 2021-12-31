@@ -188,6 +188,8 @@ namespace GemiCrawler
             } while (KeepWorkersAlive);
             crawlStopwatch.Stop();
 
+            urlFrontier.SaveSnapshot($"{DataDirectory}remaining-frontier.txt");
+
             Console.WriteLine($"Complete! {crawlStopwatch.Elapsed.TotalSeconds}");
             FinalizeCrawl();
         }
@@ -268,6 +270,21 @@ namespace GemiCrawler
                 return (urlFrontier.GetCount() > 0);
             }
         }
+
+        public void LoadPreviousResults()
+        {
+            //load frontier with URLs
+            urlFrontier.PopulateFromSnapshot($"{DataDirectory}remaining-frontier.txt");
+
+            //populate our seen URLs list with everything that's in the frontier...
+            seenUrlModule.PopulateWithSeenIDs(urlFrontier.GetSnapshot().Select(x=>x.DocID).ToList());
+            //... and what we have already saved in the database
+            seenUrlModule.PopulateWithSeenIDs(docIndex.GetDocIDs());
+
+            //load previous known body hashes
+            seenContentModule.PopulateWithSeenHashes(docIndex.GetBodyHashes());
+        }
+
 
         /// <summary>
         /// Is there work being done
