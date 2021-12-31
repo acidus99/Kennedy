@@ -30,6 +30,11 @@ namespace GemiCrawler.DocumentIndex.Db
 
         public DateTime? LastVisit { get; set; }
 
+        public DateTime? LastSuccessfulVisit { get; set; }
+
+        public int ErrorCount { get; set; } = 0;
+
+
         [MaxLength(1024)]
         [Required]
         public string Url { get; set; }
