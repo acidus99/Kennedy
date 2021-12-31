@@ -52,6 +52,14 @@ namespace GemiCrawler.Modules
             return true;
         }
 
+        public void PopulateWithSeenHashes(List<uint> hashes)
+        {
+            foreach (var hash in hashes)
+            {
+                seenHashes[hash] = true;
+            }
+        }
+
         protected override string GetStatusMesssage()
             => $"Responses w/ Bodies: {processedCounter.Count} Duplicates: {duplicateCounter.Count}";
     }

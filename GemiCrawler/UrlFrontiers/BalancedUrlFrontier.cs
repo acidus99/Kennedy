@@ -80,10 +80,22 @@ namespace GemiCrawler.UrlFrontiers
 
         public void PopulateFromSnapshot(string filename)
         {
-            var urls = File.ReadAllLines(filename).Select(x => new GemiUrl(x));
-            foreach (var url in urls)
+            foreach (string line in File.ReadAllLines(filename))
             {
-                AddUrl(url);
+                GemiUrl url = null;
+                try
+                {
+                    url = new GemiUrl(line);
+                }
+                catch (Exception)
+                {
+                    int x = 5;
+
+                }
+                if (url != null)
+                {
+                    AddUrl(url);
+                }
             }
         }
     }

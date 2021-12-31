@@ -43,6 +43,15 @@ namespace GemiCrawler.Modules
             return false;
         }
 
+        public void PopulateWithSeenIDs(List<ulong> ids)
+        {
+            foreach (var id in ids)
+            {
+                SeenUrls[id] = true;
+            }
+        }
+
+
         protected override string GetStatusMesssage()
             => $"Urls seen: {processedCounter.Count} Seen Before: {seenCounter.Count}";
     }
