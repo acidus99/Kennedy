@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.IO;
 using System.Collections.Generic;
 using Gemi.Net;
 using GemiCrawler.Modules;
@@ -36,7 +38,7 @@ namespace GemiCrawler.UrlFrontiers
         {
             return Math.Abs(url.Authority.GetHashCode()) % totalWorkerThreads;
         }
-      
+
         public void AddUrl(GemiUrl url)
         {
             int queueID = queueForUrl(url);
@@ -69,5 +71,20 @@ namespace GemiCrawler.UrlFrontiers
             return ret;
         }
 
+        public void SaveSnapshot(string filename)
+        {
+            //Anything left in the Frontier?
+            var remaining = GetSnapshot();
+            File.WriteAllLines(filename, remaining.Select(x=>x.NormalizedUrl));
+        }
+
+        public void PopulateFromSnapshot(string filename)
+        {
+            var urls = File.ReadAllLines(filename).Select(x => new GemiUrl(x));
+            foreach (var url in urls)
+            {
+                AddUrl(url);
+            }
+        }
     }
 }
