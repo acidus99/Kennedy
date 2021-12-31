@@ -10,9 +10,8 @@ namespace GemiCrawler.Modules
     {
         /// <summary>
         /// Lookup table of URLs we have seen before
-        /// TODO: track hashes instead of the full URL
         /// </summary>
-        Dictionary<string, bool> SeenUrls;
+        Dictionary<ulong, bool> SeenUrls;
 
         object locker;
         ThreadSafeCounter seenCounter = new ThreadSafeCounter();
@@ -21,7 +20,7 @@ namespace GemiCrawler.Modules
             : base("SEENURL")
         {
             locker = new object();
-            SeenUrls = new Dictionary<string, bool>();
+            SeenUrls = new Dictionary<ulong, bool>();
         }
 
         /// <summary>
@@ -31,13 +30,12 @@ namespace GemiCrawler.Modules
         /// <returns>URL has not been seen before during this crawl</returns>
         public override bool IsUrlAllowed(GemiUrl url)
         {
-            var normalizedUrl = url.NormalizedUrl;
             processedCounter.Increment();
             lock (locker)
             {
-                if (!SeenUrls.ContainsKey(normalizedUrl))
+                if (!SeenUrls.ContainsKey(url.DocID))
                 {
-                    SeenUrls[normalizedUrl] = true;
+                    SeenUrls[url.DocID] = true;
                     return true;
                 }
             }
