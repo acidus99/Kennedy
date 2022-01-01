@@ -27,10 +27,10 @@ namespace GemiCrawler.DocumentIndex
             ///nop since we are not caching any writes
         }
 
-        private long toLong(ulong ulongValue)
+        private static long toLong(ulong ulongValue)
             => unchecked((long)ulongValue);
 
-        private ulong toULong(long longValue)
+        private static ulong toULong(long longValue)
             => unchecked((ulong)longValue);
 
         public void StoreMetaData(GemiUrl url, GemiResponse resp, int outboundLinkCount)
@@ -102,6 +102,30 @@ namespace GemiCrawler.DocumentIndex
             }
         }
 
+        public List<uint> GetBodyHashes()
+        {
+            using (var db = new DocIndexDbContext(StoragePath))
+            {
+                return db.DocEntries
+                        .Select(x => x.BodyHash)
+                        .Where(x => (x != null))
+                        .Select(x => x.Value).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Gets all DocIDs we have stored in the db
+        /// </summary>
+        /// <returns></returns>
+        public List<ulong> GetDocIDs()
+        {
+            using (var db = new DocIndexDbContext(StoragePath))
+            {
+                return db.DocEntries
+                        .Select(x => x.DBDocID)
+                        .Select(x => toULong(x)).ToList();
+            }
+        }
 
     }
 }
