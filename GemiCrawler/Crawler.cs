@@ -233,19 +233,18 @@ namespace GemiCrawler
             {
                 errorLog.LogError(ex, url.NormalizedUrl);
             }
-            else if (resp != null)
+            
+            //Modules
+            if (!seenContentModule.CheckAndRecord(resp))
             {
-                //Modules
-                if (!seenContentModule.CheckAndRecord(resp))
-                {
-                    var foundLinks = LinkFinder.ExtractLinks(resp);
-                    foundLinks.ForEach(x => ProcessProspectiveUrl(x.Url));
-
-                    docIndex.StoreMetaData(url, resp, foundLinks.Count);
-                    docIndex.StoreLinks(url, foundLinks);
-                    docStore.StoreDocument(resp);
-                }
+                var foundLinks = LinkFinder.ExtractLinks(resp);
+                foundLinks.ForEach(x => ProcessProspectiveUrl(x.Url));
+                docStore.StoreDocument(resp);
+                docIndex.StoreMetaData(url, resp, foundLinks.Count);
+                docIndex.StoreLinks(url, foundLinks);
+                
             }
+            
             //note the work is complete
             workInFlight.Decrement();
         }
