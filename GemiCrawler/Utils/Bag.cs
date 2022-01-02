@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 namespace GemiCrawler.Utils
 {
     /// <summary>
@@ -44,6 +45,25 @@ namespace GemiCrawler.Utils
             }
             return count;
         }
+
+        public void AddRange(IEnumerable<T> enumberable)
+        {
+            foreach(T t in enumberable)
+            {
+                Add(t);
+            }
+        }
+
+        public bool Contains(T t)
+        {
+            lock(locker)
+            {
+                return bag.ContainsKey(t);
+            }
+        }
+
+        public IEnumerable<T> GetValues()
+            => bag.Keys;
 
         public int UniqueItems
             =>bag.Keys.Count;
