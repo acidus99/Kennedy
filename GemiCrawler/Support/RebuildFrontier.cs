@@ -17,6 +17,8 @@ namespace GemiCrawler.Support
 {
     /// <summary>
     /// Tool to rebuild the pending URL Frontier from the crawl results
+    /// NOTE! This does not filter excluded URLs! from the links it rebuilds. Presumably
+    /// filters/robots.txt handlers will be applied with adding the URLS into the frontier!
     /// </summary>
     public static class RebuildFrontier
     {
