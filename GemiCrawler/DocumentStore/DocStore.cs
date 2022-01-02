@@ -27,5 +27,11 @@ namespace GemiCrawler.DocumentStore
                 }
             }
         }
+
+        public byte [] GetDocument(ulong docID)
+        {
+            var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(docID))).ToLower();
+            return store.GetObject(key);            
+        }
     }
 }
