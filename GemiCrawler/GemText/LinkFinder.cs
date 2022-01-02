@@ -27,17 +27,22 @@ namespace GemiCrawler.GemText
             }
             else if(resp.IsSuccess && resp.HasBody && resp.MimeType.StartsWith("text/gemini"))
             {
-                var foundLinks =
-                            (from line in resp.BodyText.Split("\n")
-                             let match = linkLine.Match(line)
-                             where match.Success
-                             let link = Create(resp.RequestUrl, match)
-                             where link != null
-                             select link);
-                links.AddRange(foundLinks);
+                links.AddRange(ExtractBodyLinks(resp.RequestUrl, resp.BodyText));
             }
 
             return links;
+        }
+
+        public static IEnumerable<FoundLink> ExtractBodyLinks(GemiUrl requestUrl, string bodyText)
+        {
+            var foundLinks =
+                            (from line in bodyText.Split("\n")
+                             let match = linkLine.Match(line)
+                             where match.Success
+                             let link = Create(requestUrl, match)
+                             where link != null
+                             select link);
+            return foundLinks;
         }
 
         private static FoundLink Create(GemiUrl pageUrl, Match match)
