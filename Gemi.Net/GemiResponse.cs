@@ -69,8 +69,9 @@ namespace Gemi.Net
 
         public int BodySize => HasBody ? BodyBytes.Length : 0;
 
-        internal GemiResponse()
+        internal GemiResponse(GemiUrl url)
         {
+            RequestUrl = url;
             ConnectStatus = ConnectStatus.Error;
             StatusCode = 0;
             MimeType = "";

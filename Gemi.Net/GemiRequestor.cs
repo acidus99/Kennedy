@@ -53,7 +53,7 @@ namespace Gemi.Net
                 throw new ApplicationException("Trying to request a non-absolute URL!");
             }
 
-            var ret = new GemiResponse();
+            var ret = new GemiResponse(url);
 
             AbortTimer = new Stopwatch();
             ConnectTimer = new Stopwatch();
@@ -65,13 +65,13 @@ namespace Gemi.Net
                 var sock = new TimeoutSocket();
                 AbortTimer.Start();
                 ConnectTimer.Start();
-                var client = sock.Connect(url.Hostname, url.Port, 30000);
+                var client = sock.Connect(url.Hostname, url.Port, 60000);
 
                 using (SslStream sslStream = new SslStream(client.GetStream(), false,
                     new RemoteCertificateValidationCallback(ProcessServerCertificate), null))
                 {
 
-                    sslStream.ReadTimeout = 45000; //wait 15 sec
+                    sslStream.ReadTimeout = 60000; //wait 45 sec
                     sslStream.AuthenticateAsClient(url.Hostname);
                     ConnectTimer.Stop();
 
