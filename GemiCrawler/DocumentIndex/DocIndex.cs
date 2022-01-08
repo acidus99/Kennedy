@@ -33,7 +33,7 @@ namespace GemiCrawler.DocumentIndex
         private static ulong toULong(long longValue)
             => unchecked((ulong)longValue);
 
-        public void StoreMetaData(GemiUrl url, GemiResponse resp, int outboundLinkCount)
+        public void StoreMetaData(GemiUrl url, GemiResponse resp, int outboundLinkCount, bool bodySaved)
         {
             var entry = new StoredDocEntry
             {
@@ -51,6 +51,7 @@ namespace GemiCrawler.DocumentIndex
 
                 MimeType = resp.MimeType,
                 BodySkipped = resp.BodySkipped,
+                BodySaved = bodySaved,
                 BodySize = resp.BodySize,
                 BodyHash = resp.BodyHash,
                 Title = TitleFinder.ExtractTitle(resp),

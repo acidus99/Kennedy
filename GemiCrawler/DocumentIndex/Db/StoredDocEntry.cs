@@ -59,8 +59,9 @@ namespace GemiCrawler.DocumentIndex.Db
         /// <summary>
         /// Did we deliberately skip downloading this body?
         /// </summary>
-
         public bool BodySkipped { get; set; } = false;
+
+        public bool BodySaved { get; set; } = false;
         public int BodySize { get; set; }
         public uint? BodyHash { get; set; }
 

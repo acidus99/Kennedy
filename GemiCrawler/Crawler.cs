@@ -239,8 +239,8 @@ namespace GemiCrawler
             {
                 var foundLinks = LinkFinder.ExtractLinks(resp);
                 foundLinks.ForEach(x => ProcessProspectiveUrl(x.Url));
-                docStore.StoreDocument(resp);
-                docIndex.StoreMetaData(url, resp, foundLinks.Count);
+                bool savedBody = docStore.StoreDocument(resp);
+                docIndex.StoreMetaData(url, resp, foundLinks.Count, savedBody);
                 docIndex.StoreLinks(url, foundLinks);
                 
             }

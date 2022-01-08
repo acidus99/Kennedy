@@ -16,7 +16,12 @@ namespace GemiCrawler.DocumentStore
             store = new ObjectStore(outputDir);
         }
 
-        public void StoreDocument(GemiResponse resp)
+        /// <summary>
+        /// returns if we successfully stored this response
+        /// </summary>
+        /// <param name="resp"></param>
+        /// <returns></returns>
+        public bool StoreDocument(GemiResponse resp)
         {
             if (resp.IsSuccess & resp.HasBody)
             {
@@ -25,7 +30,9 @@ namespace GemiCrawler.DocumentStore
                 {
                     throw new ApplicationException("Failed to store resp!");
                 }
+                return true;
             }
+            return false;
         }
 
         public byte [] GetDocument(ulong docID)
