@@ -76,7 +76,7 @@ namespace GemiCrawler
 
             // init document repository and data bases
             docIndex = new DocIndex(Crawler.DataDirectory);
-            docStore = new DocStore(outputBase + "page-store/");
+            docStore = new DocStore(Crawler.DataDirectory + "page-store/");
 
             //init errorlog
             errorLog = new ErrorLog(outputBase);
