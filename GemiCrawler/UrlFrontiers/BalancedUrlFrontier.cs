@@ -19,6 +19,7 @@ namespace GemiCrawler.UrlFrontiers
         /// </summary>
         PriorityQueue [] queues;
 
+        DnsCache dnsCache;
         int totalWorkerThreads;
 
         public BalancedUrlFrontier(int totalWorkers)
@@ -26,6 +27,7 @@ namespace GemiCrawler.UrlFrontiers
         {
             locker = new object();
             totalWorkerThreads = totalWorkers;
+            dnsCache = new DnsCache();
 
             queues = new PriorityQueue[totalWorkerThreads];
             for(int i = 0; i< totalWorkerThreads; i++)
@@ -36,7 +38,17 @@ namespace GemiCrawler.UrlFrontiers
 
         private int queueForUrl(GemiUrl url)
         {
-            return Math.Abs(url.Authority.GetHashCode()) % totalWorkerThreads;
+            //we are trying to avoid adding URLs that are all served by the same
+            //system from being dumped into different buckets, where we then overwhelm
+            //that server. Basically Flounder, since all the subdomains are served by the same system
+
+            //try and look up the ip address for this host. If we don't get one,
+            //fall back to using the hostname.
+
+            string address = dnsCache.GetLookup(url.Hostname);
+            int hash = (address != null) ? address.GetHashCode() : url.Hostname.GetHashCode();
+
+            return Math.Abs(hash) % totalWorkerThreads;
         }
 
         public void AddUrl(GemiUrl url)
