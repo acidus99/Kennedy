@@ -92,8 +92,10 @@ namespace GemiCrawler.UrlFrontiers
 
         public void PopulateFromSnapshot(string filename)
         {
+            var i = 0;
             foreach (string line in File.ReadAllLines(filename))
             {
+                i++;
                 GemiUrl url = null;
                 try
                 {
@@ -106,6 +108,7 @@ namespace GemiCrawler.UrlFrontiers
                 }
                 if (url != null)
                 {
+                    Console.WriteLine($"{i}\t{url.NormalizedUrl}");
                     AddUrl(url);
                 }
             }
