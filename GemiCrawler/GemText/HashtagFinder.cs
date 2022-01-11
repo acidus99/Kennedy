@@ -12,7 +12,15 @@ namespace GemiCrawler.GemText
     public static class HashtagFinder
     {
         private static readonly Regex HashtagFormat = new Regex(@"[\,\s]#([a-zA-Z0-9][a-zA-Z0-9_\-]+)", RegexOptions.Compiled);
-        private static readonly Regex OnlyNumbers = new Regex(@"^\d+$", RegexOptions.Compiled);
+
+        private static readonly Regex[] ExcludedFormats = new Regex[]
+        {
+           //only numbers or number ranges
+           new Regex(@"^[\d\-]+$", RegexOptions.Compiled),
+           //CSS hex color 3 or 6
+           new Regex(@"^[a-fA-F0-9]{3}$", RegexOptions.Compiled),
+           new Regex(@"^[a-fA-F0-9]{6}$", RegexOptions.Compiled),
+        };
 
         public static IEnumerable<string> GetHashtags(string bodyText)
         {
@@ -51,10 +59,12 @@ namespace GemiCrawler.GemText
 
         private static bool IsGoodHashtag(string hashtag)
         {
-            //for now, only criteria is to skip all numeric hashtags
-            if (OnlyNumbers.IsMatch(hashtag))
+            foreach(var regex in ExcludedFormats)
             {
-                return false;
+                if(regex.IsMatch(hashtag))
+                {
+                    return false;
+                }
             }
             return true;
         }
