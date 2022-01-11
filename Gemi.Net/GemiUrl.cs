@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Gemi.Net
 {
-    public class GemiUrl :IEquatable<GemiUrl>
+    public class GemiUrl :IEquatable<GemiUrl>, IComparable<GemiUrl>
     {
         public Uri _url;
 
@@ -93,5 +93,10 @@ namespace Gemi.Net
 
         public override int GetHashCode()
             => DocID.GetHashCode();
+
+        public int CompareTo(GemiUrl other)
+        {
+            return this.NormalizedUrl.CompareTo(other.NormalizedUrl);
+        }
     }
 }
