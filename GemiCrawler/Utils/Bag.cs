@@ -65,6 +65,13 @@ namespace GemiCrawler.Utils
         public IEnumerable<T> GetValues()
             => bag.Keys;
 
+        public List<Tuple<T, int>> GetSortedValues(int atLeast = 1)
+        {
+            return bag.Keys
+                .Select(x => new Tuple<T, int>(x, bag[x]))
+                .Where(x => (x.Item2 >= atLeast)).OrderByDescending(x => x.Item2).ToList();
+        }
+
         public int UniqueItems
             =>bag.Keys.Count;
     }
