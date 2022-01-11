@@ -27,10 +27,10 @@ namespace GemiCrawler.DocumentIndex
             ///nop since we are not caching any writes
         }
 
-        private static long toLong(ulong ulongValue)
+        public static long toLong(ulong ulongValue)
             => unchecked((long)ulongValue);
 
-        private static ulong toULong(long longValue)
+        public static ulong toULong(long longValue)
             => unchecked((ulong)longValue);
 
         public void StoreMetaData(GemiUrl url, GemiResponse resp, int outboundLinkCount, bool bodySaved)
