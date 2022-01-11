@@ -33,6 +33,14 @@ namespace GemiCrawler.GemText
             return links;
         }
 
+        /// <summary>
+        /// Returns the link text from a link line. If not a link line, or no link text is present, returns ""
+        /// </summary>
+        /// <param name="line"></param>
+        /// <returns></returns>
+        public static string GetLinkText(string line)
+            => getLinkText(linkLine.Match(line));
+
         public static IEnumerable<FoundLink> ExtractBodyLinks(GemiUrl requestUrl, string bodyText)
         {
             var foundLinks =
@@ -73,6 +81,4 @@ namespace GemiCrawler.GemText
             => (match.Groups.Count > 2) ? match.Groups[2].Value : "";
 
     }
-
-
 }
