@@ -11,7 +11,13 @@ namespace GemiCrawler.GemText
 {
     public static class MentionsFinder
     {
-        private static readonly Regex MentionsFormat = new Regex(@"\B\@([a-zA-Z_][a-zA-Z\d_]{2,})", RegexOptions.Compiled);
+        private static readonly Regex[] AllowedFormats = new Regex[]
+       {
+           //after whitespace or a comma.
+           new Regex(@"[\s\,][\@\~]([a-zA-Z_][a-zA-Z\d_\-]{2,})", RegexOptions.Compiled),
+           //start of line
+           new Regex(@"^[\@\~]([a-zA-Z_][a-zA-Z\d_\-]{2,})", RegexOptions.Compiled),
+       };
 
         public static IEnumerable<string> GetMentions(string bodyText)
         {
@@ -37,7 +43,7 @@ namespace GemiCrawler.GemText
             if(line.StartsWith("=>"))
             {
                 //only search link text to avoid flagging on URL fragments
-                return LinkFinder.GetLinkText(line);
+                return Regex.Replace(LinkFinder.GetLinkText(line), @"[a-z]{4,}\:\/\/[^\s]+", " ");
             }
             if(LineParser.IsHeading(line))
             {
@@ -49,8 +55,13 @@ namespace GemiCrawler.GemText
 
         private static IEnumerable<string> GetMentionsForLine(string line)
         {
-            return MentionsFormat.Matches(FilterLine(line))
-                .Select(x => x.Groups[1].Value);
+            var filtered = FilterLine(line);
+            var matches = new List<string>();
+            foreach(var regex in AllowedFormats)
+            {
+                matches.AddRange(regex.Matches(filtered).Select(x => x.Groups[1].Value));
+            }
+            return matches.ToHashSet();
         }
     }
 }

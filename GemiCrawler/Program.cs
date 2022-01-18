@@ -3,7 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Gemi.Net;
 
-using GemiCrawler.GemText;
+using GemiCrawler.Support;
 
 
 
@@ -13,18 +13,14 @@ namespace GemiCrawler
     {
         static void Main(string[] args)
         {
-            var requestor = new GemiRequestor();
-            var resp = requestor.Request(new GemiUrl("gemini://going-flying.com:1965/thoughts/"));
-
-            var lines = LineParser.RemovePreformatted(resp.BodyText).ToList();
-
-
-
-            var scanner = new GemiCrawler.Support.TermScanner();
-            //scanner.FindHashtagsInGemtext(resp.RequestUrl, resp.BodyText);
+            var scanner = new TermScanner();
             scanner.ScanDocs();
 
-            GemiCrawler.Support.TermDumper.Dump(scanner.Hashtags, 3, Crawler.DataDirectory + "hashtags/");
+            var hashdumper = new HashtagDumper(scanner.Hashtags, Crawler.DataDirectory);
+            var mentionDumper = new MentionsDumper(scanner.Mentions, Crawler.DataDirectory);
+
+            hashdumper.GenerateFiles(Crawler.DataDirectory + "hashtags/", 3);
+            mentionDumper.GenerateFiles(Crawler.DataDirectory + "mentions/", 2);
 
             return;
             var crawler = new Crawler(80,400000);
