@@ -13,14 +13,9 @@ namespace GemiCrawler
     {
         static void Main(string[] args)
         {
-            var scanner = new TermScanner();
-            scanner.ScanDocs();
 
-            var hashdumper = new HashtagDumper(scanner.Hashtags, Crawler.DataDirectory);
-            var mentionDumper = new MentionsDumper(scanner.Mentions, Crawler.DataDirectory);
-
-            hashdumper.GenerateFiles(Crawler.DataDirectory + "hashtags/", 3);
-            mentionDumper.GenerateFiles(Crawler.DataDirectory + "mentions/", 2);
+            FTSLoader loader = new FTSLoader(Crawler.DataDirectory);
+            loader.LoadDocuments();
 
             return;
             var crawler = new Crawler(80,400000);
