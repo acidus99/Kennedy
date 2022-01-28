@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using Gemini.Net
+using Gemini.Net;
 
-using GemiCrawler.Support;
+using Gemini.Net.Crawler.Support;
 
 
 
-namespace GemiCrawler
+namespace Gemini.Net.Crawler
 {
     class Program
     {

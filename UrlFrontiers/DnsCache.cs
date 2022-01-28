@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Net;
 
-using Gemini.Net
+using Gemini.Net;
 using System.Collections.Generic;
 
-namespace GemiCrawler.UrlFrontiers
+namespace Gemini.Net.Crawler.UrlFrontiers
 {
     public class DnsCache
     {

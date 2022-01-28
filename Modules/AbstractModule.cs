@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
 
-using GemiCrawler.Utils;
+using Gemini.Net.Crawler.Utils;
 
 
-namespace GemiCrawler.Modules
+namespace Gemini.Net.Crawler.Modules
 {
     public abstract class AbstractModule
     {

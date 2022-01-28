@@ -2,10 +2,10 @@
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
-using Gemini.Net
-using GemiCrawler.Modules;
+using Gemini.Net;
+using Gemini.Net.Crawler.Modules;
 
-namespace GemiCrawler.UrlFrontiers
+namespace Gemini.Net.Crawler.UrlFrontiers
 {
     /// <summary>
     /// Manages our queue of URLs to crawl

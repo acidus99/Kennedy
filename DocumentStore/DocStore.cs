@@ -1,8 +1,8 @@
 ﻿using System;
-using Gemini.Net
+using Gemini.Net;
 using System.Security.Cryptography;
 
-namespace GemiCrawler.DocumentStore
+namespace Gemini.Net.Crawler.DocumentStore
 {
     /// <summary>
     /// Document store implemented using an Object Store, backed onto a disk

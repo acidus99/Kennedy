@@ -1,6 +1,6 @@
 ﻿using System;
-using Gemini.Net
-namespace GemiCrawler
+using Gemini.Net;
+namespace Gemini.Net.Crawler
 {
     public interface ICrawler
     {

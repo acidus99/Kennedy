@@ -7,14 +7,14 @@ using System.Timers;
 using System.Threading;
 
 
-using GemiCrawler.DocumentIndex;
-using GemiCrawler.DocumentStore;
-using GemiCrawler.GemText;
-using GemiCrawler.Modules;
-using GemiCrawler.Utils;
-using GemiCrawler.UrlFrontiers;
+using Gemini.Net.Crawler.DocumentIndex;
+using Gemini.Net.Crawler.DocumentStore;
+using Gemini.Net.Crawler.GemText;
+using Gemini.Net.Crawler.Modules;
+using Gemini.Net.Crawler.Utils;
+using Gemini.Net.Crawler.UrlFrontiers;
 
-namespace GemiCrawler
+namespace Gemini.Net.Crawler
 {
     public class Crawler : AbstractModule, ICrawler
     {

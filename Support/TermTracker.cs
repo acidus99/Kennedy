@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Text;
-using System.Text.RegularExpressions;
 
 using System.Linq;
 using System.Collections.Generic;
-using GemiCrawler.DocumentIndex.Db;
-using GemiCrawler.DocumentStore;
-using GemiCrawler.Utils;
-using GemiCrawler.GemText;
-using Gemini.Net
+using Gemini.Net.Crawler.Utils;
+using Gemini.Net;
 
-namespace GemiCrawler.Support
+namespace Gemini.Net.Crawler.Support
 {
     public class TermTracker
     {

@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq;
-using GemiCrawler.DocumentStore;
-using GemiCrawler.DocumentIndex.Db;
-using Gemini.Net
-using GemiCrawler.GemText;
+using Gemini.Net.Crawler.DocumentStore;
+using Gemini.Net.Crawler.DocumentIndex.Db;
+using Gemini.Net;
+using Gemini.Net.Crawler.GemText;
 using System.Text;
 using Microsoft.Data.Sqlite;
 using Microsoft.Data.SqlClient;
 
-namespace GemiCrawler.Support
+namespace Gemini.Net.Crawler.Support
 {
     public class FTSLoader
     {

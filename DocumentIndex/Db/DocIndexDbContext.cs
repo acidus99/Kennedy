@@ -1,7 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 
-namespace GemiCrawler.DocumentIndex.Db
+namespace Gemini.Net.Crawler.DocumentIndex.Db
 {
     public class DocIndexDbContext : DbContext
     {

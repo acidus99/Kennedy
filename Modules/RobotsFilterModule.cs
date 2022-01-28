@@ -1,14 +1,13 @@
 ﻿using System;
-//using Com.Bekijkhet.RobotsTxt;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Gemini.Net
-using GemiCrawler.RobotsTxt;
+using Gemini.Net;
+using Gemini.Net.Crawler.RobotsTxt;
 
-using GemiCrawler.Utils;
+using Gemini.Net.Crawler.Utils;
 
-namespace GemiCrawler.Modules
+namespace Gemini.Net.Crawler.Modules
 {
     public class RobotsFilterModule : AbstractUrlModule
     {

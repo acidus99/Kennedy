@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 
-using Gemini.Net
+using Gemini.Net;
 
-namespace GemiCrawler.GemText
+namespace Gemini.Net.Crawler.GemText
 {
     /// <summary>
     /// Attempts to determine a "title" for a gemtext page

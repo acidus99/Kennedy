@@ -4,11 +4,11 @@ using System.Data;
 using System.Linq;
 using EFCore.BulkExtensions;
 
-using Gemini.Net
-using GemiCrawler.DocumentIndex.Db;
-using GemiCrawler.GemText;
+using Gemini.Net;
+using Gemini.Net.Crawler.DocumentIndex.Db;
+using Gemini.Net.Crawler.GemText;
 
-namespace GemiCrawler.DocumentIndex
+namespace Gemini.Net.Crawler.DocumentIndex
 {
     public class DocIndex
     {

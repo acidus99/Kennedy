@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace GemiCrawler.RobotsTxt
+namespace Gemini.Net.Crawler.RobotsTxt
 {
     internal class DenyRule
     {

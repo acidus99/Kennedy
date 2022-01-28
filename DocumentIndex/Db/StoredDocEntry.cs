@@ -2,10 +2,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
-using Gemini.Net
+using Gemini.Net;
 
 
-namespace GemiCrawler.DocumentIndex.Db
+namespace Gemini.Net.Crawler.DocumentIndex.Db
 {
     [Table("Documents")]
     [Index(nameof(Status))]

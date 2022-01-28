@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using Gemini.Net
-using GemiCrawler.Utils;
+using Gemini.Net;
+using Gemini.Net.Crawler.Utils;
 
-namespace GemiCrawler.UrlFrontiers
+namespace Gemini.Net.Crawler.UrlFrontiers
 {
     /// <summary>
     /// 

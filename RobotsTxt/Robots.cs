@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GemiCrawler.RobotsTxt
+namespace Gemini.Net.Crawler.RobotsTxt
 {
     public class Robots
     {

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using Gemini.Net
+using Gemini.Net;
 using System.Linq;
 
-namespace GemiCrawler.GemText
+namespace Gemini.Net.Crawler.GemText
 {
     /// <summary>
     /// Finds hyperlinks in Gemini Text Documents

@@ -1,19 +1,17 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Gemini.Net
-using GemiCrawler.Utils;
-using GemiCrawler;
-using GemiCrawler.DocumentIndex.Db;
-using GemiCrawler.DocumentStore;
+using Gemini.Net;
+using Gemini.Net.Crawler.Utils;
+using Gemini.Net.Crawler;
+using Gemini.Net.Crawler.DocumentIndex.Db;
+using Gemini.Net.Crawler.DocumentStore;
 using System.Collections.Generic;
-using GemiCrawler.Utils;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 
-namespace GemiCrawler.Support
+namespace Gemini.Net.Crawler.Support
 {
     /// <summary>
     /// Tool to rebuild the pending URL Frontier from the crawl results
@@ -56,7 +54,7 @@ namespace GemiCrawler.Support
                 var docStore = new DocStore(@"/Users/billy/Code/gemini-play/crawl-out/2021-12-31 (024040)/page-store");
                 string bodyText = System.Text.Encoding.UTF8.GetString(docStore.GetDocument(toULong(entry.DBDocID)));
 
-                var foundLinks = GemiCrawler.GemText.LinkFinder.ExtractBodyLinks(new GemiUrl(entry.Url), bodyText);
+                var foundLinks = GemText.LinkFinder.ExtractBodyLinks(new GemiUrl(entry.Url), bodyText);
 
                 foreach (var link in foundLinks)
                 {

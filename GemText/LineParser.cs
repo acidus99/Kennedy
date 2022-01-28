@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-namespace GemiCrawler.GemText
+namespace Gemini.Net.Crawler.GemText
 {
     //Extracts
     public static class LineParser

@@ -1,7 +1,7 @@
 ﻿using System;
 
 using System.Threading;
-namespace GemiCrawler.Utils
+namespace Gemini.Net.Crawler.Utils
 {
     /// <summary>
     /// Simple, thread safe counter

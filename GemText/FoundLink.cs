@@ -1,6 +1,6 @@
 ﻿using System;
-using Gemini.Net
-namespace GemiCrawler.GemText
+using Gemini.Net;
+namespace Gemini.Net.Crawler.GemText
 {
     public class FoundLink : IEquatable<FoundLink>
     {

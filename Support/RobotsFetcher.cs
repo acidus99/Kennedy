@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Gemini.Net
-using GemiCrawler.Utils;
-using GemiCrawler.RobotsTxt;
+using Gemini.Net;
+using Gemini.Net.Crawler.Utils;
+using Gemini.Net.Crawler.RobotsTxt;
 
-namespace GemiCrawler.Support
+namespace Gemini.Net.Crawler.Support
 {
 
     /// <summary>

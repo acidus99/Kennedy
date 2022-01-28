@@ -1,10 +1,10 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Gemini.Net
+using Gemini.Net;
 
 
-namespace GemiCrawler.DocumentIndex.Db
+namespace Gemini.Net.Crawler.DocumentIndex.Db
 {
     [Table("Links")]
     public class StoredLinkEntry

@@ -2,13 +2,13 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Gemini.Net
-using GemiCrawler.Utils;
+using Gemini.Net;
+using Gemini.Net.Crawler.Utils;
 using System.IO.Compression;
 
-using GemiCrawler.Modules;
+using Gemini.Net.Crawler.Modules;
 
-namespace GemiCrawler.DocumentStore
+namespace Gemini.Net.Crawler.DocumentStore
 {
     /// <summary>
     /// disk-backed KV store, using a directory structure
