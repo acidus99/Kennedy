@@ -39,9 +39,9 @@ namespace Gemini.Net.Crawler.Support
             {
                 int t = requestCounter.Increment();
 
-                GemiRequestor gemiRequestor = new GemiRequestor();
+                GeminiRequestor gemiRequestor = new GeminiRequestor();
 
-                GemiUrl url = new GemiUrl($"gemini://{domain}/robots.txt");
+                GeminiUrl url = new GeminiUrl($"gemini://{domain}/robots.txt");
 
                 var resp = gemiRequestor.Request(url);
 
@@ -59,9 +59,9 @@ namespace Gemini.Net.Crawler.Support
 
         public static void DoSingle(string surl)
         {
-            GemiUrl url = new GemiUrl(surl);
+            GeminiUrl url = new GeminiUrl(surl);
 
-            GemiRequestor gemiRequestor = new GemiRequestor();
+            GeminiRequestor gemiRequestor = new GeminiRequestor();
 
             
             var resp = gemiRequestor.Request(url);
@@ -72,7 +72,7 @@ namespace Gemini.Net.Crawler.Support
             }
         }
 
-        private static bool IsValidRobotsResp(GemiResponse resp)
+        private static bool IsValidRobotsResp(GeminiResponse resp)
         {
             if(resp != null && resp.IsSuccess && resp.IsTextResponse)
             {
@@ -84,7 +84,7 @@ namespace Gemini.Net.Crawler.Support
             return false;
         }
 
-        private static void SaveFile(GemiUrl url, string text)
+        private static void SaveFile(GeminiUrl url, string text)
         {
 
             Robots robot = new Robots(text);

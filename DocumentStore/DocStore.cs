@@ -21,7 +21,7 @@ namespace Gemini.Net.Crawler.DocumentStore
         /// </summary>
         /// <param name="resp"></param>
         /// <returns></returns>
-        public bool StoreDocument(GemiResponse resp)
+        public bool StoreDocument(GeminiResponse resp)
         {
             if (resp.IsSuccess & resp.HasBody)
             {

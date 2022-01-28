@@ -4,7 +4,7 @@ namespace Gemini.Net.Crawler.GemText
 {
     public class FoundLink : IEquatable<FoundLink>
     {
-        public GemiUrl Url { get; set; }
+        public GeminiUrl Url { get; set; }
         public bool IsExternal { get; set; }
         public string LinkText { get; set; }
 
@@ -17,7 +17,7 @@ namespace Gemini.Net.Crawler.GemText
             => other != null && Url.Equals(other.Url);
 
         public override bool Equals(object obj)
-            => Equals(obj as GemiUrl);
+            => Equals(obj as GeminiUrl);
 
         public override int GetHashCode()
             => Url.GetHashCode();

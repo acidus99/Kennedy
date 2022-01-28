@@ -30,7 +30,7 @@ namespace Gemini.Net.Crawler.Support
                         .Where(x => x.BodySize > 0).ToList()
                          .Select(x => toULong(x.DBDocID)));
 
-            Bag<GemiUrl> unvisitedUrls = new Bag<GemiUrl>();
+            Bag<GeminiUrl> unvisitedUrls = new Bag<GeminiUrl>();
 
             //grab the URL and DocID for all documents which have links to targets that
             //don't exist in the database. These are the pages we need to parge to find the
@@ -54,7 +54,7 @@ namespace Gemini.Net.Crawler.Support
                 var docStore = new DocStore(@"/Users/billy/Code/gemini-play/crawl-out/2021-12-31 (024040)/page-store");
                 string bodyText = System.Text.Encoding.UTF8.GetString(docStore.GetDocument(toULong(entry.DBDocID)));
 
-                var foundLinks = GemText.LinkFinder.ExtractBodyLinks(new GemiUrl(entry.Url), bodyText);
+                var foundLinks = GemText.LinkFinder.ExtractBodyLinks(new GeminiUrl(entry.Url), bodyText);
 
                 foreach (var link in foundLinks)
                 {

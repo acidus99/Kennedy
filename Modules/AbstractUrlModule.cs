@@ -13,7 +13,7 @@ namespace Gemini.Net.Crawler.Modules
         {
         }
 
-        public abstract bool IsUrlAllowed(GemiUrl url);
+        public abstract bool IsUrlAllowed(GeminiUrl url);
 
     }
 }

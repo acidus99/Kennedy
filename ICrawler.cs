@@ -7,8 +7,8 @@ namespace Gemini.Net.Crawler
 
         bool KeepWorkersAlive { get; }
 
-        GemiUrl GetNextUrl(int crawlerID = 0);
+        GeminiUrl GetNextUrl(int crawlerID = 0);
 
-        void ProcessResult(GemiUrl url, GemiResponse resp, Exception ex);
+        void ProcessResult(GeminiUrl url, GeminiResponse resp, Exception ex);
     }
 }

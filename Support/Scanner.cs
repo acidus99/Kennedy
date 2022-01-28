@@ -31,7 +31,7 @@ namespace Gemini.Net.Crawler.Support
             {
                 int t = counter.Increment();
 
-                GemiRequestor gemiRequestor = new GemiRequestor();
+                GeminiRequestor gemiRequestor = new GeminiRequestor();
 
                 var fullUrl = $"gemini://{host}/";
 
@@ -59,7 +59,7 @@ namespace Gemini.Net.Crawler.Support
 
         }
 
-        private static void SaveFile(string host, GemiResponse resp)
+        private static void SaveFile(string host, GeminiResponse resp)
         {
             if(resp != null && resp.IsTextResponse)
             {

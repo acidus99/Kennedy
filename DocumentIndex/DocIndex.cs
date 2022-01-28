@@ -33,7 +33,7 @@ namespace Gemini.Net.Crawler.DocumentIndex
         public static ulong toULong(long longValue)
             => unchecked((ulong)longValue);
 
-        public void StoreMetaData(GemiUrl url, GemiResponse resp, int outboundLinkCount, bool bodySaved)
+        public void StoreMetaData(GeminiUrl url, GeminiResponse resp, int outboundLinkCount, bool bodySaved)
         {
             var entry = new StoredDocEntry
             {
@@ -83,11 +83,11 @@ namespace Gemini.Net.Crawler.DocumentIndex
         /// </summary>
         /// <param name="resp"></param>
         /// <returns></returns>
-        private bool IsError(GemiResponse resp)
+        private bool IsError(GeminiResponse resp)
             => (resp.ConnectStatus != ConnectStatus.Success) ||
                 resp.IsTempFail || resp.IsPermFail;
 
-        public void StoreLinks(GemiUrl sourcePage, List<FoundLink> links)
+        public void StoreLinks(GeminiUrl sourcePage, List<FoundLink> links)
         {
             using (var db = new DocIndexDbContext(StoragePath))
             {

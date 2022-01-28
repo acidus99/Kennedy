@@ -13,7 +13,7 @@ namespace Gemini.Net.Crawler.GemText
     {
         static readonly Regex linkLine = new Regex(@"^=>\s+([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
-        public static List<FoundLink> ExtractLinks(GemiResponse resp)
+        public static List<FoundLink> ExtractLinks(GeminiResponse resp)
         {
             var links = new List<FoundLink>();
 
@@ -41,7 +41,7 @@ namespace Gemini.Net.Crawler.GemText
         public static string GetLinkText(string line)
             => getLinkText(linkLine.Match(line));
 
-        public static IEnumerable<FoundLink> ExtractBodyLinks(GemiUrl requestUrl, string bodyText)
+        public static IEnumerable<FoundLink> ExtractBodyLinks(GeminiUrl requestUrl, string bodyText)
         {
             var foundLinks =
                             (from line in bodyText.Split("\n")
@@ -53,12 +53,12 @@ namespace Gemini.Net.Crawler.GemText
             return foundLinks;
         }
 
-        private static FoundLink Create(GemiUrl pageUrl, Match match)
+        private static FoundLink Create(GeminiUrl pageUrl, Match match)
             => Create(pageUrl, match.Groups[1].Value, getLinkText(match));
 
-        private static FoundLink Create(GemiUrl pageUrl, string foundUrl, string linkText = "")
+        private static FoundLink Create(GeminiUrl pageUrl, string foundUrl, string linkText = "")
         {
-            var newUrl = GemiUrl.MakeUrl(pageUrl, foundUrl);
+            var newUrl = GeminiUrl.MakeUrl(pageUrl, foundUrl);
             //ignore anything that doesn't resolve properly, or isn't to a gemini:// URL
             if (newUrl == null)
             {

@@ -29,7 +29,7 @@ namespace Gemini.Net.Crawler.Modules
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        public override bool IsUrlAllowed(GemiUrl url)
+        public override bool IsUrlAllowed(GeminiUrl url)
         {
             processedCounter.Increment();
             int hits = domainHits.Add(url.Authority);

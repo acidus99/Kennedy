@@ -194,7 +194,7 @@ namespace Gemini.Net.Crawler
             FinalizeCrawl();
         }
 
-        public GemiUrl GetNextUrl(int crawlerID = 0)
+        public GeminiUrl GetNextUrl(int crawlerID = 0)
         {
             if (HitUrlLimit)
             {
@@ -212,9 +212,9 @@ namespace Gemini.Net.Crawler
         }
 
         public void AddSeed(string url)
-            => ProcessProspectiveUrl(new GemiUrl(url));
+            => ProcessProspectiveUrl(new GeminiUrl(url));
 
-        private void ProcessProspectiveUrl(GemiUrl url)
+        private void ProcessProspectiveUrl(GeminiUrl url)
         {
             foreach (var urlModule in UrlModeles)
             {
@@ -226,7 +226,7 @@ namespace Gemini.Net.Crawler
             urlFrontier.AddUrl(url);
         }
 
-        public void ProcessResult(GemiUrl url, GemiResponse resp, Exception ex)
+        public void ProcessResult(GeminiUrl url, GeminiResponse resp, Exception ex)
         {
             processedCounter.Increment();
             if (resp.ConnectStatus != ConnectStatus.Success)

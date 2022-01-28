@@ -28,7 +28,7 @@ namespace Gemini.Net.Crawler.Modules
         /// </summary>
         /// <param name="url"></param>
         /// <returns>URL has not been seen before during this crawl</returns>
-        public override bool IsUrlAllowed(GemiUrl url)
+        public override bool IsUrlAllowed(GeminiUrl url)
         {
             processedCounter.Increment();
             lock (locker)

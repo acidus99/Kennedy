@@ -10,7 +10,7 @@ namespace Gemini.Net.Crawler.GemText
     /// </summary>
     public static class TitleFinder
     {
-        public static string ExtractTitle(GemiResponse resp)
+        public static string ExtractTitle(GeminiResponse resp)
         {
             if (resp.IsSuccess && resp.HasBody && resp.MimeType.StartsWith("text/gemini"))
             {

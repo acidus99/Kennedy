@@ -26,7 +26,7 @@ namespace Gemini.Net.Crawler.Modules
         /// </summary>
         /// <param name="resp"></param>
         /// <returns>if we have seen this resp body before</returns>
-        public bool CheckAndRecord(GemiResponse resp)
+        public bool CheckAndRecord(GeminiResponse resp)
         {
             //TODO could only do this for gemini texts if I really cared to
             if (resp.HasBody)

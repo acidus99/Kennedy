@@ -25,7 +25,7 @@ namespace Gemini.Net.Crawler.Modules
             rejectedCounter = new ThreadSafeCounter();
         }
         
-        public override bool IsUrlAllowed(GemiUrl url)
+        public override bool IsUrlAllowed(GeminiUrl url)
         {
             if (!rulesCache.ContainsKey(url.Authority))
             {

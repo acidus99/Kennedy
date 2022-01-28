@@ -18,8 +18,8 @@ namespace Gemini.Net.Crawler.UrlFrontiers
         /// <summary>
         /// our queue of URLs to crawl
         /// </summary>
-        Queue<GemiUrl> highQueue;
-        Queue<GemiUrl> lowQueue;
+        Queue<GeminiUrl> highQueue;
+        Queue<GeminiUrl> lowQueue;
 
         /// <summary>
         /// tracks how many requests are going to a specific domain
@@ -28,14 +28,14 @@ namespace Gemini.Net.Crawler.UrlFrontiers
 
         public PriorityQueue()
         {
-            highQueue = new Queue<GemiUrl>();
-            lowQueue = new Queue<GemiUrl>();
+            highQueue = new Queue<GeminiUrl>();
+            lowQueue = new Queue<GeminiUrl>();
             domainCounts = new Bag<string>();
 
             locker = new object();
         }
 
-        public void AddUrl(GemiUrl url)
+        public void AddUrl(GeminiUrl url)
         {
             if (IsHighPriority(url))
             {
@@ -52,7 +52,7 @@ namespace Gemini.Net.Crawler.UrlFrontiers
             }
         }
 
-        private bool IsHighPriority(GemiUrl url)
+        private bool IsHighPriority(GeminiUrl url)
         {
             //have we accessed this domain to many times?
             if(domainCounts.Add(url.Authority) > domainThreshold)
@@ -77,9 +77,9 @@ namespace Gemini.Net.Crawler.UrlFrontiers
         public int GetCount()
             => highQueue.Count + lowQueue.Count;
 
-        public GemiUrl GetUrl()
+        public GeminiUrl GetUrl()
         {
-            GemiUrl ret = null;
+            GeminiUrl ret = null;
 
             lock (locker)
             {
@@ -91,9 +91,9 @@ namespace Gemini.Net.Crawler.UrlFrontiers
             return ret;
         }
 
-        public List<GemiUrl> GetSnapshot()
+        public List<GeminiUrl> GetSnapshot()
         {
-            var ret = new List<GemiUrl>();
+            var ret = new List<GeminiUrl>();
             ret.AddRange(highQueue);
             ret.AddRange(lowQueue);
             return ret;

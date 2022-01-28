@@ -31,7 +31,7 @@ namespace Gemini.Net.Crawler.Modules
                 {
                     continue;
                 }
-                GemiUrl url = new GemiUrl(line);
+                GeminiUrl url = new GeminiUrl(line);
                 if(!excludedUrls.ContainsKey(url.Authority))
                 {
                     excludedUrls[url.Authority] = new List<string>();
@@ -45,7 +45,7 @@ namespace Gemini.Net.Crawler.Modules
         /// </summary>
         /// <param name="url"></param>
         /// <returns>Is this URL not blocked by a deny pattern<returns>
-        public override bool IsUrlAllowed(GemiUrl url)
+        public override bool IsUrlAllowed(GeminiUrl url)
         {
             processedCounter.Increment();
             if(!excludedUrls.ContainsKey(url.Authority))

@@ -31,9 +31,9 @@ namespace Gemini.Net.Crawler
         // and printing a document.
         public void DoWork()
         {
-            GemiUrl url = null;
+            GeminiUrl url = null;
 
-            GemiRequestor requestor = new GemiRequestor
+            GeminiRequestor requestor = new GeminiRequestor
             {
                 OnlyDownloadText = true,
                 AbortTimeout = 45000,

@@ -37,7 +37,7 @@ namespace Gemini.Net.Crawler.Support
                             .Select(x => new
                             {
                                 DocID = DocumentIndex.DocIndex.toULong(x.DBDocID),
-                                Url = new GemiUrl(x.Url)
+                                Url = new GeminiUrl(x.Url)
                             }).ToList();
 
             int total = entries.Count;
@@ -53,14 +53,14 @@ namespace Gemini.Net.Crawler.Support
             }
         }
 
-        private void ScanDocument(ulong docID, GemiUrl url)
+        private void ScanDocument(ulong docID, GeminiUrl url)
         {
             var body = docStore.GetDocument(docID);
             var bodyText = Encoding.UTF8.GetString(body);
             ScanDocument(url, bodyText);
         }
 
-        public void ScanDocument(GemiUrl url, string bodyText)
+        public void ScanDocument(GeminiUrl url, string bodyText)
         {
 
             var tags = HashtagFinder.GetHashtags(bodyText);

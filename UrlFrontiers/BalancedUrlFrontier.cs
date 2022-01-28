@@ -36,7 +36,7 @@ namespace Gemini.Net.Crawler.UrlFrontiers
             }
         }
 
-        private int queueForUrl(GemiUrl url)
+        private int queueForUrl(GeminiUrl url)
         {
             //we are trying to avoid adding URLs that are all served by the same
             //system from being dumped into different buckets, where we then overwhelm
@@ -51,7 +51,7 @@ namespace Gemini.Net.Crawler.UrlFrontiers
             return Math.Abs(hash) % totalWorkerThreads;
         }
 
-        public void AddUrl(GemiUrl url)
+        public void AddUrl(GeminiUrl url)
         {
             int queueID = queueForUrl(url);
             queues[queueID].AddUrl(url);
@@ -67,15 +67,15 @@ namespace Gemini.Net.Crawler.UrlFrontiers
             return totalCount;
         }
 
-        public GemiUrl GetUrl(int crawlerID = 0)
+        public GeminiUrl GetUrl(int crawlerID = 0)
             => queues[crawlerID].GetUrl();
 
         protected override string GetStatusMesssage()
             => $"Total Queue Size: {GetCount()}";
 
-        public List<GemiUrl> GetSnapshot()
+        public List<GeminiUrl> GetSnapshot()
         {
-            var ret = new List<GemiUrl>();
+            var ret = new List<GeminiUrl>();
             foreach(var queue in queues)
             {
                 ret.AddRange(queue.GetSnapshot());
@@ -96,10 +96,10 @@ namespace Gemini.Net.Crawler.UrlFrontiers
             foreach (string line in File.ReadAllLines(filename))
             {
                 i++;
-                GemiUrl url = null;
+                GeminiUrl url = null;
                 try
                 {
-                    url = new GemiUrl(line);
+                    url = new GeminiUrl(line);
                 }
                 catch (Exception)
                 {

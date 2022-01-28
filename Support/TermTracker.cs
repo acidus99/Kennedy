@@ -9,12 +9,12 @@ namespace Gemini.Net.Crawler.Support
 {
     public class TermTracker
     {
-        public Dictionary<string, HashSet<GemiUrl>> pages;
+        public Dictionary<string, HashSet<GeminiUrl>> pages;
         public Dictionary<string, Bag<string>> variations;
 
         public TermTracker()
         {
-            pages = new Dictionary<string, HashSet<GemiUrl>>();
+            pages = new Dictionary<string, HashSet<GeminiUrl>>();
             variations = new Dictionary<string, Bag<string>>();
             UrlCount = 0;
         }
@@ -23,23 +23,23 @@ namespace Gemini.Net.Crawler.Support
 
         public int UrlCount { get; private set; }
 
-        public void AddRange(GemiUrl onUrl, IEnumerable<string> terms)
+        public void AddRange(GeminiUrl onUrl, IEnumerable<string> terms)
             => terms.ToList().ForEach(x => Add(onUrl, x));
 
-        public void Add(GemiUrl onUrl, string term)
+        public void Add(GeminiUrl onUrl, string term)
         {
             var termlow = term.ToLower();
             if(!pages.ContainsKey(termlow))
             {
                 variations[termlow] = new Bag<string>();
-                pages[termlow] = new HashSet<GemiUrl>();
+                pages[termlow] = new HashSet<GeminiUrl>();
             }
             pages[termlow].Add(onUrl);
             variations[termlow].Add(term);
             UrlCount++;
         }
 
-        public List<GemiUrl> GetOccurences(string term)
+        public List<GeminiUrl> GetOccurences(string term)
             => (pages.ContainsKey(term)) ? pages[term].ToList() : null;
 
         public List<string> GetVariations(string term)
