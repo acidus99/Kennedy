@@ -7,8 +7,7 @@ using System.Timers;
 using System.Threading;
 
 
-using Gemini.Net.Crawler.DocumentIndex;
-using Gemini.Net.Crawler.DocumentStore;
+using Gemini.Net.CrawlDataStore;
 using Gemini.Net.Crawler.GemText;
 using Gemini.Net.Crawler.Modules;
 using Gemini.Net.Crawler.Utils;
@@ -23,9 +22,9 @@ namespace Gemini.Net.Crawler
         const int StatusIntervalDisk = 60000;
         const int StatusIntervalScreen = 5000;
 
-        public const string DataDirectory = "/Users/billy/Code/gemini-play/crawler-data-files/";
+        public const string DataDirectory = "/var/gemini/crawl-data/";
 
-        readonly string outputBase = $"/Users/billy/Code/gemini-play/crawl-out/{DateTime.Now.ToString("yyyy-MM-dd (hhmmss)")}/";
+        readonly string outputBase = $"{DataDirectory}/logs/{DateTime.Now.ToString("yyyy-MM-dd (hhmmss)")}/";
 
         int crawlerThreadCount;
 
@@ -45,8 +44,8 @@ namespace Gemini.Net.Crawler
         ExcludedUrlModule excludedUrlModule;
         DomainLimiterModule domainLimiter;
 
-        DocIndex docIndex;
-        DocStore docStore;
+        DocumentIndex docIndex;
+        DocumentStore docStore;
 
         List<AbstractModule> Modules;
         List<AbstractUrlModule> UrlModeles;
@@ -55,9 +54,6 @@ namespace Gemini.Net.Crawler
 
         System.Timers.Timer statusTimer;
         System.Timers.Timer snapshotTimer;
-
-        private string SnapshotDirectory
-            => $"{outputBase}snapshots/";
 
         public Crawler(int threadCount, int stopAfterCount)
             : base("Crawler")
@@ -75,8 +71,8 @@ namespace Gemini.Net.Crawler
             crawlStopwatch = new Stopwatch();
 
             // init document repository and data bases
-            docIndex = new DocIndex(Crawler.DataDirectory);
-            docStore = new DocStore(Crawler.DataDirectory + "page-store/");
+            docIndex = new DocumentIndex(Crawler.DataDirectory);
+            docStore = new DocumentStore(Crawler.DataDirectory + "page-store/");
 
             //init errorlog
             errorLog = new ErrorLog(outputBase);
@@ -119,7 +115,6 @@ namespace Gemini.Net.Crawler
         private void InitOutputDirectories()
         {
             Directory.CreateDirectory(outputBase);
-            Directory.CreateDirectory(SnapshotDirectory);
         }
 
         private void SnapshotTimer_Elapsed(object sender, ElapsedEventArgs e)
