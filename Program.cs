@@ -14,7 +14,7 @@ namespace Gemini.Net.Crawler
         static void Main(string[] args)
         {
 
-            FTSLoader loader = new FTSLoader(Crawler.DataDirectory);
+            LineLoader loader = new LineLoader(Crawler.DataDirectory);
             loader.LoadDocuments();
 
             return;
