@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Text;
-using System.Text.RegularExpressions;
 
 using System.Linq;
 using System.Collections.Generic;
-using Gemini.Net.Crawler.DocumentIndex.Db;
-using Gemini.Net.Crawler.DocumentStore;
-using Gemini.Net.Crawler.Utils;
-using Gemini.Net.Crawler.GemText;
-using Gemini.Net;
+using Gemini.Net.CrawlDataStore;
+using Gemini.Net.CrawlDataStore.Db;
 using System.IO;
-using Gemini.Net.Crawler.DocumentIndex;
 
 
 namespace Gemini.Net.Crawler.Support
@@ -64,7 +58,7 @@ namespace Gemini.Net.Crawler.Support
                 urls.Sort();
                 foreach (var url in urls)
                 {
-                    var dbID = DocIndex.toLong(url.DocID);
+                    var dbID = DocumentIndex.toLong(url.DocID);
                     var title = (Db.DocEntries.Where(x => x.DBDocID == dbID).Select(x => x.Title).FirstOrDefault());
                     title = title.Length > 0 ? title : $"{url.Hostname}{url.Path}";
                     fout.WriteLine($"=> {url.NormalizedUrl} {title}");

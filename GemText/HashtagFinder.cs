@@ -2,10 +2,7 @@
 using System.Text.RegularExpressions;
 using System.Linq;
 using System.Collections.Generic;
-using Gemini.Net.Crawler.DocumentIndex.Db;
-using Gemini.Net.Crawler.DocumentStore;
 using Gemini.Net.Crawler.Utils;
-using Gemini.Net.Crawler.GemText;
 
 namespace Gemini.Net.Crawler.GemText
 {

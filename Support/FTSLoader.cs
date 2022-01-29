@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
-using Gemini.Net.Crawler.DocumentStore;
-using Gemini.Net.Crawler.DocumentIndex.Db;
+using Gemini.Net.CrawlDataStore;
+using Gemini.Net.CrawlDataStore.Db;
 using Gemini.Net;
 using Gemini.Net.Crawler.GemText;
 using System.Text;
 using Microsoft.Data.Sqlite;
-using Microsoft.Data.SqlClient;
+
 
 namespace Gemini.Net.Crawler.Support
 {
@@ -19,13 +19,13 @@ namespace Gemini.Net.Crawler.Support
         SqliteParameter parameterTitle;
 
         DocIndexDbContext db;
-        DocStore docStore;
+        DocumentStore docStore;
 
 
         public FTSLoader(string dataDir)
         {
             db = new DocIndexDbContext(dataDir);
-            docStore = new DocStore(dataDir + "page-store/");
+            docStore = new DocumentStore(dataDir + "page-store/");
             connection = new SqliteConnection($"Data Source='{dataDir}doc-index.db'");
         }
 
@@ -88,7 +88,7 @@ namespace Gemini.Net.Crawler.Support
 
         private string GetDocumentText(long dbDocID)
         {
-            ulong docID = DocumentIndex.DocIndex.toULong(dbDocID);
+            ulong docID = DocumentIndex.toULong(dbDocID);
 
             byte [] bytes = docStore.GetDocument(docID);
             return System.Text.Encoding.UTF8.GetString(bytes);

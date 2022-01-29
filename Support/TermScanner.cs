@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Text;
-using System.Text.RegularExpressions;
-
 using System.Linq;
-using System.Collections.Generic;
-using Gemini.Net.Crawler.DocumentIndex.Db;
-using Gemini.Net.Crawler.DocumentStore;
-using Gemini.Net.Crawler.Utils;
+using Gemini.Net.CrawlDataStore;
+using Gemini.Net.CrawlDataStore.Db;
 using Gemini.Net.Crawler.GemText;
 using Gemini.Net;
 
@@ -14,13 +10,13 @@ namespace Gemini.Net.Crawler.Support
 {
     public class TermScanner
     {
-        DocStore docStore;
+        DocumentStore docStore;
         public TermTracker Mentions;
         public TermTracker Hashtags;
 
         public TermScanner()
         {
-            docStore = new DocStore(Crawler.DataDirectory + "page-store/");
+            docStore = new DocumentStore(Crawler.DataDirectory + "page-store/");
             Mentions = new TermTracker();
             Hashtags = new TermTracker();
         }
@@ -36,7 +32,7 @@ namespace Gemini.Net.Crawler.Support
                             .Where(x => (x.BodySaved && x.MimeType.StartsWith("text/gemini"))).ToList()
                             .Select(x => new
                             {
-                                DocID = DocumentIndex.DocIndex.toULong(x.DBDocID),
+                                DocID = DocumentIndex.toULong(x.DBDocID),
                                 Url = new GeminiUrl(x.Url)
                             }).ToList();
 
