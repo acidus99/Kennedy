@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using Gemini.Net;
 using Gemini.Net.Crawler.Utils;
 using Gemini.Net.Crawler;
-using Gemini.Net.Crawler.DocumentIndex.Db;
-using Gemini.Net.Crawler.DocumentStore;
+using Gemini.Net.CrawlDataStore;
+using Gemini.Net.CrawlDataStore.Db;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +51,7 @@ namespace Gemini.Net.Crawler.Support
             Parallel.ForEach(docsWithUnvisitedLinks, new ParallelOptions { MaxDegreeOfParallelism = 8 }, entry =>
             {
 
-                var docStore = new DocStore(@"/Users/billy/Code/gemini-play/crawl-out/2021-12-31 (024040)/page-store");
+                var docStore = new DocumentStore(@"/Users/billy/Code/gemini-play/crawl-out/2021-12-31 (024040)/page-store");
                 string bodyText = System.Text.Encoding.UTF8.GetString(docStore.GetDocument(toULong(entry.DBDocID)));
 
                 var foundLinks = GemText.LinkFinder.ExtractBodyLinks(new GeminiUrl(entry.Url), bodyText);
