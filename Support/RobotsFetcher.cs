@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Gemini.Net;
 using Gemini.Net.Crawler.Utils;
-using Gemini.Net.Crawler.RobotsTxt;
 
 namespace Gemini.Net.Crawler.Support
 {
@@ -20,10 +19,13 @@ namespace Gemini.Net.Crawler.Support
         static readonly string domainsFile = $"{Crawler.DataDirectory}capsules-to-scan.txt";
 
         //folder to output robots.txt into
-        static  readonly string outputDir = $"/{Crawler.DataDirectory}/robots/";
+        static  readonly string outputDirRobots = $"/{Crawler.DataDirectory}/robots/";
+        
+        static readonly string outputDirFavicon = $"/{Crawler.DataDirectory}/favicons/";
 
         static ThreadSafeCounter requestCounter = new ThreadSafeCounter();
-        static ThreadSafeCounter foundCounter = new ThreadSafeCounter();
+        static ThreadSafeCounter foundRobotsCounter = new ThreadSafeCounter();
+        static ThreadSafeCounter foundFaviconsCounter = new ThreadSafeCounter();
 
 
         public static void DoIt()
@@ -33,42 +35,44 @@ namespace Gemini.Net.Crawler.Support
 
             int total = domains.Length;
 
-            int parallelThreadsCount = 16;
+            int parallelThreadsCount = 4;
 
             Parallel.ForEach(domains, new ParallelOptions { MaxDegreeOfParallelism = parallelThreadsCount }, domain =>
             {
                 int t = requestCounter.Increment();
 
-                GeminiRequestor gemiRequestor = new GeminiRequestor();
+                CheckRobot($"gemini://{domain}/robots.txt");
+                CheckFavicon($"gemini://{domain}/favicon.txt");
 
-                GeminiUrl url = new GeminiUrl($"gemini://{domain}/robots.txt");
-
-                var resp = gemiRequestor.Request(url);
-
-                if(gemiRequestor.LastException == null && IsValidRobotsResp(resp))
-                {
-                    SaveFile(url, resp.BodyText);
-                }
-
-                Console.WriteLine($"Progress:\t{t}\t of {total}\tHits:\t{foundCounter.Count}");
+                Console.WriteLine($"Progress:\t{t}\t of {total}\tRobots Hits:\t{foundRobotsCounter.Count}");
             }); //close method invocation 
-
-            int xxx = 5;
-
         }
 
-        public static void DoSingle(string surl)
+        public static void CheckFavicon(string surl)
+        {
+            GeminiUrl url = new GeminiUrl(surl);
+
+            GeminiRequestor gemiRequestor = new GeminiRequestor();
+            
+            var resp = gemiRequestor.Request(url);
+
+            if (gemiRequestor.LastException == null && IsValidFaviconResp(resp))
+            {
+                SaveFileFavicon(url, resp.BodyText.Trim());
+            }
+        }
+
+        public static void CheckRobot(string surl)
         {
             GeminiUrl url = new GeminiUrl(surl);
 
             GeminiRequestor gemiRequestor = new GeminiRequestor();
 
-            
             var resp = gemiRequestor.Request(url);
 
             if (gemiRequestor.LastException == null && IsValidRobotsResp(resp))
             {
-                SaveFile(url, resp.BodyText);
+                SaveFileRobot(url, resp.BodyText);
             }
         }
 
@@ -84,18 +88,40 @@ namespace Gemini.Net.Crawler.Support
             return false;
         }
 
-        private static void SaveFile(GeminiUrl url, string text)
+        private static bool IsValidFaviconResp(GeminiResponse resp)
+        {
+            if (resp != null && resp.IsSuccess && resp.IsTextResponse)
+            {
+                var favicon = resp.BodyText.Trim();
+                if(favicon.Contains(" ") || favicon.Contains("\n"))
+                {
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private static void SaveFileFavicon(GeminiUrl url, string text)
         {
 
-            Robots robot = new Robots(text);
-            foundCounter.Increment();
+            foundFaviconsCounter.Increment();
+            //and replace : from a host:port with an @
+            var filteredAuthority = url.Authority.Replace(":", "@");
+            File.WriteAllText($"{outputDirFavicon}{filteredAuthority}!favicon.txt", text);
+        }
 
+
+        private static void SaveFileRobot(GeminiUrl url, string text)
+        {
+
+            foundRobotsCounter.Increment();
             //prepand the host/port in a comment
             text = $"#{url.Authority}\n" + text;
             //and replace : from a host:port with an @
             var filteredAuthority = url.Authority.Replace(":", "@");
 
-            File.WriteAllText($"{outputDir}{filteredAuthority}!robots.txt", text);
+            File.WriteAllText($"{outputDirRobots}{filteredAuthority}!robots.txt", text);
         }
 
     }

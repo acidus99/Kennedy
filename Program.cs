@@ -14,10 +14,10 @@ namespace Gemini.Net.Crawler
         static void Main(string[] args)
         {
 
-            LineLoader loader = new LineLoader(Crawler.DataDirectory);
-            loader.LoadDocuments();
+            VulnScanner.DoIt();
 
             return;
+
             var crawler = new Crawler(80,400000);
 
             bool doNew = true;
