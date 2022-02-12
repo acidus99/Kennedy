@@ -42,7 +42,6 @@ namespace Gemini.Net.Crawler.Support
                 int t = requestCounter.Increment();
 
                 CheckRobot($"gemini://{domain}/robots.txt");
-                CheckFavicon($"gemini://{domain}/favicon.txt");
 
                 Console.WriteLine($"Progress:\t{t}\t of {total}\tRobots Hits:\t{foundRobotsCounter.Count}");
             }); //close method invocation 
