@@ -1,6 +1,8 @@
 ﻿using System;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
+
 namespace Gemini.Net.Crawler.GemText
 {
     //Extracts
@@ -24,6 +26,28 @@ namespace Gemini.Net.Crawler.GemText
                 }
             }
             return ret;
+        }
+
+        /// <summary>
+        /// gets rid of preformatted text, and the hyperlink part of any link lines
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static string FilterBody(string text)
+        {
+            var sb = new StringBuilder();
+            foreach (string line in LineParser.RemovePreformatted(text))
+            {
+                if (line.StartsWith("=>"))
+                {
+                    sb.AppendLine(LinkFinder.GetLinkText(line));
+                }
+                else
+                {
+                    sb.AppendLine(line);
+                }
+            }
+            return sb.ToString();
         }
 
         public static bool IsHeading(string line)
