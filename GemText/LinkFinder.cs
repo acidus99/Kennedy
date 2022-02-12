@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using Gemini.Net;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Gemini.Net.Crawler.GemText
 {
@@ -56,7 +55,7 @@ namespace Gemini.Net.Crawler.GemText
         private static FoundLink Create(GeminiUrl pageUrl, Match match)
             => Create(pageUrl, match.Groups[1].Value, getLinkText(match));
 
-        private static FoundLink Create(GeminiUrl pageUrl, string foundUrl, string linkText = "")
+        public static FoundLink Create(GeminiUrl pageUrl, string foundUrl, string linkText = "")
         {
             var newUrl = GeminiUrl.MakeUrl(pageUrl, foundUrl);
             //ignore anything that doesn't resolve properly, or isn't to a gemini:// URL
