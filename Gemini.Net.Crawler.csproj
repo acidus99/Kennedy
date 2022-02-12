@@ -14,6 +14,7 @@
     <None Remove="README.md" />
     <None Remove=".gitignore" />
     <None Remove="NTextCat" />
+    <None Remove="DocumentParsers\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
@@ -22,6 +23,7 @@
     <Folder Include="RobotsTxt\" />
     <Folder Include="Support\" />
     <Folder Include="GemText\" />
+    <Folder Include="DocumentParsers\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Gemini.Net\Gemini.Net.csproj" />

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Timers;
 using System.Threading;
 
-
+using Gemini.Net.Crawler.DocumentParsers;
 using Gemini.Net.CrawlDataStore;
 using Gemini.Net.Crawler.GemText;
 using Gemini.Net.Crawler.Modules;
@@ -46,6 +46,9 @@ namespace Gemini.Net.Crawler
 
         DocumentIndex docIndex;
         DocumentStore docStore;
+        FullTextSearchEngine ftsEngine;
+
+        DocumentParser docParser;
 
         List<AbstractModule> Modules;
         List<AbstractUrlModule> UrlModeles;
@@ -72,7 +75,10 @@ namespace Gemini.Net.Crawler
 
             // init document repository and data bases
             docIndex = new DocumentIndex(Crawler.DataDirectory);
+            ftsEngine = new FullTextSearchEngine(Crawler.DataDirectory);
             docStore = new DocumentStore(Crawler.DataDirectory + "page-store/");
+
+            docParser = new DocumentParser();
 
             //init errorlog
             errorLog = new ErrorLog(outputBase);
@@ -232,17 +238,39 @@ namespace Gemini.Net.Crawler
             //Modules
             if (!seenContentModule.CheckAndRecord(resp))
             {
-                var foundLinks = LinkFinder.ExtractLinks(resp);
-                foundLinks.ForEach(x => ProcessProspectiveUrl(x.Url));
-                bool savedBody = docStore.StoreDocument(resp);
-                docIndex.StoreMetaData(url, resp, foundLinks.Count, savedBody);
-                docIndex.StoreLinks(url, foundLinks);
-                
+                //parse it
+                DocumentMetadata metaData = docParser.ParseDocument(resp);
+                //act on the links
+                metaData.Links.ForEach(x => ProcessProspectiveUrl(x.Url));
+
+                var dbDocID = SaveResponse(resp, metaData);
+                IndexDocument(dbDocID, metaData);
             }
             
             //note the work is complete
             workInFlight.Decrement();
         }
+
+        private void IndexDocument(long dbDocID, DocumentMetadata metaData)
+        {
+            if (metaData.IsIndexable)
+            {
+                ftsEngine.AddResponseToIndex(dbDocID, metaData.Title, metaData.FilteredBody);
+            }
+        }
+
+        private long SaveResponse(GeminiResponse resp, DocumentMetadata metaData)
+        {
+            //store it in our doc storeage
+            bool savedBody = docStore.StoreDocument(resp);
+
+            //store in in the doc index (inserting or updating as appropriate
+            long dbDocID = docIndex.StoreMetaData(resp, metaData.Title, metaData.Links.Count, savedBody, metaData.Language, metaData.LineCount);
+            docIndex.StoreLinks(resp.RequestUrl, metaData.Links);
+
+            return dbDocID;
+        }
+
 
         protected override string GetStatusMesssage()
             => $"Elapsed: {crawlStopwatch.Elapsed}\tTotal Requested: {totalUrlsRequested.Count}\tTotal Processed: {processedCounter.Count}";
@@ -265,19 +293,19 @@ namespace Gemini.Net.Crawler
             }
         }
 
-        public void LoadPreviousResults()
-        {
-            //load frontier with URLs
-            urlFrontier.PopulateFromSnapshot($"{DataDirectory}remaining-frontier.txt");
+        //public void LoadPreviousResults()
+        //{
+        //    //load frontier with URLs
+        //    urlFrontier.PopulateFromSnapshot($"{DataDirectory}remaining-frontier.txt");
 
-            //populate our seen URLs list with everything that's in the frontier...
-            seenUrlModule.PopulateWithSeenIDs(urlFrontier.GetSnapshot().Select(x=>x.DocID).ToList());
-            //... and what we have already saved in the database
-            seenUrlModule.PopulateWithSeenIDs(docIndex.GetDocIDs());
+        //    //populate our seen URLs list with everything that's in the frontier...
+        //    seenUrlModule.PopulateWithSeenIDs(urlFrontier.GetSnapshot().Select(x=>x.DocID).ToList());
+        //    //... and what we have already saved in the database
+        //    seenUrlModule.PopulateWithSeenIDs(docIndex.GetDocIDs());
 
-            //load previous known body hashes
-            seenContentModule.PopulateWithSeenHashes(docIndex.GetBodyHashes());
-        }
+        //    //load previous known body hashes
+        //    seenContentModule.PopulateWithSeenHashes(docIndex.GetBodyHashes());
+        //}
 
 
         /// <summary>
