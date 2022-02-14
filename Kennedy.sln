@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.810.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gemini.Net", "..\Gemini.Net\Gemini.Net.csproj", "{524D863C-D4E0-4141-BF91-9CD3EEE73DA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Crawler", "Crawler\Kennedy.Crawler.csproj", "{D6C872C2-4F84-4779-9545-1A86BE1118FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.CrawlData", "CrawlData\Kennedy.CrawlData.csproj", "{1FD8C514-93B8-455F-9FE4-2507F1CA3C13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Server", "Server\Kennedy.Server.csproj", "{EB77F55F-8987-49F6-87D0-9D5168A2B3E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocketForce", "..\RocketForce\RocketForce\RocketForce.csproj", "{4DD2858A-0A29-4CE7-BFE8-A6697B584ED9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.SearchConsole", "SearchConsole\Kennedy.SearchConsole.csproj", "{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{524D863C-D4E0-4141-BF91-9CD3EEE73DA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{524D863C-D4E0-4141-BF91-9CD3EEE73DA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{524D863C-D4E0-4141-BF91-9CD3EEE73DA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{524D863C-D4E0-4141-BF91-9CD3EEE73DA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6C872C2-4F84-4779-9545-1A86BE1118FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6C872C2-4F84-4779-9545-1A86BE1118FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6C872C2-4F84-4779-9545-1A86BE1118FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6C872C2-4F84-4779-9545-1A86BE1118FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FD8C514-93B8-455F-9FE4-2507F1CA3C13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FD8C514-93B8-455F-9FE4-2507F1CA3C13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FD8C514-93B8-455F-9FE4-2507F1CA3C13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FD8C514-93B8-455F-9FE4-2507F1CA3C13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB77F55F-8987-49F6-87D0-9D5168A2B3E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB77F55F-8987-49F6-87D0-9D5168A2B3E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB77F55F-8987-49F6-87D0-9D5168A2B3E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB77F55F-8987-49F6-87D0-9D5168A2B3E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DD2858A-0A29-4CE7-BFE8-A6697B584ED9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DD2858A-0A29-4CE7-BFE8-A6697B584ED9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DD2858A-0A29-4CE7-BFE8-A6697B584ED9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DD2858A-0A29-4CE7-BFE8-A6697B584ED9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {793F3374-39EF-4946-9322-B72389525220}
+	EndGlobalSection
+EndGlobal
