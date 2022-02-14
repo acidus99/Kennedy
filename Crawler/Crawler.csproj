@@ -32,4 +32,7 @@
   <ItemGroup>
     <PackageReference Include="NTextCat" Version="0.3.65" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
+  </ItemGroup>
 </Project>
