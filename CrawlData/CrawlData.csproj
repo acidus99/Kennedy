@@ -6,8 +6,19 @@
 
   <ItemGroup>
     <None Remove="Db\" />
+    <None Remove="Microsoft.EntityFrameworkCore" />
+    <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
+    <None Remove="EFCore.BulkExtensions" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Db\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.14" />
+    <PackageReference Include="EFCore.BulkExtensions" Version="5.4.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
   </ItemGroup>
 </Project>
