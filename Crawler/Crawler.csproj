@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="DocumentParsers\" />
+    <None Remove="GemText\" />
+    <None Remove="Modules\" />
+    <None Remove="RobotsTxt\" />
+    <None Remove="Support\" />
+    <None Remove="UrlFrontiers\" />
+    <None Remove="Utils\" />
+    <None Remove="NTextCat" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DocumentParsers\" />
+    <Folder Include="GemText\" />
+    <Folder Include="Modules\" />
+    <Folder Include="RobotsTxt\" />
+    <Folder Include="Support\" />
+    <Folder Include="UrlFrontiers\" />
+    <Folder Include="Utils\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Core14.profile.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NTextCat" Version="0.3.65" />
+  </ItemGroup>
+</Project>
