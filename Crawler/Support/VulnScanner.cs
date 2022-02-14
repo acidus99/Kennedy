@@ -2,10 +2,10 @@
 using System.IO;
 using System.Threading.Tasks;
 using Gemini.Net;
-using Gemini.Net.Crawler.Utils;
+using Kennedy.Crawler.Utils;
 
 
-namespace Gemini.Net.Crawler.Support
+namespace Kennedy.Crawler.Support
 {
     public class VulnScanner
     {

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
 
-using Gemini.Net.Crawler.Utils;
+using Kennedy.Crawler.Utils;
 
 
-namespace Gemini.Net.Crawler.Modules
+namespace Kennedy.Crawler.Modules
 {
     public abstract class AbstractModule
     {

@@ -1,6 +1,8 @@
 ﻿using System;
 
-namespace Gemini.Net.Crawler
+using Gemini.Net;
+
+namespace Kennedy.Crawler
 {
     public class DomainAnalyzer
     {

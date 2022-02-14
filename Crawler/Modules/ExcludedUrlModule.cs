@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Gemini.Net;
-using Gemini.Net.Crawler.Utils;
+using Kennedy.Crawler.Utils;
 using System.IO;
 
-namespace Gemini.Net.Crawler.Modules
+namespace Kennedy.Crawler.Modules
 {
     public class ExcludedUrlModule : AbstractUrlModule
     {

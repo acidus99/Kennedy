@@ -3,7 +3,9 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gemini.Net.CrawlDataStore.Db
+using Gemini.Net;
+
+namespace Kennedy.CrawlData.Db
 {
     [Table("Documents")]
     [Index(nameof(Status))]

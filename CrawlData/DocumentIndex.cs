@@ -5,9 +5,11 @@ using System.Data;
 using System.Linq;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
-using Gemini.Net.CrawlDataStore.Db;
 
-namespace Gemini.Net.CrawlDataStore
+using Gemini.Net;
+using Kennedy.CrawlData.Db;
+
+namespace Kennedy.CrawlData
 { 
     public class DocumentIndex
     {

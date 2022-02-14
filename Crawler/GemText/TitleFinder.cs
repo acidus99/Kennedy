@@ -3,7 +3,7 @@ using System.Linq;
 
 using Gemini.Net;
 
-namespace Gemini.Net.Crawler.GemText
+namespace Kennedy.Crawler.GemText
 {
     /// <summary>
     /// Attempts to determine a "title" for a gemtext page

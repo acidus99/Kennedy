@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Gemini.Net;
 
-namespace Gemini.Net.CrawlDataStore
+namespace Kennedy.CrawlData
 {
     /// <summary>
     /// disk-backed KV store, using a directory structure

@@ -1,7 +1,7 @@
 ﻿using System;
 using Gemini.Net;
 
-namespace Gemini.Net.Crawler.Modules
+namespace Kennedy.Crawler.Modules
 {
     /// <summary>
     /// Abstract module that determines if a URL is allowed to be added to the Url Frontier

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Gemini.Net.Crawler.GemText
+using Gemini.Net;
+
+namespace Kennedy.Crawler.GemText
 {
     /// <summary>
     /// Finds hyperlinks in Gemini Text Documents

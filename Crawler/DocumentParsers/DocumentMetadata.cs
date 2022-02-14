@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Gemini.Net.Crawler.DocumentParsers
+using Gemini.Net;
+
+namespace Kennedy.Crawler.DocumentParsers
 {
     public class DocumentMetadata
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Gemini.Net.Crawler.GemText
+namespace Kennedy.Crawler.GemText
 {
     //Extracts
     public static class LineParser

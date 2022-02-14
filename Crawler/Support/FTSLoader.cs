@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq;
-using Gemini.Net.CrawlDataStore;
-using Gemini.Net.CrawlDataStore.Db;
+using Kennedy.CrawlData;
+using Kennedy.CrawlData.Db;
 using Gemini.Net;
-using Gemini.Net.Crawler.GemText;
+using Kennedy.Crawler.GemText;
 using System.Text;
 using Microsoft.Data.Sqlite;
 
 
-namespace Gemini.Net.Crawler.Support
+namespace Kennedy.Crawler.Support
 {
     public class FTSLoader
     {

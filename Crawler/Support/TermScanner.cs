@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Text;
 using System.Linq;
-using Gemini.Net.CrawlDataStore;
-using Gemini.Net.CrawlDataStore.Db;
-using Gemini.Net.Crawler.GemText;
+using Kennedy.CrawlData;
+using Kennedy.CrawlData.Db;
+using Kennedy.Crawler.GemText;
 using Gemini.Net;
 
-namespace Gemini.Net.Crawler.Support
+namespace Kennedy.Crawler.Support
 {
     public class TermScanner
     {

@@ -4,7 +4,7 @@ using System.Net;
 using Gemini.Net;
 using System.Collections.Generic;
 
-namespace Gemini.Net.Crawler
+namespace Kennedy.Crawler
 {
     public class DnsCache
     {

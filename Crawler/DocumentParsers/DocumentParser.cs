@@ -5,9 +5,10 @@ using System.Text.RegularExpressions;
 
 using NTextCat;
 
-using Gemini.Net.Crawler.GemText;
+using Gemini.Net;
+using Kennedy.Crawler.GemText;
 
-namespace Gemini.Net.Crawler.DocumentParsers
+namespace Kennedy.Crawler.DocumentParsers
 {
     public class DocumentParser
     {

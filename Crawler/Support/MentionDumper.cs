@@ -2,12 +2,12 @@
 
 using System.Linq;
 using System.Collections.Generic;
-using Gemini.Net.CrawlDataStore;
-using Gemini.Net.CrawlDataStore.Db;
+using Kennedy.CrawlData;
+using Kennedy.CrawlData.Db;
 using System.IO;
 
 
-namespace Gemini.Net.Crawler.Support
+namespace Kennedy.Crawler.Support
 {
     public class MentionsDumper
     {

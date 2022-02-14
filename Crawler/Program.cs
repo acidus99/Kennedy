@@ -3,11 +3,11 @@ using System.Linq;
 using System.Collections.Generic;
 using Gemini.Net;
 
-using Gemini.Net.Crawler.Support;
+using Kennedy.Crawler.Support;
 
 
 
-namespace Gemini.Net.Crawler
+namespace Kennedy.Crawler
 {
     class Program
     {

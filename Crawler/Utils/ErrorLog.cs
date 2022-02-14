@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Gemini.Net.Crawler.Utils
+namespace Kennedy.Crawler.Utils
 {
     public class ErrorLog
     {

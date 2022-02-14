@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Gemini.Net.Crawler.RobotsTxt
+namespace Kennedy.Crawler.RobotsTxt
 {
     internal class DenyRule
     {

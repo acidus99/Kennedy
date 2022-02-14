@@ -2,9 +2,11 @@
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Gemini.Net.Crawler.Utils;
 
-namespace Gemini.Net.Crawler.Support
+using Gemini.Net;
+using Kennedy.Crawler.Utils;
+
+namespace Kennedy.Crawler.Support
 {
 
     /// <summary>

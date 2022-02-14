@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace Gemini.Net.Crawler.Utils
+namespace Kennedy.Crawler.Utils
 {
     public class ThreadedFileWriter
     {

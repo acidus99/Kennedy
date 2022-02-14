@@ -4,15 +4,15 @@ using System.Text.RegularExpressions;
 
 using System.Linq;
 using System.Collections.Generic;
-using Gemini.Net.CrawlDataStore;
-using Gemini.Net.CrawlDataStore.Db;
-using Gemini.Net.Crawler.Utils;
-using Gemini.Net.Crawler.GemText;
+using Kennedy.CrawlData;
+using Kennedy.CrawlData.Db;
+using Kennedy.Crawler.Utils;
+using Kennedy.Crawler.GemText;
 using Gemini.Net;
 using System.IO;
 
 
-namespace Gemini.Net.Crawler.Support
+namespace Kennedy.Crawler.Support
 {
     public class HashtagDumper
     {

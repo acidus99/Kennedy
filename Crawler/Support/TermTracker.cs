@@ -2,10 +2,10 @@
 
 using System.Linq;
 using System.Collections.Generic;
-using Gemini.Net.Crawler.Utils;
+using Kennedy.Crawler.Utils;
 using Gemini.Net;
 
-namespace Gemini.Net.Crawler.Support
+namespace Kennedy.Crawler.Support
 {
     public class TermTracker
     {

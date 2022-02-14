@@ -3,9 +3,9 @@ using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using Gemini.Net;
-using Gemini.Net.Crawler.Modules;
+using Kennedy.Crawler.Modules;
 
-namespace Gemini.Net.Crawler.UrlFrontiers
+namespace Kennedy.Crawler.UrlFrontiers
 {
     /// <summary>
     /// Manages our queue of URLs to crawl

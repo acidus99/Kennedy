@@ -2,7 +2,7 @@
 using Gemini.Net;
 using System.Security.Cryptography;
 
-namespace Gemini.Net.CrawlDataStore
+namespace Kennedy.CrawlData
 {
     /// <summary>
     /// Document store implemented using an Object Store, backed onto a disk

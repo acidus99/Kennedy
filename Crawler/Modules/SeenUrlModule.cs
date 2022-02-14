@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 
 using Gemini.Net;
-using Gemini.Net.Crawler.Utils;
+using Kennedy.Crawler.Utils;
 
-namespace Gemini.Net.Crawler.Modules
+namespace Kennedy.Crawler.Modules
 {
     public class SeenUrlModule : AbstractUrlModule
     {

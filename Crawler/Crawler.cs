@@ -6,14 +6,16 @@ using System.Linq;
 using System.Timers;
 using System.Threading;
 
-using Gemini.Net.Crawler.DocumentParsers;
-using Gemini.Net.CrawlDataStore;
-using Gemini.Net.Crawler.GemText;
-using Gemini.Net.Crawler.Modules;
-using Gemini.Net.Crawler.Utils;
-using Gemini.Net.Crawler.UrlFrontiers;
+using Gemini.Net;
+using Kennedy.Crawler.DocumentParsers;
+using Kennedy.CrawlData;
+using Kennedy.CrawlData.Db;
+using Kennedy.Crawler.GemText;
+using Kennedy.Crawler.Modules;
+using Kennedy.Crawler.Utils;
+using Kennedy.Crawler.UrlFrontiers;
 
-namespace Gemini.Net.Crawler
+namespace Kennedy.Crawler
 {
     public class Crawler : AbstractModule, ICrawler
     {
@@ -291,7 +293,7 @@ namespace Gemini.Net.Crawler
             using (var db = docIndex.GetContext())
             {
                 db.DomainEntries.Add(
-                    new CrawlDataStore.Db.StoredDomainsEntry
+                    new StoredDomainsEntry
                     {
                         Domain = url.Hostname,
                         Port = url.Port,

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Gemini.Net;
-namespace Gemini.Net.Crawler
+namespace Kennedy.Crawler
 {
     /// <summary>
     /// Thread that pulls jobs for a specific authoriy

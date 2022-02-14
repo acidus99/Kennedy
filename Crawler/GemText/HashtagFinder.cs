@@ -2,9 +2,9 @@
 using System.Text.RegularExpressions;
 using System.Linq;
 using System.Collections.Generic;
-using Gemini.Net.Crawler.Utils;
+using Kennedy.Crawler.Utils;
 
-namespace Gemini.Net.Crawler.GemText
+namespace Kennedy.Crawler.GemText
 {
     public static class HashtagFinder
     {

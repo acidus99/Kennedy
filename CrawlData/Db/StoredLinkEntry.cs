@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Gemini.Net;
 
 
-namespace Gemini.Net.CrawlDataStore.Db
+namespace Kennedy.CrawlData.Db
 {
     [Table("Links")]
     public class StoredLinkEntry

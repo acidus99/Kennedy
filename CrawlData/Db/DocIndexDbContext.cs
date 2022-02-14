@@ -1,7 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 
-namespace Gemini.Net.CrawlDataStore.Db
+namespace Kennedy.CrawlData.Db
 {
     public class DocIndexDbContext : DbContext
     {

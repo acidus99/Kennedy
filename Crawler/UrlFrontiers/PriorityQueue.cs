@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Collections.Generic;
 using Gemini.Net;
-using Gemini.Net.Crawler.Utils;
+using Kennedy.Crawler.Utils;
 
-namespace Gemini.Net.Crawler.UrlFrontiers
+namespace Kennedy.Crawler.UrlFrontiers
 {
     /// <summary>
     /// 

@@ -2,16 +2,16 @@
 using System.IO;
 using System.Threading.Tasks;
 using Gemini.Net;
-using Gemini.Net.Crawler.Utils;
-using Gemini.Net.Crawler;
-using Gemini.Net.CrawlDataStore;
-using Gemini.Net.CrawlDataStore.Db;
+using Kennedy.Crawler.Utils;
+using Kennedy.Crawler;
+using Kennedy.CrawlData;
+using Kennedy.CrawlData.Db;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Gemini.Net.Crawler.Support
+namespace Kennedy.Crawler.Support
 {
     /// <summary>
     /// Tool to rebuild the pending URL Frontier from the crawl results

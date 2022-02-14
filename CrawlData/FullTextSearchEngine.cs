@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 
-namespace Gemini.Net.CrawlDataStore
+using Gemini.Net;
+
+namespace Kennedy.CrawlData
 {
     public class FullTextSearchEngine
     {
