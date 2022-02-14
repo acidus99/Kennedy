@@ -35,6 +35,7 @@ namespace Gemini.Net.Crawler
         ThreadSafeCounter totalUrlsRequested;
 
         BalancedUrlFrontier urlFrontier;
+        Bag<string> HitsForDomain = new Bag<string>();
 
         ThreadSafeCounter workInFlight;
 
@@ -72,6 +73,7 @@ namespace Gemini.Net.Crawler
             workInFlight = new ThreadSafeCounter();
             totalUrlsRequested = new ThreadSafeCounter();
             crawlStopwatch = new Stopwatch();
+            HitsForDomain = new Bag<string>();
 
             // init document repository and data bases
             docIndex = new DocumentIndex(Crawler.DataDirectory);
@@ -267,8 +269,46 @@ namespace Gemini.Net.Crawler
             //store in in the doc index (inserting or updating as appropriate
             long dbDocID = docIndex.StoreMetaData(resp, metaData.Title, metaData.Links.Count, savedBody, metaData.Language, metaData.LineCount);
             docIndex.StoreLinks(resp.RequestUrl, metaData.Links);
-
+            SaveDomainStats(resp.RequestUrl);
             return dbDocID;
+        }
+
+        private void SaveDomainStats(GeminiUrl url)
+        {
+            var count = HitsForDomain.Add(url.Authority);
+            if (count == 1)
+            {
+                AnalyzeDomain(url);
+            }
+        }
+
+        private void AnalyzeDomain(GeminiUrl url)
+        {
+            Console.WriteLine("analysing domain: " + url.Hostname);
+            DomainAnalyzer analyzer = new DomainAnalyzer(url.Hostname, url.Port);
+            analyzer.QueryDomain(urlFrontier.DnsCache);
+
+            using (var db = docIndex.GetContext())
+            {
+                db.DomainEntries.Add(
+                    new CrawlDataStore.Db.StoredDomainsEntry
+                    {
+                        Domain = url.Hostname,
+                        Port = url.Port,
+
+                        IsReachable = analyzer.IsReachable,
+                        ErrorMessage = analyzer.ErrorMessage,
+
+                        HasFaviconTxt = analyzer.HasValidFavionTxt,
+                        HasRobotsTxt = analyzer.HasValidRobotsTxt,
+                        HasSecurityTxt = analyzer.HasValidSecurityTxt,
+
+                        FaviconTxt = analyzer.FaviconTxt,
+                        RobotsTxt = analyzer.RobotsTxt,
+                        SecurityTxt = analyzer.SecurityTxt
+                    });
+                db.SaveChanges();
+            }
         }
 
 

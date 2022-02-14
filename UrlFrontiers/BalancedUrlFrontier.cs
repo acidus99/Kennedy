@@ -19,7 +19,7 @@ namespace Gemini.Net.Crawler.UrlFrontiers
         /// </summary>
         PriorityQueue [] queues;
 
-        DnsCache dnsCache;
+        public DnsCache DnsCache;
         int totalWorkerThreads;
 
         public BalancedUrlFrontier(int totalWorkers)
@@ -27,7 +27,7 @@ namespace Gemini.Net.Crawler.UrlFrontiers
         {
             locker = new object();
             totalWorkerThreads = totalWorkers;
-            dnsCache = new DnsCache();
+            DnsCache = new DnsCache();
 
             queues = new PriorityQueue[totalWorkerThreads];
             for(int i = 0; i< totalWorkerThreads; i++)
@@ -45,7 +45,7 @@ namespace Gemini.Net.Crawler.UrlFrontiers
             //try and look up the ip address for this host. If we don't get one,
             //fall back to using the hostname.
 
-            string address = dnsCache.GetLookup(url.Hostname);
+            string address = DnsCache.GetLookup(url.Hostname);
             int hash = (address != null) ? address.GetHashCode() : url.Hostname.GetHashCode();
 
             return Math.Abs(hash) % totalWorkerThreads;

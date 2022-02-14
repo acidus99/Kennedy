@@ -4,7 +4,7 @@ using System.Net;
 using Gemini.Net;
 using System.Collections.Generic;
 
-namespace Gemini.Net.Crawler.UrlFrontiers
+namespace Gemini.Net.Crawler
 {
     public class DnsCache
     {
