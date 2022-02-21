@@ -50,6 +50,10 @@ namespace Kennedy.Server.Views
                     }
 
                     Response.WriteLine(">" + FormatSnippet(result.Snippet));
+                    if (result.BodySaved)
+                    {
+                        Response.WriteLine($"=> /delorean?id={result.DBDocID} Cached copy");
+                    }
                     Response.WriteLine("");
                 }
 

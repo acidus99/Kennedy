@@ -27,6 +27,17 @@ namespace Kennedy.Crawler
             IsReachable = false;
         }
 
+        public void QueryDomain()
+        {
+            if (CheckIfReachable())
+            {
+                IsReachable = true;
+                CheckRobots();
+                CheckFavicon();
+                CheckSecurity();
+            }
+        }
+
         public void QueryDomain(DnsCache dnsCache)
         {
             if (dnsCache.GetLookup(Host) != null)
@@ -36,6 +47,16 @@ namespace Kennedy.Crawler
                 CheckFavicon();
                 CheckSecurity();
             }            
+        }
+
+        private bool CheckIfReachable()
+        {
+            var resp = GetFile("/");
+            if (resp.ConnectStatus == ConnectStatus.Success)
+            {
+                return true;
+            }
+            return false;
         }
 
         private void CheckRobots()
@@ -58,7 +79,11 @@ namespace Kennedy.Crawler
 
         private void CheckSecurity()
         {
-            SecurityTxt = GetTextForFile("/.well-known/security.txt");
+            var txt = GetTextForFile("/.well-known/security.txt");
+            if (txt.ToLower().Contains("contact:"))
+            {
+                SecurityTxt = txt;
+            }
         }
 
         private GeminiResponse GetFile(string path)

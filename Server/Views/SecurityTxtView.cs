@@ -9,10 +9,10 @@ using RocketForce;
 
 namespace Kennedy.Server.Views
 {
-    internal class KnownHostsView :AbstractView
+    internal class SecurityTxtView :AbstractView
     {
 
-        public KnownHostsView(Request request, Response response, App app)
+        public SecurityTxtView(Request request, Response response, App app)
             : base(request, response, app) { }
 
         public override void Render()
@@ -26,13 +26,13 @@ namespace Kennedy.Server.Views
 => /search New Search
 => /lucky I'm Feeling Lucky */
 
-            Response.WriteLine($"# 🔭 Known Gemini Hosts");
-            Response.WriteLine("=> /search New Search");
-            Response.WriteLine("=> /lucky I'm Feeling Lucky");
+            Response.WriteLine($"# 🔭 Capsules with security.txt ");
+            Response.WriteLine("The following are capsules using the \"security.txt\" standard, allowing people to easily contact capsule owners about security issues.");
+            Response.WriteLine("=> https://securitytxt.org About Security.txt");
             Response.WriteLine();
-            Response.WriteLine("## Known Hosts");
+            Response.WriteLine("## Capsules with security.txt");
 
-            var knownHosts = db.DomainEntries.Where(x => x.IsReachable).OrderBy(x => x.Domain).Select(x => new
+            var knownHosts = db.DomainEntries.Where(x => x.IsReachable && x.HasSecurityTxt).OrderBy(x => x.Domain).Select(x => new
             {
                 Hostname = x.Domain,
                 Port = x.Port,
@@ -46,7 +46,7 @@ namespace Kennedy.Server.Views
                 {
                     label += ":" + host.Port;
                 }
-                Response.WriteLine($"=> gemini://{host.Hostname}:{host.Port}/ {label}");
+                Response.WriteLine($"=> gemini://{host.Hostname}:{host.Port}/.well-known/security.txt {label}");
             }
         }
     }

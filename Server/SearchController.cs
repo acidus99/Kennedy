@@ -35,6 +35,28 @@ namespace Kennedy.Server
             view.Render();
         }
 
+        public static void SecurityTxt(Request request, Response response, App app)
+        {
+            var view = new SecurityTxtView(request, response, app);
+            view.Render();
+        }
+
+        public static void Cached(Request request, Response response, App app)
+        {
+            var view = new CachedView(request, response, app);
+            view.Render();
+        }
+
+        public static void DeloreanSearch(Request request, Response response, App app)
+        {
+            if (!request.Url.HasQuery)
+            {
+                response.Input("Enter Gemini Url");
+                return;
+            }
+            var view = new DorleanResultView(request, response, app);
+            view.Render();
+        }
 
     }
 }

