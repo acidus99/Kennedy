@@ -87,5 +87,10 @@ namespace Kennedy.CrawlData.Db
         public int LineCount { get; set; }
 
         #endregion
+
+        public void SetDocID()
+        {
+            DocID = DocumentIndex.toULong(DBDocID);
+        }
     }
 }

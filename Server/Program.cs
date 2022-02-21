@@ -43,6 +43,8 @@ namespace Kennedy.Server
             app.OnRequest("/lucky", SearchController.LuckySearch);
             app.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
             app.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
+            app.OnRequest("/delorean", SearchController.DeloreanSearch);
+            app.OnRequest("/cached", SearchController.Cached);
             app.Run();
         }
 

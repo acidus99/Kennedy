@@ -43,7 +43,7 @@ namespace Kennedy.CrawlData
                 {
                     connection.Open();
                     SqliteCommand cmd = new SqliteCommand(@"
-Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, HasFaviconTxt, FaviconTxt, snippet(FTS, 1, '[',']','…',20) as snip
+Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, BodySaved, HasFaviconTxt, FaviconTxt, snippet(FTS, 1, '[',']','…',20) as snip
 From FTS as fts
 Inner Join Documents as doc
 On doc.DBDocID = fts.ROWID
@@ -73,6 +73,7 @@ LIMIT $limit OFFSET $offset
                             Snippet = reader["snip"].ToString(),
                             DBDocID = reader.GetInt64(reader.GetOrdinal("DBDocID")),
                             Language = reader["Language"].ToString(),
+                            BodySaved = reader.GetBoolean(reader.GetOrdinal("BodySaved")),
                             LineCount = reader.GetInt32(reader.GetOrdinal("LineCount")),
                             Favicon = favicon
                         }); ;

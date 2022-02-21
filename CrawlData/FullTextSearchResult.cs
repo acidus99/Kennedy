@@ -19,6 +19,8 @@ namespace Kennedy.CrawlData
         public bool IsRecognizedLanguage
             => FormattedLanguage.Length > 0;
 
+        public bool BodySaved { get; set; }
+
         public string FormattedLanguage
         {
             get {
