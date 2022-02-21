@@ -17,7 +17,7 @@ namespace Kennedy.Server.Views
 
         public override void Render()
         {
-            var query = SanitizedQuery;
+            var query = PrepareQuery(SanitizedQuery);
             var options = new SearchOptions(Request.Url, "/search");
 
             Response.Success();
@@ -48,12 +48,12 @@ namespace Kennedy.Server.Views
                     {
                         Response.WriteLine($"* {result.LineCount} Lines - {FormatSize(result.BodySize)} - {FormatDomain(result)}");
                     }
-
-                    Response.WriteLine(">" + FormatSnippet(result.Snippet));
                     if (result.BodySaved)
                     {
-                        Response.WriteLine($"=> /delorean?id={result.DBDocID} Cached copy");
+                        Response.WriteLine($"=> /cached?id={result.DBDocID} Cached copy");
                     }
+                    Response.WriteLine(">" + FormatSnippet(result.Snippet));
+                    
                     Response.WriteLine("");
                 }
 
@@ -114,6 +114,11 @@ namespace Kennedy.Server.Views
             snippet = snippet.Replace("\r", "").Replace("\n", " ").Replace("#", "").Trim();
             //collapse whitespace runs
             return Regex.Replace(snippet, @"\s+", " ");
+        }
+
+        private string PrepareQuery(string query)
+        {
+            return query.Replace(".", " ");
         }
     }
 }
