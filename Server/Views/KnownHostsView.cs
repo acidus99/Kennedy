@@ -32,28 +32,22 @@ namespace Kennedy.Server.Views
             Response.WriteLine();
             Response.WriteLine("## Known Hosts");
 
-            var domains = db.DocEntries.Select(x=>x.Domain).Distinct().ToList();
-
-            domains.Sort();
-
-            foreach (var domain in domains)
+            var knownHosts = db.DomainEntries.Where(x => x.IsReachable).OrderBy(x => x.Domain).Select(x => new
             {
-                var port = 1965;
-                var fav = GetFavicon(domain, port);
-                Response.WriteLine($"=> gemini://{domain}/ {fav}{domain}");
-            }
+                Hostname = x.Domain,
+                Port = x.Port,
+                Favicon = !string.IsNullOrEmpty(x.FaviconTxt) ? x.FaviconTxt : ""
+            }) ;
 
-        }
-
-        private string GetFavicon(string host, int port)
-        {
-            try
+            foreach (var host in knownHosts)
             {
-                //return File.ReadAllText($"/var/gemini/crawl-data/favicons/{host}@{port}!favicon.txt") + " ";
+                var label = $"{host.Favicon}{host.Hostname}";
+                if(host.Port != 1965)
+                {
+                    label += ":" + host.Port;
+                }
+                Response.WriteLine($"=> gemini://{host.Hostname}:{host.Port}/ {label}");
             }
-            catch (Exception) { }
-            return "";
         }
-
     }
 }
