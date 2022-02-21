@@ -35,6 +35,10 @@ namespace Kennedy.Server
             view.Render();
         }
 
-
+        public static void SecurityTxt(Request request, Response response, App app)
+        {
+            var view = new SecurityTxtView(request, response, app);
+            view.Render();
+        }
     }
 }
