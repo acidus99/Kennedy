@@ -86,6 +86,8 @@ namespace Kennedy.CrawlData.Db
 
         public int LineCount { get; set; }
 
+        public double PopularityRank { get; set; }
+
         #endregion
 
         public void SetDocID()
