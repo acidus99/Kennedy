@@ -11,12 +11,15 @@ namespace Kennedy.SearchConsole
             string query = "";
             while (query != "exit")
             {
+                Console.WriteLine("***************************************************************");
+                Console.WriteLine("***************************************************************");
+                Console.WriteLine("***************************************************************");
                 Console.WriteLine("Entry Search term");
                 query = Console.ReadLine();
 
                 FullTextSearchEngine engine = new FullTextSearchEngine("/var/gemini/crawl-data/");
 
-                var results = engine.DoSearch(query,0,15);
+                var results = engine.DoSearch(query,0,15,true);
 
                 int counter = 0;
 
@@ -26,8 +29,10 @@ namespace Kennedy.SearchConsole
 
                     Console.WriteLine($"#\t{counter}");
                     Console.WriteLine($"Title\t{result.Title}");
-                    Console.WriteLine($"Size\t{result.BodySize}");
+                    Console.WriteLine($"FTS Rank\t{result.FtsRank}");
+                    Console.WriteLine($"Pop Rank\t{result.PopRank}");
                     Console.WriteLine($"Url\t{result.Url}");
+                    Console.WriteLine($"Size\t{result.BodySize}");
                     Console.WriteLine($"Snippet===\n{result.Snippet}\n===");
                     Console.WriteLine();
                     if (counter >= 10)
