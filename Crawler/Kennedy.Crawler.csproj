@@ -15,7 +15,6 @@
     <None Remove="Utils\" />
     <None Remove="NTextCat" />
     <None Remove="Core14.profile.xml" />
-    <None Remove="PageRank\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DocumentParsers\" />
@@ -25,7 +24,6 @@
     <Folder Include="Support\" />
     <Folder Include="UrlFrontiers\" />
     <Folder Include="Utils\" />
-    <Folder Include="PageRank\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NTextCat" Version="0.3.65" />

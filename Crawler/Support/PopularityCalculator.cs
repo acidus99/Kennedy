@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Kennedy.CrawlData.Db;
-using Kennedy.Crawler.PageRank;
 
 namespace Kennedy.Crawler.Support
 {
@@ -27,47 +26,37 @@ namespace Kennedy.Crawler.Support
             BuildOutlinkCache();
             BuildLinkToPageCache();
 
-            double totalPopularity = 0;
             Console.WriteLine("computing popularity");
-
-            int counter = 0;
 
             foreach(var entry in reachableEntries)
             {
-                counter++;
-                if(counter % 100 ==0 )
-                {
-                    Console.WriteLine($"{counter} of {totalPages}");
-                }
-
-                var seedPopularity = 1;
-
-                entry.PopularityRank = seedPopularity;
-                totalPopularity += seedPopularity;
+                //every page has a rank of 1
+                entry.PopularityRank = 1;
 
                 if(LinksToPage.ContainsKey(entry.DBDocID))
                 {
                     foreach (var sourceID in LinksToPage[entry.DBDocID])
                     {
+                        //they get 1 more for each cross domain link
                         //var voteValue = (1 / OutboundCount[sourceID]);
                         var voteValue = 1;
 
                         entry.PopularityRank += voteValue;
-                        totalPopularity += voteValue;
                     }
                 }
             }
-            //Console.WriteLine("computing percentages");
-            //foreach (var entry in reachableEntries)
-            //{
-            //    entry.PopularityRank = entry.PopularityRank / totalPopularity;
-            //}
+            Console.WriteLine("computing percentages");
+            foreach (var entry in reachableEntries)
+            {
+                //clip to 100
+                entry.PopularityRank = (entry.PopularityRank > 100) ? 100 : entry.PopularityRank;
+                //log distribution over the score
+                entry.PopularityRank = Math.Log(entry.PopularityRank, 100);
+            }
 
             db.SaveChanges();
 
-
             int xxx = 4;
-
 
         }
 
