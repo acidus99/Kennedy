@@ -34,16 +34,25 @@ namespace Kennedy.CrawlData
             return 0;
         }
 
-        public List<FullTextSearchResult> DoSearch(string query, int offset, int limit)
+        private string GetAlgorithmString(bool usePopRank)
         {
-            List<FullTextSearchResult> ret = new List<FullTextSearchResult>();
-            try
+            if (usePopRank)
             {
-                using (var connection = new SqliteConnection(connectString))
-                {
-                    connection.Open();
-                    SqliteCommand cmd = new SqliteCommand(@"
-Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, BodySaved, HasFaviconTxt, FaviconTxt, snippet(FTS, 1, '[',']','…',20) as snip
+                return @"
+Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, BodySaved, HasFaviconTxt, FaviconTxt, PopularityRank, rank, ( rank + (rank*0.3*PopularityRank)) as tot, snippet(FTS, 1, '[',']','…',20) as snip
+From FTS as fts
+Inner Join Documents as doc
+On doc.DBDocID = fts.ROWID
+Inner Join Domains as dom
+On doc.Domain = dom.Domain
+WHERE Body match $query
+order by tot
+LIMIT $limit OFFSET $offset";
+            }
+            else
+            {
+                return @"
+Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, BodySaved, HasFaviconTxt, FaviconTxt, PopularityRank, rank, rank as tot, snippet(FTS, 1, '[',']','…',20) as snip
 From FTS as fts
 Inner Join Documents as doc
 On doc.DBDocID = fts.ROWID
@@ -51,8 +60,19 @@ Inner Join Domains as dom
 On doc.Domain = dom.Domain
 WHERE Body match $query
 order by rank
-LIMIT $limit OFFSET $offset
-", connection);
+LIMIT $limit OFFSET $offset";
+            }
+        }
+
+        public List<FullTextSearchResult> DoSearch(string query, int offset, int limit, bool usePopRank = true)
+        {
+            List<FullTextSearchResult> ret = new List<FullTextSearchResult>();
+            try
+            {
+                using (var connection = new SqliteConnection(connectString))
+                {
+                    connection.Open();
+                    SqliteCommand cmd = new SqliteCommand(GetAlgorithmString(usePopRank), connection);
 
                     cmd.Parameters.Add(new SqliteParameter("$query", query));
                     cmd.Parameters.Add(new SqliteParameter("limit", limit));
@@ -75,7 +95,12 @@ LIMIT $limit OFFSET $offset
                             Language = reader["Language"].ToString(),
                             BodySaved = reader.GetBoolean(reader.GetOrdinal("BodySaved")),
                             LineCount = reader.GetInt32(reader.GetOrdinal("LineCount")),
-                            Favicon = favicon
+                            Favicon = favicon,
+
+                            FtsRank = reader.GetDouble(reader.GetOrdinal("rank")),
+                            PopRank = reader.GetDouble(reader.GetOrdinal("Popular")),
+                            TotalRank = reader.GetDouble(reader.GetOrdinal("tot")),
+
                         }); ;
                     }
                     return ret;

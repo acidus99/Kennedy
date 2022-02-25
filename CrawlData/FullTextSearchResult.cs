@@ -21,6 +21,15 @@ namespace Kennedy.CrawlData
 
         public bool BodySaved { get; set; }
 
+        #region meta data for debugging
+
+        //score of our FTS
+        public double FtsRank { get; set; }
+        //score of our popularity ranker
+        public double PopRank { get; set; }
+        public double TotalRank { get; set; }
+        #endregion
+
         public string FormattedLanguage
         {
             get {
