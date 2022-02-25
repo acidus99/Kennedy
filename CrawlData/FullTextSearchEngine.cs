@@ -98,7 +98,7 @@ LIMIT $limit OFFSET $offset";
                             Favicon = favicon,
 
                             FtsRank = reader.GetDouble(reader.GetOrdinal("rank")),
-                            PopRank = reader.GetDouble(reader.GetOrdinal("Popular")),
+                            PopRank = reader.GetDouble(reader.GetOrdinal("PopularityRank")),
                             TotalRank = reader.GetDouble(reader.GetOrdinal("tot")),
 
                         }); ;
