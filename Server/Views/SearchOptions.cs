@@ -5,12 +5,12 @@ namespace Kennedy.Server.Views
 {
     internal class SearchOptions
     {
-        public int SearchPage { get; private set; }
+        public int SearchPage { get; private set; } = 1;
+        public int Algorithm { get; private set; } = 1;
 
         public SearchOptions(GeminiUrl url, string route)
         {
             var optionsPath = WebUtility.UrlDecode(url.Path).Substring(route.Length);
-            SearchPage = 1;
             if (optionsPath.Length > 0)
             {
                 foreach (var option in optionsPath.Split('/'))
@@ -33,6 +33,9 @@ namespace Kennedy.Server.Views
                 {
                     case "p":
                         SearchPage = Convert.ToInt32(parts[1]);
+                        break;
+                    case "a":
+                        Algorithm = Convert.ToInt32(parts[1]);
                         break;
                 }
             }

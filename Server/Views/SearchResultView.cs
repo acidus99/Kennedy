@@ -2,9 +2,9 @@
 using System.IO;
 using System.Text.RegularExpressions;
 
-using Gemini.Net;
 using Kennedy.CrawlData;
 using RocketForce;
+using System.Diagnostics;
 
 namespace Kennedy.Server.Views
 {
@@ -26,13 +26,18 @@ namespace Kennedy.Server.Views
             Response.WriteLine();
             int baseCounter = options.SearchPage - 1;
 
+            bool usePopRank = (options.Algorithm == 1);
+
             var engine = new FullTextSearchEngine("/var/gemini/crawl-data/");
             var resultCount = engine.GetResultsCount(query);
-
+            
             if (resultCount > 0)
             {
-                var results = engine.DoSearch(query, baseCounter * resultsInPage, resultsInPage);
-
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+                var results = engine.DoSearch(query, baseCounter * resultsInPage, resultsInPage, usePopRank);
+                stopwatch.Stop();
+                var queryTime = (int)stopwatch.ElapsedMilliseconds;
                 int counter = baseCounter * resultsInPage;
                 int start = counter + 1;
                 foreach (var result in results)
