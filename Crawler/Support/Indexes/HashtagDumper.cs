@@ -12,9 +12,9 @@ using Gemini.Net;
 using System.IO;
 
 
-namespace Kennedy.Crawler.Support
+namespace Kennedy.Crawler.Support.Indexes
 {
-    public class HashtagDumper
+    internal class HashtagDumper
     {
         DocIndexDbContext Db;
         TermTracker Tracker;

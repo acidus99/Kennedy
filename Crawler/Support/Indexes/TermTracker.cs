@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using Kennedy.Crawler.Utils;
 using Gemini.Net;
 
-namespace Kennedy.Crawler.Support
+namespace Kennedy.Crawler.Support.Indexes
 {
-    public class TermTracker
+    internal class TermTracker
     {
         public Dictionary<string, HashSet<GeminiUrl>> pages;
         public Dictionary<string, Bag<string>> variations;

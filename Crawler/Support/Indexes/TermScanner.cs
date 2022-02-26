@@ -6,7 +6,7 @@ using Kennedy.CrawlData.Db;
 using Kennedy.Crawler.GemText;
 using Gemini.Net;
 
-namespace Kennedy.Crawler.Support
+namespace Kennedy.Crawler.Support.Indexes
 {
     public class TermScanner
     {
