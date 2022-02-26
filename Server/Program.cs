@@ -47,10 +47,5 @@ namespace Kennedy.Server
             app.OnRequest("/cached", SearchController.Cached);
             app.Run();
         }
-
-
-        
     }
-
-
 }
