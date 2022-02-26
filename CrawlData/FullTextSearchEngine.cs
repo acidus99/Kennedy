@@ -44,7 +44,7 @@ From FTS as fts
 Inner Join Documents as doc
 On doc.DBDocID = fts.ROWID
 Inner Join Domains as dom
-On doc.Domain = dom.Domain
+On doc.Domain = dom.Domain and doc.Port = dom.Port
 WHERE Body match $query
 order by tot
 LIMIT $limit OFFSET $offset";
@@ -57,7 +57,7 @@ From FTS as fts
 Inner Join Documents as doc
 On doc.DBDocID = fts.ROWID
 Inner Join Domains as dom
-On doc.Domain = dom.Domain
+On doc.Domain = dom.Domain and doc.Port = dom.Port
 WHERE Body match $query
 order by rank
 LIMIT $limit OFFSET $offset";
