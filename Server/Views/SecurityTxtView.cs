@@ -30,7 +30,6 @@ namespace Kennedy.Server.Views
             Response.WriteLine("The following are capsules using the \"security.txt\" standard, allowing people to easily contact capsule owners about security issues.");
             Response.WriteLine("=> https://securitytxt.org About Security.txt");
             Response.WriteLine();
-            Response.WriteLine("## Capsules with security.txt");
 
             var knownHosts = db.DomainEntries.Where(x => x.IsReachable && x.HasSecurityTxt).OrderBy(x => x.Domain).Select(x => new
             {
@@ -38,6 +37,8 @@ namespace Kennedy.Server.Views
                 Port = x.Port,
                 Favicon = !string.IsNullOrEmpty(x.FaviconTxt) ? x.FaviconTxt : ""
             }) ;
+
+            Response.WriteLine($"## Capsules with security.txt ({knownHosts.Count()})");
 
             foreach (var host in knownHosts)
             {

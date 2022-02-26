@@ -26,11 +26,12 @@ namespace Kennedy.Server.Views
 => /search New Search
 => /lucky I'm Feeling Lucky */
 
-            Response.WriteLine($"# 🔭 Known Gemini Hosts");
+            Response.WriteLine($"# 🔭 Known Gemini Caspules");
             Response.WriteLine("=> /search New Search");
             Response.WriteLine("=> /lucky I'm Feeling Lucky");
             Response.WriteLine();
-            Response.WriteLine("## Known Hosts");
+            Response.WriteLine("The following are capsules are known to Kennedy and are reachable.");
+
 
             var knownHosts = db.DomainEntries.Where(x => x.IsReachable).OrderBy(x => x.Domain).Select(x => new
             {
@@ -38,6 +39,8 @@ namespace Kennedy.Server.Views
                 Port = x.Port,
                 Favicon = !string.IsNullOrEmpty(x.FaviconTxt) ? x.FaviconTxt : ""
             }) ;
+
+            Response.WriteLine($"## Known Capsules ({knownHosts.Count()})");
 
             foreach (var host in knownHosts)
             {
