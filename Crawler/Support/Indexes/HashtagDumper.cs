@@ -20,18 +20,16 @@ namespace Kennedy.Crawler.Support
         TermTracker Tracker;
         string OutDir;
 
-        public HashtagDumper(TermTracker tracker, string pathToCrawlDB)
+        public HashtagDumper(TermTracker tracker)
         {
             Tracker = tracker;
-            Db = new DocIndexDbContext(pathToCrawlDB);
+            Db = new DocIndexDbContext(Crawler.DataDirectory);
         }
 
 
         public void GenerateFiles(string outputDir, int min)
         {
             OutDir = outputDir;
-
-            Directory.CreateDirectory(outputDir);
             Directory.CreateDirectory(outputDir + "tags/");
 
             var terms = Tracker.GetSortedTerms(min);
@@ -47,13 +45,13 @@ namespace Kennedy.Crawler.Support
 
         private string getVariantString(List<string> variants)
         {
-            var variout = $"@{variants[0]}";
+            var variout = $"#{variants[0]}";
             if (variants.Count > 1)
             {
-                variout += $" (and @{variants[1]}";
+                variout += $" (and #{variants[1]}";
                 for (int i = 2; i < variants.Count; i++)
                 {
-                    variout += $", @{variants[i]}";
+                    variout += $", #{variants[i]}";
                 }
                 variout += ")";
             }
@@ -68,7 +66,7 @@ namespace Kennedy.Crawler.Support
                 var variout = getVariantString(Tracker.GetVariations(term.Item1));
 
                 StreamWriter fout = new StreamWriter(OutDir + outfile);
-                fout.WriteLine($"# {term.Item1}");
+                fout.WriteLine($"# #{term.Item1} - Kennedy #Hashtag Index");
                 fout.WriteLine($"The hashtag #{term.Item1} appears on {term.Item2} pages in gemini space.");
                 fout.WriteLine("Detected variants: " + variout);
                 var urls = Tracker.GetOccurences(term.Item1);
@@ -87,6 +85,15 @@ namespace Kennedy.Crawler.Support
         private void CreatePopularIndexPage(List<Tuple<string, int>> terms)
         {
             StreamWriter index = new StreamWriter(OutDir + "index.gmi");
+            index.WriteLine(@$"# 🏷 #Hashtag Index (Occurrence)
+
+This is an index of {terms.Count} commonly used hashtags across gemini space.
+
+=> about.gmi About this index
+=> hashtagsAZ.gmi 🔤 Ordered alphabetically
+
+## 📈 Popular Hashtags (at least 3 uses), ordered by occurrence");
+
             foreach (var term in terms)
             {
                 var outfile = termPath(term.Item1);
@@ -98,7 +105,15 @@ namespace Kennedy.Crawler.Support
         }
         private void CreateAlphabIndexPage(List<Tuple<string, int>> terms)
         {
-            StreamWriter index = new StreamWriter(OutDir + "commonAZ.gmi");
+            StreamWriter index = new StreamWriter(OutDir + "hashtagsAZ.gmi");
+            index.WriteLine(@$"# 🏷 #Hashtag Index (Alphabetical)
+
+This is an index of {terms.Count} commonly used hashtags across gemini space.
+
+=> about.gmi About this index
+=> index.gmi 📈 Ordered by Popularity  
+
+## 🔤 Popular Hashtags (at least 3 uses), ordered alphabetically");
             foreach (var term in terms.OrderBy(x => x.Item1))
             {
                 var outfile = termPath(term.Item1);

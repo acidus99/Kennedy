@@ -30,6 +30,7 @@ namespace Kennedy.Crawler.Support
 
             var entries = db.DocEntries
                             .Where(x => (x.BodySaved && x.MimeType.StartsWith("text/gemini"))).ToList()
+                            .Where(x=>(x.Domain != "kennedy.gemi.dev"))
                             .Select(x => new
                             {
                                 DocID = DocumentIndex.toULong(x.DBDocID),
