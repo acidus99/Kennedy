@@ -26,20 +26,26 @@ namespace Kennedy.Crawler.Support
 
             int total = hosts.Count;
 
-            int parallelThreadsCount = 10;
+            int parallelThreadsCount = 5;
             Console.WriteLine($"Starting Domain Scan...");
             Parallel.ForEach(hosts, new ParallelOptions { MaxDegreeOfParallelism = parallelThreadsCount }, host =>
             {
                 var t = counter.Increment();
-                DomainAnalyzer analyzer = new DomainAnalyzer(host.Domain, host.Port);
-                analyzer.QueryDomain();
-                Update(analyzer);
+
+                ProcessDomain(host.Domain, host.Port);
                 
                 Console.WriteLine($"{t}\t{total}");
             }); //close method invocation 
 
             int xxx = 5;
 
+        }
+
+        public static void ProcessDomain(string domain, int port = 1965)
+        {
+            DomainAnalyzer analyzer = new DomainAnalyzer(domain, port);
+            analyzer.QueryDomain();
+            Update(analyzer);
         }
 
         private static void Update(DomainAnalyzer analyzer)
