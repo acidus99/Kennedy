@@ -7,9 +7,9 @@ using Kennedy.CrawlData.Db;
 using System.IO;
 
 
-namespace Kennedy.Crawler.Support
+namespace Kennedy.Crawler.Support.Indexes
 {
-    public class MentionsDumper
+    internal class MentionsDumper
     {
         DocIndexDbContext Db;
         TermTracker Tracker;

@@ -8,7 +8,7 @@ using Gemini.Net;
 
 namespace Kennedy.Crawler.Support.Indexes
 {
-    public class TermScanner
+    internal class TermScanner
     {
         DocumentStore docStore;
         public TermTracker Mentions;
