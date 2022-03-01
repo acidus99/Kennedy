@@ -15,7 +15,12 @@ namespace Kennedy.Crawler
         {
             //DomainScanner.DoIt();
             //DomainScanner.ProcessDomain("gmi.bacardi55.io");
-            IndexLoader.BuildIndexes();
+            //IndexLoader.BuildIndexes();
+            //var title = TitleChecker.GetTitle("gemini://geminispace.info:1965/");
+            //return;
+
+            PopularityCalculator calc = new PopularityCalculator();
+            calc.Rank();
             return;
 
             var crawler = new Crawler(80,300000);
