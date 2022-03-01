@@ -88,6 +88,8 @@ namespace Kennedy.CrawlData.Db
 
         public double PopularityRank { get; set; }
 
+        public int ExternalInboundLinks { get; set; }
+
         #endregion
 
         public void SetDocID()
