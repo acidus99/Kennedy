@@ -3,17 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Kennedy.CrawlData.Db;
+using Kennedy.CrawlData;
 
 namespace Kennedy.Crawler.Support
 {
     public class PopularityCalculator
     {
-
+        DocumentStore docStore = new DocumentStore(Crawler.DataDirectory + "page-store/");
         DocIndexDbContext db = new DocIndexDbContext(Crawler.DataDirectory);
 
         Dictionary<long, int> OutboundCount = new Dictionary<long, int>();
 
         Dictionary<long, List<long>> LinksToPage = new Dictionary<long, List<long>>();
+
+        int fixedTitle = 0;
 
         public void Rank()
         {
@@ -32,6 +35,7 @@ namespace Kennedy.Crawler.Support
             {
                 //every page has a rank of 1
                 entry.PopularityRank = 1;
+                entry.ExternalInboundLinks = 0;
 
                 if(LinksToPage.ContainsKey(entry.DBDocID))
                 {
@@ -40,10 +44,23 @@ namespace Kennedy.Crawler.Support
                         //they get 1 more for each cross domain link
                         //var voteValue = (1 / OutboundCount[sourceID]);
                         var voteValue = 1;
-
+                        entry.ExternalInboundLinks++;
                         entry.PopularityRank += voteValue;
                     }
                 }
+
+                if (entry.BodySaved && entry.MimeType.StartsWith("text/gemini"))
+                {
+                    var title = GetTitle(entry.DBDocID);
+                    if(entry.Title != title)
+                    {
+                        fixedTitle++;
+                        entry.Title = title;
+                    }
+                    
+                }
+
+
             }
             Console.WriteLine("computing percentages");
             foreach (var entry in reachableEntries)
@@ -53,11 +70,24 @@ namespace Kennedy.Crawler.Support
                 //log distribution over the score
                 entry.PopularityRank = Math.Log(entry.PopularityRank, 100);
             }
+            int xxx = 4;
 
             db.SaveChanges();
 
-            int xxx = 4;
+        }
 
+        private string GetTitle(long dbDocID)
+        {
+            return GemText.TitleFinder.ExtractTitle(GetDocumentText(dbDocID));
+        }
+
+        private string GetDocumentText(long dbDocID)
+        {
+            ulong docID = DocumentIndex.toULong(dbDocID);
+            
+
+            byte[] bytes = docStore.GetDocument(docID);
+            return System.Text.Encoding.UTF8.GetString(bytes);
         }
 
         private void BuildOutlinkCache()

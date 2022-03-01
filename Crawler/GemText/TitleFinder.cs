@@ -22,12 +22,12 @@ namespace Kennedy.Crawler.GemText
         {
             if (resp.IsSuccess && resp.HasBody && resp.MimeType.StartsWith("text/gemini"))
             {
-                return ExtractTile(resp.BodyText);
+                return ExtractTitle(resp.BodyText);
             }
             return "";
         }
 
-        public static string ExtractTile(string gemText)
+        public static string ExtractTitle(string gemText)
         {
             var title = TryHeaders(gemText);
             if(title.Length > 0)
@@ -40,7 +40,7 @@ namespace Kennedy.Crawler.GemText
         private static string TryHeaders(string gemText)
         {
             var t = gemText.Split("\n")
-                   .Where(x => x.StartsWith("```") && x.Length > 2)
+                   .Where(x => x.StartsWith("#") && x.Length > 2)
                    .FirstOrDefault() ?? "";
             var match = headingRegex.Match(t);
             if (match.Success)
