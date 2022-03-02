@@ -29,6 +29,12 @@ namespace Kennedy.Server
             view.Render();
         }
 
+        public static void PageInfo(Request request, Response response, App app)
+        {
+            var view = new PageInfoView(request, response, app);
+            view.Render();
+        }
+
         public static void KnownHosts(Request request, Response response, App app)
         {
             var view = new KnownHostsView(request, response, app);

@@ -45,6 +45,7 @@ namespace Kennedy.Server
             app.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
             app.OnRequest("/delorean", SearchController.DeloreanSearch);
             app.OnRequest("/cached", SearchController.Cached);
+            app.OnRequest("/page-info", SearchController.PageInfo);
             app.Run();
         }
     }

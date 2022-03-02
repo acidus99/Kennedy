@@ -44,7 +44,7 @@ namespace Kennedy.Server.Views
 
             foreach (var host in knownHosts)
             {
-                var label = $"{host.Favicon}{host.Hostname}";
+                var label = FormatDomain(host.Hostname, host.Favicon);
                 if(host.Port != 1965)
                 {
                     label += ":" + host.Port;

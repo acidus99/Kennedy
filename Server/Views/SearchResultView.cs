@@ -43,23 +43,7 @@ namespace Kennedy.Server.Views
                 foreach (var result in results)
                 {
                     counter++;
-                    var title = ConstructTitle(result);
-                    Response.WriteLine($"=> {result.Url} {counter}. {title}");
-                    if (result.IsRecognizedLanguage)
-                    {
-                        Response.WriteLine($"* {result.LineCount} Lines - {result.FormattedLanguage} - {FormatSize(result.BodySize)} - {FormatDomain(result)}");
-                    }
-                    else
-                    {
-                        Response.WriteLine($"* {result.LineCount} Lines - {FormatSize(result.BodySize)} - {FormatDomain(result)}");
-                    }
-                    if (result.BodySaved)
-                    {
-                        Response.WriteLine($"=> /cached?id={result.DBDocID} Cached copy");
-                    }
-                    Response.WriteLine(">" + FormatSnippet(result.Snippet));
-                    
-                    Response.WriteLine("");
+                    WriteResultEntry(Response, result, counter);
                 }
 
                 Response.WriteLine($"Showing {start} - {counter}  of {resultCount} total results");
@@ -86,33 +70,37 @@ namespace Kennedy.Server.Views
             }
         }
 
+        private void WriteResultEntry(Response resp, FullTextSearchResult result, int resultNumber)
+        {
+
+            Response.WriteLine($"=> {result.Url} {resultNumber}. {FormatPageTitle(result.Url, result.Title)}");
+            Response.Write($"=> /page-info?id={result.DBDocID} {result.LineCount} Lines • ");
+
+            var language = FormatLanguage(result.Language);
+
+            if (language.Length > 0)
+            {
+                Response.Write($"{language} • ");
+            }
+            Response.Write($"{FormatSize(result.BodySize)} • {FormatDomain(result.Url.Hostname, result.Favicon)}");
+            //if(result.ExternalInboundLinks > 0)
+            //{
+            //    Response.Write($" • {result.ExternalInboundLinks} inbound links");
+            //}
+            //if (result.BodySaved)
+            //{
+            //    Response.Write(" • Cached Copy");
+            //    //Response.WriteLine($"=> /cached?id={result.DBDocID} Cached copy");
+            //}
+            Response.Write("\n");
+            Response.WriteLine(">" + FormatSnippet(result.Snippet));
+
+            Response.WriteLine("");
+
+        }
+
         private string PageLink(string linkText, int page)
             => $"=> /search/p:{page}/?{Request.Url.RawQuery} {linkText}";
-
-
-        private string ConstructTitle(FullTextSearchResult result)
-        {
-            if (result.Title.Trim().Length > 0)
-            {
-                return result.Title;
-            }
-            return $"{result.Url.Hostname}{result.Url.Path}";
-        }
-
-        private string FormatDomain(FullTextSearchResult result)
-        {
-            return (result.Favicon.Length > 0) ? $"{result.Favicon} {result.Url.Hostname}" : $"{result.Url.Hostname}";
-        }
-
-        private string FormatSize(int bodySize)
-        {
-            if (bodySize < 1024)
-            {
-                return $"{bodySize} B";
-            }
-
-            return $"{Math.Round(((double)bodySize) / ((double)1024))} KB";
-        }
 
         private string FormatSnippet(string snippet)
         {

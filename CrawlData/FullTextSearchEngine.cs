@@ -39,7 +39,7 @@ namespace Kennedy.CrawlData
             if (usePopRank)
             {
                 return @"
-Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, BodySaved, HasFaviconTxt, FaviconTxt, PopularityRank, rank, ( rank + (rank*0.3*PopularityRank)) as tot, snippet(FTS, 1, '[',']','…',20) as snip
+Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, BodySaved, HasFaviconTxt, FaviconTxt, ExternalInboundLinks, PopularityRank, rank, ( rank + (rank*0.3*PopularityRank)) as tot, snippet(FTS, 1, '[',']','…',20) as snip
 From FTS as fts
 Inner Join Documents as doc
 On doc.DBDocID = fts.ROWID
@@ -52,7 +52,7 @@ LIMIT $limit OFFSET $offset";
             else
             {
                 return @"
-Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, BodySaved, HasFaviconTxt, FaviconTxt, PopularityRank, rank, rank as tot, snippet(FTS, 1, '[',']','…',20) as snip
+Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, BodySaved, HasFaviconTxt, FaviconTxt, ExternalInboundLinks, PopularityRank, rank, rank as tot, snippet(FTS, 1, '[',']','…',20) as snip
 From FTS as fts
 Inner Join Documents as doc
 On doc.DBDocID = fts.ROWID
@@ -96,6 +96,7 @@ LIMIT $limit OFFSET $offset";
                             BodySaved = reader.GetBoolean(reader.GetOrdinal("BodySaved")),
                             LineCount = reader.GetInt32(reader.GetOrdinal("LineCount")),
                             Favicon = favicon,
+                            ExternalInboundLinks = reader.GetInt32(reader.GetOrdinal("ExternalInboundLinks")),
 
                             FtsRank = reader.GetDouble(reader.GetOrdinal("rank")),
                             PopRank = reader.GetDouble(reader.GetOrdinal("PopularityRank")),
