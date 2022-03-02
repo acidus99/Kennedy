@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Timers;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Gemini.Net;
 using Kennedy.Crawler.DocumentParsers;
@@ -214,6 +215,30 @@ namespace Kennedy.Crawler
 
             }
             return url;
+        }
+
+        public void AddSeedFile(string capsulesFile)
+        {
+            foreach (var authority in File.ReadAllLines(capsulesFile))
+            {
+                AddSeed($"gemini://{authority}/");
+            }
+        }
+
+        public void PreheatDns(string capsulesFile)
+        {
+            var capsules = File.ReadAllLines(capsulesFile);
+            DnsCache dnsCache = new DnsCache();
+            Console.WriteLine("Warming DNS");
+            Parallel.ForEach(capsules, capsule =>
+            {
+                if (capsule.IndexOf(":") > 0)
+                {
+                    capsule = capsule.Substring(0, capsule.IndexOf(":"));
+                }
+                dnsCache.GetLookup(capsule);
+                urlFrontier.DnsCache = dnsCache;
+            }); //close method invocation
         }
 
         public void AddSeed(string url)
