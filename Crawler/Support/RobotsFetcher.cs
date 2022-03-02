@@ -17,20 +17,13 @@ namespace Kennedy.Crawler.Support
     /// </summary>
     public static class RobotsFetcher
     {
-        
-        static readonly string domainsFile = $"{Crawler.DataDirectory}capsules-to-scan.txt";
-
         //folder to output robots.txt into
         static  readonly string outputDirRobots = $"/{Crawler.DataDirectory}/robots/";
-        
-        static readonly string outputDirFavicon = $"/{Crawler.DataDirectory}/favicons/";
 
         static ThreadSafeCounter requestCounter = new ThreadSafeCounter();
         static ThreadSafeCounter foundRobotsCounter = new ThreadSafeCounter();
-        static ThreadSafeCounter foundFaviconsCounter = new ThreadSafeCounter();
 
-
-        public static void DoIt()
+        public static void DoIt(string domainsFile)
         {
 
             string[] domains = File.ReadAllLines(domainsFile);
@@ -47,20 +40,6 @@ namespace Kennedy.Crawler.Support
 
                 Console.WriteLine($"Progress:\t{t}\t of {total}\tRobots Hits:\t{foundRobotsCounter.Count}");
             }); //close method invocation 
-        }
-
-        public static void CheckFavicon(string surl)
-        {
-            GeminiUrl url = new GeminiUrl(surl);
-
-            GeminiRequestor gemiRequestor = new GeminiRequestor();
-            
-            var resp = gemiRequestor.Request(url);
-
-            if (gemiRequestor.LastException == null && IsValidFaviconResp(resp))
-            {
-                SaveFileFavicon(url, resp.BodyText.Trim());
-            }
         }
 
         public static void CheckRobot(string surl)
@@ -88,31 +67,6 @@ namespace Kennedy.Crawler.Support
             }
             return false;
         }
-
-        private static bool IsValidFaviconResp(GeminiResponse resp)
-        {
-            if (resp != null && resp.IsSuccess && resp.IsTextResponse)
-            {
-                var favicon = resp.BodyText.Trim();
-                if(favicon.Contains(" ") || favicon.Contains("\n"))
-                {
-                    return false;
-                }
-                return true;
-            }
-            return false;
-        }
-
-        private static void SaveFileFavicon(GeminiUrl url, string text)
-        {
-
-            foundFaviconsCounter.Increment();
-            //and replace : from a host:port with an @
-            var filteredAuthority = url.Authority.Replace(":", "@");
-            File.WriteAllText($"{outputDirFavicon}{filteredAuthority}!favicon.txt", text);
-        }
-
-
         private static void SaveFileRobot(GeminiUrl url, string text)
         {
 
