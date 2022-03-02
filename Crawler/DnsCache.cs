@@ -3,6 +3,7 @@ using System.Net;
 
 using Gemini.Net;
 using System.Collections.Generic;
+using Kennedy.Crawler.Utils;
 
 namespace Kennedy.Crawler
 {
@@ -11,11 +12,13 @@ namespace Kennedy.Crawler
 
         object locker;
         Dictionary<string, string> cache;
+        DnsWrapper client;
 
         public DnsCache()
         {
             locker = new object();
             cache = new Dictionary<string, string>();
+            client = new DnsWrapper();
         }
 
         public string GetLookup(string hostname)
@@ -30,14 +33,13 @@ namespace Kennedy.Crawler
             //look it up
             try
             {
-                var result = Dns.GetHostEntry(hostname);
-                if (result.AddressList.Length > 0)
+                var result = client.DoLookup(hostname);
+                if (result != null)
                 {
-                    var address = result.AddressList[0].ToString();
                     lock (locker)
                     {
-                        cache[hostname] = address;
-                        return address;
+                        cache[hostname] = result;
+                        return result;
                     }
                 }
             }

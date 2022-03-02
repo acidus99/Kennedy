@@ -16,6 +16,7 @@
     <None Remove="NTextCat" />
     <None Remove="Core14.profile.xml" />
     <None Remove="Support\Indexes\" />
+    <None Remove="DnsClient" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DocumentParsers\" />
@@ -29,6 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NTextCat" Version="0.3.65" />
+    <PackageReference Include="DnsClient" Version="1.6.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
