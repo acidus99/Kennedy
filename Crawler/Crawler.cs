@@ -242,7 +242,13 @@ namespace Kennedy.Crawler
         }
 
         public void AddSeed(string url)
-            => ProcessProspectiveUrl(new GeminiUrl(url));
+        {
+            try
+            {
+                ProcessProspectiveUrl(new GeminiUrl(url));
+            }
+            catch (Exception) { }
+        }
 
         private void ProcessProspectiveUrl(GeminiUrl url)
         {

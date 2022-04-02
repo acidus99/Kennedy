@@ -26,11 +26,12 @@ namespace Kennedy.Crawler.Support
         public static void DoIt(string domainsFile)
         {
 
+            Directory.CreateDirectory(outputDirRobots);
             string[] domains = File.ReadAllLines(domainsFile);
 
             int total = domains.Length;
 
-            int parallelThreadsCount = 4;
+            int parallelThreadsCount = 10;
 
             Parallel.ForEach(domains, new ParallelOptions { MaxDegreeOfParallelism = parallelThreadsCount }, domain =>
             {
@@ -44,7 +45,15 @@ namespace Kennedy.Crawler.Support
 
         public static void CheckRobot(string surl)
         {
-            GeminiUrl url = new GeminiUrl(surl);
+            GeminiUrl url = null;
+
+            try
+            {
+                url = new GeminiUrl(surl);
+            } catch(Exception ex)
+            {
+                return;
+            }
 
             GeminiRequestor gemiRequestor = new GeminiRequestor();
 
