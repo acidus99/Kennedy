@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Gemini.Net;
 using Kennedy.Crawler.Utils;
@@ -13,12 +14,15 @@ namespace Kennedy.Crawler.Modules
         /// </summary>
         Dictionary<string, List<string>> excludedUrls;
 
+        List<string> globalRules;
+
         ThreadSafeCounter excludedCounter = new ThreadSafeCounter();
 
         public ExcludedUrlModule(string dataFile)
             : base("ExcludedUrl")
         {
             excludedUrls = new Dictionary<string, List<string>>();
+            globalRules = new List<string>();
             LoadExclusions(dataFile);
         }
 
@@ -31,12 +35,21 @@ namespace Kennedy.Crawler.Modules
                 {
                     continue;
                 }
-                GeminiUrl url = new GeminiUrl(line);
-                if(!excludedUrls.ContainsKey(url.Authority))
+
+                if (line.EndsWith("*"))
                 {
-                    excludedUrls[url.Authority] = new List<string>();
+                    //global rule
+                    globalRules.Add(line);
                 }
-                excludedUrls[url.Authority].Add(url.NormalizedUrl);
+                else
+                {
+                    var url = new GeminiUrl(line);
+                    if (!excludedUrls.ContainsKey(url.Authority))
+                    {
+                        excludedUrls[url.Authority] = new List<string>();
+                    }
+                    excludedUrls[url.Authority].Add(url.NormalizedUrl);
+                }
             }
         }
 
@@ -47,12 +60,20 @@ namespace Kennedy.Crawler.Modules
         /// <returns>Is this URL not blocked by a deny pattern<returns>
         public override bool IsUrlAllowed(GeminiUrl url)
         {
+            var normalized = url.NormalizedUrl;
+
             processedCounter.Increment();
+
+            if(globalRules.Where(x=>normalized.StartsWith(x)).Count() > 0)
+            {
+                return false;
+            }
+
             if(!excludedUrls.ContainsKey(url.Authority))
             {
                 return true;
             }
-            var normalized = url.NormalizedUrl;
+            
             foreach(string urlPrefix in excludedUrls[url.Authority])
             {
                 if(normalized.StartsWith(urlPrefix))
