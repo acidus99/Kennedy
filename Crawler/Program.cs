@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Gemini.Net;
 
+using Kennedy.Crawler.Modules;
 using Kennedy.Crawler.Support;
 
 
@@ -13,6 +14,15 @@ namespace Kennedy.Crawler
     {
         static void Main(string[] args)
         {
+
+
+            GeminiRequestor requestor = new GeminiRequestor();
+            var url = "gemini://ttrpgs.org:1965/";
+            //var url = "gemini://cyberpunksin.space:1965/";
+
+            var result = requestor.Request(url);
+
+            return;
 
 
             //DomainScanner.DoIt();
