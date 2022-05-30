@@ -267,7 +267,7 @@ namespace Kennedy.Crawler
             processedCounter.Increment();
             if (resp.ConnectStatus != ConnectStatus.Success)
             {
-                errorLog.LogError(ex, url.NormalizedUrl);
+                errorLog.LogError(resp.Meta, url.NormalizedUrl);
             }
             
             //Modules
