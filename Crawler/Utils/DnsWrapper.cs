@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using DnsClient;
-using DnsClient.Protocol;
-using DnsClient.Internal;
 
 
 namespace Kennedy.Crawler.Utils
