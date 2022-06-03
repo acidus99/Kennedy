@@ -14,16 +14,7 @@ namespace Kennedy.Crawler
     {
         static void Main(string[] args)
         {
-
-
-            GeminiRequestor requestor = new GeminiRequestor();
-            var url = "gemini://ttrpgs.org:1965/";
-            //var url = "gemini://cyberpunksin.space:1965/";
-
-            var result = requestor.Request(url);
-
-            return;
-
+            Console.WriteLine("Kennedy Crawler!");
 
             //DomainScanner.DoIt();
             //DomainScanner.ProcessDomain("gmi.bacardi55.io");
