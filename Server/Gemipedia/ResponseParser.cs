@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -36,10 +37,9 @@ namespace Kennedy.Gemipedia
                             thumb["source"]?.ToString() ?? "";
                 if (url.Length > 0)
                 {
-                    EnsureHttps(url);
+                    return EnsureHttps(url);
                 }
             }
-
             return "";
         }
 
