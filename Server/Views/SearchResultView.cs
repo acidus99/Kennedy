@@ -1,10 +1,13 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Net;
 
 using Kennedy.CrawlData;
 using RocketForce;
 using System.Diagnostics;
+using Kennedy.Gemipedia;
 
 namespace Kennedy.Server.Views
 {
@@ -15,32 +18,47 @@ namespace Kennedy.Server.Views
         public SearchResultView(Request request, Response response, App app)
             : base(request, response, app) { }
 
+        ArticleSummary TopGemipediaHit = null;
+        List<FullTextSearchResult> SearchResults = null;
+        FullTextSearchEngine FullTextEngine;
+
+        SearchOptions Options;
+
         public override void Render()
         {
             var query = PrepareQuery(SanitizedQuery);
-            var options = new SearchOptions(Request.Url, "/search");
+            Options = new SearchOptions(Request.Url, "/search");
+            FullTextEngine = new FullTextSearchEngine("/var/gemini/crawl-data/");
 
             Response.Success();
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Search");
             Response.WriteLine("=> /search New Search");
             Response.WriteLine();
-            int baseCounter = options.SearchPage - 1;
-
-            bool usePopRank = (options.Algorithm == 1);
-
-            var engine = new FullTextSearchEngine("/var/gemini/crawl-data/");
-            var resultCount = engine.GetResultsCount(query);
             
+            var resultCount = FullTextEngine.GetResultsCount(query);
             if (resultCount > 0)
             {
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
-                var results = engine.DoSearch(query, baseCounter * resultsInPage, resultsInPage, usePopRank);
+                DoFullQuery(query);
                 stopwatch.Stop();
                 var queryTime = (int)stopwatch.ElapsedMilliseconds;
+                int baseCounter = Options.SearchPage - 1;
                 int counter = baseCounter * resultsInPage;
                 int start = counter + 1;
-                foreach (var result in results)
+
+                if(TopGemipediaHit != null)
+                {
+                    Response.WriteLine($"=> gemini://gemi.dev/cgi-bin/wp.cgi/view?{WebUtility.UrlEncode(TopGemipediaHit.Title)} 📖 Top Gemipedia Article: {TopGemipediaHit.Title}");
+                    if (TopGemipediaHit.Description.Length > 0)
+                    {
+                        Response.WriteLine($"> {TopGemipediaHit.Description}");
+                    }
+                    Response.WriteLine($"=> gemini://gemi.dev/cgi-bin/wp.cgi/search?{WebUtility.UrlEncode(TopGemipediaHit.Title)} 📚 Other Gemipedia Articles that mention '{TopGemipediaHit.Title}'");
+                    Response.WriteLine();
+                }
+
+                foreach (var result in SearchResults)
                 {
                     counter++;
                     WriteResultEntry(Response, result, counter);
@@ -48,17 +66,18 @@ namespace Kennedy.Server.Views
 
                 Response.WriteLine($"Showing {start} - {counter}  of {resultCount} total results");
 
-                if (options.SearchPage > 1)
+                if (Options.SearchPage > 1)
                 {
                     //show previous link
-                    Response.WriteLine(PageLink("⬅️ Previous Page", options.SearchPage - 1));
+                    Response.WriteLine(PageLink("⬅️ Previous Page", Options.SearchPage - 1));
                 }
 
                 if ((baseCounter * resultsInPage) + resultsInPage < resultCount)
                 {
                     //show next page
-                    Response.WriteLine(PageLink("➡️ Next Page", options.SearchPage + 1));
+                    Response.WriteLine(PageLink("➡️ Next Page", Options.SearchPage + 1));
                 }
+                Response.WriteLine($"Query time: {queryTime} ms");
                 Response.WriteLine();
                 Response.WriteLine("=> /search New Search");
                 Response.WriteLine("=> /lucky I'm Feeling Lucky");
@@ -97,6 +116,28 @@ namespace Kennedy.Server.Views
 
             Response.WriteLine("");
 
+        }
+
+        private void QueryGemipedia(string query)
+        {
+            if (Options.SearchPage == 1)
+            {
+                var client = new WikipediaApiClient();
+                TopGemipediaHit = client.TopResultSearch(query);
+            }
+        }
+
+        private void QueryFullText(string query)
+        {
+            bool usePopRank = (Options.Algorithm == 1);
+            int baseCounter = Options.SearchPage - 1;
+            SearchResults = FullTextEngine.DoSearch(query, baseCounter * resultsInPage, resultsInPage, usePopRank);
+        }
+
+        private void DoFullQuery(string query)
+        {
+            Parallel.Invoke(() => QueryGemipedia(query),
+                            () => QueryFullText(query));
         }
 
         private string PageLink(string linkText, int page)

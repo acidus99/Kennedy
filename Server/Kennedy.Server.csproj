@@ -16,9 +16,14 @@
     <None Remove="Microsoft.Extensions.Configuration.Json" />
     <None Remove="appsettings.DEV.json" />
     <None Remove="appsettings.PROD.json" />
+    <None Remove="Gemipedia\" />
+    <None Remove="Cache\" />
+    <None Remove="Newtonsoft.Json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\" />
+    <Folder Include="Gemipedia\" />
+    <Folder Include="Cache\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.PROD.json">
@@ -39,5 +44,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 </Project>
