@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using Gemini.Net;
 
-using Kennedy.Crawler.Modules;
 using Kennedy.Crawler.Support;
-
-
 
 namespace Kennedy.Crawler
 {
@@ -16,25 +10,26 @@ namespace Kennedy.Crawler
         {
             Console.WriteLine("Kennedy Crawler!");
 
-            //DomainScanner.DoIt();
-            //DomainScanner.ProcessDomain("gmi.bacardi55.io");
-            //IndexLoader.BuildIndexes();
-            //var title = TitleChecker.GetTitle("gemini://geminispace.info:1965/");
-            //return;
-
-            //PopularityCalculator calc = new PopularityCalculator();
-            //calc.Rank();
-            //return;
-
+            //TODO: use hosts from previous crawls to build capsules list
             var domainsFile = $"{Crawler.DataDirectory}capsules-to-scan.txt";
 
-            //RobotsFetcher.DoIt(domainsFile);
-            var crawler = new Crawler(80,400000);
+            Console.WriteLine("Stage 1: Fetching Robots");
+            RobotsFetcher.DoIt(domainsFile);
 
+            Console.WriteLine("Stage 2: Preheating DNS");
+            var crawler = new Crawler(80, 400000);
             crawler.PreheatDns(domainsFile);
+
+            Console.WriteLine("Stage 3: Crawling");
             crawler.AddSeedFile(domainsFile);
             crawler.DoCrawl();
 
+            Console.WriteLine("Stage 4: Calculating Poprank");
+            PopularityCalculator calc = new PopularityCalculator();
+            calc.Rank();
+
+            Console.WriteLine("Stage 5: Building Indexes: Topics and Mentions ");
+            IndexLoader.BuildIndexes();
             return;
         }
     }
