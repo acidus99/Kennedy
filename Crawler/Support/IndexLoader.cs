@@ -13,10 +13,10 @@ namespace Kennedy.Crawler.Support
             TermScanner termScanner = new TermScanner();
             termScanner.ScanDocs();
             HashtagDumper dumper = new HashtagDumper(termScanner.Hashtags);
-            dumper.GenerateFiles("/var/gemini/capsule/public_root/hashtags/", 3);
+            dumper.GenerateFiles("/var/gemini/crawl-data/hashtags/", 3);
 
             MentionsDumper mentions = new MentionsDumper(termScanner.Mentions);
-            mentions.GenerateFiles("/var/gemini/capsule/public_root/mentions/", 3);
+            mentions.GenerateFiles("/var/gemini/crawl-data/mentions/", 3);
 
         }
     }
