@@ -49,12 +49,17 @@ namespace Kennedy.Server.Views
 
                 if(TopGemipediaHit != null)
                 {
-                    Response.WriteLine($"=> gemini://gemi.dev/cgi-bin/wp.cgi/view?{WebUtility.UrlEncode(TopGemipediaHit.Title)} 📖 Top Gemipedia Article: {TopGemipediaHit.Title}");
+                    Response.WriteLine($"=> {Helper.ArticleUrl(TopGemipediaHit.Title)} 📖 Top Gemipedia Article: {TopGemipediaHit.Title}");
+                    if (!string.IsNullOrEmpty(TopGemipediaHit.ThumbnailUrl))
+                    {
+                        Response.WriteLine($"=> {Helper.MediaProxyUrl(TopGemipediaHit.ThumbnailUrl)} Article Image: {TopGemipediaHit.Title}");
+                    }
+
                     if (TopGemipediaHit.Description.Length > 0)
                     {
                         Response.WriteLine($"> {TopGemipediaHit.Description}");
                     }
-                    Response.WriteLine($"=> gemini://gemi.dev/cgi-bin/wp.cgi/search?{WebUtility.UrlEncode(TopGemipediaHit.Title)} 📚 Other Gemipedia Articles that mention '{TopGemipediaHit.Title}'");
+                    Response.WriteLine($"=> {Helper.SearchUrl(TopGemipediaHit.Title)} 📚 Other Gemipedia Articles that mention '{TopGemipediaHit.Title}'");
                     Response.WriteLine();
                 }
 
