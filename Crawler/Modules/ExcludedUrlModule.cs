@@ -38,6 +38,7 @@ namespace Kennedy.Crawler.Modules
 
                 if (line.EndsWith("*"))
                 {
+                    line = line.Replace("*", "");
                     //global rule
                     globalRules.Add(line);
                 }
