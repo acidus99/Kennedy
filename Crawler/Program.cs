@@ -8,6 +8,12 @@ namespace Kennedy.Crawler
     {
         static void Main(string[] args)
         {
+            FeedFinder finder = new FeedFinder();
+            finder.Doit();
+            int x = 5;
+            return;
+
+
             Console.WriteLine("Kennedy Crawler!");
 
             //TODO: use hosts from previous crawls to build capsules list
