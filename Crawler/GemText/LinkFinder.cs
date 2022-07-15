@@ -12,7 +12,7 @@ namespace Kennedy.Crawler.GemText
     /// </summary>
     public static class LinkFinder
     {
-        static readonly Regex linkLine = new Regex(@"^=>\s+([^\s]+)\s*(.*)", RegexOptions.Compiled);
+        static readonly Regex linkLine = new Regex(@"^=>\s*([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
         public static List<FoundLink> ExtractLinks(GeminiResponse resp)
         {
