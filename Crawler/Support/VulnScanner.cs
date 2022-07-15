@@ -16,9 +16,9 @@ namespace Kennedy.Crawler.Support
             ThreadSafeCounter counter = new ThreadSafeCounter();
             ThreadSafeCounter found = new ThreadSafeCounter();
 
-            ThreadedFileWriter logOut = new ThreadedFileWriter($"{Crawler.DataDirectory}/all-vulns.csv", 1);
+            ThreadedFileWriter logOut = new ThreadedFileWriter($"{CrawlerOptions.DataDirectory}/all-vulns.csv", 1);
 
-            string[] hosts = File.ReadAllLines($"{Crawler.DataDirectory}capsules-to-scan.txt");
+            string[] hosts = File.ReadAllLines($"{CrawlerOptions.DataDirectory}capsules-to-scan.txt");
 
             int total = hosts.Length;
 

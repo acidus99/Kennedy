@@ -20,7 +20,7 @@ namespace Kennedy.Crawler.Support
 
             ThreadSafeCounter counter = new ThreadSafeCounter();
 
-            var db = new DocIndexDbContext(Crawler.DataDirectory);
+            var db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
 
             var hosts = db.DomainEntries.Where(x=>x.IsReachable).ToList();
 
@@ -50,7 +50,7 @@ namespace Kennedy.Crawler.Support
 
         private static void Update(DomainAnalyzer analyzer)
         {
-            using (var db = new DocIndexDbContext(Crawler.DataDirectory))
+            using (var db = new DocIndexDbContext(CrawlerOptions.DataDirectory))
             {
                 var domain = db.DomainEntries.Where(x => (x.Domain == analyzer.Host && x.Port == analyzer.Port)).FirstOrDefault();
 

@@ -9,8 +9,8 @@ namespace Kennedy.Crawler.Support
 {
     public class PopularityCalculator
     {
-        DocumentStore docStore = new DocumentStore(Crawler.DataDirectory + "page-store/");
-        DocIndexDbContext db = new DocIndexDbContext(Crawler.DataDirectory);
+        DocumentStore docStore = new DocumentStore(CrawlerOptions.DataDirectory + "page-store/");
+        DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
 
         Dictionary<long, int> OutboundCount = new Dictionary<long, int>();
 

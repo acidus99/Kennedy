@@ -8,22 +8,16 @@ namespace Kennedy.Crawler
     {
         static void Main(string[] args)
         {
-            FeedFinder finder = new FeedFinder();
-            finder.Doit();
-            int x = 5;
-            return;
-
+            HandleArgs(args);
 
             Console.WriteLine("Kennedy Crawler!");
-
-            //TODO: use hosts from previous crawls to build capsules list
-            var domainsFile = $"{Crawler.DataDirectory}capsules-to-scan.txt";
+            var domainsFile = $"{CrawlerOptions.DataDirectory}capsules-to-scan.txt";
 
             Console.WriteLine("Stage 1: Fetching Robots");
             RobotsFetcher.DoIt(domainsFile);
 
             Console.WriteLine("Stage 2: Preheating DNS");
-            var crawler = new Crawler(80, 400000);
+            var crawler = new Crawler(80, 500000);
             crawler.PreheatDns(domainsFile);
 
             Console.WriteLine("Stage 3: Crawling");
@@ -37,6 +31,21 @@ namespace Kennedy.Crawler
             Console.WriteLine("Stage 5: Building Indexes: Topics and Mentions ");
             IndexLoader.BuildIndexes();
             return;
+        }
+
+        static void HandleArgs(string[] args)
+        {
+            try
+            {
+                if (System.IO.Directory.Exists(args[0]))
+                {
+                    CrawlerOptions.DataDirectory = args[0];
+                }
+            }
+            catch (Exception)
+            {
+
+            }
         }
     }
 }

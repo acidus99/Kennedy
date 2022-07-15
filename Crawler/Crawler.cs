@@ -25,9 +25,7 @@ namespace Kennedy.Crawler
         const int StatusIntervalDisk = 60000;
         const int StatusIntervalScreen = 5000;
 
-        public const string DataDirectory = "/var/gemini/crawl-data/";
-
-        readonly string outputBase = $"{DataDirectory}/logs/{DateTime.Now.ToString("yyyy-MM-dd (hhmmss)")}/";
+        readonly string outputBase = $"{CrawlerOptions.DataDirectory}/logs/{DateTime.Now.ToString("yyyy-MM-dd (hhmmss)")}/";
 
         int crawlerThreadCount;
 
@@ -79,9 +77,9 @@ namespace Kennedy.Crawler
             HitsForDomain = new Bag<string>();
 
             // init document repository and data bases
-            docIndex = new DocumentIndex(Crawler.DataDirectory);
-            ftsEngine = new FullTextSearchEngine(Crawler.DataDirectory);
-            docStore = new DocumentStore(Crawler.DataDirectory + "page-store/");
+            docIndex = new DocumentIndex(CrawlerOptions.DataDirectory);
+            ftsEngine = new FullTextSearchEngine(CrawlerOptions.DataDirectory);
+            docStore = new DocumentStore(CrawlerOptions.DataDirectory + "page-store/");
 
             docParser = new DocumentParser();
 
@@ -92,8 +90,8 @@ namespace Kennedy.Crawler
 
             seenUrlModule = new SeenUrlModule();
             seenContentModule = new SeenContentModule();
-            robotsModule = new RobotsFilterModule($"/{Crawler.DataDirectory}/robots/");
-            excludedUrlModule = new ExcludedUrlModule($"/{Crawler.DataDirectory}/block-list.txt");
+            robotsModule = new RobotsFilterModule($"/{CrawlerOptions.DataDirectory}/robots/");
+            excludedUrlModule = new ExcludedUrlModule($"/{CrawlerOptions.DataDirectory}/block-list.txt");
             domainLimiter = new DomainLimiterModule();
 
             SetupStatusLog(urlFrontier, "url-frontier");
@@ -194,7 +192,7 @@ namespace Kennedy.Crawler
             } while (KeepWorkersAlive);
             crawlStopwatch.Stop();
 
-            urlFrontier.SaveSnapshot($"{DataDirectory}remaining-frontier.txt");
+            urlFrontier.SaveSnapshot($"{CrawlerOptions.DataDirectory}remaining-frontier.txt");
 
             Console.WriteLine($"Complete! {crawlStopwatch.Elapsed.TotalSeconds}");
             FinalizeCrawl();

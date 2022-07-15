@@ -25,7 +25,7 @@ namespace Kennedy.Crawler.Support
             ThreadSafeCounter counter = new ThreadSafeCounter();
 
 
-            var db = new DocIndexDbContext(Crawler.DataDirectory);
+            var db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
             var urlsInDocIndex = (db.DocEntries
                         .Where(x => x.BodySize > 0).ToList()
                          .Select(x => toULong(x.DBDocID)));
@@ -71,7 +71,7 @@ namespace Kennedy.Crawler.Support
 
             int x = 5;
 
-            File.WriteAllLines($"{Crawler.DataDirectory}rebuilt.txt", unvisitedUrls.GetValues().Select(x => x.NormalizedUrl));
+            File.WriteAllLines($"{CrawlerOptions.DataDirectory}rebuilt.txt", unvisitedUrls.GetValues().Select(x => x.NormalizedUrl));
 
         }
 

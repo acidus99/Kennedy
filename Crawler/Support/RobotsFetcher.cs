@@ -18,7 +18,7 @@ namespace Kennedy.Crawler.Support
     public static class RobotsFetcher
     {
         //folder to output robots.txt into
-        static  readonly string outputDirRobots = $"/{Crawler.DataDirectory}/robots/";
+        static  readonly string outputDirRobots = $"/{CrawlerOptions.DataDirectory}/robots/";
 
         static ThreadSafeCounter requestCounter = new ThreadSafeCounter();
         static ThreadSafeCounter foundRobotsCounter = new ThreadSafeCounter();

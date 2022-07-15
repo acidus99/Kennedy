@@ -16,7 +16,7 @@ namespace Kennedy.Crawler.Support.Indexes
 
         public TermScanner()
         {
-            docStore = new DocumentStore(Crawler.DataDirectory + "page-store/");
+            docStore = new DocumentStore(CrawlerOptions.DataDirectory + "page-store/");
             Mentions = new TermTracker();
             Hashtags = new TermTracker();
         }
@@ -25,7 +25,7 @@ namespace Kennedy.Crawler.Support.Indexes
         public void ScanDocs()
         {
 
-            DocIndexDbContext db = new DocIndexDbContext(Crawler.DataDirectory);
+            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
             
 
             var entries = db.DocEntries

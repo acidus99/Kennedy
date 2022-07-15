@@ -18,7 +18,7 @@ namespace Kennedy.Crawler.Support.Indexes
         public MentionsDumper(TermTracker tracker)
         {
             Tracker = tracker;
-            Db = new DocIndexDbContext(Crawler.DataDirectory);
+            Db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
         }
 
 
