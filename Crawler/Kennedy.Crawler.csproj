@@ -14,7 +14,6 @@
     <None Remove="UrlFrontiers\" />
     <None Remove="Utils\" />
     <None Remove="NTextCat" />
-    <None Remove="Core14.profile.xml" />
     <None Remove="Support\Indexes\" />
     <None Remove="DnsClient" />
   </ItemGroup>
@@ -35,10 +34,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
     <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Core14.profile.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 </Project>
