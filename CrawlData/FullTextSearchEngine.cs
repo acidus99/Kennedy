@@ -8,7 +8,6 @@ namespace Kennedy.CrawlData
 {
     public class FullTextSearchEngine
     {
-
         string connectString;
 
         public FullTextSearchEngine(string storageDirectory)
@@ -135,6 +134,7 @@ LIMIT $limit OFFSET $offset";
 
                     transaction.Commit();
                 }
+                connection.Close();
             }
         }
     }
