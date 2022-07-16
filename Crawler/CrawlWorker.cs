@@ -35,7 +35,6 @@ namespace Kennedy.Crawler
 
             GeminiRequestor requestor = new GeminiRequestor
             {
-                OnlyDownloadText = true,
                 AbortTimeout = 45000,
                 MaxResponseSize = 1024 * 10124,
             };
