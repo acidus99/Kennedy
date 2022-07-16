@@ -22,7 +22,7 @@ namespace Kennedy.Crawler.DocumentParsers
             // Don't forget to deploy a language profile (e.g. Core14.profile.xml) with your application.
             // (take a look at "content" folder inside of NTextCat nupkg and here: https://github.com/ivanakcheurov/ntextcat/tree/master/src/LanguageModels).
             var factory = new RankedLanguageIdentifierFactory();
-            langClassifier = factory.Load("Core14.profile.xml"); // can be an absolute or relative path. Beware of 260 chars limitation of the path length in Windows. Linux allows 4096 chars.
+            langClassifier = factory.Load(CrawlerOptions.DataDirectory +"Core14.profile.xml"); // can be an absolute or relative path. Beware of 260 chars limitation of the path length in Windows. Linux allows 4096 chars.
         }
 
         private bool IsGemText(GeminiResponse resp)
@@ -41,7 +41,7 @@ namespace Kennedy.Crawler.DocumentParsers
 
             if (IsGemText(resp))
             {
-                    return ParseGemText(resp);
+                return ParseGemText(resp);
             }
             return new DocumentMetadata();
         }
