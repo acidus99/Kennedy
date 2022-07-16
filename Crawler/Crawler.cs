@@ -309,13 +309,14 @@ namespace Kennedy.Crawler
             var count = HitsForDomain.Add(url.Authority);
             if (count == 1)
             {
+                //too many threads
+                //(new Thread(() => AnalyzeDomain(url))).Start();
                 AnalyzeDomain(url);
             }
         }
 
         private void AnalyzeDomain(GeminiUrl url)
         {
-            Console.WriteLine("analysing domain: " + url.Hostname);
             DomainAnalyzer analyzer = new DomainAnalyzer(url.Hostname, url.Port);
             analyzer.QueryDomain(urlFrontier.DnsCache);
 
