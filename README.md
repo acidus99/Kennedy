@@ -3,7 +3,7 @@ Kennedy is a search engine for [Gemini space](https://en.wikipedia.org/wiki/Gemi
 
 ![Kennedy running in Lagrange client](imgs/kennedy-in-lagrange.png)
 
-## Demo:
+## Demo
 Visit `gemini://kennedy.gemi.dev` with a [Gemini client](https://github.com/kr1sp1n/awesome-gemini) or [via an HTTP-to-Gemini proxy](https://portal.mozz.us/gemini/kennedy.gemi.dev)
 
 ## Features
