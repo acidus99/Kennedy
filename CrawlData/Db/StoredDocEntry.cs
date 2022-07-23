@@ -90,6 +90,8 @@ namespace Kennedy.CrawlData.Db
 
         public int ExternalInboundLinks { get; set; }
 
+        public ContentType ContentType { get; set; }
+
         #endregion
 
         public void SetDocID()

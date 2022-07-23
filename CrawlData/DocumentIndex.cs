@@ -112,6 +112,8 @@ namespace Kennedy.CrawlData
                 entry.DownloadTime = resp.DownloadTime;
                 entry.OutboundLinks = outboundLinkCount;
 
+                entry.ContentType = resp.ContentType;
+
                 if (IsError(resp))
                 {
                     entry.ErrorCount++;
