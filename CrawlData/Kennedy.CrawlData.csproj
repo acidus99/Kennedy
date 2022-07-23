@@ -9,9 +9,11 @@
     <None Remove="Microsoft.EntityFrameworkCore" />
     <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
     <None Remove="EFCore.BulkExtensions" />
+    <None Remove="Search\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Db\" />
+    <Folder Include="Search\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.14" />
