@@ -11,6 +11,7 @@ namespace Kennedy.CrawlData.Db
         public DbSet<StoredDocEntry> DocEntries { get; set; }
         public DbSet<StoredLinkEntry> LinkEntries { get; set; }
         public DbSet<StoredDomainsEntry> DomainEntries { get; set; }
+        public DbSet<StoredImageEntry> ImageEntries { get; set; }
 
         public DocIndexDbContext(string storageDir)
         {
