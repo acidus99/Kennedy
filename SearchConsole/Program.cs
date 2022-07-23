@@ -1,6 +1,5 @@
 ﻿using System;
-
-using Kennedy.CrawlData;
+using Kennedy.CrawlData.Search;
 
 namespace Kennedy.SearchConsole
 {
@@ -17,7 +16,7 @@ namespace Kennedy.SearchConsole
                 Console.WriteLine("Entry Search term");
                 query = Console.ReadLine();
 
-                FullTextSearchEngine engine = new FullTextSearchEngine("/var/gemini/crawl-data/");
+                var engine = new FullTextSearchEngine("/var/gemini/crawl-data/");
 
                 var results = engine.DoSearch(query,0,15,true);
 

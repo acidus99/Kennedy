@@ -11,6 +11,7 @@ using Gemini.Net;
 using Kennedy.Crawler.DocumentParsers;
 using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
+using Kennedy.CrawlData.Search;
 using Kennedy.Crawler.GemText;
 using Kennedy.Crawler.Modules;
 using Kennedy.Crawler.Utils;

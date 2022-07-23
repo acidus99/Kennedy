@@ -2,7 +2,7 @@
 using System.IO;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
+using Kennedy.CrawlData.Search;
 using RocketForce;
 
 namespace Kennedy.Server.Views

@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Net;
 
-using Kennedy.CrawlData;
+using Kennedy.CrawlData.Search;
 using RocketForce;
 using System.Diagnostics;
 using Kennedy.Gemipedia;
