@@ -9,29 +9,26 @@ using Kennedy.CrawlData.Db;
 using Kennedy.Crawler.GemText;
 namespace Kennedy.Crawler.Support
 {
+    /// <summary>
+    /// Detects all gemini feeds and Atom feeds. For gemini feeds, finds all the gemtext, the looks in
+    /// the page store to if they have link which match the gemini feed format
+    /// </summary>
     public class FeedFinder
     {
-        const string storage = "/Users/billy/tmp/crawl-data/";
-        DocumentStore docStore = new DocumentStore(storage + "page-store/");
+        DocumentStore docStore = new DocumentStore(CrawlerOptions.DataDirectory + "page-store/");
         Regex regex = new Regex(@"^\d{4}-\d{2}-\d{2}\s+");
-
-        public FeedFinder()
-        {
-
-
-        }
 
         public void Doit()
         {
             var urls = FindGeminiFeeds();
-            System.IO.File.WriteAllLines("/Users/billy/tmp/gemfeeds.txt", urls);
             urls = FindXmlFeeds();
-            System.IO.File.WriteAllLines("/Users/billy/tmp/atom-feeds.txt", urls);
+            //TODO: 
+            //Write out the URLS
         }
 
         public List<string> FindXmlFeeds()
         {
-            DocIndexDbContext db = new DocIndexDbContext(storage);
+            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
 
             return db.DocEntries
                 .Where(x => (x.ErrorCount == 0 && x.MimeType.StartsWith("application/xml")))
@@ -42,7 +39,7 @@ namespace Kennedy.Crawler.Support
         {
             List<string> ret = new List<string>();
 
-            DocIndexDbContext db = new DocIndexDbContext(storage);
+            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
 
             var entries = db.DocEntries
                 .Where(x => (x.ErrorCount == 0 && x.BodySize > 0 && x.MimeType.StartsWith("text/gemini"))).ToList();
