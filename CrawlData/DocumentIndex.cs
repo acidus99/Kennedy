@@ -24,7 +24,7 @@ namespace Kennedy.CrawlData
             EnsureFullTextSearch(db);
         }
 
-        public void EnsureFullTextSearch(DocIndexDbContext db)
+        private void EnsureFullTextSearch(DocIndexDbContext db)
         {
 
             using (var connection = db.Database.GetDbConnection())
