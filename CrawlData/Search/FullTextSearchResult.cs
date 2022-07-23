@@ -1,7 +1,7 @@
 ﻿using System;
 using Gemini.Net;
 
-namespace Kennedy.CrawlData
+namespace Kennedy.CrawlData.Search
 {
     public class FullTextSearchResult
     {
