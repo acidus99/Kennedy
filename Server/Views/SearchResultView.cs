@@ -28,7 +28,7 @@ namespace Kennedy.Server.Views
         {
             var query = PrepareQuery(SanitizedQuery);
             Options = new SearchOptions(Request.Url, "/search");
-            FullTextEngine = new FullTextSearchEngine("/var/gemini/crawl-data/");
+            FullTextEngine = new FullTextSearchEngine(Settings.Global.DataRoot);
 
             Response.Success();
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Search");
