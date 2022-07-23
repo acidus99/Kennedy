@@ -7,7 +7,7 @@ namespace Kennedy.Crawler.Modules
 {
     public class DomainLimiterModule : AbstractUrlModule
     {
-        public int MaxUrlsPerDomain { get; set; } = 15000;
+        public int MaxUrlsPerDomain { get; set; } = 35000;
 
         Bag<string> domainHits;
         object locker;
