@@ -34,8 +34,13 @@ namespace Kennedy.Server
             app.Logger = loggerFactory.CreateLogger<App>();
             app.IsMaskingRemoteIPs = false;
 
+            //text search
             app.OnRequest("/search", SearchController.Search);
             app.OnRequest("/lucky", SearchController.LuckySearch);
+
+            //image search
+            app.OnRequest("/image-search", ImageSearchController.Search);
+
             app.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
             app.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
             app.OnRequest("/delorean", SearchController.DeloreanSearch);

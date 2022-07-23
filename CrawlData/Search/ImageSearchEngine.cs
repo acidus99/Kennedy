@@ -22,7 +22,7 @@ namespace Kennedy.CrawlData.Search
                 using (var connection = new SqliteConnection(connectString))
                 {
                     connection.Open();
-                    SqliteCommand cmd = new SqliteCommand(@"Select count(*) From Images WHERE Terms match $query", connection);
+                    SqliteCommand cmd = new SqliteCommand(@"Select count(*) From ImageSearch WHERE Terms match $query", connection);
                     cmd.Parameters.Add(new SqliteParameter("$query", query));
                     return Convert.ToInt32(cmd.ExecuteScalar());
                 }

@@ -39,14 +39,11 @@ namespace Kennedy.Server.Views
             return $"{Math.Round(((double)bodySize) / ((double)1024))} KB";
         }
 
+        protected string FormatPageTitle(GeminiUrl url)
+            => $"{url.Hostname}{url.Path}";
+
         protected string FormatPageTitle(GeminiUrl url, string title)
-        {
-            if (title.Trim().Length > 0)
-            {
-                return title;
-            }
-            return $"{url.Hostname}{url.Path}";
-        }
+            => (title.Trim().Length > 0) ? title : FormatPageTitle(url);
 
         protected string FormatLanguage(string language)
         {
