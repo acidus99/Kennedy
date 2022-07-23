@@ -21,6 +21,7 @@ namespace Kennedy.Server.Views
         ArticleSummary TopGemipediaHit = null;
         List<FullTextSearchResult> SearchResults = null;
         FullTextSearchEngine FullTextEngine;
+        int ImageHits = 0;
 
         SearchOptions Options;
 
@@ -50,16 +51,16 @@ namespace Kennedy.Server.Views
                 if(TopGemipediaHit != null)
                 {
                     Response.WriteLine($"=> {Helper.ArticleUrl(TopGemipediaHit.Title)} 📖 Top Gemipedia Article: {TopGemipediaHit.Title}");
-                    if (!string.IsNullOrEmpty(TopGemipediaHit.ThumbnailUrl))
-                    {
-                        Response.WriteLine($"=> {Helper.MediaProxyUrl(TopGemipediaHit.ThumbnailUrl)} Article Image: {TopGemipediaHit.Title}");
-                    }
-
                     if (TopGemipediaHit.Description.Length > 0)
                     {
                         Response.WriteLine($"> {TopGemipediaHit.Description}");
                     }
-                    Response.WriteLine($"=> {Helper.SearchUrl(TopGemipediaHit.Title)} 📚 Other Gemipedia Articles that mention '{TopGemipediaHit.Title}'");
+                    Response.WriteLine();
+                }
+
+                if(ImageHits > 0)
+                {
+                    Response.WriteLine($"=> /image-search?{Request.Url.RawQuery} Found {ImageHits} images with 🖼 Kennedy Image Search!");
                     Response.WriteLine();
                 }
 
@@ -139,10 +140,17 @@ namespace Kennedy.Server.Views
             SearchResults = FullTextEngine.DoSearch(query, baseCounter * resultsInPage, resultsInPage, usePopRank);
         }
 
+        private void QueryImageSearch(string query)
+        {
+            ImageSearchEngine img = new ImageSearchEngine(Settings.Global.DataRoot);
+            ImageHits = img.GetResultsCount(query);
+        }
+
         private void DoFullQuery(string query)
         {
             Parallel.Invoke(() => QueryGemipedia(query),
-                            () => QueryFullText(query));
+                            () => QueryFullText(query),
+                            () => QueryImageSearch(query));
         }
 
         private string PageLink(string linkText, int page)
