@@ -39,12 +39,20 @@ namespace Kennedy.Server.Views
 
                     byte[] body = docStore.GetDocument(entry.DocID);
 
-                    Response.Success();
-                    Response.WriteLine($"> This is the Cached verision of {entry.Url} as seen by the Kennedy Crawler on {entry.LastVisit.Value.ToString("yyyy-MM-dd")}");
-                    Response.WriteLine($"=> {entry.Url} Current Version");
-                    Response.WriteLine();
-                    Response.Write(body);
-                    return;
+                    if (entry.MimeType.StartsWith("text/"))
+                    {
+                        Response.Success();
+                        Response.WriteLine($"> This is the Cached verision of {entry.Url} as seen by the Kennedy Crawler on {entry.LastVisit.Value.ToString("yyyy-MM-dd")}");
+                        Response.WriteLine($"=> {entry.Url} Current Version");
+                        Response.WriteLine();
+                        Response.Write(body);
+                        return;
+                    }
+                    else
+                    {
+                        Response.Success(entry.MimeType);
+                        Response.Write(body);
+                    }
                 }
             }
             catch(Exception)
