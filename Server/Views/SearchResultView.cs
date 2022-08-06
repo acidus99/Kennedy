@@ -107,7 +107,7 @@ namespace Kennedy.Server.Views
             {
                 Response.Write($"{language} • ");
             }
-            Response.Write($"{FormatSize(result.BodySize)} • {FormatDomain(result.Url.Hostname, result.Favicon)}");
+            Response.Write($"{FormatSize(result.BodySize)} • {FormatDomain(result.Url.Hostname, result.Favicon)} • More info...");
             //if(result.ExternalInboundLinks > 0)
             //{
             //    Response.Write($" • {result.ExternalInboundLinks} inbound links");
