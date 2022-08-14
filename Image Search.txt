@@ -1,0 +1,23 @@
+Select * , rank , ( rank + (rank*0.3*PopularityRank)) as tot,  snippet(ImageSearch, 0, '[',']','…',20) as snip
+From ImageSearch as fts
+Inner Join Documents as doc
+On doc.DBDocID = fts.ROWID
+WHERE Terms match 'k'
+order by tot
+
+
+
+
+
+
+
+
+
+### update the content type
+Update Documents Set ContentType = 1 where ErrorCount = 0 and Status = 20 and MimeType like 'text/%'
+Update Documents Set ContentType = 2 where ErrorCount = 0 and Status = 20 and MimeType like 'image/%'
+
+
+### Create it
+
+CREATE VIRTUAL TABLE ImageSearch using fts5(terms, tokenize = 'porter');
