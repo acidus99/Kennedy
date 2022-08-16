@@ -36,5 +36,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
     <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
+    <ProjectReference Include="..\Kennedy.Archive\Kennedy.Archive.csproj" />
+    <ProjectReference Include="..\Kennedy.Archive\Kennedy.Archive.csproj" />
   </ItemGroup>
 </Project>

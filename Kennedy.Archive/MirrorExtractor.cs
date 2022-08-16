@@ -18,26 +18,25 @@ namespace Kennedy.Archive
     public class MirrorExtractor
     {
         string DocDBLocation;
+        string BaseOutputLocation;
         string OutputLocation;
-        string UrlPathRoot;
 
         public MirrorExtractor(string dbLocation, string outputLocation)
         {
             DocDBLocation = EnsureSlash(dbLocation);
-            OutputLocation = EnsureSlash(outputLocation);
+            BaseOutputLocation = EnsureSlash(outputLocation);
         }
 
-        public void CreateMirror(string domainToClone, int portToClone, string urlPathRoot)
+        public void CreateMirror(string domainToClone, int portToClone)
         {
-            UrlPathRoot = EnsureSlash(urlPathRoot);
-
+            OutputLocation = EnsureSlash(BaseOutputLocation + domainToClone);
             // /Users/billy/tmp/DD/   
             DocIndexDbContext db = new DocIndexDbContext(DocDBLocation);
             DocumentStore docStore = new DocumentStore($"{DocDBLocation}page-store/");
 
             foreach (var entry in db.DocEntries.Where(x => x.Domain == domainToClone && x.Port == portToClone && x.Status == 20))
             {
-                
+
                 entry.SetDocID();
                 byte[] data = null;
                 try
@@ -53,15 +52,11 @@ namespace Kennedy.Archive
 
                     Uri originalUrl = new Uri(entry.Url);
 
-                    //something to output.
-                    Uri newUrl = RewriteUrl(originalUrl);
-
-                    string outputFile = OutputFileForUrl(newUrl);
+                    string outputFile = OutputFileForUrl(originalUrl);
 
                     Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
                     if (entry.MimeType.StartsWith("text/gemini"))
                     {
-
                         //get data here, use charset in the future
                         string content = Encoding.UTF8.GetString(data);
                         content = RewriteGemtext(originalUrl, content);
@@ -77,7 +72,7 @@ namespace Kennedy.Archive
 
         }
 
-        public string RewriteGemtext(Uri originalUrl, string gemtext)
+        public string RewriteGemtext(Uri sourceUrl, string gemtext)
         {
             bool inPre = false;
             StringBuilder sb = new StringBuilder();
@@ -99,7 +94,7 @@ namespace Kennedy.Archive
                 }
                 else
                 {
-                    sb.Append(RewriteLine(originalUrl, line));
+                    sb.Append(RewriteLine(sourceUrl, line));
                     sb.Append('\n');
 
                 }
@@ -110,58 +105,50 @@ namespace Kennedy.Archive
         //Creates the output filename for a url. Handles index.gmi
         private string OutputFileForUrl(Uri newUrl)
         {
-            var path = Path.Combine(OutputLocation , newUrl.AbsolutePath.Substring(1));
-            if(path.EndsWith('/'))
-            {
-                path += "index.gmi";
-            }
-            return path;
+            var path = AddDefaultFile(newUrl.AbsolutePath);
+            //skip the leading /
+            return Path.Combine(OutputLocation, path.Substring(1));
         }
 
-        private string RewriteLine(Uri originalUrl, string line)
+        private string RewriteLine(Uri sourceUrl, string line)
         {
             var match = linkLine.Match(line);
-            if(!match.Success)
+            if (!match.Success)
             {
                 //not a link line, pass it through
                 return line;
             }
 
-            Uri linkUrl = CreateUri(originalUrl, match);
+            Uri targetUrl = CreateUri(sourceUrl, match);
 
-            if(!ShouldRewrite(linkUrl, originalUrl))
+            if (!ShouldRewrite(targetUrl, sourceUrl))
             {
                 //not rewritting, pass it through
                 return line;
             }
 
             string linkText = getLinkText(match);
-            Uri newUrl = RewriteUrl(linkUrl);
+            string relativeUrl = ToRelativeUrl(sourceUrl, targetUrl);
             if (linkText.Length > 0)
             {
-                return $"=> {newUrl.AbsolutePath} {linkText}";
+                return $"=> {relativeUrl} {linkText}";
             }
             else
             {
-                return $"=> {newUrl.AbsolutePath}";
+                return $"=> {relativeUrl}";
             }
         }
 
         private string EnsureSlash(string s)
             => s.EndsWith('/') ? s : s + '/';
 
-        private Uri RewriteUrl(Uri url)
-        {
-            UriBuilder b = new UriBuilder(url);
+        private string AddDefaultFile(string path)
+            => path.EndsWith('/') ? path + "index.gmi" : path;
 
-            if (b.Path.StartsWith("/") && b.Path.Length >= 2)
-            {
-                b.Path =UrlPathRoot + b.Path.Substring(1);
-            } else
-            {
-                b.Path = UrlPathRoot;
-            }
-            return b.Uri;
+        private string ToRelativeUrl(Uri sourceUrl, Uri targetUrl)
+        {
+            string target = AddDefaultFile(targetUrl.AbsolutePath);
+            return Path.GetRelativePath(Path.GetDirectoryName(sourceUrl.AbsolutePath) ?? "/", target);
         }
 
         private Uri CreateUri(Uri originalUrl, Match match)
@@ -169,11 +156,11 @@ namespace Kennedy.Archive
 
         private bool ShouldRewrite(Uri url, Uri originalUrl)
         {
-            if(url.Scheme != "gemini" || url.Host != originalUrl.Host)
+            if (url.Scheme != "gemini" || url.Host != originalUrl.Host)
             {
                 return false;
             }
-            
+
             GeminiUrl gNew = new GeminiUrl(url);
             GeminiUrl gOrig = new GeminiUrl(originalUrl);
             return (gNew.Port == gOrig.Port);
@@ -186,7 +173,6 @@ namespace Kennedy.Archive
         /// <returns></returns>
         private static string getLinkText(Match match)
             => (match.Groups.Count > 2) ? match.Groups[2].Value : "";
-
 
         static readonly Regex linkLine = new Regex(@"^=>\s*([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
