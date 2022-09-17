@@ -9,7 +9,7 @@ using Gemini.Net;
 using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
 
-namespace Kennedy.Crawler.Support.Indexes
+namespace Kennedy.Crawler.TopicIndexes
 {
     internal class HashtagDumper
     {

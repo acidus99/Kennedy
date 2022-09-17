@@ -24,5 +24,20 @@ namespace Kennedy.Data.Models
         public override int GetHashCode()
             => Url.GetHashCode();
 
+        public static FoundLink Create(GeminiUrl pageUrl, string foundUrl, string linkText = "")
+        {
+            var newUrl = GeminiUrl.MakeUrl(pageUrl, foundUrl);
+            //ignore anything that doesn't resolve properly, or isn't to a gemini:// URL
+            if (newUrl == null)
+            {
+                return null;
+            }
+            return new FoundLink
+            {
+                Url = newUrl,
+                IsExternal = (newUrl.Authority != pageUrl.Authority),
+                LinkText = linkText
+            };
+        }
     }
 }

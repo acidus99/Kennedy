@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Kennedy.Crawler.Support;
+using Kennedy.Crawler.TopicIndexes;
 
 namespace Kennedy.Crawler
 {
@@ -24,12 +25,8 @@ namespace Kennedy.Crawler
             crawler.AddSeedFile(domainsFile);
             crawler.DoCrawl();
 
-            Console.WriteLine("Stage 4: Calculating Poprank");
-            PopularityCalculator calc = new PopularityCalculator();
-            calc.Rank();
-
-            Console.WriteLine("Stage 5: Building Indexes: Topics and Mentions ");
-            IndexLoader.BuildIndexes();
+            Console.WriteLine("Stage 4: Building Indexes: Topics and Mentions ");
+            TopicGenerator.BuildFiles(CrawlerOptions.DataDirectory);
             return;
         }
 

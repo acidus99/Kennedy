@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 using Microsoft.Data.Sqlite;
-using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
-using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
-
-namespace Kennedy.Crawler.Support
+namespace Kennedy.CrawlData.Indexers
 {
     public class ImageIndexer
     {
@@ -23,11 +15,9 @@ namespace Kennedy.Crawler.Support
         SqliteParameter parameterDbDocID;
         SqliteParameter parameterTerms;
 
-        DocumentStore docStore = new DocumentStore(CrawlerOptions.DataDirectory + "page-store/");
-
-        public ImageIndexer()
+        public ImageIndexer(DocumentIndex documentIndex)
         {
-            connection = new SqliteConnection($"Data Source='{CrawlerOptions.DataDirectory}doc-index.db'");
+            connection = new SqliteConnection(documentIndex.GetContext().Database.GetConnectionString());
             pathTokenizer = new PathTokenizer();
             imageTextContent = new Dictionary<long, string>();
         }
@@ -105,9 +95,5 @@ where length(LinkText) > 0", connection))
             parameterTerms.Value = terms;
             command.ExecuteNonQuery();
         }
-
     }
-
-        
 }
-

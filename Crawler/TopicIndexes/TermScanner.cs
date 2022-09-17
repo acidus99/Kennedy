@@ -7,7 +7,7 @@ using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
 using Kennedy.Data.Parsers.GemText;
 
-namespace Kennedy.Crawler.Support.Indexes
+namespace Kennedy.Crawler.TopicIndexes
 {
     internal class TermScanner
     {
@@ -21,7 +21,6 @@ namespace Kennedy.Crawler.Support.Indexes
             Mentions = new TermTracker();
             Hashtags = new TermTracker();
         }
-
 
         public void ScanDocs()
         {

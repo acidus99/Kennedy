@@ -1,0 +1,23 @@
+﻿using System;
+namespace Kennedy.Data.Models
+{
+	public class DomainInfo
+	{
+        public int Id { get; set; }
+
+        public string Domain { get; set; }
+        public int Port { get; set; }
+
+        public bool IsReachable { get; set; }
+        public string ErrorMessage { get; set; }
+
+        public bool HasRobotsTxt { get; set; }
+        public bool HasFaviconTxt { get; set; }
+        public bool HasSecurityTxt { get; set; }
+
+        public string FaviconTxt { get; set; }
+        public string SecurityTxt { get; set; }
+        public string RobotsTxt { get; set; }
+
+    }
+}

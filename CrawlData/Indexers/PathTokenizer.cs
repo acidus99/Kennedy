@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using Gemini.Net;
 
-namespace Kennedy.Crawler.Support
+namespace Kennedy.CrawlData.Indexers
 {
 	public class PathTokenizer
 	{

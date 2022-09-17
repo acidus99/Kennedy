@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using Gemini.Net;
 using Kennedy.Data.Utils;
 
-namespace Kennedy.Crawler.Support.Indexes
+namespace Kennedy.Crawler.TopicIndexes
 {
     internal class TermTracker
     {

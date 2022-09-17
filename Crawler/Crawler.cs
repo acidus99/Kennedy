@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 
 using Gemini.Net;
 using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
-using Kennedy.CrawlData.Search;
 using Kennedy.Crawler.Modules;
 using Kennedy.Crawler.Utils;
 using Kennedy.Crawler.UrlFrontiers;
@@ -18,11 +16,13 @@ using Kennedy.Data.Models;
 using Kennedy.Data.Parsers;
 using Kennedy.Data.Utils;
 
-
 namespace Kennedy.Crawler
 {
     public class Crawler : AbstractModule, ICrawler
     {
+
+        public IDocumentStorage DocumentStorage { get; private set; }
+
 
         const int SnapshotInterval = 2 * StatusIntervalDisk;
         const int StatusIntervalDisk = 60000;
@@ -49,11 +49,7 @@ namespace Kennedy.Crawler
         ExcludedUrlModule excludedUrlModule;
         DomainLimiterModule domainLimiter;
 
-        DocumentIndex docIndex;
-        DocumentStore docStore;
-        FullTextSearchEngine ftsEngine;
-
-        DocumentParser docParser;
+        ResponseParser responseParser;
 
         List<AbstractModule> Modules;
         List<AbstractUrlModule> UrlModeles;
@@ -79,12 +75,10 @@ namespace Kennedy.Crawler
             crawlStopwatch = new Stopwatch();
             HitsForDomain = new Bag<string>();
 
-            // init document repository and data bases
-            docIndex = new DocumentIndex(CrawlerOptions.DataDirectory);
-            ftsEngine = new FullTextSearchEngine(CrawlerOptions.DataDirectory);
-            docStore = new DocumentStore(CrawlerOptions.DataDirectory + "page-store/");
+            LanguageDetector.ConfigFileDirectory = CrawlerOptions.DataDirectory;
+            responseParser = new ResponseParser();
 
-            docParser = new DocumentParser(CrawlerOptions.DataDirectory);
+            DocumentStorage = new DocumentStorageSystem(CrawlerOptions.DataDirectory);
 
             //init errorlog
             errorLog = new ErrorLog(outputBase);
@@ -153,7 +147,7 @@ namespace Kennedy.Crawler
         private void FinalizeCrawl()
         {
             errorLog.Close();
-            docIndex.Close();
+            DocumentStorage.Finalize();
         }
 
         private void SpawnWorker(int workerNum)
@@ -275,38 +269,18 @@ namespace Kennedy.Crawler
             if (!seenContentModule.CheckAndRecord(resp))
             {
                 //parse it
-                DocumentMetadata metaData = docParser.ParseDocument(resp);
+                AbstractResponse parsedResp = responseParser.Parse(resp);
                 //act on the links
-                metaData.Links.ForEach(x => ProcessProspectiveUrl(x.Url));
+                parsedResp.Links.ForEach(x => ProcessProspectiveUrl(x.Url));
 
-                var dbDocID = SaveResponse(resp, metaData);
-                IndexDocument(dbDocID, metaData);
+                DocumentStorage.StoreDocument(resp, parsedResp);
+                SaveDomainStats(resp.RequestUrl);
             }
             
             //note the work is complete
             workInFlight.Decrement();
         }
-
-        private void IndexDocument(long dbDocID, DocumentMetadata metaData)
-        {
-            if (metaData.IsIndexable)
-            {
-                ftsEngine.AddResponseToIndex(dbDocID, metaData.Title, metaData.FilteredBody);
-            }
-        }
-
-        private long SaveResponse(GeminiResponse resp, DocumentMetadata metaData)
-        {
-            //store it in our doc storeage
-            bool savedBody = docStore.StoreDocument(resp);
-
-            //store in in the doc index (inserting or updating as appropriate
-            long dbDocID = docIndex.StoreMetaData(resp, metaData.Title, metaData.Links.Count, savedBody, metaData.Language, metaData.LineCount);
-            docIndex.StoreLinks(resp.RequestUrl, metaData.Links);
-            SaveDomainStats(resp.RequestUrl);
-            return dbDocID;
-        }
-
+     
         private void SaveDomainStats(GeminiUrl url)
         {
             var count = HitsForDomain.Add(url.Authority);
@@ -323,29 +297,24 @@ namespace Kennedy.Crawler
             DomainAnalyzer analyzer = new DomainAnalyzer(url.Hostname, url.Port);
             analyzer.QueryDomain(urlFrontier.DnsCache);
 
-            using (var db = docIndex.GetContext())
+            var domainInfo = new DomainInfo
             {
-                db.DomainEntries.Add(
-                    new StoredDomainsEntry
-                    {
-                        Domain = url.Hostname,
-                        Port = url.Port,
+                Domain = url.Hostname,
+                Port = url.Port,
 
-                        IsReachable = analyzer.IsReachable,
-                        ErrorMessage = analyzer.ErrorMessage,
+                IsReachable = analyzer.IsReachable,
+                ErrorMessage = analyzer.ErrorMessage,
 
-                        HasFaviconTxt = analyzer.HasValidFavionTxt,
-                        HasRobotsTxt = analyzer.HasValidRobotsTxt,
-                        HasSecurityTxt = analyzer.HasValidSecurityTxt,
+                HasFaviconTxt = analyzer.HasValidFavionTxt,
+                HasRobotsTxt = analyzer.HasValidRobotsTxt,
+                HasSecurityTxt = analyzer.HasValidSecurityTxt,
 
-                        FaviconTxt = analyzer.FaviconTxt,
-                        RobotsTxt = analyzer.RobotsTxt,
-                        SecurityTxt = analyzer.SecurityTxt
-                    });
-                db.SaveChanges();
-            }
+                FaviconTxt = analyzer.FaviconTxt,
+                RobotsTxt = analyzer.RobotsTxt,
+                SecurityTxt = analyzer.SecurityTxt
+            };
+            DocumentStorage.StoreDomain(domainInfo);
         }
-
 
         protected override string GetStatusMesssage()
             => $"Elapsed: {crawlStopwatch.Elapsed}\tTotal Requested: {totalUrlsRequested.Count}\tTotal Processed: {processedCounter.Count}";
@@ -391,6 +360,5 @@ namespace Kennedy.Crawler
 
         public bool KeepWorkersAlive
             => HasUrlsToFetch || WorkInFlight;
-
     }
 }

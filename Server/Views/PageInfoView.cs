@@ -5,6 +5,7 @@ using System.IO;
 using Gemini.Net;
 using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
+using Kennedy.Data.Models;
 using RocketForce;
 
 namespace Kennedy.Server.Views

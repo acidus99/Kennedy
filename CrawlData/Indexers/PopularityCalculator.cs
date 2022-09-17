@@ -4,20 +4,21 @@ using System.Linq;
 
 using Kennedy.CrawlData.Db;
 using Kennedy.CrawlData;
-using Kennedy.Data.Parsers.GemText;
 
-namespace Kennedy.Crawler.Support
+namespace Kennedy.CrawlData.Indexers
 {
     public class PopularityCalculator
     {
-        DocumentStore docStore = new DocumentStore(CrawlerOptions.DataDirectory + "page-store/");
-        DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
+        DocIndexDbContext db;
+
+        public PopularityCalculator(DocumentIndex documentIndex)
+        {
+            db = documentIndex.GetContext();
+        }
 
         Dictionary<long, int> OutboundCount = new Dictionary<long, int>();
 
         Dictionary<long, List<long>> LinksToPage = new Dictionary<long, List<long>>();
-
-        int fixedTitle = 0;
 
         public void Rank()
         {
@@ -49,19 +50,6 @@ namespace Kennedy.Crawler.Support
                         entry.PopularityRank += voteValue;
                     }
                 }
-
-                if (entry.BodySaved && entry.MimeType.StartsWith("text/gemini"))
-                {
-                    var title = GetTitle(entry.DBDocID);
-                    if(entry.Title != title)
-                    {
-                        fixedTitle++;
-                        entry.Title = title;
-                    }
-                    
-                }
-
-
             }
             Console.WriteLine("computing percentages");
             foreach (var entry in reachableEntries)
@@ -71,24 +59,7 @@ namespace Kennedy.Crawler.Support
                 //log distribution over the score
                 entry.PopularityRank = Math.Log(entry.PopularityRank, 100);
             }
-            int xxx = 4;
-
             db.SaveChanges();
-
-        }
-
-        private string GetTitle(long dbDocID)
-        {
-            return TitleFinder.ExtractTitle(GetDocumentText(dbDocID));
-        }
-
-        private string GetDocumentText(long dbDocID)
-        {
-            ulong docID = DocumentIndex.toULong(dbDocID);
-            
-
-            byte[] bytes = docStore.GetDocument(docID);
-            return System.Text.Encoding.UTF8.GetString(bytes);
         }
 
         private void BuildOutlinkCache()
@@ -114,6 +85,5 @@ namespace Kennedy.Crawler.Support
                 LinksToPage[link.DBTargetDocID].Add(link.DBSourceDocID);
             }
         }
-
     }
 }

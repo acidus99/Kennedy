@@ -1,11 +1,9 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Kennedy.CrawlData.Db
 {
     public class DocIndexDbContext : DbContext
     {
-
         protected string StorageDirectory;
 
         public DbSet<StoredDocEntry> DocEntries { get; set; }

@@ -15,26 +15,6 @@ namespace Kennedy.Data.Parsers.GemText
     {
         static readonly Regex linkLine = new Regex(@"^=>\s*([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
-        public static List<FoundLink> ExtractLinks(GeminiResponse resp)
-        {
-            var links = new List<FoundLink>();
-
-            if(resp.IsRedirect)
-            {
-                var foundLink = Create(resp.RequestUrl, resp.Meta);
-                if(foundLink != null)
-                {
-                    links.Add(foundLink);
-                }
-            }
-            else if(resp.IsSuccess && resp.HasBody && resp.MimeType.StartsWith("text/gemini"))
-            {
-                links.AddRange(ExtractBodyLinks(resp.RequestUrl, resp.BodyText));
-            }
-
-            return links;
-        }
-
         /// <summary>
         /// Returns the link text from a link line. If not a link line, or no link text is present, returns ""
         /// </summary>
@@ -56,23 +36,7 @@ namespace Kennedy.Data.Parsers.GemText
         }
 
         private static FoundLink Create(GeminiUrl pageUrl, Match match)
-            => Create(pageUrl, match.Groups[1].Value, getLinkText(match));
-
-        public static FoundLink Create(GeminiUrl pageUrl, string foundUrl, string linkText = "")
-        {
-            var newUrl = GeminiUrl.MakeUrl(pageUrl, foundUrl);
-            //ignore anything that doesn't resolve properly, or isn't to a gemini:// URL
-            if (newUrl == null)
-            {
-                return null;
-            }
-            return new FoundLink
-            {
-                Url = newUrl,
-                IsExternal = (newUrl.Authority != pageUrl.Authority),
-                LinkText = linkText
-            };
-        }
+            => FoundLink.Create(pageUrl, match.Groups[1].Value, getLinkText(match));
 
         /// <summary>
         /// gives us the text, if any, used with this link

@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
+using Kennedy.Data.Models;
 
 namespace Kennedy.CrawlData.Db
 {

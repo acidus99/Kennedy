@@ -14,17 +14,18 @@
     <None Remove="Support\Indexes\" />
     <None Remove="DnsClient" />
     <None Remove="Magick.NET-Q8-AnyCPU" />
+    <None Remove="Indexer\" />
+    <None Remove="TopicIndexes\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Modules\" />
     <Folder Include="Support\" />
     <Folder Include="UrlFrontiers\" />
     <Folder Include="Utils\" />
-    <Folder Include="Support\Indexes\" />
+    <Folder Include="TopicIndexes\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DnsClient" Version="1.6.0" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="11.3.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
