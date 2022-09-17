@@ -6,7 +6,8 @@ using System.Text.RegularExpressions;
 using Gemini.Net;
 using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
-using Kennedy.Crawler.GemText;
+using Kennedy.Data.Models;
+using Kennedy.Data.Parsers.GemText;
 namespace Kennedy.Crawler.Support
 {
     /// <summary>

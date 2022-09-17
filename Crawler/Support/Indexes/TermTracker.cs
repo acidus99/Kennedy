@@ -2,8 +2,9 @@
 
 using System.Linq;
 using System.Collections.Generic;
-using Kennedy.Crawler.Utils;
+
 using Gemini.Net;
+using Kennedy.Data.Utils;
 
 namespace Kennedy.Crawler.Support.Indexes
 {

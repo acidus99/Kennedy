@@ -7,6 +7,7 @@ using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
+using Kennedy.Data.Models;
 using Kennedy.CrawlData.Db;
 
 namespace Kennedy.CrawlData

@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
-using Gemini.Net;
-using Kennedy.Crawler.GemText;
 using System.Text;
+
 using Microsoft.Data.Sqlite;
-using System.Linq;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
+
+using Gemini.Net;
+using Kennedy.CrawlData;
+using Kennedy.CrawlData.Db;
 
 namespace Kennedy.Crawler.Support
 {

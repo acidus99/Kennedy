@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-namespace Kennedy.Crawler.Utils
+namespace Kennedy.Data.Utils
 {
     /// <summary>
     /// Generic Object Bag - Holds objects and keeps a count of how many times the same object has been added

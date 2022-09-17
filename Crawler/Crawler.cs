@@ -8,14 +8,16 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Gemini.Net;
-using Kennedy.Crawler.DocumentParsers;
 using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
 using Kennedy.CrawlData.Search;
-using Kennedy.Crawler.GemText;
 using Kennedy.Crawler.Modules;
 using Kennedy.Crawler.Utils;
 using Kennedy.Crawler.UrlFrontiers;
+using Kennedy.Data.Models;
+using Kennedy.Data.Parsers;
+using Kennedy.Data.Utils;
+
 
 namespace Kennedy.Crawler
 {
@@ -82,7 +84,7 @@ namespace Kennedy.Crawler
             ftsEngine = new FullTextSearchEngine(CrawlerOptions.DataDirectory);
             docStore = new DocumentStore(CrawlerOptions.DataDirectory + "page-store/");
 
-            docParser = new DocumentParser();
+            docParser = new DocumentParser(CrawlerOptions.DataDirectory);
 
             //init errorlog
             errorLog = new ErrorLog(outputBase);

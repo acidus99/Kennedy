@@ -1,16 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-using System.Linq;
-using System.Collections.Generic;
+using Gemini.Net;
 using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
-using Kennedy.Crawler.Utils;
-using Kennedy.Crawler.GemText;
-using Gemini.Net;
-using System.IO;
-
 
 namespace Kennedy.Crawler.Support.Indexes
 {

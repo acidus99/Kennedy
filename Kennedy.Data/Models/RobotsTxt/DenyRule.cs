@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Kennedy.Crawler.RobotsTxt
+namespace Kennedy.Data.Models.RobotsTxt
 {
-    internal class DenyRule
+    public class DenyRule
     {
         public string Path { get; private set; }
 
@@ -12,9 +12,9 @@ namespace Kennedy.Crawler.RobotsTxt
         public bool HasWildcard
             => Path.Contains("*");
 
-        public DenyRule(Line line)
+        public DenyRule(string value)
         {
-            Path = line.Value ?? "";
+            Path = value ?? "";
 
             if (Path.Length > 0 && !Path.StartsWith("/"))
             {

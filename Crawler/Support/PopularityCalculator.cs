@@ -4,6 +4,7 @@ using System.Linq;
 
 using Kennedy.CrawlData.Db;
 using Kennedy.CrawlData;
+using Kennedy.Data.Parsers.GemText;
 
 namespace Kennedy.Crawler.Support
 {
@@ -78,7 +79,7 @@ namespace Kennedy.Crawler.Support
 
         private string GetTitle(long dbDocID)
         {
-            return GemText.TitleFinder.ExtractTitle(GetDocumentText(dbDocID));
+            return TitleFinder.ExtractTitle(GetDocumentText(dbDocID));
         }
 
         private string GetDocumentText(long dbDocID)

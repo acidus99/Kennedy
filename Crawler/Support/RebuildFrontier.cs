@@ -1,15 +1,18 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Gemini.Net;
-using Kennedy.Crawler.Utils;
-using Kennedy.Crawler;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
+
+
+using Gemini.Net;
+using Kennedy.Crawler.Utils;
+using Kennedy.CrawlData;
+using Kennedy.CrawlData.Db;
+using Kennedy.Data.Parsers.GemText;
+using Kennedy.Data.Utils;
 
 namespace Kennedy.Crawler.Support
 {
@@ -54,7 +57,7 @@ namespace Kennedy.Crawler.Support
                 var docStore = new DocumentStore(@"/Users/billy/Code/gemini-play/crawl-out/2021-12-31 (024040)/page-store");
                 string bodyText = System.Text.Encoding.UTF8.GetString(docStore.GetDocument(toULong(entry.DBDocID)));
 
-                var foundLinks = GemText.LinkFinder.ExtractBodyLinks(new GeminiUrl(entry.Url), bodyText);
+                var foundLinks = LinkFinder.ExtractBodyLinks(new GeminiUrl(entry.Url), bodyText);
 
                 foreach (var link in foundLinks)
                 {

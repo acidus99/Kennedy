@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Gemini.Net;
-using Kennedy.Crawler.RobotsTxt;
+using Kennedy.Data.Models.RobotsTxt;
+using Kennedy.Data.Parsers;
 
 using Kennedy.Crawler.Utils;
 
@@ -12,14 +13,14 @@ namespace Kennedy.Crawler.Modules
     public class RobotsFilterModule : AbstractUrlModule
     {
 
-        Dictionary<string, Robots> rulesCache;
+        Dictionary<string, RobotsTxt> rulesCache;
         ThreadSafeCounter rejectedCounter;
 
 
         public RobotsFilterModule(string dataDirectory)
             : base("ROBOTS-FILTER")
         {
-            rulesCache = new Dictionary<string, Robots>();
+            rulesCache = new Dictionary<string, RobotsTxt>();
             LoadFromFolder(dataDirectory);
 
             rejectedCounter = new ThreadSafeCounter();
@@ -49,6 +50,7 @@ namespace Kennedy.Crawler.Modules
                 Console.WriteLine($"{CreatePrefix()}Warning! No Robots.txt Loaded!");
                 return;
             }
+            var robotsParser = new RobotsTxtParser();
 
             foreach (var file in files)
             {
@@ -56,13 +58,13 @@ namespace Kennedy.Crawler.Modules
                 string authority = GetAuthority(contents);
                 if(!rulesCache.ContainsKey(authority))
                 {
-                    var robots = new Robots(contents);
-                    if(robots.IsMalformed)
+                    var robotsTxt = robotsParser.Parse(contents);
+                    if(robotsTxt.IsMalformed)
                     {
                         Console.WriteLine($"{CreatePrefix()}ERROR! Malformed Robots.txt '{file.FullName}'");
                     } else
                     {
-                        rulesCache[authority] = robots;
+                        rulesCache[authority] = robotsTxt;
                     }
                 } else
                 {

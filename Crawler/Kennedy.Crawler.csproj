@@ -6,10 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="DocumentParsers\" />
-    <None Remove="GemText\" />
     <None Remove="Modules\" />
-    <None Remove="RobotsTxt\" />
     <None Remove="Support\" />
     <None Remove="UrlFrontiers\" />
     <None Remove="Utils\" />
@@ -19,17 +16,13 @@
     <None Remove="Magick.NET-Q8-AnyCPU" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DocumentParsers\" />
-    <Folder Include="GemText\" />
     <Folder Include="Modules\" />
-    <Folder Include="RobotsTxt\" />
     <Folder Include="Support\" />
     <Folder Include="UrlFrontiers\" />
     <Folder Include="Utils\" />
     <Folder Include="Support\Indexes\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NTextCat" Version="0.3.65" />
     <PackageReference Include="DnsClient" Version="1.6.0" />
     <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="11.3.0" />
   </ItemGroup>
@@ -38,5 +31,6 @@
     <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
     <ProjectReference Include="..\Kennedy.Archive\Kennedy.Archive.csproj" />
     <ProjectReference Include="..\Kennedy.Archive\Kennedy.Archive.csproj" />
+    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
   </ItemGroup>
 </Project>

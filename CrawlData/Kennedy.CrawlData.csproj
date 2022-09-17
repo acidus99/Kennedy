@@ -22,5 +22,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
+    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
   </ItemGroup>
 </Project>

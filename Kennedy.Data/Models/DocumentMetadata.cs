@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using Gemini.Net;
 
-namespace Kennedy.Crawler.DocumentParsers
+namespace Kennedy.Data.Models
 {
     public class DocumentMetadata
     {
@@ -21,7 +21,6 @@ namespace Kennedy.Crawler.DocumentParsers
 
         public DocumentMetadata()
         {
-
         }
 
         public DocumentMetadata(FoundLink link)
