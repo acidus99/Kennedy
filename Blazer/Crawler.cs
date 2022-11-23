@@ -50,13 +50,13 @@ namespace Kennedy.Blazer
         public void AddSeed(string url)
             => UrlFrontier.AddUrl(new GeminiUrl(url));
 
-        private void LogError(Exception ex, GeminiUrl url)
+        private void LogError(string error, GeminiUrl url)
         {
-            var msg = $"EXCEPTION {ex.Message} on '{url}'";
+            var msg = $"EXCEPTION {error} on '{url}'";
             Console.WriteLine(msg);
             errorOut.WriteLine($"{DateTime.Now}\t{msg}");
 
-            msg = $"XX\t{ex.Message}\t{url}\t0\t0";
+            msg = $"XX\t{error}\t{url}\t0\t0";
             logOut.WriteLine(msg);
         }
 
@@ -91,7 +91,7 @@ namespace Kennedy.Blazer
                     {
                         if (resp.ConnectStatus != ConnectStatus.Success)
                         {
-                            LogError(requestor.LastException, url);
+                            LogError(requestor.LastException?.Message ?? resp.Meta, url);
                         }
                         else
                         {
