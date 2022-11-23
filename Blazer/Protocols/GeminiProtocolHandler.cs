@@ -1,6 +1,8 @@
 ﻿using System;
 
 using Gemini.Net;
+using Kennedy.Blazer.Dns;
+using Kennedy.Blazer.RobotsTxt;
 
 namespace Kennedy.Blazer.Protocols
 {

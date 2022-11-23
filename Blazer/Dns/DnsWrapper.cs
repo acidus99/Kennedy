@@ -1,9 +1,7 @@
-﻿using System;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using DnsClient;
 
-namespace Kennedy.Blazer
+namespace Kennedy.Blazer.Dns
 {
     public class DnsWrapper
     {

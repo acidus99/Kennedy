@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Kennedy.Blazer
+namespace Kennedy.Blazer.Utils
 {
     public class ThreadedFileWriter
     {
@@ -22,8 +22,6 @@ namespace Kennedy.Blazer
             locker = new object();
             counter = 0;
             this.flushCounter = flushCounter;
-
-
         }
 
         public void Close()
@@ -42,7 +40,5 @@ namespace Kennedy.Blazer
                 }
             }
         }
-
-
     }
 }

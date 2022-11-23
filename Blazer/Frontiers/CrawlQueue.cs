@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using Gemini.Net;
 
-namespace Kennedy.Blazer;
+namespace Kennedy.Blazer.Frontiers;
 
 /// <summary>
 /// Manages our queue of URLs to crawl. URL that have already been added are ignored
 /// </summary>
-public class CrawlQueue
+public class CrawlQueue : IUrlFrontier
 {
     object locker;
 
@@ -24,6 +25,8 @@ public class CrawlQueue
     int stopAfterUrls = int.MaxValue;
     int totalUrlsProcessed = 0;
 
+    public int Count
+        => queue.Count;
 
     public CrawlQueue(int stopAfter = 10000)
     {
@@ -33,48 +36,34 @@ public class CrawlQueue
         stopAfterUrls = stopAfter;
     }
 
-    public void EnqueueUrls(List<GeminiUrl> urls)
+    public void AddUrl(GeminiUrl url)
     {
-        int count = 0;
-        foreach(var url in urls)
-        {
-            if(EnqueueUrl(url))
-            {
-                count++;
-            }
-        }
-        if (count > 0)
-        {
-            Console.WriteLine($"\tAdded {count} URLs. Queue Length: {Count}");
-        }
-    }
-
-    /// <summary>
-    /// Adds a URL to the queue only if we haven't see it before
-    /// </summary>
-    /// <param name="url"></param>
-    public bool EnqueueUrl(GeminiUrl url)
-    {
-        lock(locker)
+        lock (locker)
         {
             string normalizedUrl = url.NormalizedUrl;
-            if(!SeenUrls.ContainsKey(normalizedUrl))
+            if (!SeenUrls.ContainsKey(normalizedUrl))
             {
                 Console.WriteLine($"\tAdding new URL '{normalizedUrl}'");
                 SeenUrls.Add(normalizedUrl, true);
                 queue.Enqueue(url);
-                return true;
             }
         }
-        return false;
     }
 
-    public GeminiUrl DequeueUrl()
+    public void AddUrls(IEnumerable<GeminiUrl> urls)
+    {
+        foreach (var url in urls)
+        {
+            AddUrl(url);
+        }
+    }
+
+    public GeminiUrl GetUrl()
     {
         lock (locker)
         {
             totalUrlsProcessed++;
-            if(totalUrlsProcessed >= stopAfterUrls)
+            if (totalUrlsProcessed >= stopAfterUrls)
             {
                 Console.WriteLine("Crawl Limit reached! Dequeuing no more URLs!");
                 return null;
@@ -82,8 +71,4 @@ public class CrawlQueue
             return (queue.Count > 0) ? queue.Dequeue() : null;
         }
     }
-
-    public int Count
-        => queue.Count;
-
 }

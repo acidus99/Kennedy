@@ -6,7 +6,10 @@ using System.Collections.Generic;
 using System.Threading;
 
 using Gemini.Net;
+using Kennedy.Blazer.Frontiers;
+using Kennedy.Blazer.Processors;
 using Kennedy.Blazer.Protocols;
+using Kennedy.Blazer.Utils;
 
 namespace Kennedy.Blazer
 {
@@ -21,22 +24,31 @@ namespace Kennedy.Blazer
         ThreadedFileWriter errorOut;
         ThreadedFileWriter logOut;
 
+        IUrlFrontier UrlFrontier;
 
-        CrawlQueue queue;
-        DocumentStore docStore;
+        List<IResponseProcessor> responseProcessors;
+
+        SeenContentTracker seenContentTracker;
+
 
         public Crawler()
         {
-            queue = new CrawlQueue(5000);
-
             Directory.CreateDirectory(outputBase);
-            docStore = new DocumentStore(outputBase + "page-store/");
             errorOut = new ThreadedFileWriter(outputBase + "errors.txt", 1);
             logOut = new ThreadedFileWriter(outputBase + "log.tsv", 20);
+
+            UrlFrontier = new CrawlQueue(5000);
+            seenContentTracker = new SeenContentTracker();
+
+            responseProcessors = new List<IResponseProcessor>
+            {
+                new RedirectProcessor(UrlFrontier),
+                new GemtextProcessor(UrlFrontier)
+            };
         }
 
         public void AddSeed(string url)
-            => queue.EnqueueUrl(new GeminiUrl(url));
+            => UrlFrontier.AddUrl(new GeminiUrl(url));
 
         private void LogError(Exception ex, GeminiUrl url)
         {
@@ -46,16 +58,7 @@ namespace Kennedy.Blazer
 
             msg = $"XX\t{ex.Message}\t{url}\t0\t0";
             logOut.WriteLine(msg);
-
         }
-
-        private void LogWarn(string what)
-        {
-            var msg = $"WARNING! {what}";
-            Console.WriteLine(msg);
-            errorOut.WriteLine($"{DateTime.Now}\t{msg}");
-        }
-
 
         private void CloseLogs()
         {
@@ -65,7 +68,6 @@ namespace Kennedy.Blazer
 
         private void LogPage(GeminiUrl url, GeminiResponse resp, int foundLinksCount)
         {
-
             var msg = $"{resp.StatusCode}\t{resp.MimeType}\t{url}\t{resp.BodySize}\t{foundLinksCount}";
             logOut.WriteLine(msg);
             Console.WriteLine($"\t{msg}");
@@ -78,10 +80,10 @@ namespace Kennedy.Blazer
             GeminiUrl url = null;
             do
             {
-                url = queue.DequeueUrl();
+                url = UrlFrontier.GetUrl();
                 if (url != null)
                 {
-                    Console.WriteLine($"Queue Len:{queue.Count}\tRequesting '{url}'");
+                    Console.WriteLine($"Queue Len:{UrlFrontier.Count}\tRequesting '{url}'");
 
                     var resp = requestor.Request(url);
                     //null means it was ignored by robots
@@ -93,14 +95,7 @@ namespace Kennedy.Blazer
                         }
                         else
                         {
-                            var foundLinks = LinkFinder.ExtractLinks(resp);
-                            queue.EnqueueUrls(foundLinks.Select(x => x.Url).ToList());
-                            LogPage(url, resp, foundLinks.Count);
-
-                            if (!docStore.Store(url, resp))
-                            {
-                                LogWarn($"Could not save document for '{url}' to disk");
-                            }
+                            ProcessResponse(resp);
                         }
                     }
                 }
@@ -117,6 +112,17 @@ namespace Kennedy.Blazer
             int x = 4;
         }
 
+        private void ProcessResponse(GeminiResponse response)
+        {
+            if (!seenContentTracker.CheckAndRecord(response)) { }
+            foreach (var processor in responseProcessors)
+            {
+                if (processor.CanProcessResponse(response))
+                {
+                    processor.ProcessResponse(response);
+                }
+            }
+        }
     }
 
 }

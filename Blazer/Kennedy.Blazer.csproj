@@ -14,4 +14,14 @@
   <ItemGroup>
     <PackageReference Include="DnsClient" Version="1.7.0" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Dns\" />
+    <None Remove="Processors\" />
+    <None Remove="Utils\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Dns\" />
+    <Folder Include="Processors\" />
+    <Folder Include="Utils\" />
+  </ItemGroup>
 </Project>

@@ -16,6 +16,8 @@ namespace Kennedy.Blazer.Frontiers
         /// <param name="url"></param>
         void AddUrl(GeminiUrl url);
 
+        void AddUrls(IEnumerable<GeminiUrl> urls);
+
 
         /// <summary>
         /// Gets the next URL from the frontier
