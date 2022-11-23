@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocketForce", "..\RocketFor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Data", "Kennedy.Data\Kennedy.Data.csproj", "{94EC8766-A342-4B34-8C3F-F9C2A86D7E0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Blazer", "Kennedy.Blazer\Kennedy.Blazer.csproj", "{2EB91818-5404-4DD5-A171-75C5671275BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Blazer", "Blazer\Kennedy.Blazer.csproj", "{2EB91818-5404-4DD5-A171-75C5671275BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

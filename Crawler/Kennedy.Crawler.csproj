@@ -25,7 +25,9 @@
     <Folder Include="TopicIndexes\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DnsClient" Version="1.6.0" />
+    <PackageReference Include="NTextCat" Version="0.3.65" />
+    <PackageReference Include="DnsClient" Version="1.7.0" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="11.3.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />

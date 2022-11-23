@@ -11,4 +11,7 @@
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
     <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="DnsClient" Version="1.7.0" />
+  </ItemGroup>
 </Project>

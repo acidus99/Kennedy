@@ -11,6 +11,8 @@ namespace Kennedy.Blazer;
 /// </summary>
 public class RobotsChecker
 {
+    public static RobotsChecker Global = new RobotsChecker();
+
     Dictionary<string, Robots> Cache;
 
     public RobotsChecker()
@@ -79,12 +81,18 @@ public class RobotsChecker
     {
         var robotsUrl = new GeminiUrl($"gemini://{hostname}:{port}/robots.txt?kennedy-crawler");
 
-        GeminiRequestor requestor = new GeminiRequestor();
+        Gemini.Net.GeminiRequestor requestor = new Gemini.Net.GeminiRequestor();
 
-        var resp = requestor.Request(robotsUrl);
-        return (resp.IsSuccess && resp.HasBody) ?
-            resp.BodyText :
-            "";
+        var ipAddress = DnsCache.Global.GetLookup(hostname);
+        string ret = "";
+        if (ipAddress != null)
+        {
+            var resp = requestor.Request(robotsUrl, ipAddress);
+            ret = (resp.IsSuccess && resp.HasBody) ?
+                resp.BodyText :
+                "";
+        }
+        return ret;
     }
 
 }
