@@ -50,14 +50,6 @@ public class CrawlQueue : IUrlFrontier
         }
     }
 
-    public void AddUrls(IEnumerable<GeminiUrl> urls)
-    {
-        foreach (var url in urls)
-        {
-            AddUrl(url);
-        }
-    }
-
     public GeminiUrl GetUrl()
     {
         lock (locker)
