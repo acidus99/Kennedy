@@ -9,11 +9,11 @@ namespace Kennedy.Blazer.Processors
     /// </summary>
     public class RedirectProcessor : IResponseProcessor
     {
-        IUrlFrontier UrlFrontier;
+        UrlFrontierWrapper FrontierWrapper;
 
-        public RedirectProcessor(IUrlFrontier urlFrontier)
+        public RedirectProcessor(UrlFrontierWrapper frontierWrapper)
         {
-            UrlFrontier = urlFrontier;
+            FrontierWrapper = frontierWrapper;
         }
 
         public bool CanProcessResponse(GeminiResponse response)
@@ -24,7 +24,7 @@ namespace Kennedy.Blazer.Processors
             var newUrl = GeminiUrl.MakeUrl(response.RequestUrl, response.Meta);
             if (newUrl != null)
             {
-                UrlFrontier.AddUrl(newUrl);
+                FrontierWrapper.AddUrl(newUrl);
             }
         }
     }

@@ -10,13 +10,13 @@ namespace Kennedy.Blazer.Processors
     /// </summary>
 	public class GemtextProcessor : IResponseProcessor
 	{
-        IUrlFrontier UrlFrontier;
+        UrlFrontierWrapper FrontierWrapper;
 
         static readonly Regex linkLine = new Regex(@"^=>\s*([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
-        public GemtextProcessor(IUrlFrontier urlFrontier)
+        public GemtextProcessor(UrlFrontierWrapper frontierWrapper)
         {
-            UrlFrontier = urlFrontier;
+            FrontierWrapper = frontierWrapper;
         }
 
         public bool CanProcessResponse(GeminiResponse response)
@@ -34,7 +34,7 @@ namespace Kennedy.Blazer.Processors
                         where link != null
                         select link);
 
-            UrlFrontier.AddUrls(foundLinks);
+            FrontierWrapper.AddUrls(foundLinks);
         }
     }
 }

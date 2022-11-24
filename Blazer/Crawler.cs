@@ -25,11 +25,11 @@ namespace Kennedy.Blazer
         ThreadedFileWriter logOut;
 
         IUrlFrontier UrlFrontier;
+        UrlFrontierWrapper FrontierWrapper;
 
         List<IResponseProcessor> responseProcessors;
 
         SeenContentTracker seenContentTracker;
-
 
         public Crawler()
         {
@@ -38,12 +38,14 @@ namespace Kennedy.Blazer
             logOut = new ThreadedFileWriter(outputBase + "log.tsv", 20);
 
             UrlFrontier = new CrawlQueue(5000);
+            FrontierWrapper = new UrlFrontierWrapper(UrlFrontier);
+
             seenContentTracker = new SeenContentTracker();
 
             responseProcessors = new List<IResponseProcessor>
             {
-                new RedirectProcessor(UrlFrontier),
-                new GemtextProcessor(UrlFrontier)
+                new RedirectProcessor(FrontierWrapper),
+                new GemtextProcessor(FrontierWrapper)
             };
         }
 
