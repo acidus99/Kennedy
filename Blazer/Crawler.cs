@@ -116,12 +116,14 @@ namespace Kennedy.Blazer
 
         private void ProcessResponse(GeminiResponse response)
         {
-            if (!seenContentTracker.CheckAndRecord(response)) { }
-            foreach (var processor in responseProcessors)
+            if (!seenContentTracker.CheckAndRecord(response))
             {
-                if (processor.CanProcessResponse(response))
+                foreach (var processor in responseProcessors)
                 {
-                    processor.ProcessResponse(response);
+                    if (processor.CanProcessResponse(response))
+                    {
+                        processor.ProcessResponse(response);
+                    }
                 }
             }
         }
