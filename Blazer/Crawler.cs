@@ -19,7 +19,7 @@ namespace Kennedy.Blazer
         /// <summary>
         /// how long should we wait between requests
         /// </summary>
-        const int delayMs = 1000;
+        const int delayMs = 350;
 
         ErrorLog errorLog;
 
