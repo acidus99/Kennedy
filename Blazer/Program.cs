@@ -19,7 +19,7 @@ namespace Kennedy.Blazer
             //var url = "gemini://marginalia.nu:1965/log";
             //var url = "gemini://geminispace.info/known-hosts";
 
-            var crawler = new Crawler();
+            var crawler = new Crawler(1);
 
             crawler.AddSeed(url);
             crawler.DoCrawl();

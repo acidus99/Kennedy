@@ -23,7 +23,7 @@ namespace Kennedy.Blazer.Frontiers
         /// Gets the next URL from the frontier
         /// </summary>
         /// <returns></returns>
-        GeminiUrl GetUrl();
+        GeminiUrl GetUrl(int crawlerID);
 
     }
 }

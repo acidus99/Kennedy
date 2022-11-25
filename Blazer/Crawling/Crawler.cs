@@ -26,6 +26,8 @@ public class Crawler
     /// </summary>
     const int delayMs = 350;
 
+    int CrawlerThreads;
+
     ErrorLog errorLog;
 
     IUrlFrontier UrlFrontier;
@@ -37,11 +39,13 @@ public class Crawler
     System.Timers.Timer ScreenStatusTimer;
     Stopwatch CrawlerStopwatch;
 
-    public Crawler()
+    public Crawler(int crawlerThreads)
     {
         ConfigureDirectories();
 
-        UrlFrontier = new CrawlQueue(5000);
+        CrawlerThreads = crawlerThreads;
+
+        UrlFrontier = new BalancedUrlFrontier(CrawlerThreads);
         FrontierWrapper = new UrlFrontierWrapper(UrlFrontier);
 
         seenContentTracker = new SeenContentTracker();
@@ -94,7 +98,7 @@ public class Crawler
         GeminiUrl url = null;
         do
         {
-            url = UrlFrontier.GetUrl();
+            url = UrlFrontier.GetUrl(0);
             if (url != null)
             {
                 var resp = requestor.Request(url);
@@ -128,7 +132,7 @@ public class Crawler
 
     private void LogStatusToScreen(object? sender, System.Timers.ElapsedEventArgs e)
     {
-        Console.WriteLine($"Elapsed: {CrawlerStopwatch.Elapsed}\tTotal Requested: {UrlFrontier.Total}\tRemaining: {UrlFrontier.Count}");
+        Console.WriteLine($"Elapsed: {CrawlerStopwatch.Elapsed}\tTotal Added: {UrlFrontier.Total}\tRemaining: {UrlFrontier.Count}");
     }
 
     private void ProcessResponse(GeminiResponse response)
