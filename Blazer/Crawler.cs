@@ -24,7 +24,6 @@ namespace Kennedy.Blazer
         const int delayMs = 1000;
 
         ErrorLog errorLog;
-        ThreadedFileWriter logOut;
 
         IUrlFrontier UrlFrontier;
         UrlFrontierWrapper FrontierWrapper;
@@ -37,7 +36,6 @@ namespace Kennedy.Blazer
         {
             Directory.CreateDirectory(outputBase);
             errorLog = new ErrorLog(outputBase + "errors.txt");
-            logOut = new ThreadedFileWriter(outputBase + "log.tsv", 20);
 
             UrlFrontier = new CrawlQueue(5000);
             FrontierWrapper = new UrlFrontierWrapper(UrlFrontier);
@@ -53,18 +51,6 @@ namespace Kennedy.Blazer
 
         public void AddSeed(string url)
             => UrlFrontier.AddUrl(new GeminiUrl(url));
-
-        private void CloseLogs()
-        {
-            logOut.Close();
-        }
-
-        private void LogPage(GeminiUrl url, GeminiResponse resp, int foundLinksCount)
-        {
-            var msg = $"{resp.StatusCode}\t{resp.MimeType}\t{url}\t{resp.BodySize}\t{foundLinksCount}";
-            logOut.WriteLine(msg);
-            Console.WriteLine($"\t{msg}");
-        }
 
         public void DoCrawl()
         {
@@ -98,8 +84,6 @@ namespace Kennedy.Blazer
 
             } while (url != null);
             Console.WriteLine("Complete!");
-            CloseLogs();
-            int x = 4;
         }
 
         private void ProcessResponse(GeminiResponse response)
