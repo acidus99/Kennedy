@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 
 using Gemini.Net;
+using Kennedy.Blazer.Logging;
 
 namespace Kennedy.Blazer.Frontiers;
 
 /// <summary>
 /// Manages our queue of URLs to crawl. URL that have already been added are ignored
 /// </summary>
-public class CrawlQueue : IUrlFrontier
+public class CrawlQueue : IUrlFrontier, IStatusProvider
 {
     object locker;
 
@@ -22,6 +23,8 @@ public class CrawlQueue : IUrlFrontier
 
     public int Count
         => queue.Count;
+
+    public string ModuleName => "Url Frontier";
 
     public CrawlQueue(int stopAfter = 10000)
     {
@@ -46,4 +49,7 @@ public class CrawlQueue : IUrlFrontier
             return (queue.Count > 0) ? queue.Dequeue() : null;
         }
     }
+
+    public string GetStatus()
+        => $"URL Frontier Size:\t{Count}";
 }
