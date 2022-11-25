@@ -32,6 +32,8 @@ namespace Kennedy.Blazer
 
         public Crawler()
         {
+            ConfigureDirectories();
+
             UrlFrontier = new CrawlQueue(5000);
             FrontierWrapper = new UrlFrontierWrapper(UrlFrontier);
 
@@ -43,7 +45,6 @@ namespace Kennedy.Blazer
                 new GemtextProcessor(FrontierWrapper)
             };
         }
-
 
         private void ConfigureDirectories()
         {
