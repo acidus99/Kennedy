@@ -16,7 +16,7 @@ using Kennedy.Blazer.Utils;
 
 namespace Kennedy.Blazer.Crawling;
 
-public class Crawler
+public class Crawler : ICrawler
 {
     const int StatusIntervalDisk = 60000;
     const int StatusIntervalScreen = 5000;
@@ -27,8 +27,14 @@ public class Crawler
     const int delayMs = 350;
 
     int CrawlerThreads;
-
+    ThreadSafeCounter TotalUrlsRequested;
+    ThreadSafeCounter TotalUrlsProcessed;
     ErrorLog errorLog;
+
+    int UrlLimit;
+
+    bool HitUrlLimit
+        => (TotalUrlsRequested.Count >= UrlLimit);
 
     IUrlFrontier UrlFrontier;
     UrlFrontierWrapper FrontierWrapper;
@@ -36,14 +42,17 @@ public class Crawler
     SeenContentTracker seenContentTracker;
 
     System.Timers.Timer DiskStatusTimer;
-    System.Timers.Timer ScreenStatusTimer;
     Stopwatch CrawlerStopwatch;
 
-    public Crawler(int crawlerThreads)
+    public Crawler(int crawlerThreads, int urlLimit)
     {
-        ConfigureDirectories();
-
         CrawlerThreads = crawlerThreads;
+        UrlLimit = urlLimit;
+
+        ConfigureDirectories();
+        
+        TotalUrlsRequested = new ThreadSafeCounter();
+        TotalUrlsProcessed = new ThreadSafeCounter();
 
         UrlFrontier = new BalancedUrlFrontier(CrawlerThreads);
         FrontierWrapper = new UrlFrontierWrapper(UrlFrontier);
@@ -75,15 +84,7 @@ public class Crawler
         };
         DiskStatusTimer.Elapsed += LogStatusToDisk;
 
-        ScreenStatusTimer = new System.Timers.Timer(StatusIntervalScreen)
-        {
-            Enabled = true,
-            AutoReset = true,
-        };
-        ScreenStatusTimer.Elapsed += LogStatusToScreen;
-
         DiskStatusTimer.Start();
-        ScreenStatusTimer.Start();
     }
 
     public void AddSeed(string url)
@@ -92,35 +93,42 @@ public class Crawler
     public void DoCrawl()
     {
         ConfigureTimers();
+        for (int i = 0; i < CrawlerThreads; i++)
+        {
+            SpawnWorker(i);
+        }
 
-        var requestor = new GeminiProtocolHandler();
+        int prevRequested = 0;
 
-        GeminiUrl url = null;
         do
         {
-            url = UrlFrontier.GetUrl(0);
-            if (url != null)
-            {
-                var resp = requestor.Request(url);
-                //null means it was ignored by robots
-                if (resp != null)
-                {
-                    if (resp.ConnectStatus != ConnectStatus.Success)
-                    {
-                        var msg = requestor.LastException?.Message ?? resp.Meta;
-                        errorLog.LogError(msg, url.NormalizedUrl);
-                    }
-                    else
-                    {
-                        ProcessResponse(resp);
-                    }
-                }
-            }
+            Thread.Sleep(StatusIntervalScreen);
 
-            Thread.Sleep(delayMs);
+            int currRequested = TotalUrlsRequested.Count;
+            string speed = ComputeSpeed((double)currRequested, (double)prevRequested, (double)StatusIntervalScreen);
+            Console.WriteLine($"Elapsed: {CrawlerStopwatch.Elapsed}\tActive Workers: {WorkInFlight} Speed: {speed}\tTotal Requested: {currRequested}\tTotal Processed: {TotalUrlsProcessed.Count}\tRemaining: {UrlFrontier.Count}");
+            prevRequested = TotalUrlsRequested.Count;
 
-        } while (url != null);
-        Console.WriteLine("Complete!");
+        } while (KeepWorkersAlive);
+        CrawlerStopwatch.Stop();
+        
+        Console.WriteLine($"Complete! {CrawlerStopwatch.Elapsed.TotalSeconds}");
+    }
+
+    private void SpawnWorker(int workerNum)
+    {
+        var worker = new CrawlWorker(this, workerNum);
+
+        var threadDelegate = new ThreadStart(worker.DoWork);
+        var newThread = new Thread(threadDelegate);
+        newThread.Name = $"Worker {workerNum}";
+        newThread.Start();
+    }
+
+    private string ComputeSpeed(double curr, double prev, double seconds)
+    {
+        double requestSec = (curr - prev) / seconds * 1000;
+        return $"{requestSec} req / sec";
     }
 
     private void LogStatusToDisk(object? sender, System.Timers.ElapsedEventArgs e)
@@ -130,9 +138,22 @@ public class Crawler
         logger.LogStatus(UrlFrontier);
     }
 
-    private void LogStatusToScreen(object? sender, System.Timers.ElapsedEventArgs e)
+    public void ProcessRequestResponse(GeminiResponse resp, Exception ex)
     {
-        Console.WriteLine($"Elapsed: {CrawlerStopwatch.Elapsed}\tTotal Added: {UrlFrontier.Total}\tRemaining: {UrlFrontier.Count}");
+        //null means it was ignored by robots
+        if (resp != null)
+        {
+            if (resp.ConnectStatus != ConnectStatus.Success)
+            {
+                var msg = ex?.Message ?? resp.Meta;
+                errorLog.LogError(msg, resp.RequestUrl.NormalizedUrl);
+            }
+            else
+            {
+                ProcessResponse(resp);
+            }
+        }
+        TotalUrlsProcessed.Increment();
     }
 
     private void ProcessResponse(GeminiResponse response)
@@ -148,4 +169,35 @@ public class Crawler
             }
         }
     }
+
+    public GeminiUrl GetUrl(int crawlerID = 0)
+    {
+        if (HitUrlLimit)
+        {
+            return null;
+        }
+
+        var url = UrlFrontier.GetUrl(crawlerID);
+        if (url != null)
+        {
+            TotalUrlsRequested.Increment();
+        }
+        return url;
+    }
+
+    /// <summary>
+    /// Is there pending work in our queue?
+    /// </summary>
+    public bool HasUrlsToFetch
+        => (!HitUrlLimit) ? (UrlFrontier.Count > 0) : false;
+
+    /// <summary>
+    /// Is there work being done
+    /// </summary>
+    public int WorkInFlight
+        => TotalUrlsRequested.Count - TotalUrlsProcessed.Count;
+
+    public bool KeepWorkersAlive
+        => HasUrlsToFetch || (WorkInFlight > 0);
+
 }
