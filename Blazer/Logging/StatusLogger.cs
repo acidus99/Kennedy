@@ -29,7 +29,7 @@ namespace Kennedy.Blazer.Logging
 			{
 				ret = ret.Replace(c, '-');
 			}
-			return ret;
+			return ret + ".txt";
         }
 	}
 }

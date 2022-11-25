@@ -16,6 +16,8 @@ namespace Kennedy.Blazer
 {
     public class Crawler
     {
+        const int StatusIntervalDisk = 60000;
+
         /// <summary>
         /// how long should we wait between requests
         /// </summary>
@@ -25,10 +27,10 @@ namespace Kennedy.Blazer
 
         IUrlFrontier UrlFrontier;
         UrlFrontierWrapper FrontierWrapper;
-
         List<IResponseProcessor> responseProcessors;
-
         SeenContentTracker seenContentTracker;
+
+        System.Timers.Timer DiskStatusTimer;
 
         public Crawler()
         {
@@ -44,6 +46,14 @@ namespace Kennedy.Blazer
                 new RedirectProcessor(FrontierWrapper),
                 new GemtextProcessor(FrontierWrapper)
             };
+
+            DiskStatusTimer = new System.Timers.Timer(StatusIntervalDisk)
+            {
+                Enabled = true,
+                AutoReset = true,
+            };
+            DiskStatusTimer.Elapsed += LogStatusToDisk;
+            
         }
 
         private void ConfigureDirectories()
@@ -57,6 +67,8 @@ namespace Kennedy.Blazer
 
         public void DoCrawl()
         {
+            DiskStatusTimer.Start();
+
             var requestor = new GeminiProtocolHandler();
 
             GeminiUrl url = null;
@@ -87,6 +99,13 @@ namespace Kennedy.Blazer
 
             } while (url != null);
             Console.WriteLine("Complete!");
+        }
+
+        private void LogStatusToDisk(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+            StatusLogger logger = new StatusLogger(CrawlerOptions.OutputBase);
+            logger.LogStatus(FrontierWrapper);
+            logger.LogStatus(UrlFrontier);
         }
 
         private void ProcessResponse(GeminiResponse response)
