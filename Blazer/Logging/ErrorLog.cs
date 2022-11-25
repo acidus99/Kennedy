@@ -1,22 +1,19 @@
-﻿using System;
-
-using Kennedy.Blazer.Utils;
+﻿using System.IO;
 
 namespace Kennedy.Blazer.Logging
 {
     public class ErrorLog
     {
-        ThreadedFileWriter errorOut;
+        string OutputFile;
 
         public ErrorLog(string outputDir)
         {
-            errorOut = new ThreadedFileWriter(outputDir + "errors.txt", 1);
+            OutputFile = Path.Combine(outputDir, "errors.txt");
         }
 
         public void LogError(string msg, string url)
-            => errorOut.WriteLine($"{DateTime.Now}\tError: {msg} on '{url}'");
-        
-        public void Close()
-            => errorOut.Close();
+        {
+            File.WriteAllText(OutputFile, $"{DateTime.Now}\tError: {msg} on '{url}'{Environment.NewLine}");
+        }
     }
 }
