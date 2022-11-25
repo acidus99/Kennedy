@@ -31,9 +31,9 @@ namespace Kennedy.Blazer.Frontiers
         {
             lock (locker)
             {
-                if (!SeenUrls.ContainsKey(url.DocID))
+                if (!SeenUrls.ContainsKey(url.HashID))
                 {
-                    SeenUrls[url.DocID] = true;
+                    SeenUrls[url.HashID] = true;
                     return true;
                 }
             }
