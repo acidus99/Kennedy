@@ -11,6 +11,8 @@ namespace Kennedy.Blazer.Frontiers
         /// </summary>
         int Count { get; }
 
+        int Total { get; }
+
         /// <summary>
         /// Adds a URL to the frontier
         /// </summary>

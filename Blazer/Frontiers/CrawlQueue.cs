@@ -24,6 +24,9 @@ public class CrawlQueue : IUrlFrontier, IStatusProvider
     public int Count
         => queue.Count;
 
+    public int Total
+        => totalUrlsProcessed;
+
     public string ModuleName => "Url Frontier";
 
     public CrawlQueue(int stopAfter = 10000)
