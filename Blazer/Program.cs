@@ -1,6 +1,8 @@
 ﻿using System;
 using Gemini.Net;
 
+using Kennedy.Blazer.Crawling;
+
 namespace Kennedy.Blazer
 {
     class Program
