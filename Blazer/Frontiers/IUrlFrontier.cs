@@ -1,9 +1,10 @@
 ﻿using System;
 using Gemini.Net;
+using Kennedy.Blazer.Logging;
 
 namespace Kennedy.Blazer.Frontiers
 {
-    public interface IUrlFrontier
+    public interface IUrlFrontier : IStatusProvider
     {
         /// <summary>
         /// How many URLs are in the frontier
