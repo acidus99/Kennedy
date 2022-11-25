@@ -18,10 +18,12 @@
     <None Remove="Dns\" />
     <None Remove="Processors\" />
     <None Remove="Utils\" />
+    <None Remove="Logging\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Dns\" />
     <Folder Include="Processors\" />
     <Folder Include="Utils\" />
+    <Folder Include="Logging\" />
   </ItemGroup>
 </Project>

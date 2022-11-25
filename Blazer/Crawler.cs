@@ -7,6 +7,7 @@ using System.Threading;
 
 using Gemini.Net;
 using Kennedy.Blazer.Frontiers;
+using Kennedy.Blazer.Logging;
 using Kennedy.Blazer.Processors;
 using Kennedy.Blazer.Protocols;
 using Kennedy.Blazer.Utils;
@@ -21,7 +22,8 @@ namespace Kennedy.Blazer
         /// how long should we wait between requests
         /// </summary>
         const int delayMs = 1000;
-        ThreadedFileWriter errorOut;
+
+        ErrorLog errorLog;
         ThreadedFileWriter logOut;
 
         IUrlFrontier UrlFrontier;
@@ -34,7 +36,7 @@ namespace Kennedy.Blazer
         public Crawler()
         {
             Directory.CreateDirectory(outputBase);
-            errorOut = new ThreadedFileWriter(outputBase + "errors.txt", 1);
+            errorLog = new ErrorLog(outputBase + "errors.txt");
             logOut = new ThreadedFileWriter(outputBase + "log.tsv", 20);
 
             UrlFrontier = new CrawlQueue(5000);
@@ -52,19 +54,8 @@ namespace Kennedy.Blazer
         public void AddSeed(string url)
             => UrlFrontier.AddUrl(new GeminiUrl(url));
 
-        private void LogError(string error, GeminiUrl url)
-        {
-            var msg = $"EXCEPTION {error} on '{url}'";
-            Console.WriteLine(msg);
-            errorOut.WriteLine($"{DateTime.Now}\t{msg}");
-
-            msg = $"XX\t{error}\t{url}\t0\t0";
-            logOut.WriteLine(msg);
-        }
-
         private void CloseLogs()
         {
-            errorOut.Close();
             logOut.Close();
         }
 
@@ -93,17 +84,14 @@ namespace Kennedy.Blazer
                     {
                         if (resp.ConnectStatus != ConnectStatus.Success)
                         {
-                            LogError(requestor.LastException?.Message ?? resp.Meta, url);
+                            var msg = requestor.LastException?.Message ?? resp.Meta;
+                            errorLog.LogError(msg, url.NormalizedUrl);
                         }
                         else
                         {
                             ProcessResponse(resp);
                         }
                     }
-                }
-                else
-                {
-                    Console.WriteLine("Queue was empty...");
                 }
 
                 Thread.Sleep(delayMs);
