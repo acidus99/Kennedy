@@ -13,7 +13,7 @@ namespace Kennedy.Blazer.Logging
 
         public void LogError(string msg, string url)
         {
-            File.WriteAllText(OutputFile, $"{DateTime.Now}\tError: {msg} on '{url}'{Environment.NewLine}");
+            File.AppendAllText(OutputFile, $"{DateTime.Now}\tError: {msg} on '{url}'{Environment.NewLine}");
         }
     }
 }
