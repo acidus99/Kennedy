@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Threading;
+using System.Collections.Generic;
+
 
 using Gemini.Net;
 using Kennedy.Blazer.Frontiers;
@@ -17,6 +19,7 @@ namespace Kennedy.Blazer
     public class Crawler
     {
         const int StatusIntervalDisk = 60000;
+        const int StatusIntervalScreen = 5000;
 
         /// <summary>
         /// how long should we wait between requests
@@ -31,6 +34,8 @@ namespace Kennedy.Blazer
         SeenContentTracker seenContentTracker;
 
         System.Timers.Timer DiskStatusTimer;
+        System.Timers.Timer ScreenStatusTimer;
+        Stopwatch CrawlerStopwatch;
 
         public Crawler()
         {
@@ -46,14 +51,6 @@ namespace Kennedy.Blazer
                 new RedirectProcessor(FrontierWrapper),
                 new GemtextProcessor(FrontierWrapper)
             };
-
-            DiskStatusTimer = new System.Timers.Timer(StatusIntervalDisk)
-            {
-                Enabled = true,
-                AutoReset = true,
-            };
-            DiskStatusTimer.Elapsed += LogStatusToDisk;
-            
         }
 
         private void ConfigureDirectories()
@@ -62,12 +59,35 @@ namespace Kennedy.Blazer
             errorLog = new ErrorLog(CrawlerOptions.ErrorLog);
         }
 
+        private void ConfigureTimers()
+        {
+            CrawlerStopwatch = new Stopwatch();
+            CrawlerStopwatch.Start();
+
+            DiskStatusTimer = new System.Timers.Timer(StatusIntervalDisk)
+            {
+                Enabled = true,
+                AutoReset = true,
+            };
+            DiskStatusTimer.Elapsed += LogStatusToDisk;
+
+            ScreenStatusTimer = new System.Timers.Timer(StatusIntervalScreen)
+            {
+                Enabled = true,
+                AutoReset = true,
+            };
+            ScreenStatusTimer.Elapsed += LogStatusToScreen;
+
+            DiskStatusTimer.Start();
+            ScreenStatusTimer.Start();
+        }
+
         public void AddSeed(string url)
             => UrlFrontier.AddUrl(new GeminiUrl(url));
 
         public void DoCrawl()
         {
-            DiskStatusTimer.Start();
+            ConfigureTimers();
 
             var requestor = new GeminiProtocolHandler();
 
@@ -77,8 +97,6 @@ namespace Kennedy.Blazer
                 url = UrlFrontier.GetUrl();
                 if (url != null)
                 {
-                    Console.WriteLine($"Queue Len:{UrlFrontier.Count}\tRequesting '{url}'");
-
                     var resp = requestor.Request(url);
                     //null means it was ignored by robots
                     if (resp != null)
@@ -106,6 +124,11 @@ namespace Kennedy.Blazer
             StatusLogger logger = new StatusLogger(CrawlerOptions.OutputBase);
             logger.LogStatus(FrontierWrapper);
             logger.LogStatus(UrlFrontier);
+        }
+
+        private void LogStatusToScreen(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+            Console.WriteLine($"Elapsed: {CrawlerStopwatch.Elapsed}\tTotal Requested: {UrlFrontier.Total}\tRemaining: {UrlFrontier.Count}");
         }
 
         private void ProcessResponse(GeminiResponse response)
