@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-namespace Kennedy.Crawler.Utils
+
+namespace Kennedy.Blazer.Utils
 {
     /// <summary>
     /// Generic Object Bag - Holds objects and keeps a count of how many times the same object has been added
@@ -10,17 +11,11 @@ namespace Kennedy.Crawler.Utils
     /// <typeparam name="T"></typeparam>
     public class Bag<T>
     {
-        object locker;
+        object locker = new object();
 
         public int TotalAdds { get; private set; }
 
-        Dictionary<T, int> bag;
-
-        public Bag()
-        {
-            bag = new Dictionary<T, int>();
-            locker = new object();
-        }
+        Dictionary<T, int> bag = new Dictionary<T, int>();
 
         public void Clear()
             => bag.Clear();
