@@ -1,6 +1,10 @@
 ﻿namespace Kennedy.Blazer
 {	public static class CrawlerOptions
 	{
-		public static string DataDirectory { get; set; } = "/var/gemini/crawl-data/";
-	}
+        public readonly static string OutputBase = $"/var/gemini/{DateTime.Now.ToString("yyyy-MM-dd (mm)")}/";
+
+        public static string ErrorLog => OutputBase + "error.txt";
+
+
+    }
 }

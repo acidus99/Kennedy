@@ -6,9 +6,9 @@ namespace Kennedy.Blazer.Logging
     {
         string OutputFile;
 
-        public ErrorLog(string outputDir)
+        public ErrorLog(string outputFile)
         {
-            OutputFile = Path.Combine(outputDir, "errors.txt");
+            OutputFile = outputFile;
         }
 
         public void LogError(string msg, string url)

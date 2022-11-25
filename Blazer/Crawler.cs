@@ -16,8 +16,6 @@ namespace Kennedy.Blazer
 {
     public class Crawler
     {
-        readonly string outputBase = $"/var/gemini/{DateTime.Now.ToString("yyyy-MM-dd (mm)")}/";
-
         /// <summary>
         /// how long should we wait between requests
         /// </summary>
@@ -34,9 +32,6 @@ namespace Kennedy.Blazer
 
         public Crawler()
         {
-            Directory.CreateDirectory(outputBase);
-            errorLog = new ErrorLog(outputBase + "errors.txt");
-
             UrlFrontier = new CrawlQueue(5000);
             FrontierWrapper = new UrlFrontierWrapper(UrlFrontier);
 
@@ -47,6 +42,13 @@ namespace Kennedy.Blazer
                 new RedirectProcessor(FrontierWrapper),
                 new GemtextProcessor(FrontierWrapper)
             };
+        }
+
+
+        private void ConfigureDirectories()
+        {
+            Directory.CreateDirectory(CrawlerOptions.OutputBase);
+            errorLog = new ErrorLog(CrawlerOptions.ErrorLog);
         }
 
         public void AddSeed(string url)
