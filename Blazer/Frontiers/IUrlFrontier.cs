@@ -22,7 +22,5 @@ namespace Kennedy.Blazer.Frontiers
         /// <returns></returns>
         GeminiUrl GetUrl();
 
-        
     }
 }
-
