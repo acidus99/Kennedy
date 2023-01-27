@@ -70,20 +70,16 @@ namespace Kennedy.Server.Views
 
                     var imgmeta = (from img in db.ImageEntries
                                    where img.DBDocID == dbDocID
-                                   join imgsearch in db.ImageSearchEntries on img.DBDocID equals imgsearch.ROWID
                                    select new
                                    {
                                        img.Height,
                                        img.Width,
                                        img.ImageType,
                                        img.IsTransparent,
-                                       imgsearch.Terms
                                    }).FirstOrDefault();
 
                     Response.WriteLine($"* Dimensions: {imgmeta.Width} x {imgmeta.Height}");
                     Response.WriteLine($"* Format: {imgmeta.ImageType}");
-                    Response.WriteLine($"* Indexable text:");
-                    Response.WriteLine($">{imgmeta.Terms}");
                     break;
             }
 
