@@ -33,7 +33,7 @@ namespace Kennedy.Archive.Db
 
 		public UrlEntry(GeminiUrl url)
         {
-			UrlId = unchecked((long)url.DocID);
+			UrlId = unchecked((long)url.HashID);
 			Url = url.NormalizedUrl;
 			Domain = url.Hostname;
 			Port = url.Port;

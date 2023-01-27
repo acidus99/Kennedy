@@ -14,7 +14,7 @@ using Kennedy.Crawler.Utils;
 using Kennedy.Crawler.UrlFrontiers;
 using Kennedy.Data.Models;
 using Kennedy.Data.Parsers;
-using Kennedy.Data.Utils;
+using Kennedy.Data.Utils;   
 
 namespace Kennedy.Crawler
 {
@@ -288,7 +288,7 @@ namespace Kennedy.Crawler
             {
                 //too many threads
                 //(new Thread(() => AnalyzeDomain(url))).Start();
-                AnalyzeDomain(url);
+                //AnalyzeDomain(url);
             }
         }
 
@@ -343,7 +343,7 @@ namespace Kennedy.Crawler
         //    urlFrontier.PopulateFromSnapshot($"{DataDirectory}remaining-frontier.txt");
 
         //    //populate our seen URLs list with everything that's in the frontier...
-        //    seenUrlModule.PopulateWithSeenIDs(urlFrontier.GetSnapshot().Select(x=>x.DocID).ToList());
+        //    seenUrlModule.PopulateWithSeenIDs(urlFrontier.GetSnapshot().Select(x=>x.HashID).ToList());
         //    //... and what we have already saved in the database
         //    seenUrlModule.PopulateWithSeenIDs(docIndex.GetDocIDs());
 

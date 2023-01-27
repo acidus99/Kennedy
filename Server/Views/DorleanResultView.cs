@@ -34,7 +34,7 @@ namespace Kennedy.Server.Views
             try
             {
 
-                var dbDocID = DocumentIndex.toLong(url.DocID);
+                var dbDocID = DocumentIndex.toLong(url.HashID);
                 var db = new DocumentIndex(Settings.Global.DataRoot).GetContext();
 
                 var entry = db.DocEntries.Where(x => x.DBDocID == dbDocID).FirstOrDefault();

@@ -61,7 +61,7 @@ namespace Kennedy.Crawler.Support
 
                 foreach (var link in foundLinks)
                 {
-                    if (!urlsInDocIndex.Contains(link.Url.DocID))
+                    if (!urlsInDocIndex.Contains(link.Url.HashID))
                     {
                         unvisitedUrls.Add(link.Url);
                     }
