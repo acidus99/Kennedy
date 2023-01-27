@@ -38,6 +38,16 @@ namespace Kennedy.CrawlData
                     cmd.CommandText = "CREATE VIRTUAL TABLE FTS using fts5(Title, Body, tokenize = 'porter');";
                     cmd.ExecuteNonQuery();
                 }
+
+                cmd.CommandText = "SELECT Count(*) FROM sqlite_master WHERE type='table' AND name='ImageSearch';";
+                count = Convert.ToInt32(cmd.ExecuteScalar());
+
+                if (count == 0)
+                {
+                    cmd.CommandText = "CREATE VIRTUAL TABLE ImageSearch using fts5(Terms, tokenize = 'porter');";
+                    cmd.ExecuteNonQuery();
+                }
+
             }
         }
 
@@ -107,7 +117,7 @@ namespace Kennedy.CrawlData
             {
                 StoredImageEntry imageEntry = new StoredImageEntry
                 {
-                    DBDocID = toLong(resp.RequestUrl.DocID),
+                    DBDocID = toLong(resp.RequestUrl.HashID),
                     IsTransparent = imageResponse.IsTransparent,
                     Height = imageResponse.Height,
                     Width = imageResponse.Width,
