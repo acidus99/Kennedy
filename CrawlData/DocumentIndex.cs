@@ -68,7 +68,7 @@ namespace Kennedy.CrawlData
         /// <returns></returns>
         internal long StoreMetaData(GeminiResponse resp, AbstractResponse parsedResponse, bool bodySaved)
         {
-            var dbDocID = toLong(resp.RequestUrl.DocID);
+            var dbDocID = toLong(resp.RequestUrl.HashID);
             StoredDocEntry entry = null;
             using (var db = new DocIndexDbContext(StoragePath))
             {
@@ -179,14 +179,14 @@ namespace Kennedy.CrawlData
         {
             using (var db = new DocIndexDbContext(StoragePath))
             {
-                var dbDocID = toLong(sourcePage.DocID);
+                var dbDocID = toLong(sourcePage.HashID);
                 //first delete all source IDs
                 db.LinkEntries.RemoveRange(db.LinkEntries.Where(x => (x.DBSourceDocID == dbDocID)));
                 db.SaveChanges();
                 db.BulkInsert(links.Distinct().Select(link => new StoredLinkEntry
                 {
-                    DBSourceDocID = toLong(sourcePage.DocID),
-                    DBTargetDocID = toLong(link.Url.DocID),
+                    DBSourceDocID = toLong(sourcePage.HashID),
+                    DBTargetDocID = toLong(link.Url.HashID),
                     IsExternal = link.IsExternal,
                     LinkText = link.LinkText
                 }).ToList());

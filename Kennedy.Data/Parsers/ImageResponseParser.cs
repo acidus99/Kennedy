@@ -20,7 +20,7 @@ namespace Kennedy.Data.Parsers
                 {
                     return new ImageResponse
                     {
-                        ContentType = ContentType.Image,
+                        ContentType = Kennedy.Data.Models.ContentType.Image,
                         IsTransparent = !image.IsOpaque,
                         Height = image.Height,
                         Width = image.Width,

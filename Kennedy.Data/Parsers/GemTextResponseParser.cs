@@ -19,7 +19,7 @@ namespace Kennedy.Data.Parsers
 
             return new GemTextResponse
             {
-                ContentType = ContentType.Text,
+                ContentType = Kennedy.Data.Models.ContentType.Text,
                 FilteredBody = filteredBody,
                 Links = LinkFinder.ExtractBodyLinks(resp.RequestUrl, resp.BodyText).ToList(),
                 Title = TitleFinder.ExtractTitle(resp),

@@ -25,7 +25,7 @@ namespace Kennedy.CrawlData
         {
             if (resp.IsSuccess & resp.HasBody)
             {
-                var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(resp.RequestUrl.DocID))).ToLower();
+                var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(resp.RequestUrl.HashID))).ToLower();
                 if(!store.StoreObject(key, resp.BodyBytes))
                 {
                     throw new ApplicationException("Failed to store resp!");

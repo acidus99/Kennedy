@@ -15,7 +15,7 @@ namespace Kennedy.Crawler
             var domainsFile = $"{CrawlerOptions.DataDirectory}capsules-to-scan.txt";
 
             Console.WriteLine("Stage 1: Fetching Robots");
-            RobotsFetcher.DoIt(domainsFile);
+            //RobotsFetcher.DoIt(domainsFile);
 
             Console.WriteLine("Stage 2: Preheating DNS");
             var crawler = new Crawler(80, 500000);

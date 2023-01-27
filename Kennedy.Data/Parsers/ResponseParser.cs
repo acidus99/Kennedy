@@ -36,7 +36,7 @@ namespace Kennedy.Data.Parsers
             }
             return new AbstractResponse
             {
-                ContentType = ContentType.Binary
+                ContentType = Kennedy.Data.Models.ContentType.Binary
             };
         }
     }
