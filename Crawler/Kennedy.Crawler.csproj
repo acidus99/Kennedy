@@ -27,11 +27,11 @@
   <ItemGroup>
     <PackageReference Include="NTextCat" Version="0.3.65" />
     <PackageReference Include="DnsClient" Version="1.7.0" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="11.3.0" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="12.2.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
     <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
+    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
   </ItemGroup>
 </Project>
