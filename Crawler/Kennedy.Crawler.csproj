@@ -28,10 +28,8 @@
     <PackageReference Include="DnsClient" Version="1.6.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
-    <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
-    <ProjectReference Include="..\Kennedy.Archive\Kennedy.Archive.csproj" />
-    <ProjectReference Include="..\Kennedy.Archive\Kennedy.Archive.csproj" />
     <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
+    <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
+    <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
   </ItemGroup>
 </Project>

@@ -13,13 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Server", "Server\Ke
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocketForce", "..\RocketForce\RocketForce\RocketForce.csproj", "{4DD2858A-0A29-4CE7-BFE8-A6697B584ED9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.SearchConsole", "SearchConsole\Kennedy.SearchConsole.csproj", "{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Archive", "Kennedy.Archive\Kennedy.Archive.csproj", "{E85B43FF-E223-43CF-908E-A223CB1C8D63}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Data", "Kennedy.Data\Kennedy.Data.csproj", "{94EC8766-A342-4B34-8C3F-F9C2A86D7E0E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArchiveLoader", "ArchiveLoader\ArchiveLoader.csproj", "{0000A857-24F6-4B32-8157-D7E5CF2D0D24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,22 +41,10 @@ Global
 		{4DD2858A-0A29-4CE7-BFE8-A6697B584ED9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DD2858A-0A29-4CE7-BFE8-A6697B584ED9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4DD2858A-0A29-4CE7-BFE8-A6697B584ED9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E85B43FF-E223-43CF-908E-A223CB1C8D63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E85B43FF-E223-43CF-908E-A223CB1C8D63}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E85B43FF-E223-43CF-908E-A223CB1C8D63}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E85B43FF-E223-43CF-908E-A223CB1C8D63}.Release|Any CPU.Build.0 = Release|Any CPU
 		{94EC8766-A342-4B34-8C3F-F9C2A86D7E0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{94EC8766-A342-4B34-8C3F-F9C2A86D7E0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94EC8766-A342-4B34-8C3F-F9C2A86D7E0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94EC8766-A342-4B34-8C3F-F9C2A86D7E0E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0000A857-24F6-4B32-8157-D7E5CF2D0D24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0000A857-24F6-4B32-8157-D7E5CF2D0D24}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0000A857-24F6-4B32-8157-D7E5CF2D0D24}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0000A857-24F6-4B32-8157-D7E5CF2D0D24}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
