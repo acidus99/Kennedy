@@ -57,6 +57,9 @@ public class Crawler : ICrawler
     System.Timers.Timer DiskStatusTimer;
     Stopwatch CrawlerStopwatch;
 
+    bool UserQuit = false;
+
+
     public Crawler(int crawlerThreads, int urlLimit)
     {
         CrawlerThreads = crawlerThreads;
@@ -116,7 +119,19 @@ public class Crawler : ICrawler
         int prevRequested = 0;
         do
         {
-
+            if (Console.KeyAvailable)
+            {
+                Console.WriteLine("stop? type 'quit'");
+                Console.ReadKey(true);
+                if (Console.ReadLine() == "quit")
+                {
+                    Console.WriteLine("quiting...");
+                    UserQuit = true;
+                } else
+                {
+                    Console.WriteLine("resuming");
+                }
+            }
 
             Thread.Sleep(StatusIntervalScreen);
 
@@ -190,7 +205,7 @@ public class Crawler : ICrawler
 
     public GeminiUrl GetUrl(int crawlerID = 0)
     {
-        if (HitUrlLimit)
+        if (HitUrlLimit || UserQuit)
         {
             return null;
         }
@@ -207,7 +222,16 @@ public class Crawler : ICrawler
     /// Is there pending work in our queue?
     /// </summary>
     public bool HasUrlsToFetch
-        => (!HitUrlLimit) ? (UrlFrontier.Count > 0) : false;
+    {
+        get
+        {
+            if (UserQuit)
+            {
+                return false;
+            }
+            return (!HitUrlLimit) ? (UrlFrontier.Count > 0) : false;
+        }
+    }
 
     /// <summary>
     /// Is there work being done
@@ -216,21 +240,6 @@ public class Crawler : ICrawler
         => TotalUrlsRequested.Count - TotalUrlsProcessed.Count;
 
     public bool KeepWorkersAlive
-    {
-
-        get
-        {
-            bool ret = (HasUrlsToFetch || (WorkInFlight > 0));
-            if (ret)
-            {
-                int xx = 4;
-            }
-
-            return ret;
-
-        }
-
-    }
-        
+        => (HasUrlsToFetch || (WorkInFlight > 0));
 
 }
