@@ -26,7 +26,8 @@ namespace Kennedy.Blazer.Frontiers
             UrlFilters = new List<IUrlFilter>
             {
                 new SeenUrlFilter(),
-                new DenyListFilter()
+                new DenyListFilter(),
+                new DomainLimitFilter(),
             };
 
             TotalUrls = new ThreadSafeCounter();
