@@ -1,23 +1,25 @@
 ﻿using System;
 using Gemini.Net;
-using Kennedy.Data.Models;
+using Kennedy.Data;
 
-namespace Kennedy.Data.Parsers
+namespace Kennedy.Parsers
 {
     public class RedirectResponseParser : AbstractResponseParser
     {
         public override bool CanParse(GeminiResponse resp)
             => resp.IsRedirect;
 
-        public override AbstractResponse Parse(GeminiResponse resp)
+        public override ParsedResponse Parse(GeminiResponse resp)
         {
-            var ret = new AbstractResponse();
             var link = FoundLink.Create(resp.RequestUrl, resp.Meta);
             if (link != null)
             {
-                ret.Links.Add(link);
+                return new ParsedResponse(resp)
+                {
+                    Links = { link }
+                };
             }
-            return ret;
+            return null;
         }
     }
 }

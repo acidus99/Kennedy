@@ -24,12 +24,15 @@ namespace Kennedy.Blazer.RobotsTxt
 
         public bool HasUnknown { get; private set; }
 
+        public string Contents;
+
         public Robots(string contents)
         {
             if (String.IsNullOrWhiteSpace(contents))
             {
                 return;
             }
+            Contents = contents;
 
             string[] lines = contents
                 .Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)

@@ -10,9 +10,15 @@ using System.Collections.Generic;
 using Gemini.Net;
 using Kennedy.Blazer.Frontiers;
 using Kennedy.Blazer.Logging;
-using Kennedy.Blazer.Processors;
 using Kennedy.Blazer.Protocols;
 using Kennedy.Blazer.Utils;
+
+using Kennedy.CrawlData;
+
+using Kennedy.Data;
+using Kennedy.Parsers;
+using Kennedy.Blazer.Domains;
+
 
 namespace Kennedy.Blazer.Crawling;
 
@@ -38,8 +44,15 @@ public class Crawler : ICrawler
 
     IUrlFrontier UrlFrontier;
     UrlFrontierWrapper FrontierWrapper;
-    List<IResponseProcessor> responseProcessors;
+
     SeenContentTracker seenContentTracker;
+
+    ResponseParser responseParser;
+
+    DocumentStorageSystem documentStorage;
+
+    DomainAnalyzer domainAnalyzer;
+
 
     System.Timers.Timer DiskStatusTimer;
     Stopwatch CrawlerStopwatch;
@@ -50,25 +63,26 @@ public class Crawler : ICrawler
         UrlLimit = urlLimit;
 
         ConfigureDirectories();
+
+        responseParser = new ResponseParser();
         
         TotalUrlsRequested = new ThreadSafeCounter();
         TotalUrlsProcessed = new ThreadSafeCounter();
 
         UrlFrontier = new BalancedUrlFrontier(CrawlerThreads);
         FrontierWrapper = new UrlFrontierWrapper(UrlFrontier);
-
         seenContentTracker = new SeenContentTracker();
 
-        responseProcessors = new List<IResponseProcessor>
-        {
-            new RedirectProcessor(FrontierWrapper),
-            new GemtextProcessor(FrontierWrapper)
-        };
+        documentStorage = new DocumentStorageSystem(CrawlerOptions.DataStore);
+
+        domainAnalyzer = new DomainAnalyzer(documentStorage);
+
     }
 
     private void ConfigureDirectories()
     {
-        Directory.CreateDirectory(CrawlerOptions.OutputBase);
+        Directory.CreateDirectory(CrawlerOptions.DataStore);
+        LanguageDetector.ConfigFileDirectory = CrawlerOptions.ConfigDir;
         errorLog = new ErrorLog(CrawlerOptions.ErrorLog);
     }
 
@@ -97,11 +111,13 @@ public class Crawler : ICrawler
         {
             SpawnWorker(i);
         }
+        domainAnalyzer.Start();
 
         int prevRequested = 0;
-
         do
         {
+
+
             Thread.Sleep(StatusIntervalScreen);
 
             int currRequested = TotalUrlsRequested.Count;
@@ -111,8 +127,15 @@ public class Crawler : ICrawler
 
         } while (KeepWorkersAlive);
         CrawlerStopwatch.Stop();
-        
+        domainAnalyzer.Stop();
+        FinalizeCrawl();
+
         Console.WriteLine($"Complete! {CrawlerStopwatch.Elapsed.TotalSeconds}");
+    }
+
+    private void FinalizeCrawl()
+    {
+        documentStorage.Finalize();
     }
 
     private void SpawnWorker(int workerNum)
@@ -143,32 +166,27 @@ public class Crawler : ICrawler
         //null means it was ignored by robots
         if (resp != null)
         {
+            bool isReachable = true;
+
             if (resp.ConnectStatus != ConnectStatus.Success)
             {
                 var msg = ex?.Message ?? resp.Meta;
                 errorLog.LogError(msg, resp.RequestUrl.NormalizedUrl);
+                isReachable = false;
             }
-            else
+
+            if (!seenContentTracker.CheckAndRecord(resp))
             {
-                ProcessResponse(resp);
+                var parsedResponse = responseParser.Parse(resp);
+                FrontierWrapper.AddUrls(parsedResponse.Links);
+                documentStorage.StoreDocument(parsedResponse);
+
+                domainAnalyzer.AddDomain(resp.RequestUrl.Hostname, resp.RequestUrl.Port, isReachable);
             }
         }
         TotalUrlsProcessed.Increment();
     }
 
-    private void ProcessResponse(GeminiResponse response)
-    {
-        if (!seenContentTracker.CheckAndRecord(response))
-        {
-            foreach (var processor in responseProcessors)
-            {
-                if (processor.CanProcessResponse(response))
-                {
-                    processor.ProcessResponse(response);
-                }
-            }
-        }
-    }
 
     public GeminiUrl GetUrl(int crawlerID = 0)
     {
@@ -198,6 +216,21 @@ public class Crawler : ICrawler
         => TotalUrlsRequested.Count - TotalUrlsProcessed.Count;
 
     public bool KeepWorkersAlive
-        => HasUrlsToFetch || (WorkInFlight > 0);
+    {
+
+        get
+        {
+            bool ret = (HasUrlsToFetch || (WorkInFlight > 0));
+            if (ret)
+            {
+                int xx = 4;
+            }
+
+            return ret;
+
+        }
+
+    }
+        
 
 }

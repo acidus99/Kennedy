@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 using Gemini.Net;
 
-namespace Kennedy.Data.Parsers.GemText
+namespace Kennedy.Parsers.GemText
 {
     /// <summary>
     /// Attempts to determine a "title" for a gemtext page

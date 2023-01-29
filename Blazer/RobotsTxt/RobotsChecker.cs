@@ -29,12 +29,13 @@ public class RobotsChecker
 
         var key = GetCacheKey(url);
 
-        if(!Cache.ContainsKey(key))
+        Robots robots = null;
+
+        if(!Cache.TryGetValue(key, out robots))
         {
-            LoadRobotsIntoCache(key, url.Hostname, url.Port);
+            robots = LoadRobotsIntoCache(key, url.Hostname, url.Port);
         }
 
-        var robots = Cache[key];
         if(robots != null)
         {
             return robots.IsPathAllowed("indexer", url.Path);
@@ -44,8 +45,14 @@ public class RobotsChecker
         return true;
     }
 
+    public Robots GetFromCache(string domain, int port)
+        => Cache.GetValueOrDefault(GetCacheKey(domain, port));
+
     private string GetCacheKey(GeminiUrl url)
         => url.Authority;
+
+    private string GetCacheKey(string domain, int port)
+        => $"{domain}:{port}";
 
     /// <summary>
     /// Downloads the Robots.txt file for a host, parses it, and adds it to the cache
@@ -53,7 +60,7 @@ public class RobotsChecker
     /// <param name="key"></param>
     /// <param name="hostname"></param>
     /// <param name="port"></param>
-    private void LoadRobotsIntoCache(string key, string hostname, int port)
+    private Robots LoadRobotsIntoCache(string key, string hostname, int port)
     {
         try
         {
@@ -61,14 +68,15 @@ public class RobotsChecker
             Robots robots = new Robots(contents);
             if(!robots.IsMalformed)
             {
-                Cache.Add(key, robots);
-                return;
+                Cache[key] = robots;
+                return robots;
             }
         } catch(Exception)
         {
 
         }
         Cache[key] = null;
+        return null;
     }
 
     /// <summary>

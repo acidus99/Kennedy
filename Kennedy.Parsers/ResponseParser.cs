@@ -1,11 +1,8 @@
-﻿
+﻿using Gemini.Net;
+using Kennedy.Data;
 
 
-using Gemini.Net;
-using Kennedy.Data.Models;
-using Kennedy.Data.Parsers.GemText;
-
-namespace Kennedy.Data.Parsers
+namespace Kennedy.Parsers
 {
     public class ResponseParser
     {
@@ -21,7 +18,7 @@ namespace Kennedy.Data.Parsers
             };
         }
 
-        public AbstractResponse Parse(GeminiResponse resp)
+        public ParsedResponse Parse(GeminiResponse resp)
         {
             foreach (var parser in parsers)
             {
@@ -34,9 +31,9 @@ namespace Kennedy.Data.Parsers
                     }
                 }
             }
-            return new AbstractResponse
+            return new ParsedResponse(resp)
             {
-                ContentType = Kennedy.Data.Models.ContentType.Binary
+                ContentType = ContentType.Binary
             };
         }
     }

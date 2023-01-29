@@ -269,7 +269,7 @@ namespace Kennedy.Crawler
             if (!seenContentModule.CheckAndRecord(resp))
             {
                 //parse it
-                AbstractResponse parsedResp = responseParser.Parse(resp);
+                ParsedResponse parsedResp = responseParser.Parse(resp);
                 //act on the links
                 parsedResp.Links.ForEach(x => ProcessProspectiveUrl(x.Url));
 

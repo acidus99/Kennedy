@@ -1,4 +1,4 @@
-﻿namespace Kennedy.Data.Models
+﻿namespace Kennedy.Data
 {
     public enum ContentType : int
     {

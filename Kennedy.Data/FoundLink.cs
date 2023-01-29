@@ -2,7 +2,7 @@
 
 using Gemini.Net;
 
-namespace Kennedy.Data.Models
+namespace Kennedy.Data
 {
     public class FoundLink : IEquatable<FoundLink>
     {

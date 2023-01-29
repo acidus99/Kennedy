@@ -10,20 +10,22 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
     <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
+    <ProjectReference Include="..\Kennedy.Parsers\Kennedy.Parsers.csproj" />
+    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DnsClient" Version="1.7.0" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Dns\" />
-    <None Remove="Processors\" />
     <None Remove="Utils\" />
     <None Remove="Logging\" />
+    <None Remove="Domains\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Dns\" />
-    <Folder Include="Processors\" />
     <Folder Include="Utils\" />
     <Folder Include="Logging\" />
+    <Folder Include="Domains\" />
   </ItemGroup>
 </Project>

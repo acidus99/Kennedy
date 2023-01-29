@@ -1,10 +1,10 @@
 ﻿using System;
 using Gemini.Net;
-using Kennedy.Data.Models;
+using Kennedy.Data;
 
-using Kennedy.Data.Parsers.GemText;
+using Kennedy.Parsers.GemText;
 
-namespace Kennedy.Data.Parsers
+namespace Kennedy.Parsers
 {
 	public class GemTextResponseParser : AbstractResponseParser
 	{
@@ -13,13 +13,13 @@ namespace Kennedy.Data.Parsers
         public override bool CanParse(GeminiResponse resp)
             => resp.HasBody && resp.IsSuccess && resp.MimeType.StartsWith("text/gemini");
 
-        public override AbstractResponse Parse(GeminiResponse resp)
+        public override ParsedResponse Parse(GeminiResponse resp)
         {
             var filteredBody = LineParser.FilterBody(resp.BodyText);
 
-            return new GemTextResponse
+            return new GemTextResponse(resp)
             {
-                ContentType = Kennedy.Data.Models.ContentType.Text,
+                ContentType = ContentType.Text,
                 FilteredBody = filteredBody,
                 Links = LinkFinder.ExtractBodyLinks(resp.RequestUrl, resp.BodyText).ToList(),
                 Title = TitleFinder.ExtractTitle(resp),

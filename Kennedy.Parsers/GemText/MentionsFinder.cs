@@ -3,10 +3,10 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using System.Collections.Generic;
 
-using Kennedy.Data.Parsers.GemText;
+using Kennedy.Parsers.GemText;
 using Kennedy.Data.Utils;
 
-namespace Kennedy.Data.Parsers.GemText
+namespace Kennedy.Parsers.GemText
 {
     public static class MentionsFinder
     {

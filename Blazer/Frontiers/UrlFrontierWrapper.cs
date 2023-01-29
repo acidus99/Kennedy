@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Linq;
+
+
 using Gemini.Net;
+
+using Kennedy.Data;
 
 using Kennedy.Blazer.Frontiers;
 using Kennedy.Blazer.Logging;
@@ -21,6 +26,7 @@ namespace Kennedy.Blazer.Frontiers
             UrlFilters = new List<IUrlFilter>
             {
                 new SeenUrlFilter(),
+                new DenyListFilter()
             };
 
             TotalUrls = new ThreadSafeCounter();
@@ -49,6 +55,14 @@ namespace Kennedy.Blazer.Frontiers
             foreach(var url in urls)
             {
                 AddUrl(url);
+            }
+        }
+
+        public void AddUrls(List<FoundLink> links)
+        {
+            foreach (var link in links)
+            {
+                AddUrl(link.Url);
             }
         }
 

@@ -1,7 +1,9 @@
 ﻿using System;
-namespace Kennedy.Data.Models
+using Gemini.Net;
+
+namespace Kennedy.Data
 {
-	public class ImageResponse : AbstractResponse
+	public class ImageResponse : ParsedResponse
 	{
         public int Width { get; set; }
 
@@ -10,6 +12,11 @@ namespace Kennedy.Data.Models
         public string ImageType { get; set; }
 
         public bool IsTransparent { get; set; }
+
+        public ImageResponse(GeminiResponse resp)
+            : base(resp)
+        { }
+
     }
 }
 

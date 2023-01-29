@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 
 using Gemini.Net;
-using Kennedy.Data.Models;
+using Kennedy.Data;
 
-namespace Kennedy.Data.Parsers.GemText
+namespace Kennedy.Parsers.GemText
 {
     /// <summary>
     /// Finds hyperlinks in Gemini Text Documents

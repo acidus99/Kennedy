@@ -3,24 +3,24 @@
 using ImageMagick;
 
 using Gemini.Net;
-using Kennedy.Data.Models;
+using Kennedy.Data;
 
-namespace Kennedy.Data.Parsers
+namespace Kennedy.Parsers
 {
     public class ImageResponseParser : AbstractResponseParser
     {
         public override bool CanParse(GeminiResponse resp)
          => resp.HasBody && resp.IsSuccess && resp.MimeType.StartsWith("image/");
 
-        public override AbstractResponse Parse(GeminiResponse resp)
+        public override ParsedResponse Parse(GeminiResponse resp)
         {
             using (var image = LoadImage(resp))
             {
                 if (image != null)
                 {
-                    return new ImageResponse
+                    return new ImageResponse(resp)
                     {
-                        ContentType = Kennedy.Data.Models.ContentType.Image,
+                        ContentType = ContentType.Image,
                         IsTransparent = !image.IsOpaque,
                         Height = image.Height,
                         Width = image.Width,

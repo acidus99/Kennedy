@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Kennedy.Data.Models
+namespace Kennedy.Data
 {
 	public class DomainInfo
 	{
@@ -9,7 +9,6 @@ namespace Kennedy.Data.Models
         public int Port { get; set; }
 
         public bool IsReachable { get; set; }
-        public string ErrorMessage { get; set; }
 
         public bool HasRobotsTxt { get; set; }
         public bool HasFaviconTxt { get; set; }

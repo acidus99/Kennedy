@@ -5,7 +5,7 @@ using Kennedy.CrawlData.Db;
 using Kennedy.CrawlData.Indexers;
 using Kennedy.CrawlData.Search;
 
-using Kennedy.Data.Models;
+using Kennedy.Data;
 
 
 
@@ -45,12 +45,12 @@ namespace Kennedy.CrawlData
             popularity.Rank();
         }
 
-        public void StoreDocument(GeminiResponse response, AbstractResponse parsedResponse)
+        public void StoreDocument(ParsedResponse parsedResponse)
         {
             //store the response in our document store, allowing us to do cool things like serve cached copies
-            bool isBodySaved = StoreFullResponse(response);
+            bool isBodySaved = StoreFullResponse(parsedResponse);
 
-            long dbID = StoreMetaData(response, parsedResponse, isBodySaved);
+            long dbID = StoreMetaData(parsedResponse, isBodySaved);
 
             //Index the text
             IndexResponse(parsedResponse, dbID);
@@ -67,7 +67,6 @@ namespace Kennedy.CrawlData
                         Port = domainInfo.Port,
 
                         IsReachable = domainInfo.IsReachable,
-                        ErrorMessage = domainInfo.ErrorMessage,
 
                         HasFaviconTxt = domainInfo.HasFaviconTxt,
                         HasRobotsTxt = domainInfo.HasRobotsTxt,
@@ -81,7 +80,7 @@ namespace Kennedy.CrawlData
             }
         }
 
-        private void IndexResponse(AbstractResponse parsedResponse, long dbID)
+        private void IndexResponse(ParsedResponse parsedResponse, long dbID)
         {
             if (parsedResponse is GemTextResponse)
             {
@@ -93,26 +92,24 @@ namespace Kennedy.CrawlData
             }
         }
 
-        private bool StoreFullResponse(GeminiResponse response)
+        private bool StoreFullResponse(ParsedResponse response)
             => documentStore.StoreDocument(response);
 
-        private long StoreMetaData(GeminiResponse response, AbstractResponse parsedResponse, bool isBodySaved)
+        private long StoreMetaData(ParsedResponse parsedResponse, bool isBodySaved)
         {
             //store in in the doc index (inserting or updating as appropriate)
-            long dbID = documentIndex.StoreMetaData(response, parsedResponse, isBodySaved);
+            long dbID = documentIndex.StoreMetaData(parsedResponse, isBodySaved);
 
             //if its an image, we store extra meta data
             if (parsedResponse is ImageResponse)
             {
-                documentIndex.StoreImageMetaData(response, parsedResponse as ImageResponse);
+                documentIndex.StoreImageMetaData(parsedResponse as ImageResponse);
             }
 
             //store the links
-            documentIndex.StoreLinks(response.RequestUrl, parsedResponse.Links);
+            documentIndex.StoreLinks(parsedResponse);
             return dbID;
         }
-
-
     }
 }
 

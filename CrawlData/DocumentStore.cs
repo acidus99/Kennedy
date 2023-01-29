@@ -1,6 +1,7 @@
 ﻿using System;
-using Gemini.Net;
 using System.Security.Cryptography;
+
+using Kennedy.Data;
 
 namespace Kennedy.CrawlData
 {
@@ -21,7 +22,7 @@ namespace Kennedy.CrawlData
         /// </summary>
         /// <param name="resp"></param>
         /// <returns></returns>
-        public bool StoreDocument(GeminiResponse resp)
+        public bool StoreDocument(ParsedResponse resp)
         {
             if (resp.IsSuccess & resp.HasBody)
             {

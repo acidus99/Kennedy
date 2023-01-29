@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 using Kennedy.Data.Utils;
 
-namespace Kennedy.Data.Parsers.GemText
+namespace Kennedy.Parsers.GemText
 {
     public static class HashtagFinder
     {
