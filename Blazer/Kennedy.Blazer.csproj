@@ -21,11 +21,15 @@
     <None Remove="Utils\" />
     <None Remove="Logging\" />
     <None Remove="Domains\" />
+    <None Remove="Support\" />
+    <None Remove="TopicIndexes\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Dns\" />
     <Folder Include="Utils\" />
     <Folder Include="Logging\" />
     <Folder Include="Domains\" />
+    <Folder Include="Support\" />
+    <Folder Include="TopicIndexes\" />
   </ItemGroup>
 </Project>
