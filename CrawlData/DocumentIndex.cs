@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.CrawlData.Db;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Kennedy.CrawlData
 { 
@@ -48,6 +49,19 @@ namespace Kennedy.CrawlData
                     cmd.ExecuteNonQuery();
                 }
 
+            }
+        }
+
+        public string GetImageIndexText(long dbDocId)
+        {
+            var db = new DocIndexDbContext(StoragePath);
+
+            using (var connection = (db.Database.GetDbConnection()))
+            {
+                connection.Open();
+                var cmd = db.Database.GetDbConnection().CreateCommand();
+                cmd.CommandText = "SELECT Terms FROM ImageSearch WHERE ROWID = " + dbDocId;
+                return (string)cmd.ExecuteScalar();
             }
         }
 
