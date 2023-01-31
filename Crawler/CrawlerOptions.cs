@@ -1,7 +1,7 @@
 ﻿namespace Kennedy.Blazer
 {	public static class CrawlerOptions
 	{
-        public static string OutputBase = "~/kennedy-capsule/";
+        public static string OutputBase = "~/kennedy-capsule/crawler-out/";
 
         public static string Logs => OutputBase + "logs/";
 
