@@ -11,11 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Server", "Server\Ke
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocketForce", "..\RocketForce\RocketForce\RocketForce.csproj", "{4DD2858A-0A29-4CE7-BFE8-A6697B584ED9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Blazer", "Blazer\Kennedy.Blazer.csproj", "{2EB91818-5404-4DD5-A171-75C5671275BA}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Data", "Kennedy.Data\Kennedy.Data.csproj", "{ABEE71CE-D457-404D-A613-E23B36843831}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Parsers", "Kennedy.Parsers\Kennedy.Parsers.csproj", "{B86CB593-FD5B-4518-9D59-0D61C0C1FB20}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Crawler", "Crawler\Kennedy.Crawler.csproj", "{26D51D53-751E-42FF-8F5E-78B712E82CE3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,10 +43,6 @@ Global
 		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22DACAA8-FC2F-4DFE-8E06-45270A941E8D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2EB91818-5404-4DD5-A171-75C5671275BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2EB91818-5404-4DD5-A171-75C5671275BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2EB91818-5404-4DD5-A171-75C5671275BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2EB91818-5404-4DD5-A171-75C5671275BA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ABEE71CE-D457-404D-A613-E23B36843831}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{ABEE71CE-D457-404D-A613-E23B36843831}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABEE71CE-D457-404D-A613-E23B36843831}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -55,6 +51,10 @@ Global
 		{B86CB593-FD5B-4518-9D59-0D61C0C1FB20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B86CB593-FD5B-4518-9D59-0D61C0C1FB20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B86CB593-FD5B-4518-9D59-0D61C0C1FB20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26D51D53-751E-42FF-8F5E-78B712E82CE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26D51D53-751E-42FF-8F5E-78B712E82CE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26D51D53-751E-42FF-8F5E-78B712E82CE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26D51D53-751E-42FF-8F5E-78B712E82CE3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
