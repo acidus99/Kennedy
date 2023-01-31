@@ -6,8 +6,9 @@ using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
-using Kennedy.Data.Models;
+using Kennedy.Data;
 using Kennedy.CrawlData.Db;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Kennedy.CrawlData
 { 
@@ -51,6 +52,19 @@ namespace Kennedy.CrawlData
             }
         }
 
+        public string GetImageIndexText(long dbDocId)
+        {
+            var db = new DocIndexDbContext(StoragePath);
+
+            using (var connection = (db.Database.GetDbConnection()))
+            {
+                connection.Open();
+                var cmd = db.Database.GetDbConnection().CreateCommand();
+                cmd.CommandText = "SELECT Terms FROM ImageSearch WHERE ROWID = " + dbDocId;
+                return (string)cmd.ExecuteScalar();
+            }
+        }
+
         public DocIndexDbContext GetContext()
             => new DocIndexDbContext(StoragePath);
 
@@ -76,9 +90,9 @@ namespace Kennedy.CrawlData
         /// <param name="lines"></param>
         /// <param name="language"></param>
         /// <returns></returns>
-        internal long StoreMetaData(GeminiResponse resp, AbstractResponse parsedResponse, bool bodySaved)
+        internal long StoreMetaData(ParsedResponse parsedResponse, bool bodySaved)
         {
-            var dbDocID = toLong(resp.RequestUrl.HashID);
+            var dbDocID = toLong(parsedResponse.RequestUrl.HashID);
             StoredDocEntry entry = null;
             using (var db = new DocIndexDbContext(StoragePath))
             {
@@ -95,12 +109,12 @@ namespace Kennedy.CrawlData
 
                         ErrorCount = 0,
 
-                        Url = resp.RequestUrl.NormalizedUrl,
-                        Domain = resp.RequestUrl.Hostname,
-                        Port = resp.RequestUrl.Port
+                        Url = parsedResponse.RequestUrl.NormalizedUrl,
+                        Domain = parsedResponse.RequestUrl.Hostname,
+                        Port = parsedResponse.RequestUrl.Port
                     };
                 }
-                entry = PopulateEntry(resp, parsedResponse, bodySaved, entry);
+                entry = PopulateEntry(parsedResponse, bodySaved, entry);
 
                 if(isNew)
                 {
@@ -111,13 +125,13 @@ namespace Kennedy.CrawlData
             return dbDocID;
         }
 
-        internal void StoreImageMetaData(GeminiResponse resp, ImageResponse imageResponse)
+        internal void StoreImageMetaData(ImageResponse imageResponse)
         {
             using (var db = new DocIndexDbContext(StoragePath))
             {
                 StoredImageEntry imageEntry = new StoredImageEntry
                 {
-                    DBDocID = toLong(resp.RequestUrl.HashID),
+                    DBDocID = toLong(imageResponse.RequestUrl.HashID),
                     IsTransparent = imageResponse.IsTransparent,
                     Height = imageResponse.Height,
                     Width = imageResponse.Width,
@@ -128,26 +142,26 @@ namespace Kennedy.CrawlData
             }
         }
 
-        private StoredDocEntry PopulateEntry(GeminiResponse resp, AbstractResponse parsedResponse, bool bodySaved, StoredDocEntry entry)
+        private StoredDocEntry PopulateEntry(ParsedResponse parsedResponse, bool bodySaved, StoredDocEntry entry)
         {
             entry.LastVisit = DateTime.Now;
 
-            entry.ConnectStatus = resp.ConnectStatus;
-            entry.Status = resp.StatusCode;
-            entry.Meta = resp.Meta;
+            entry.ConnectStatus = parsedResponse.ConnectStatus;
+            entry.Status = parsedResponse.StatusCode;
+            entry.Meta = parsedResponse.Meta;
 
-            entry.MimeType = resp.MimeType;
-            entry.BodySkipped = resp.BodySkipped;
+            entry.MimeType = parsedResponse.MimeType;
+            entry.BodySkipped = parsedResponse.BodySkipped;
             entry.BodySaved = bodySaved;
-            entry.BodySize = resp.BodySize;
-            entry.BodyHash = resp.BodyHash;
+            entry.BodySize = parsedResponse.BodySize;
+            entry.BodyHash = parsedResponse.BodyHash;
             entry.OutboundLinks = parsedResponse.Links.Count;
 
-            entry.ConnectTime = resp.ConnectTime;
-            entry.DownloadTime = resp.DownloadTime;
+            entry.ConnectTime = parsedResponse.ConnectTime;
+            entry.DownloadTime = parsedResponse.DownloadTime;
             entry.ContentType = parsedResponse.ContentType;
 
-            if (IsError(resp))
+            if (IsError(parsedResponse))
             {
                 entry.ErrorCount++;
             }
@@ -181,21 +195,21 @@ namespace Kennedy.CrawlData
         /// </summary>
         /// <param name="resp"></param>
         /// <returns></returns>
-        private bool IsError(GeminiResponse resp)
+        private bool IsError(ParsedResponse resp)
             => (resp.ConnectStatus != ConnectStatus.Success) ||
                 resp.IsTempFail || resp.IsPermFail;
 
-        internal void StoreLinks(GeminiUrl sourcePage, List<FoundLink> links)
+        internal void StoreLinks(ParsedResponse response)
         {
             using (var db = new DocIndexDbContext(StoragePath))
             {
-                var dbDocID = toLong(sourcePage.HashID);
+                var dbDocID = toLong(response.RequestUrl.HashID);
                 //first delete all source IDs
                 db.LinkEntries.RemoveRange(db.LinkEntries.Where(x => (x.DBSourceDocID == dbDocID)));
                 db.SaveChanges();
-                db.BulkInsert(links.Distinct().Select(link => new StoredLinkEntry
+                db.BulkInsert(response.Links.Distinct().Select(link => new StoredLinkEntry
                 {
-                    DBSourceDocID = toLong(sourcePage.HashID),
+                    DBSourceDocID = dbDocID,
                     DBTargetDocID = toLong(link.Url.HashID),
                     IsExternal = link.IsExternal,
                     LinkText = link.LinkText
@@ -203,33 +217,5 @@ namespace Kennedy.CrawlData
                 db.SaveChanges();
             }
         }
-
-        //Unneeded until I start restarting crawls from previous crawls
-
-        //public List<uint> GetBodyHashes()
-        //{
-        //    using (var db = new DocIndexDbContext(StoragePath))
-        //    {
-        //        return db.DocEntries
-        //                .Select(x => x.BodyHash)
-        //                .Where(x => (x != null))
-        //                .Select(x => x.Value).ToList();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Gets URLs we have stored in the db
-        ///// </summary>
-        ///// <returns></returns>
-        //public List<GeminiUrl> GetUrls()
-        //{
-        //    using (var db = new DocIndexDbContext(StoragePath))
-        //    {
-        //        return db.DocEntries
-        //                .Select(x => x.Url)
-        //                .Select(x => new GeminiUrl(x)).ToList();
-        //    }
-        //}
-
     }
 }

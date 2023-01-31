@@ -5,7 +5,7 @@ using System.Linq;
 using Gemini.Net;
 using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
-using Kennedy.Data.Parsers.GemText;
+using Kennedy.Parsers.GemText;
 
 namespace Kennedy.Crawler.TopicIndexes
 {
@@ -17,7 +17,7 @@ namespace Kennedy.Crawler.TopicIndexes
 
         public TermScanner()
         {
-            docStore = new DocumentStore(CrawlerOptions.DataDirectory + "page-store/");
+            docStore = new DocumentStore(CrawlerOptions.DataStore + "page-store/");
             Mentions = new TermTracker();
             Hashtags = new TermTracker();
         }
@@ -25,7 +25,7 @@ namespace Kennedy.Crawler.TopicIndexes
         public void ScanDocs()
         {
 
-            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
+            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataStore);
             
 
             var entries = db.DocEntries

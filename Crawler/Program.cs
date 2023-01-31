@@ -1,7 +1,10 @@
 ﻿using System;
+using Gemini.Net;
 
-using Kennedy.Crawler.Support;
+using Kennedy.Crawler.Crawling;
+
 using Kennedy.Crawler.TopicIndexes;
+
 
 namespace Kennedy.Crawler
 {
@@ -11,37 +14,40 @@ namespace Kennedy.Crawler
         {
             HandleArgs(args);
 
-            Console.WriteLine("Kennedy Crawler!");
-            var domainsFile = $"{CrawlerOptions.DataDirectory}capsules-to-scan.txt";
+            //var url = "gemini://billy.flounder.online/tech-links.gmi";
+            //var url = "gemini://makeworld.gq/cgi-bin/gemini-irc";
+            //var url = "gemini://gemini.circumlunar.space/docs/faq.gmi";
+            //var url = "gemini://capsule.ghislainmary.fr/photo/";
+            //var url = "gemini://billy.flounder.online/index.gmi";
+            var url = "gemini://mozz.us/";
+            //var url = "gemini://marginalia.nu:1965/log";
+            //var url = "gemini://geminispace.info/known-hosts";
 
-            Console.WriteLine("Stage 1: Fetching Robots");
-            //RobotsFetcher.DoIt(domainsFile);
+            var crawler = new WebCrawler(40, 500000);
 
-            Console.WriteLine("Stage 2: Preheating DNS");
-            var crawler = new Crawler(80, 500000);
-            crawler.PreheatDns(domainsFile);
-
-            Console.WriteLine("Stage 3: Crawling");
-            crawler.AddSeedFile(domainsFile);
+            crawler.AddSeed(url);
             crawler.DoCrawl();
 
-            Console.WriteLine("Stage 4: Building Indexes: Topics and Mentions ");
-            TopicGenerator.BuildFiles(CrawlerOptions.DataDirectory);
+            TopicGenerator.BuildFiles(CrawlerOptions.PublicRoot);
             return;
         }
 
         static void HandleArgs(string[] args)
         {
-            try
+            if (args.Length == 1)
             {
-                if (System.IO.Directory.Exists(args[0]))
-                {
-                    CrawlerOptions.DataDirectory = args[0];
-                }
+                CrawlerOptions.OutputBase = args[1];
             }
-            catch (Exception)
+            
+            CrawlerOptions.OutputBase = CrawlerOptions.OutputBase.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) +'/');
+            if(!CrawlerOptions.OutputBase.EndsWith(Path.DirectorySeparatorChar))
             {
-
+                CrawlerOptions.OutputBase += Path.DirectorySeparatorChar;
+            }
+            if(!Directory.Exists(CrawlerOptions.OutputBase))
+            {
+                Console.WriteLine($"Output directory '{CrawlerOptions.OutputBase}' does not exist");
+                Environment.Exit(1);
             }
         }
     }

@@ -1,6 +1,6 @@
 ﻿using System;
-
 using System.Threading;
+
 namespace Kennedy.Crawler.Utils
 {
     /// <summary>
@@ -8,38 +8,26 @@ namespace Kennedy.Crawler.Utils
     /// </summary>
     public class ThreadSafeCounter
     {
+        private int Counter;
 
-        private int counter;
-
-        public ThreadSafeCounter()
-            : this(0) { }
-
-        public ThreadSafeCounter(int initialValue)
+        public ThreadSafeCounter(int initialValue = 0)
         {
-            this.counter = initialValue;
+            Counter = initialValue;
         }
 
         public int Increment()
         {
-            int tmp = Interlocked.Increment(ref counter);
+            int tmp = Interlocked.Increment(ref Counter);
             return tmp;
         }
 
         public int Decrement()
         {
-            int tmp = Interlocked.Decrement(ref counter);
+            int tmp = Interlocked.Decrement(ref Counter);
             return tmp;
         }
 
         public int Count
-        {
-            get
-            {
-                return this.counter;
-            }
-        }
-
-
+            => Counter;
     }
 }
-

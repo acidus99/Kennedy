@@ -6,10 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Parsers\" />
-    <Folder Include="Parsers\GemText\" />
-    <Folder Include="Models\" />
-    <Folder Include="Models\RobotsTxt\" />
     <Folder Include="Utils\" />
   </ItemGroup>
   <ItemGroup>
@@ -20,8 +16,6 @@
     <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="12.1.0" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Models\" />
-    <None Remove="Models\RobotsTxt\" />
     <None Remove="Utils\" />
     <None Remove="Magick.NET-Q8-AnyCPU" />
   </ItemGroup>

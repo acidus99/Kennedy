@@ -20,7 +20,7 @@ namespace Kennedy.Crawler.TopicIndexes
         public HashtagDumper(TermTracker tracker)
         {
             Tracker = tracker;
-            Db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
+            Db = new DocIndexDbContext(CrawlerOptions.DataStore);
         }
 
 

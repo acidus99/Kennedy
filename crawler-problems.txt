@@ -1,0 +1,49 @@
+- Robots are not fetched as it goes
+- Slow start
+- Crawls start from scratch each time
+- Crawls cannot be resumed
+- Indexing images doesn't happen until the end, since link text is used
+
+- Crawls must complete before hashtag/mention indexes are created
+	- This can be done offline, against a crawl database
+	
+	
+	
+	
+Components I need:
+
+
+- A (re)loadable Url Frontier
+	 - storing the list of URLs to download;
+- A optimized DNS Resolver/cacher
+	- a component for resolving host names into IP addresses;
+
+- A Gemini requestor which can use DNS resolver
+	- a component for downloading documents using the HTTP protocol;
+
+- A Link Extractor
+	- A component for extracting links from HTML documents; and
+
+- A URL Tracker
+	- a component for determining whether a URL has been encountered before.
+
+Other:
+
+- Robots Fetcher/Cache/backing store
+
+	- Implement this at the requestor stage instead of at the add to frontier phase. That allows for sharding
+
+- Seen Content Test / Cache / Backing Store
+
+- URL Filters
+
+- System for processing the documents and the links (e.g. the doc store/crawl store/archive)
+
+
+
+
+
+
+Requestor component
+	- Access to a shared Robots cache
+

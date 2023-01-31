@@ -5,7 +5,7 @@ using System.IO;
 using Gemini.Net;
 using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
-using Kennedy.Data.Models;
+using Kennedy.Data;
 using RocketForce;
 
 namespace Kennedy.Server.Views
@@ -16,11 +16,14 @@ namespace Kennedy.Server.Views
             : base(request, response, app) { }
 
         private DocIndexDbContext db;
+        private DocumentIndex documentIndex;
         StoredDocEntry entry;
 
         public override void Render()
         {
-            db = (new DocumentIndex(Settings.Global.DataRoot)).GetContext();
+            documentIndex = new DocumentIndex(Settings.Global.DataRoot);
+
+            db = documentIndex.GetContext();
             entry = null;
             long dbDocID = 0;
 
@@ -78,8 +81,12 @@ namespace Kennedy.Server.Views
                                        img.IsTransparent,
                                    }).FirstOrDefault();
 
+                    var terms = documentIndex.GetImageIndexText(dbDocID);
+
                     Response.WriteLine($"* Dimensions: {imgmeta.Width} x {imgmeta.Height}");
                     Response.WriteLine($"* Format: {imgmeta.ImageType}");
+                    Response.WriteLine($"* Indexable text:");
+                    Response.WriteLine($">{terms}");
                     break;
             }
 

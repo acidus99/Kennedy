@@ -6,8 +6,9 @@ using System.Text.RegularExpressions;
 using Gemini.Net;
 using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
-using Kennedy.Data.Models;
-using Kennedy.Data.Parsers.GemText;
+using Kennedy.Data;
+using Kennedy.Parsers.GemText;
+
 namespace Kennedy.Crawler.Support
 {
     /// <summary>
@@ -16,7 +17,7 @@ namespace Kennedy.Crawler.Support
     /// </summary>
     public class FeedFinder
     {
-        DocumentStore docStore = new DocumentStore(CrawlerOptions.DataDirectory + "page-store/");
+        DocumentStore docStore = new DocumentStore(CrawlerOptions.DataStore+ "page-store/");
         Regex regex = new Regex(@"^\d{4}-\d{2}-\d{2}\s+");
 
         public void Doit()
@@ -29,7 +30,7 @@ namespace Kennedy.Crawler.Support
 
         public List<string> FindXmlFeeds()
         {
-            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
+            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataStore);
 
             return db.DocEntries
                 .Where(x => (x.ErrorCount == 0 && x.MimeType.StartsWith("application/xml")))
@@ -40,7 +41,7 @@ namespace Kennedy.Crawler.Support
         {
             List<string> ret = new List<string>();
 
-            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataDirectory);
+            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataStore);
 
             var entries = db.DocEntries
                 .Where(x => (x.ErrorCount == 0 && x.BodySize > 0 && x.MimeType.StartsWith("text/gemini"))).ToList();
