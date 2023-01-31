@@ -3,12 +3,17 @@ using Gemini.Net;
 
 using Kennedy.Blazer.Crawling;
 
+using Kennedy.Blazer.TopicIndexes;
+
+
 namespace Kennedy.Blazer
 {
     class Program
     {
         static void Main(string[] args)
         {
+            HandleArgs(args);
+
             //var url = "gemini://billy.flounder.online/tech-links.gmi";
             //var url = "gemini://makeworld.gq/cgi-bin/gemini-irc";
             //var url = "gemini://gemini.circumlunar.space/docs/faq.gmi";
@@ -23,8 +28,27 @@ namespace Kennedy.Blazer
             crawler.AddSeed(url);
             crawler.DoCrawl();
 
+            TopicGenerator.BuildFiles(CrawlerOptions.PublicRoot);
             return;
         }
 
+        static void HandleArgs(string[] args)
+        {
+            if (args.Length == 1)
+            {
+                CrawlerOptions.OutputBase = args[1];
+            }
+            
+            CrawlerOptions.OutputBase = CrawlerOptions.OutputBase.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) +'/');
+            if(!CrawlerOptions.OutputBase.EndsWith(Path.DirectorySeparatorChar))
+            {
+                CrawlerOptions.OutputBase += Path.DirectorySeparatorChar;
+            }
+            if(!Directory.Exists(CrawlerOptions.OutputBase))
+            {
+                Console.WriteLine($"Output directory '{CrawlerOptions.OutputBase}' does not exist");
+                Environment.Exit(1);
+            }
+        }
     }
 }

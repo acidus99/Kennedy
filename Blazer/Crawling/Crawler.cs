@@ -85,6 +85,8 @@ public class Crawler : ICrawler
     private void ConfigureDirectories()
     {
         Directory.CreateDirectory(CrawlerOptions.DataStore);
+        Directory.CreateDirectory(CrawlerOptions.PublicRoot);
+        Directory.CreateDirectory(CrawlerOptions.Logs);
         LanguageDetector.ConfigFileDirectory = CrawlerOptions.ConfigDir;
         errorLog = new ErrorLog(CrawlerOptions.ErrorLog);
     }
@@ -171,7 +173,7 @@ public class Crawler : ICrawler
 
     private void LogStatusToDisk(object? sender, System.Timers.ElapsedEventArgs e)
     {
-        StatusLogger logger = new StatusLogger(CrawlerOptions.OutputBase);
+        StatusLogger logger = new StatusLogger(CrawlerOptions.Logs);
         logger.LogStatus(FrontierWrapper);
         logger.LogStatus(UrlFrontier);
     }
