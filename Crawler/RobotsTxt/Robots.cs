@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Kennedy.Blazer.RobotsTxt
+namespace Kennedy.Crawler.RobotsTxt
 {
     public class Robots
     {

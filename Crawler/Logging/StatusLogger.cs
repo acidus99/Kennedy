@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
-namespace Kennedy.Blazer.Logging
+namespace Kennedy.Crawler.Logging
 {
 	public class StatusLogger
 	{

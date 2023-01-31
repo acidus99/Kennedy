@@ -1,4 +1,4 @@
-﻿namespace Kennedy.Blazer
+﻿namespace Kennedy.Crawler
 {	public static class CrawlerOptions
 	{
         public static string OutputBase = "~/kennedy-capsule/crawler-out/";

@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Kennedy.Blazer.Logging
+namespace Kennedy.Crawler.Logging
 {
 	public interface IStatusProvider
 	{

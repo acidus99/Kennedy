@@ -7,7 +7,7 @@ using Kennedy.CrawlData;
 using Kennedy.CrawlData.Db;
 using Kennedy.Parsers.GemText;
 
-namespace Kennedy.Blazer.TopicIndexes
+namespace Kennedy.Crawler.TopicIndexes
 {
     internal class TermScanner
     {

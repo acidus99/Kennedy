@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Kennedy.Blazer.Logging
+namespace Kennedy.Crawler.Logging
 {
     public class ErrorLog
     {

@@ -1,10 +1,10 @@
 ﻿using System;
 
 using Gemini.Net;
-using Kennedy.Blazer.Dns;
-using Kennedy.Blazer.RobotsTxt;
+using Kennedy.Crawler.Dns;
+using Kennedy.Crawler.RobotsTxt;
 
-namespace Kennedy.Blazer.Protocols
+namespace Kennedy.Crawler.Protocols
 {
     public class GeminiProtocolHandler : Gemini.Net.GeminiRequestor
     {

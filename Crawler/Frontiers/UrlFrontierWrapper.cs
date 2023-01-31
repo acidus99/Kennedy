@@ -6,11 +6,11 @@ using Gemini.Net;
 
 using Kennedy.Data;
 
-using Kennedy.Blazer.Frontiers;
-using Kennedy.Blazer.Logging;
-using Kennedy.Blazer.Utils;
+using Kennedy.Crawler.Frontiers;
+using Kennedy.Crawler.Logging;
+using Kennedy.Crawler.Utils;
 
-namespace Kennedy.Blazer.Frontiers
+namespace Kennedy.Crawler.Frontiers
 {
     public class UrlFrontierWrapper : IStatusProvider
     {

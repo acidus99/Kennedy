@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kennedy.Blazer.TopicIndexes
+namespace Kennedy.Crawler.TopicIndexes
 {
     /// <summary>
     /// Builds the gemtext files for the Hashtags and Mention indexes

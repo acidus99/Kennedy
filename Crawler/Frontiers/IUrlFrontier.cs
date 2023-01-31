@@ -1,8 +1,8 @@
 ﻿using System;
 using Gemini.Net;
-using Kennedy.Blazer.Logging;
+using Kennedy.Crawler.Logging;
 
-namespace Kennedy.Blazer.Frontiers
+namespace Kennedy.Crawler.Frontiers
 {
     public interface IUrlFrontier : IStatusProvider
     {

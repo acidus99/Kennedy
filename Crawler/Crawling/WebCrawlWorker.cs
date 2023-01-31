@@ -2,25 +2,25 @@
 using System.Threading;
 
 using Gemini.Net;
-using Kennedy.Blazer.Protocols;
+using Kennedy.Crawler.Protocols;
 
-namespace Kennedy.Blazer.Crawling;
+namespace Kennedy.Crawler.Crawling;
 
 /// <summary>
 /// Thread that pulls jobs for a specific authoriy
 /// </summary>
-internal class CrawlWorker
+internal class WebCrawlWorker
 {
     /// <summary>
     /// how long should we wait between requests to the same authority
     /// </summary>
     const int delayMs = 500;
 
-    public ICrawler Crawler;
+    public IWebCrawler Crawler;
     public int CrawlerID;
 
     // The constructor obtains the state information.
-    public CrawlWorker(ICrawler crawler, int id)
+    public WebCrawlWorker(IWebCrawler crawler, int id)
     {
         Crawler = crawler;
         CrawlerID = id;

@@ -7,7 +7,7 @@ using Kennedy.CrawlData.Db;
 using System.IO;
 
 
-namespace Kennedy.Blazer.TopicIndexes
+namespace Kennedy.Crawler.TopicIndexes
 {
     internal class MentionsDumper
     {

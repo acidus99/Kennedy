@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using DnsClient;
 
-namespace Kennedy.Blazer.Dns
+namespace Kennedy.Crawler.Dns
 {
     public class DnsWrapper
     {

@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Collections.Generic;
 using Gemini.Net;
-using Kennedy.Blazer.Utils;
+using Kennedy.Crawler.Utils;
 
-namespace Kennedy.Blazer.Frontiers;
+namespace Kennedy.Crawler.Frontiers;
 
 /// <summary>
 /// 

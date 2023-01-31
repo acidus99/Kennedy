@@ -1,8 +1,8 @@
 ﻿using System;
 using Gemini.Net;
-using Kennedy.Blazer.Utils;
+using Kennedy.Crawler.Utils;
 
-namespace Kennedy.Blazer.Frontiers
+namespace Kennedy.Crawler.Frontiers
 {
 	public class DenyListFilter : IUrlFilter
 	{

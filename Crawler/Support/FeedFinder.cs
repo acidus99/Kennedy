@@ -9,7 +9,7 @@ using Kennedy.CrawlData.Db;
 using Kennedy.Data;
 using Kennedy.Parsers.GemText;
 
-namespace Kennedy.Blazer.Support
+namespace Kennedy.Crawler.Support
 {
     /// <summary>
     /// Detects all gemini feeds and Atom feeds. For gemini feeds, finds all the gemtext, the looks in

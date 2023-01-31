@@ -3,11 +3,11 @@
 using Gemini.Net;
 
 using Kennedy.CrawlData;
-using Kennedy.Blazer.Utils;
+using Kennedy.Crawler.Utils;
 using Kennedy.Data;
 
 
-namespace Kennedy.Blazer.Domains
+namespace Kennedy.Crawler.Domains
 {
 	public class DomainAnalyzer
 	{

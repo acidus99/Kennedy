@@ -1,12 +1,12 @@
 ﻿using System;
 using Gemini.Net;
 
-using Kennedy.Blazer.Crawling;
+using Kennedy.Crawler.Crawling;
 
-using Kennedy.Blazer.TopicIndexes;
+using Kennedy.Crawler.TopicIndexes;
 
 
-namespace Kennedy.Blazer
+namespace Kennedy.Crawler
 {
     class Program
     {
@@ -23,7 +23,7 @@ namespace Kennedy.Blazer
             //var url = "gemini://marginalia.nu:1965/log";
             //var url = "gemini://geminispace.info/known-hosts";
 
-            var crawler = new Crawler(40, 500000);
+            var crawler = new WebCrawler(40, 500000);
 
             crawler.AddSeed(url);
             crawler.DoCrawl();

@@ -8,21 +8,21 @@ using System.Collections.Generic;
 
 
 using Gemini.Net;
-using Kennedy.Blazer.Frontiers;
-using Kennedy.Blazer.Logging;
-using Kennedy.Blazer.Protocols;
-using Kennedy.Blazer.Utils;
+using Kennedy.Crawler.Frontiers;
+using Kennedy.Crawler.Logging;
+using Kennedy.Crawler.Protocols;
+using Kennedy.Crawler.Utils;
 
 using Kennedy.CrawlData;
 
 using Kennedy.Data;
 using Kennedy.Parsers;
-using Kennedy.Blazer.Domains;
+using Kennedy.Crawler.Domains;
 
 
-namespace Kennedy.Blazer.Crawling;
+namespace Kennedy.Crawler.Crawling;
 
-public class Crawler : ICrawler
+public class WebCrawler : IWebCrawler
 {
     const int StatusIntervalDisk = 60000;
     const int StatusIntervalScreen = 5000;
@@ -60,7 +60,7 @@ public class Crawler : ICrawler
     bool UserQuit = false;
 
 
-    public Crawler(int crawlerThreads, int urlLimit)
+    public WebCrawler(int crawlerThreads, int urlLimit)
     {
         CrawlerThreads = crawlerThreads;
         UrlLimit = urlLimit;
@@ -157,7 +157,7 @@ public class Crawler : ICrawler
 
     private void SpawnWorker(int workerNum)
     {
-        var worker = new CrawlWorker(this, workerNum);
+        var worker = new WebCrawlWorker(this, workerNum);
 
         var threadDelegate = new ThreadStart(worker.DoWork);
         var newThread = new Thread(threadDelegate);

@@ -1,8 +1,8 @@
 ﻿using System;
 using Gemini.Net;
-namespace Kennedy.Blazer.Crawling;
+namespace Kennedy.Crawler.Crawling;
 
-public interface ICrawler
+public interface IWebCrawler
 {
     bool KeepWorkersAlive { get; }
 

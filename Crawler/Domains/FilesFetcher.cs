@@ -1,9 +1,9 @@
 ﻿using System;
 
 using Gemini.Net;
-using Kennedy.Blazer.RobotsTxt;
+using Kennedy.Crawler.RobotsTxt;
 
-namespace Kennedy.Blazer.Domains
+namespace Kennedy.Crawler.Domains
 {
     public class FilesFetcher
     {

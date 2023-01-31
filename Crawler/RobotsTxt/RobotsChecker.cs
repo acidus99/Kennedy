@@ -1,9 +1,9 @@
 ﻿using System;
 
 using Gemini.Net;
-using Kennedy.Blazer.Dns;
+using Kennedy.Crawler.Dns;
 
-namespace Kennedy.Blazer.RobotsTxt;
+namespace Kennedy.Crawler.RobotsTxt;
 
 /// <summary>
 /// returns if a URL is allowed or not, based on it's Robots.txt
