@@ -7,7 +7,7 @@ using Gemini.Net;
 using Kennedy.Archive.Db;
 using Kennedy.Archive.Pack;
 using Kennedy.CrawlData;
-using Kennedy.Data.Models;
+using Kennedy.Data;
 
 
 
@@ -52,6 +52,8 @@ namespace ArchiveLoader
             Console.WriteLine("total Seconds:" + watch.Elapsed.TotalSeconds);
 
         }
+
+        static void LoadCrawl(string crawl)
 
         static void ArchiveEntry(SimpleDocEntry entry, byte [] data)
         {

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 using Microsoft.EntityFrameworkCore;
 
-using Kennedy.Data.Models;
+using Kennedy.Data;
 
 namespace Kennedy.Archive.Db
 {
@@ -26,7 +26,9 @@ namespace Kennedy.Archive.Db
 
 		public DateTime Captured { get; set; }
 
-		public UrlEntry UrlEntry { get; set; }
+        public long UrlId { get; set; }
+
+        public UrlEntry UrlEntry { get; set; }
 	}
 }
 

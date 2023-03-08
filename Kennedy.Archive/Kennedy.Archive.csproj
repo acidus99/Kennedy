@@ -18,5 +18,6 @@
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
     <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
     <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
+    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
   </ItemGroup>
 </Project>
