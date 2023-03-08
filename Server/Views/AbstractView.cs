@@ -6,13 +6,13 @@ namespace Kennedy.Server.Views
 {
     internal abstract class AbstractView
     {
-        protected Request Request;
+        protected GeminiRequest Request;
         protected Response Response;
-        protected App App;
+        protected GeminiServer App;
 
         protected TextWriter Out { get; private set; }
 
-        public AbstractView(Request request, Response response, App app)
+        public AbstractView(GeminiRequest request, Response response, GeminiServer app)
         {
             Request = request;
             Response = response;

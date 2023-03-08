@@ -7,7 +7,7 @@ namespace Kennedy.Server
 {
     public static class SearchController
     {
-        public static void Search(Request request, Response response, App app)
+        public static void Search(GeminiRequest request, Response response, GeminiServer app)
         {
             if(!request.Url.HasQuery)
             {
@@ -18,7 +18,7 @@ namespace Kennedy.Server
             view.Render();
         }
 
-        public static void LuckySearch(Request request, Response response, App app)
+        public static void LuckySearch(GeminiRequest request, Response response, GeminiServer app)
         {
             if (!request.Url.HasQuery)
             {
@@ -29,31 +29,31 @@ namespace Kennedy.Server
             view.Render();
         }
 
-        public static void PageInfo(Request request, Response response, App app)
+        public static void PageInfo(GeminiRequest request, Response response, GeminiServer app)
         {
             var view = new PageInfoView(request, response, app);
             view.Render();
         }
 
-        public static void KnownHosts(Request request, Response response, App app)
+        public static void KnownHosts(GeminiRequest request, Response response, GeminiServer app)
         {
             var view = new KnownHostsView(request, response, app);
             view.Render();
         }
 
-        public static void SecurityTxt(Request request, Response response, App app)
+        public static void SecurityTxt(GeminiRequest request, Response response, GeminiServer app)
         {
             var view = new SecurityTxtView(request, response, app);
             view.Render();
         }
 
-        public static void Cached(Request request, Response response, App app)
+        public static void Cached(GeminiRequest request, Response response, GeminiServer app)
         {
             var view = new CachedView(request, response, app);
             view.Render();
         }
 
-        public static void DeloreanSearch(Request request, Response response, App app)
+        public static void DeloreanSearch(GeminiRequest request, Response response, GeminiServer app)
         {
             if (!request.Url.HasQuery)
             {

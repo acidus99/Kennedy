@@ -12,7 +12,7 @@ namespace Kennedy.Server.Views
 {
     internal class PageInfoView :AbstractView
     {
-        public PageInfoView(Request request, Response response, App app)
+        public PageInfoView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         private DocIndexDbContext db;

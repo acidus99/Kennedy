@@ -12,7 +12,7 @@ namespace Kennedy.Server.Views
     internal class SecurityTxtView :AbstractView
     {
 
-        public SecurityTxtView(Request request, Response response, App app)
+        public SecurityTxtView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         public override void Render()

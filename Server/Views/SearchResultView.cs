@@ -15,7 +15,7 @@ namespace Kennedy.Server.Views
     {
         const int resultsInPage = 15;
 
-        public SearchResultView(Request request, Response response, App app)
+        public SearchResultView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         ArticleSummary TopGemipediaHit = null;
