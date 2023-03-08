@@ -7,7 +7,7 @@ namespace Kennedy.Server
 {
     public static class ImageSearchController
     {
-        public static void Search(Request request, Response response, App app)
+        public static void Search(GeminiRequest request, Response response, GeminiServer app)
         {
             if(!request.Url.HasQuery)
             {

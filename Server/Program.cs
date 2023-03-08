@@ -24,29 +24,29 @@ namespace Kennedy.Server
 
             Console.WriteLine($"settings '{Settings.Global.DataRoot}'");
 
-            App app = new App(
+            GeminiServer server = new GeminiServer(
                 Settings.Global.Host,
                 Settings.Global.Port,
                 CertificateUtils.LoadCertificate(Settings.Global.CertificateFile, Settings.Global.KeyFile),
-                Settings.Global.PublicRoot,
-                Settings.Global.AccessLogPath
-            );
-            app.Logger = loggerFactory.CreateLogger<App>();
-            app.IsMaskingRemoteIPs = false;
+                Settings.Global.PublicRoot)
+            {
+                Logger = loggerFactory.CreateLogger<AbstractGeminiApp>(),
+                IsMaskingRemoteIPs = false
+            };
 
             //text search
-            app.OnRequest("/search", SearchController.Search);
-            app.OnRequest("/lucky", SearchController.LuckySearch);
+            server.OnRequest("/search", SearchController.Search);
+            server.OnRequest("/lucky", SearchController.LuckySearch);
 
             //image search
-            app.OnRequest("/image-search", ImageSearchController.Search);
+            server.OnRequest("/image-search", ImageSearchController.Search);
 
-            app.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
-            app.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
-            app.OnRequest("/delorean", SearchController.DeloreanSearch);
-            app.OnRequest("/cached", SearchController.Cached);
-            app.OnRequest("/page-info", SearchController.PageInfo);
-            app.Run();
+            server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
+            server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
+            server.OnRequest("/delorean", SearchController.DeloreanSearch);
+            server.OnRequest("/cached", SearchController.Cached);
+            server.OnRequest("/page-info", SearchController.PageInfo);
+            server.Run();
         }
 
         static void LoadSettings(string[] args)

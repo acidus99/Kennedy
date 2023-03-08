@@ -12,7 +12,7 @@ namespace Kennedy.Server.Views
     internal class KnownHostsView :AbstractView
     {
 
-        public KnownHostsView(Request request, Response response, App app)
+        public KnownHostsView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         public override void Render()

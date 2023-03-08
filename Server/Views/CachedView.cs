@@ -12,7 +12,7 @@ namespace Kennedy.Server.Views
     internal class CachedView :AbstractView
     {
 
-        public CachedView(Request request, Response response, App app)
+        public CachedView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         public override void Render()

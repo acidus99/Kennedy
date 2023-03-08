@@ -10,7 +10,6 @@ namespace Kennedy.Server
         public string CertificateFile { get; set; }
         public string KeyFile { get; set; }
         public string PublicRoot { get; set; }
-        public string AccessLogPath { get; set; }
         public string DataRoot { get; set; }
     }
 }

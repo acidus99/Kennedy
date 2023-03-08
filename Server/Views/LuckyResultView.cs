@@ -9,8 +9,7 @@ namespace Kennedy.Server.Views
 {
     internal class LuckyResultView :AbstractView
     {
-
-        public LuckyResultView(Request request, Response response, App app)
+        public LuckyResultView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         public override void Render()

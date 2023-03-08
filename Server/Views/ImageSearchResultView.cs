@@ -14,7 +14,7 @@ namespace Kennedy.Server.Views
     {
         const int resultsInPage = 15;
 
-        public ImageSearchResultsView(Request request, Response response, App app)
+        public ImageSearchResultsView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         List<ImageSearchResult> SearchResults = null;
