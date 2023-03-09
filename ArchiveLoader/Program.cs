@@ -53,8 +53,6 @@ namespace ArchiveLoader
 
         }
 
-        static void LoadCrawl(string crawl)
-
         static void ArchiveEntry(SimpleDocEntry entry, byte [] data)
         {
             ArchiveDbContext db = new ArchiveDbContext(ArchiveLocation);
