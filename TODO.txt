@@ -1,0 +1,14 @@
+﻿
+- Charsets
+    - Not using them when parsing/indexing content
+    - Incorrectly outputing all content as UTF-8 in archive view
+
+- Archive view
+    - Setting a top header on all text content, but header has Gemtext markup
+        - Prehaps wrap text in preformatted gates?
+    - Not rewriting hyperlinks in Archive View
+    - Better handling of non-text content
+        - always show a text landing page
+        - Include text about when it was captured
+        - have link to the file
+        - have link to other verions
