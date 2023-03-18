@@ -18,9 +18,9 @@
     <Folder Include="Indexers\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.14" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.14" />
-    <PackageReference Include="EFCore.BulkExtensions" Version="5.4.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.4" />
+    <PackageReference Include="EFCore.BulkExtensions" Version="7.0.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />

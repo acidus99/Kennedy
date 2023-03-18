@@ -22,6 +22,8 @@ namespace Kennedy.Archive.Db
 
 		public long DataHash { get; set; }
 
+		public string Meta { get; set; }
+
 		public ContentType ContentType { get; set; }
 
 		public DateTime Captured { get; set; }

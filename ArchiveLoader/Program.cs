@@ -33,9 +33,9 @@ namespace ArchiveLoader
             Console.WriteLine("Kennedy Archive Loader!");
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             int count = 0;
-            var docs = db.Documents.Where(x => (x.Status == 20 && x.BodySaved)).ToArray();
+            var docs = db.Documents.Where(x => (x.Status == 20 && x.BodySaved)).Take(3000).ToArray();
             watch.Start();
-            Parallel.ForEach(docs, new ParallelOptions { MaxDegreeOfParallelism = 25 }, doc =>
+            Parallel.ForEach(docs, new ParallelOptions { MaxDegreeOfParallelism = 1 }, doc =>
             {
                 count++;
                 if (count % 100 == 0)
@@ -62,7 +62,8 @@ namespace ArchiveLoader
             {
                 urlEntry = new UrlEntry(new GeminiUrl(entry.Url));
                 db.Urls.Add(urlEntry);
-                db.SaveChanges();
+                //need to save for foreign key constraint
+                //db.SaveChanges();
             }
 
             //OK, create a new snapshot
@@ -73,8 +74,10 @@ namespace ArchiveLoader
                 StatusCode = entry.Status ?? 20,
                 Size = data.LongLength,
                 ContentType = GetContentType(entry),
+                Meta = entry.Meta,
                 DataHash = GetDataHash(data),
                 UrlEntry = urlEntry,
+                UrlId = urlEntry.UrlId
             };
 
             //write it into the Pack
@@ -83,9 +86,8 @@ namespace ArchiveLoader
 
             snapshot.Offset = packFile.Append(PackRecordFactory.MakeOptimalRecord(MakePayload(entry, data)));
 
-            urlEntry.Snapshots.Add(snapshot);
-
-            db.Urls.Update(urlEntry);
+            //urlEntry.Snapshots.Add(snapshot);
+            //db.Urls.Update(urlEntry);
             db.Snapshots.Add(snapshot);
 
             db.SaveChanges();

@@ -24,9 +24,9 @@ namespace Kennedy.Archive.Db
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<UrlEntry>()
-                .HasMany(u => u.Snapshots)
-                .WithOne(s => s.UrlEntry);
+            //modelBuilder.Entity<UrlEntry>()
+            //    .HasMany(u => u.Snapshots)
+            //    .WithOne(s => s.UrlEntry);
 
             base.OnModelCreating(modelBuilder);
         }

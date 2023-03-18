@@ -25,7 +25,7 @@ namespace Kennedy.Archive.Db
 
 		public string PackName { get; set; }
 
-		public List<SnapshotEntry> Snapshots;
+		public ICollection<SnapshotEntry> Snapshots;
 
 		public UrlEntry()
         {
