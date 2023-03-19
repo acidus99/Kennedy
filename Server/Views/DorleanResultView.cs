@@ -62,13 +62,23 @@ namespace Kennedy.Server.Views
 
                 var snapshots = urlEntry.Snapshots.ToArray();
 
-                for(int i=0; i < snapshots.Length; i++)
-                {
+                var first = snapshots.First();
+                var last = snapshots.Last();
 
+                Response.WriteLine($"Saved {snapshots.Length} times between {first.Captured.ToString("MMMM d yyyy")} and {last.Captured.ToString("MMMM d yyyy")}");
+                Response.WriteLine($"Unique Saves: {snapshots.GroupBy(x=>x.DataHash).Count()}");
+
+                Response.WriteLine("## Saved copies");
+                for (int i=0; i < snapshots.Length; i++)
+                {
                     var snapshot = snapshots[i];
 
-                    var hash = string.Format("{0:X}", snapshot.DataHash);
-                    Response.WriteLine($"=> /cached-full?sid={snapshot.Id} {snapshot.Captured} {snapshot.Meta} {FormatSize(snapshot.Size)} {hash}");
+                    var contentLabel = "🆕 ";
+                    if (i > 0 && snapshots[i - 1].DataHash == snapshot.DataHash)
+                    {
+                        contentLabel = "";
+                    }
+                    Response.WriteLine($"=> /cached-full?sid={snapshot.Id} {contentLabel}{snapshot.Captured} - {FormatSize(snapshot.Size)} Mime: \"{snapshot.Meta}\"");
                 }
             }
             catch (Exception)
