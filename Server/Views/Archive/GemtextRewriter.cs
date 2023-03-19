@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Gemini.Net;
 using System.Web;
 using Kennedy.Data;
@@ -8,14 +9,13 @@ using Kennedy.Archive.Db;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Kennedy.Server
+namespace Kennedy.Server.Views.Archive
 {
 	/// <summary>
 	/// Rewrites the links in a Gemtext file
 	/// </summary>
 	public class GemtextRewriter
 	{
-
         static readonly Regex linkLine = new Regex(@"^=>\s*([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
         public string Rewrite(Snapshot snapshot, string bodyText)
@@ -60,16 +60,34 @@ namespace Kennedy.Server
             {
                 return line;
             }
-            //rewrite it
+
             var linkText = (match.Groups.Count > 2) ? match.Groups[2].Value : "";
-            return $"=> {MakeCachedLink(geminiUrl, snapshot.Captured)} {linkText}";
+            //try and be smart. Does it look like an image link? then link to the raw view
+            if (HasImageExtension(geminiUrl))
+            {
+                return $"=> {RoutePaths.ViewCached(geminiUrl, snapshot.Captured, true)} {linkText}";
+            }
+            else
+            {
+                return $"=> {RoutePaths.ViewCached(geminiUrl, snapshot.Captured)} {linkText}";
+            }
         }
 
-        public static string MakeCachedLink(GeminiUrl url)
-            => $"/cached?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={DateTime.Now}";
+        private bool HasImageExtension(GeminiUrl url)
+        {
+            var ext = Path.GetExtension(url.Filename);
+            switch (ext)
+            {
+                case ".jpg":
+                case ".jpeg":
+                case ".png":
+                case ".gif":
+                    return true;
 
-        public static string MakeCachedLink(GeminiUrl url, DateTime snapshotTime)
-            => $"/cached?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={snapshotTime.Ticks}";
+                default:
+                    return false;
+            }
+        }    
     }
 }
 

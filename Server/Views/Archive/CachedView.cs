@@ -45,16 +45,25 @@ namespace Kennedy.Server.Views.Archive
                 Response.WriteLine("* This URL was excluded from crawling pr archiving via robots.txt");
                 Response.WriteLine("* You found a bug in Delorean");
                 Response.WriteLine("Options:");
-                Response.WriteLine($"=> {GemtextRewriter.MakeCachedLink(new GeminiUrl(AttemptedUrl.RootUrl), AttemptedTime)} Try looking at the cached version of capsule's home page");
+                Response.WriteLine($"=> {RoutePaths.ViewCached(AttemptedUrl.RootUrl, AttemptedTime)} Try looking at the cached version of capsule's home page");
                 return;
             }
 
             SnapshotReader reader = new SnapshotReader(Settings.Global.DataRoot + "Packs/");
 
+
+            if (RawMode)
+            {
+                Response.Success(Snapshot.Meta); 
+                Response.Write(reader.ReadBytes(Snapshot));
+                return;
+            }
+
             var text = reader.ReadText(Snapshot);
             Response.Success();
             Response.WriteLine($"> This is the archive verision of {Snapshot.Url.FullUrl} as seen by the Kennedy Crawler on {Snapshot.Captured.ToString("yyyy-MM-dd")}");
             Response.WriteLine($"=> /delorean?{HttpUtility.UrlEncode(Snapshot.Url.FullUrl)} More Information in 🏎 Delorean Time Machine");
+            Response.WriteLine($"=> {RoutePaths.ViewCached(Snapshot, true)} View Raw");
             Response.WriteLine();
 
             GemtextRewriter gemtextRewriter = new GemtextRewriter();
@@ -66,8 +75,7 @@ namespace Kennedy.Server.Views.Archive
         private void ParseArgs()
         {
             var args = HttpUtility.ParseQueryString(Request.Url.RawQuery);
-
-            if (args["raw"] != null)
+            if ((args["raw"]?.ToLower() ?? "") == "true")
             {
                 RawMode = true;
             }
