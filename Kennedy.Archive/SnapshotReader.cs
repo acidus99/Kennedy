@@ -17,7 +17,6 @@ namespace Kennedy.Archive
 
 		public string ReadText(Snapshot snapshot)
 		{
-
 			var bytes = ReadBytes(snapshot);
 
 			return (bytes != null) ?
@@ -45,4 +44,3 @@ namespace Kennedy.Archive
 				record.Data;
     }
 }
-
