@@ -12,7 +12,7 @@ using RocketForce;
 using Kennedy.Archive.Db;
 using Kennedy.Archive;
 
-namespace Kennedy.Server.Views
+namespace Kennedy.Server.Views.Archive
 {
     internal class CachedView :AbstractView
     {

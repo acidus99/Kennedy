@@ -1,9 +1,9 @@
 ﻿using System;
 
-using Kennedy.Server.Views;
+using Kennedy.Server.Views.Archive;
 using RocketForce;
 
-namespace Kennedy.Server
+namespace Kennedy.Server.Controllers
 {
     public static class ArchiveController
     {
@@ -14,7 +14,7 @@ namespace Kennedy.Server
                 response.Input("Enter search query");
                 return;
             }
-            var view = new DorleanResultView(request, response, app);
+            var view = new UrlHistoryView(request, response, app);
             view.Render();
         }
 

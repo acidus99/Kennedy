@@ -9,7 +9,7 @@ using Kennedy.CrawlData.Db;
 using Kennedy.Data;
 using RocketForce;
 
-namespace Kennedy.Server.Views
+namespace Kennedy.Server.Views.Search
 {
     internal class PageInfoView :AbstractView
     {

@@ -1,9 +1,10 @@
 ﻿using System;
 
 using Kennedy.Server.Views;
+using Kennedy.Server.Views.Search;
 using RocketForce;
 
-namespace Kennedy.Server
+namespace Kennedy.Server.Controllers
 {
     public static class SearchController
     {

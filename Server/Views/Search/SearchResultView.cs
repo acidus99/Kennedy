@@ -9,7 +9,7 @@ using RocketForce;
 using System.Diagnostics;
 using Kennedy.Gemipedia;
 
-namespace Kennedy.Server.Views
+namespace Kennedy.Server.Views.Search
 {
     internal class SearchResultView :AbstractView
     {

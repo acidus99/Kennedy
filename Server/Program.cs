@@ -3,6 +3,10 @@ using System.IO;
 using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+
+
+using Kennedy.Server.Controllers;
+
 using RocketForce;
 
 namespace Kennedy.Server

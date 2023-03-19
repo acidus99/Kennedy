@@ -8,7 +8,7 @@ using Kennedy.CrawlData.Search;
 using RocketForce;
 using System.Diagnostics;
 
-namespace Kennedy.Server.Views
+namespace Kennedy.Server.Views.Search
 {
     internal class ImageSearchResultsView :AbstractView
     {

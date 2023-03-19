@@ -20,11 +20,17 @@
     <None Remove="Gemipedia\" />
     <None Remove="Cache\" />
     <None Remove="Newtonsoft.Json" />
+    <None Remove="Views\Archive\" />
+    <None Remove="Views\Search\" />
+    <None Remove="Controllers\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\" />
     <Folder Include="Gemipedia\" />
     <Folder Include="Cache\" />
+    <Folder Include="Views\Archive\" />
+    <Folder Include="Views\Search\" />
+    <Folder Include="Controllers\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.PROD.json">

@@ -5,7 +5,7 @@ using Gemini.Net;
 using Kennedy.CrawlData.Search;
 using RocketForce;
 
-namespace Kennedy.Server.Views
+namespace Kennedy.Server.Views.Search
 {
     internal class LuckyResultView :AbstractView
     {

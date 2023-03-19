@@ -9,12 +9,16 @@ using Kennedy.CrawlData;
 using Microsoft.EntityFrameworkCore;
 using RocketForce;
 
-namespace Kennedy.Server.Views
+namespace Kennedy.Server.Views.Archive
 {
-    internal class DorleanResultView :AbstractView
+
+    /// <summary>
+    /// Shows the details about a 
+    /// </summary>
+    internal class UrlHistoryView :AbstractView
     {
 
-        public DorleanResultView(GeminiRequest request, Response response, GeminiServer app)
+        public UrlHistoryView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         public override void Render()

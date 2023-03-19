@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 using Gemini.Net;
-namespace Kennedy.Server.Views
+namespace Kennedy.Server.Views.Search
 {
     internal class SearchOptions
     {
