@@ -52,16 +52,22 @@ namespace Kennedy.Server.Views.Archive
             SnapshotReader reader = new SnapshotReader(Settings.Global.DataRoot + "Packs/");
 
 
-            if (RawMode)
+            if (RawMode || Snapshot.ContentType != Data.ContentType.Text)
             {
                 Response.Success(Snapshot.Meta); 
                 Response.Write(reader.ReadBytes(Snapshot));
                 return;
             }
 
+
             var text = reader.ReadText(Snapshot);
             Response.Success();
-            Response.WriteLine($"> This is the archive verision of {Snapshot.Url.FullUrl} as seen by the Kennedy Crawler on {Snapshot.Captured.ToString("yyyy-MM-dd")}");
+            Response.Write($"> This is the archive verision of {Snapshot.Url.FullUrl} as seen by the Kennedy Crawler on {Snapshot.Captured.ToString("yyyy-MM-dd")}. ");
+            if (Snapshot.IsGemtext)
+            {
+                Response.Write("Gemini links have been rewritten to link to archived content");
+            }
+            Response.WriteLine();
             Response.WriteLine($"=> /delorean?{HttpUtility.UrlEncode(Snapshot.Url.FullUrl)} More Information in 🏎 Delorean Time Machine");
             Response.WriteLine($"=> {RoutePaths.ViewCached(Snapshot, true)} View Raw");
             Response.WriteLine();
