@@ -62,32 +62,8 @@ namespace Kennedy.Server.Views.Archive
             }
 
             var linkText = (match.Groups.Count > 2) ? match.Groups[2].Value : "";
-            //try and be smart. Does it look like an image link? then link to the raw view
-            if (HasImageExtension(geminiUrl))
-            {
-                return $"=> {RoutePaths.ViewCached(geminiUrl, snapshot.Captured, true)} {linkText}";
-            }
-            else
-            {
-                return $"=> {RoutePaths.ViewCached(geminiUrl, snapshot.Captured)} {linkText}";
-            }
+            return $"=> {RoutePaths.ViewCached(geminiUrl, snapshot.Captured)} {linkText}";
         }
-
-        private bool HasImageExtension(GeminiUrl url)
-        {
-            var ext = Path.GetExtension(url.Filename);
-            switch (ext)
-            {
-                case ".jpg":
-                case ".jpeg":
-                case ".png":
-                case ".gif":
-                    return true;
-
-                default:
-                    return false;
-            }
-        }    
     }
 }
 
