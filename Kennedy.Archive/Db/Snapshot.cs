@@ -33,6 +33,9 @@ namespace Kennedy.Archive.Db
 
         public Url Url { get; set; }
 
+		public bool IsGemtext
+			=> (ContentType == ContentType.Text) && Meta.StartsWith("text/gemini");
+
     }
 	
 }
