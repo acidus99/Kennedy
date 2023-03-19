@@ -12,12 +12,12 @@ namespace Kennedy.Archive.Db
 	[Table("Urls")]
 	[Index(nameof(Domain))]
 	[Index(nameof(Port))]
-	public class UrlEntry
+	public class Url
 	{
 		[Key]
-		public long UrlId { get; set; }
+		public long Id { get; set; }
 
-		public string Url { get; set; }
+		public string FullUrl { get; set; }
 
 		public string Domain { get; set; }
 
@@ -25,21 +25,22 @@ namespace Kennedy.Archive.Db
 
 		public string PackName { get; set; }
 
-		public ICollection<SnapshotEntry> Snapshots;
+		public ICollection<Snapshot> Snapshots;
 
-		public UrlEntry()
+		public Url()
         {
+            Snapshots = new List<Snapshot>();
         }
 
-		public UrlEntry(GeminiUrl url)
+		public Url(GeminiUrl url)
         {
-			UrlId = unchecked((long)url.HashID);
-			Url = url.NormalizedUrl;
+            Id = unchecked((long)url.HashID);
+			FullUrl = url.NormalizedUrl;
 			Domain = url.Hostname;
 			Port = url.Port;
 
-			Snapshots = new List<SnapshotEntry>();
-			PackName = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(UrlId))).ToLower();
+			Snapshots = new List<Snapshot>();
+			PackName = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(url.HashID))).ToLower();
 		}
 	}
 }

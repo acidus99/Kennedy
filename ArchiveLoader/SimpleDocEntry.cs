@@ -2,6 +2,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using Gemini.Net;
+
 namespace ArchiveLoader
 {
     [Table("Documents")]
@@ -33,6 +35,13 @@ namespace ArchiveLoader
 
         [Required]
         public string Domain { get; set; }
+
+
+        public long TrueID()
+        {
+            GeminiUrl url = new GeminiUrl(Url);
+            return unchecked((long)url.HashID);
+        }
 
         [Required]
         public int Port { get; set; }

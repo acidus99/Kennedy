@@ -9,11 +9,11 @@ namespace Kennedy.Archive.Db
 {
 	[Table("Snapshots")]
 	[Index(nameof(DataHash))]
-	public class SnapshotEntry
+	public class Snapshot
 	{
 		[Key]
 		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-		public long SnapshotId { get; set; }
+		public long Id { get; set; }
 
 		public long Offset { get; set; }
 		public long Size { get; set; }
@@ -22,15 +22,15 @@ namespace Kennedy.Archive.Db
 
 		public long DataHash { get; set; }
 
-		public string Meta { get; set; }
-
 		public ContentType ContentType { get; set; }
 
 		public DateTime Captured { get; set; }
 
+        public string Meta { get; set; }
+
         public long UrlId { get; set; }
 
-        public UrlEntry UrlEntry { get; set; }
+        public Url Url { get; set; }
 	}
 }
 

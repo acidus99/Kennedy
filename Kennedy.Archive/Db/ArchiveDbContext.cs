@@ -6,9 +6,9 @@ namespace Kennedy.Archive.Db
 	{
         protected string DatabasePath;
 
-        public DbSet<UrlEntry> Urls { get; set; }
+        public DbSet<Url> Urls { get; set; }
 
-        public DbSet<SnapshotEntry> Snapshots { get; set; }
+        public DbSet<Snapshot> Snapshots { get; set; }
 
         public ArchiveDbContext(string databasePath)
         {
@@ -17,16 +17,18 @@ namespace Kennedy.Archive.Db
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlite($"Data Source='{DatabasePath}'");
+            options.UseSqlite($"Data Source='{DatabasePath}'")
                 //.LogTo(Console.WriteLine)
-                //.EnableSensitiveDataLogging(true);
+                //.EnableSensitiveDataLogging(true)
+                ;
+                
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //modelBuilder.Entity<UrlEntry>()
-            //    .HasMany(u => u.Snapshots)
-            //    .WithOne(s => s.UrlEntry);
+            modelBuilder.Entity<Url>()
+                .HasMany(u => u.Snapshots)
+                .WithOne(s => s.Url);
 
             base.OnModelCreating(modelBuilder);
         }

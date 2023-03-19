@@ -9,90 +9,124 @@ using Kennedy.Archive.Pack;
 using Kennedy.CrawlData;
 using Kennedy.Data;
 
+using Microsoft.EntityFrameworkCore;
 
 
 namespace ArchiveLoader
 {
     class Program
     {
-        const string ArchiveLocation = "/Users/billy/Desktop/archive.db";
-        const string ArchiveStoreRoot = "/Users/billy/Desktop/Packs/";
+        const string ArchiveLocation = "/tmp/archive.db";
+        const string ArchiveStoreRoot = "/tmp/Packs/";
 
         static void Main(string[] args)
         {
-            var crawlLocation = "/Users/billy/Desktop/ARCHIVE PROJECT/Sorted/2022-01-09/";
-
             using(ArchiveDbContext archiveDb = new ArchiveDbContext(ArchiveLocation))
             {
                 archiveDb.Database.EnsureCreated();
             }
 
+            foreach (var line in File.ReadAllLines("/Users/billy/Desktop/crawls.txt"))
+            {
+                LoadCrawlArchive(line);
+            }
+
+        }
+
+        static void LoadCrawlArchive(string crawlLocation)
+        {
             SimpleDocumentIndexDbContext db = new SimpleDocumentIndexDbContext(crawlLocation);
             DocumentStore documentStore = new DocumentStore(crawlLocation + "page-store/");
 
-            Console.WriteLine("Kennedy Archive Loader!");
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             int count = 0;
-            var docs = db.Documents.Where(x => (x.Status == 20 && x.BodySaved)).Take(3000).ToArray();
+            var docs = db.Documents.Where(x => (x.Status == 20 && x.BodySaved)).ToArray();
             watch.Start();
-            Parallel.ForEach(docs, new ParallelOptions { MaxDegreeOfParallelism = 1 }, doc =>
-            {
+            foreach (var doc in docs) {
                 count++;
                 if (count % 100 == 0)
                 {
-                    Console.WriteLine($"{count} of {docs.Length}");
+                    Console.WriteLine($"Crawl: {crawlLocation}: {count} of {docs.Length}");
                 }
                 var data = documentStore.GetDocument(doc.DocID);
                 ArchiveEntry(doc, data);
-
-            }); //close method invocation 
-
+            }
             watch.Stop();
-            int xxxx = 5;
             Console.WriteLine("total Seconds:" + watch.Elapsed.TotalSeconds);
-
         }
 
         static void ArchiveEntry(SimpleDocEntry entry, byte [] data)
         {
             ArchiveDbContext db = new ArchiveDbContext(ArchiveLocation);
-            var urlEntry = db.Urls.Where(x => x.UrlId == entry.DBDocID).FirstOrDefault();
+            var trueID = entry.TrueID();
 
-            if(urlEntry == null)
+            PackManager packManager = new PackManager(ArchiveStoreRoot);
+
+            var url = db.Urls.Where(x => x.Id == trueID).FirstOrDefault();
+            bool newUrl = false;
+            if(url == null)
             {
-                urlEntry = new UrlEntry(new GeminiUrl(entry.Url));
-                db.Urls.Add(urlEntry);
+                url = new Url(new GeminiUrl(entry.Url));
+                db.Urls.Add(url);
+                newUrl = true;
                 //need to save for foreign key constraint
-                //db.SaveChanges();
+                db.SaveChanges();
+            }
+
+            var packFile = packManager.GetPack(url.PackName);
+
+            if (newUrl)
+            {
+                packFile.Append(PackRecordFactory.MakeInfoRecord(url.FullUrl));
             }
 
             //OK, create a new snapshot
+            var dataHash = GetDataHash(data);
 
-            SnapshotEntry snapshot = new SnapshotEntry
+            var previousSnapshot = db.Snapshots
+                .Where(x => x.UrlId == url.Id &&
+                        x.DataHash == dataHash).FirstOrDefault();
+
+            bool shouldAddSnapshot = true;
+
+            var snapshot = new Snapshot
             {
                 Captured = entry.FirstSeen,
                 StatusCode = entry.Status ?? 20,
                 Size = data.LongLength,
                 ContentType = GetContentType(entry),
                 Meta = entry.Meta,
-                DataHash = GetDataHash(data),
-                UrlEntry = urlEntry,
-                UrlId = urlEntry.UrlId
+                DataHash = dataHash,
+                Url = url,
+                UrlId = url.Id
             };
 
-            //write it into the Pack
-            PackManager packManager = new PackManager(ArchiveStoreRoot);
-            var packFile = packManager.GetPack(urlEntry.PackName);
+            if (previousSnapshot == null)
+            {
+                //write it into the Pack
 
-            snapshot.Offset = packFile.Append(PackRecordFactory.MakeOptimalRecord(MakePayload(entry, data)));
+                snapshot.Offset = packFile.Append(PackRecordFactory.MakeOptimalRecord(MakePayload(entry, data)));
+            }
+            else
+            {
+                //is same as existing
+                snapshot.Offset = previousSnapshot.Offset;
 
-            //urlEntry.Snapshots.Add(snapshot);
-            //db.Urls.Update(urlEntry);
-            db.Snapshots.Add(snapshot);
+                //are the capture times the same? If so, don't save it, because its a dupe
+                if (snapshot.Captured == previousSnapshot.Captured)
+                {
+                    shouldAddSnapshot = false;
+                }
+            }
 
-            db.SaveChanges();
+            if (shouldAddSnapshot)
+            {
+                url.Snapshots.Add(snapshot);
+                db.Urls.Update(url);
+                db.Snapshots.Add(snapshot);
+                db.SaveChanges();
+            }
         }
-
 
         static ContentType GetContentType(SimpleDocEntry entry)
         {
@@ -120,12 +154,12 @@ namespace ArchiveLoader
 
         static byte [] MakePayload(SimpleDocEntry entry, byte [] body)
         {
-            string requestLine = $"{entry.Status} {entry.Meta}\r\n";
-            List<byte> buffer = new List<byte>();
-            buffer.AddRange(System.Text.Encoding.UTF8.GetBytes(requestLine));
-            buffer.AddRange(body);
-            return buffer.ToArray();
+            //string requestLine = $"{entry.Status} {entry.Meta}\r\n";
+            //List<byte> buffer = new List<byte>();
+            //buffer.AddRange(System.Text.Encoding.UTF8.GetBytes(requestLine));
+            //buffer.AddRange(body);
+            //return buffer.ToArray();
+            return body;
         }
-
     }
 }

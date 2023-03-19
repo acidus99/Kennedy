@@ -23,8 +23,8 @@
                 throw new ArgumentException($"PackID is too short! Expected > 4, got {packName.Length}");
             }
 
-            var path = ArchiveRoot + Path.DirectorySeparatorChar + packName[0] + Path.DirectorySeparatorChar +
-                packName[1] + Path.DirectorySeparatorChar;
+            var path = ArchiveRoot + Path.DirectorySeparatorChar + packName[0] + packName[1] + Path.DirectorySeparatorChar +
+                packName[2] + packName[3]+ Path.DirectorySeparatorChar;
 
             //Ensure the file path exists
             Directory.CreateDirectory(path);
