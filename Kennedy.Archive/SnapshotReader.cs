@@ -18,20 +18,26 @@ namespace Kennedy.Archive
 		public string ReadText(Snapshot snapshot)
 		{
 
-			var record = GetRecord(snapshot);
+			var bytes = ReadBytes(snapshot);
 
-			return (record != null) ?
-				Encoding.UTF8.GetString(ReadPackData(record)) :
-				"";
+			return (bytes != null) ?
+				Encoding.UTF8.GetString(bytes) :
+				null;
         }
 
 
-		private PackRecord GetRecord(Snapshot snapshot)
+        public byte[] ReadBytes(Snapshot snapshot)
+        {
+            var record = GetRecord(snapshot);
+            return (record != null) ? ReadPackData(record) :
+                null;
+        }
+
+        private PackRecord GetRecord(Snapshot snapshot)
 		{
             var pack = manager.GetPack(snapshot.Url.PackName);
             return pack.Read(snapshot.Offset);
         }
-
 
 		private byte[] ReadPackData(PackRecord record)
 			=> (record.Type == "DATZ") ?
