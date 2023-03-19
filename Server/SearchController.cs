@@ -46,23 +46,5 @@ namespace Kennedy.Server
             var view = new SecurityTxtView(request, response, app);
             view.Render();
         }
-
-        public static void Cached(GeminiRequest request, Response response, GeminiServer app)
-        {
-            var view = new CachedView(request, response, app);
-            view.Render();
-        }
-
-        public static void DeloreanSearch(GeminiRequest request, Response response, GeminiServer app)
-        {
-            if (!request.Url.HasQuery)
-            {
-                response.Input("Enter Gemini Url");
-                return;
-            }
-            var view = new DorleanResultView(request, response, app);
-            view.Render();
-        }
-
     }
 }

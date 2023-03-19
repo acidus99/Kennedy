@@ -30,6 +30,9 @@ namespace Kennedy.Server.Views
             => (favicon.Length > 0) ? $"{favicon} {domain}" : $"{domain}";
 
         protected string FormatSize(int bodySize)
+            => FormatSize(Convert.ToInt64(bodySize));
+
+        protected string FormatSize(long bodySize)
         {
             if (bodySize < 1024)
             {

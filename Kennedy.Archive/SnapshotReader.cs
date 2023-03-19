@@ -8,11 +8,11 @@ namespace Kennedy.Archive
 {
 	public class SnapshotReader
 	{
-		PackManager manager = new PackManager("/Users/billy/Desktop/Packs");
+		PackManager manager;
 
-        public SnapshotReader()
+        public SnapshotReader(string packsLocation)
 		{
-
+			manager = new PackManager(packsLocation);
 		}
 
 		public string ReadText(Snapshot snapshot)

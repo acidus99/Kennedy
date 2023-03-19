@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Linq;
-
+using System.Web;
 using Gemini.Net;
+
+using Kennedy.Archive.Db;
+using Kennedy.Archive.Pack;
 using Kennedy.CrawlData;
+using Microsoft.EntityFrameworkCore;
 using RocketForce;
 
 namespace Kennedy.Server.Views
@@ -33,28 +37,43 @@ namespace Kennedy.Server.Views
 
             try
             {
-
                 var dbDocID = DocumentIndex.toLong(url.HashID);
-                var db = new DocumentIndex(Settings.Global.DataRoot).GetContext();
 
-                var entry = db.DocEntries.Where(x => x.DBDocID == dbDocID).FirstOrDefault();
+                ArchiveDbContext db = new ArchiveDbContext(Settings.Global.DataRoot + "archive.db");
 
-                if (entry != null && entry.BodySaved)
+                var urlEntry = db.Urls.Where(x => x.Id == dbDocID).Include(x => x.Snapshots).FirstOrDefault();
+
+                if (urlEntry == null)
                 {
-                    Response.Redirect($"/cached?id={entry.DBDocID}");
+                    Response.Success();
+                    Response.WriteLine($"# 🏎 DeLorean Time Machine");
+                    Response.WriteLine("No snapshots for that URL");
+                    Response.WriteLine();
+                    Response.WriteLine("=> /delorean Search Delorean for cached Content");
+                    Response.WriteLine("=> /search 🔭 New Kennedy Search");
                     return;
+                }
+
+                Response.Success();
+                Response.WriteLine($"# 🏎 DeLorean Time Machine");
+                Response.WriteLine();
+                Response.WriteLine("Found this URL in time machine!");
+                Response.WriteLine($"URL: {urlEntry.GeminiUrl.NormalizedUrl}");
+
+                var snapshots = urlEntry.Snapshots.ToArray();
+
+                for(int i=0; i < snapshots.Length; i++)
+                {
+
+                    var snapshot = snapshots[i];
+
+                    var hash = string.Format("{0:X}", snapshot.DataHash);
+                    Response.WriteLine($"=> /cached-full?sid={snapshot.Id} {snapshot.Captured} {snapshot.Meta} {FormatSize(snapshot.Size)} {hash}");
                 }
             }
             catch (Exception)
             {
             }
-
-            Response.Success();
-            Response.WriteLine($"# 🏎 DeLorean Time Machine");
-            Response.WriteLine();
-            Response.WriteLine("There are no cached versions of that URL.");
-            Response.WriteLine("=> /delorean View Cached Content");
-            Response.WriteLine("=> /search 🔭 New Search");
         }
 
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.IO;
+using System.Web;
 
 using Gemini.Net;
 using Kennedy.CrawlData;
@@ -45,11 +46,7 @@ namespace Kennedy.Server.Views
 
             Response.WriteLine($"# Page Info: {url.Path}");
             Response.WriteLine($"=> {entry.Url} Visit Current Url");
-
-            if (entry.BodySaved)
-            {
-                Response.WriteLine($"=> /cached?id={dbDocID} View Cached copy (saved {entry.LastSuccessfulVisit?.ToString("yyyy-MM-dd")})");
-            }
+            Response.WriteLine($"=> /delorean?{HttpUtility.UrlEncode(url.NormalizedUrl)} View archived copies with 🏎 DeLorean Time Machine");
 
             Response.WriteLine();
             Response.WriteLine($"## Metadata");

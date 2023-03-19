@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 using Kennedy.Data;
+using Gemini.Net;
 
 namespace Kennedy.Archive.Db
 {
@@ -31,6 +32,23 @@ namespace Kennedy.Archive.Db
         public long UrlId { get; set; }
 
         public Url Url { get; set; }
-	}
+
+		[NotMapped]
+		public GeminiUrl GeminiUrl
+		{
+			get
+			{
+				if (geminiUrl == null)
+				{
+					geminiUrl = new GeminiUrl(Url.FullUrl);
+				}
+				return geminiUrl;
+			}
+		}
+
+        private GeminiUrl? geminiUrl = null;
+
+    }
+	
 }
 

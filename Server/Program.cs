@@ -41,10 +41,11 @@ namespace Kennedy.Server
             //image search
             server.OnRequest("/image-search", ImageSearchController.Search);
 
+            server.OnRequest("/delorean", ArchiveController.Search);
+            server.OnRequest("/cached", ArchiveController.Cached);
+
             server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
             server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
-            server.OnRequest("/delorean", SearchController.DeloreanSearch);
-            server.OnRequest("/cached", SearchController.Cached);
             server.OnRequest("/page-info", SearchController.PageInfo);
             server.Run();
         }

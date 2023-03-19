@@ -27,7 +27,22 @@ namespace Kennedy.Archive.Db
 
 		public ICollection<Snapshot> Snapshots;
 
-		public Url()
+        [NotMapped]
+        public GeminiUrl GeminiUrl
+        {
+            get
+            {
+                if (geminiUrl == null)
+                {
+                    geminiUrl = new GeminiUrl(FullUrl);
+                }
+                return geminiUrl;
+            }
+        }
+
+        private GeminiUrl? geminiUrl = null;
+
+        public Url()
         {
             Snapshots = new List<Snapshot>();
         }
@@ -36,6 +51,7 @@ namespace Kennedy.Archive.Db
         {
             Id = unchecked((long)url.HashID);
 			FullUrl = url.NormalizedUrl;
+			geminiUrl = url;
 			Domain = url.Hostname;
 			Port = url.Port;
 
