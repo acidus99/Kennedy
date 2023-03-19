@@ -33,21 +33,6 @@ namespace Kennedy.Archive.Db
 
         public Url Url { get; set; }
 
-		[NotMapped]
-		public GeminiUrl GeminiUrl
-		{
-			get
-			{
-				if (geminiUrl == null)
-				{
-					geminiUrl = new GeminiUrl(Url.FullUrl);
-				}
-				return geminiUrl;
-			}
-		}
-
-        private GeminiUrl? geminiUrl = null;
-
     }
 	
 }
