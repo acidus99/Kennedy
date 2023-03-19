@@ -7,7 +7,7 @@ namespace Kennedy.Server.Controllers
 {
     public static class ArchiveController
     {
-        public static void ViewUrl(GeminiRequest request, Response response, GeminiServer app)
+        public static void UrlHistory(GeminiRequest request, Response response, GeminiServer app)
         {
             if(!request.Url.HasQuery)
             {

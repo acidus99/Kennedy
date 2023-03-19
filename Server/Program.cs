@@ -45,8 +45,9 @@ namespace Kennedy.Server
             //image search
             server.OnRequest("/image-search", ImageSearchController.Search);
 
-            server.OnRequest(RoutePaths.ViewUrlHistoryRoute, ArchiveController.ViewUrl);
+            server.OnRequest(RoutePaths.ViewUrlHistoryRoute, ArchiveController.UrlHistory);
             server.OnRequest(RoutePaths.ViewCachedRoute, ArchiveController.Cached);
+            server.OnRequest(RoutePaths.SearchArchive, ArchiveController.Search);
 
             server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
             server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);

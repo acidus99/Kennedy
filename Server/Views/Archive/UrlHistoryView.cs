@@ -18,20 +18,17 @@ namespace Kennedy.Server.Views.Archive
     internal class UrlHistoryView :AbstractView
     {
 
+        GeminiUrl? AttemptedUrl;
+
         public UrlHistoryView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         public override void Render()
         {
-            string query = SanitizedQuery;
-            GeminiUrl url = null;
-            try
-            {
-                url = new GeminiUrl(query);
+            ParseArgs();
 
-            } catch(Exception)
-            {
-                Response.Success();
+            if(AttemptedUrl == null)
+            {                Response.Success();
                 Response.WriteLine($"# 🏎 DeLorean Time Machine");
                 Response.WriteLine();
                 Response.WriteLine("Invalid URL. Please enter a fully qualified, valid, Gemini URL.");
@@ -41,12 +38,12 @@ namespace Kennedy.Server.Views.Archive
 
             try
             {
-                var dbDocID = DocumentIndex.toLong(url.HashID);
+                long urlID = AttemptedUrl.ProperID;
 
                 ArchiveDbContext db = new ArchiveDbContext(Settings.Global.DataRoot + "archive.db");
 
                 var urlEntry = db.Urls
-                    .Where(x => x.Id == dbDocID)
+                    .Where(x => x.Id == urlID)
                     .Include(x => x.Snapshots).
                     FirstOrDefault();
 
@@ -85,7 +82,7 @@ namespace Kennedy.Server.Views.Archive
                     {
                         contentLabel = "";
                     }
-                    Response.WriteLine($"=> /cached-full?sid={snapshot.Id} {contentLabel}{snapshot.Captured}. {FormatSize(snapshot.Size)}");
+                    Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot)} {contentLabel}{snapshot.Captured}. {FormatSize(snapshot.Size)}");
                 }
             }
             catch (Exception)
@@ -93,5 +90,12 @@ namespace Kennedy.Server.Views.Archive
             }
         }
 
+
+        private void ParseArgs()
+        {
+            var args = HttpUtility.ParseQueryString(Request.Url.RawQuery);
+            AttemptedUrl = GeminiUrl.MakeUrl(args["url"]);
+
+        }
     }
 }
