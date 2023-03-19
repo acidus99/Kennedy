@@ -65,7 +65,7 @@ namespace Kennedy.Server.Views.Archive
                 Response.WriteLine($"# 🏎 DeLorean Time Machine");
                 Response.WriteLine();
                 Response.WriteLine("Found this URL in time machine!");
-                Response.WriteLine($"URL: {urlEntry.GeminiUrl.NormalizedUrl}");
+                Response.WriteLine($"=> {urlEntry.GeminiUrl.NormalizedUrl} {urlEntry.GeminiUrl.NormalizedUrl}");
 
                 var snapshots = urlEntry.Snapshots.OrderBy(x => x.Captured).ToArray();
 
