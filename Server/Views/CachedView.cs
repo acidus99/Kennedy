@@ -35,7 +35,7 @@ namespace Kennedy.Server.Views
             if (Snapshot == null)
             {
                 Response.Success();
-                Response.WriteLine("Sorry, Delorean couldn't find a snapshot of that URL in its Archive.");
+                Response.WriteLine("Sorry, Delorean Time Machine couldn't find a snapshot of that URL in its Archive.");
                 if (AttemptedUrl != null)
                 {
                     Response.WriteLine("> " + AttemptedUrl);
@@ -54,7 +54,7 @@ namespace Kennedy.Server.Views
             var text = reader.ReadText(Snapshot);
 
             Response.WriteLine($"> This is the archive verision of {Snapshot.Url.FullUrl} as seen by the Kennedy Crawler on {Snapshot.Captured.ToString("yyyy-MM-dd")}");
-            Response.WriteLine($"=> /delorean?{HttpUtility.UrlEncode(Snapshot.Url.FullUrl)} More Information");
+            Response.WriteLine($"=> /delorean?{HttpUtility.UrlEncode(Snapshot.Url.FullUrl)} More Information in Delorean Time Machine");
             Response.WriteLine();
 
             GemtextRewriter gemtextRewriter = new GemtextRewriter();
