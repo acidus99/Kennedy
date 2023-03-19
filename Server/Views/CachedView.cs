@@ -52,9 +52,9 @@ namespace Kennedy.Server.Views
             SnapshotReader reader = new SnapshotReader(Settings.Global.DataRoot + "Packs/");
 
             var text = reader.ReadText(Snapshot);
-
+            Response.Success();
             Response.WriteLine($"> This is the archive verision of {Snapshot.Url.FullUrl} as seen by the Kennedy Crawler on {Snapshot.Captured.ToString("yyyy-MM-dd")}");
-            Response.WriteLine($"=> /delorean?{HttpUtility.UrlEncode(Snapshot.Url.FullUrl)} More Information in Delorean Time Machine");
+            Response.WriteLine($"=> /delorean?{HttpUtility.UrlEncode(Snapshot.Url.FullUrl)} More Information in 🏎 Delorean Time Machine");
             Response.WriteLine();
 
             GemtextRewriter gemtextRewriter = new GemtextRewriter();
