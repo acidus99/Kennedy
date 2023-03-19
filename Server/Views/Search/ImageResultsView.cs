@@ -10,11 +10,11 @@ using System.Diagnostics;
 
 namespace Kennedy.Server.Views.Search
 {
-    internal class ImageSearchResultsView :AbstractView
+    internal class ImageResultsView :AbstractView
     {
         const int resultsInPage = 15;
 
-        public ImageSearchResultsView(GeminiRequest request, Response response, GeminiServer app)
+        public ImageResultsView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         List<ImageSearchResult> SearchResults = null;

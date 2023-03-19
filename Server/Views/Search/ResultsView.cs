@@ -11,11 +11,11 @@ using Kennedy.Gemipedia;
 
 namespace Kennedy.Server.Views.Search
 {
-    internal class SearchResultView :AbstractView
+    internal class ResultsView :AbstractView
     {
         const int resultsInPage = 15;
 
-        public SearchResultView(GeminiRequest request, Response response, GeminiServer app)
+        public ResultsView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         ArticleSummary TopGemipediaHit = null;

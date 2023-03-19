@@ -15,7 +15,7 @@ namespace Kennedy.Server.Controllers
                 response.Input("Enter search query");
                 return;
             }
-            var view = new SearchResultView(request, response, app);
+            var view = new ResultsView(request, response, app);
             view.Render();
         }
 
@@ -26,7 +26,7 @@ namespace Kennedy.Server.Controllers
                 response.Input("Enter search query. You will be redirected to the first result.");
                 return;
             }
-            var view = new LuckyResultView(request, response, app);
+            var view = new LuckyResultsView(request, response, app);
             view.Render();
         }
 

@@ -14,7 +14,7 @@ namespace Kennedy.Server.Controllers
                 response.Input("Enter image search query");
                 return;
             }
-            var view = new ImageSearchResultsView(request, response, app);
+            var view = new ImageResultsView(request, response, app);
             view.Render();
         }
     }

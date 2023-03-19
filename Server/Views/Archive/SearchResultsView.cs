@@ -15,10 +15,10 @@ namespace Kennedy.Server.Views.Archive
     /// <summary>
     /// Shows the details about a 
     /// </summary>
-    internal class UrlHistoryView :AbstractView
+    internal class SearchResultsView :AbstractView
     {
 
-        public UrlHistoryView(GeminiRequest request, Response response, GeminiServer app)
+        public SearchResultsView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         public override void Render()
@@ -56,7 +56,7 @@ namespace Kennedy.Server.Views.Archive
                     Response.WriteLine($"# 🏎 DeLorean Time Machine");
                     Response.WriteLine("No snapshots for that URL");
                     Response.WriteLine();
-                    Response.WriteLine($"=> {RoutePaths.ViewUrlHistoryRoute} Search Time Machine for cached Content");
+                    Response.WriteLine("=> /delorean Search Delorean for cached Content");
                     Response.WriteLine("=> /search 🔭 New Kennedy Search");
                     return;
                 }
@@ -64,7 +64,7 @@ namespace Kennedy.Server.Views.Archive
                 Response.Success();
                 Response.WriteLine($"# 🏎 DeLorean Time Machine");
                 Response.WriteLine();
-                Response.WriteLine("Found this URL in Time Machine!");
+                Response.WriteLine("Found this URL in time machine!");
                 Response.WriteLine($"=> {urlEntry.GeminiUrl.NormalizedUrl} {urlEntry.GeminiUrl.NormalizedUrl}");
 
                 var snapshots = urlEntry.Snapshots.OrderBy(x => x.Captured).ToArray();

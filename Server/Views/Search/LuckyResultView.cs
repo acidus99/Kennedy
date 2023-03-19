@@ -7,9 +7,9 @@ using RocketForce;
 
 namespace Kennedy.Server.Views.Search
 {
-    internal class LuckyResultView :AbstractView
+    internal class LuckyResultsView :AbstractView
     {
-        public LuckyResultView(GeminiRequest request, Response response, GeminiServer app)
+        public LuckyResultsView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         public override void Render()

@@ -10,7 +10,9 @@ namespace Kennedy.Server
 	public static class RoutePaths
 	{
 
-        public const string ViewCachedRoute = "/cached";
+        public const string ViewCachedRoute = "/archive/cached";
+
+        public const string ViewUrlHistoryRoute = "/archive/history";
 
         public static string ViewCached(GeminiUrl url)
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={DateTime.Now}";
@@ -23,6 +25,9 @@ namespace Kennedy.Server
 
         public static string ViewCached(GeminiUrl url, DateTime snapshotTime, bool useRaw = false)
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={snapshotTime.Ticks}&raw={useRaw}";
+
+        public static string ViewUrlHistory(GeminiUrl url)
+            => $"{ViewUrlHistoryRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}";
 
     }
 }

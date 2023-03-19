@@ -46,7 +46,7 @@ namespace Kennedy.Server.Views.Search
 
             Response.WriteLine($"# Page Info: {url.Path}");
             Response.WriteLine($"=> {entry.Url} Visit Current Url");
-            Response.WriteLine($"=> /delorean?{HttpUtility.UrlEncode(url.NormalizedUrl)} View archived copies with 🏎 DeLorean Time Machine");
+            Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(url)} View archived copies with 🏎 DeLorean Time Machine");
 
             Response.WriteLine();
             Response.WriteLine($"## Metadata");

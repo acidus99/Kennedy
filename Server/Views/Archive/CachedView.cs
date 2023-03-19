@@ -35,7 +35,7 @@ namespace Kennedy.Server.Views.Archive
             if (Snapshot == null)
             {
                 Response.Success();
-                Response.WriteLine("Sorry, Delorean Time Machine couldn't find a snapshot of that URL in its Archive.");
+                Response.WriteLine("Sorry, 🏎 Delorean Time Machine couldn't find a snapshot of that URL in its Archive.");
                 if (AttemptedUrl != null)
                 {
                     Response.WriteLine("> " + AttemptedUrl);
@@ -43,7 +43,7 @@ namespace Kennedy.Server.Views.Archive
                 Response.WriteLine("Possible reaons:");
                 Response.WriteLine("* Link to this URL was a typo in the original source");
                 Response.WriteLine("* This URL was excluded from crawling pr archiving via robots.txt");
-                Response.WriteLine("* You found a bug in Delorean");
+                Response.WriteLine("* You found a bug in Time Machine! Beware world ending paradoxes!");
                 Response.WriteLine("Options:");
                 Response.WriteLine($"=> {RoutePaths.ViewCached(AttemptedUrl.RootUrl, AttemptedTime)} Try looking at the cached version of capsule's home page");
                 return;
@@ -66,16 +66,17 @@ namespace Kennedy.Server.Views.Archive
             if (Snapshot.IsGemtext)
             {
                 Response.Write("Gemini links have been rewritten to link to archived content");
+
+                GemtextRewriter gemtextRewriter = new GemtextRewriter();
+                text = gemtextRewriter.Rewrite(Snapshot, text);
+
             }
             Response.WriteLine();
-            Response.WriteLine($"=> /delorean?{HttpUtility.UrlEncode(Snapshot.Url.FullUrl)} More Information in 🏎 Delorean Time Machine");
+            Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(Snapshot.Url.GeminiUrl)} More Information in 🏎 Delorean Time Machine");
             Response.WriteLine($"=> {RoutePaths.ViewCached(Snapshot, true)} View Raw");
             Response.WriteLine();
 
-            GemtextRewriter gemtextRewriter = new GemtextRewriter();
-            var newText = gemtextRewriter.Rewrite(Snapshot, text);
-
-            Response.Write(newText);                
+            Response.Write(text);
         }
 
         private void ParseArgs()
