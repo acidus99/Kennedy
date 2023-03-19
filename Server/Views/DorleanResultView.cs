@@ -41,7 +41,10 @@ namespace Kennedy.Server.Views
 
                 ArchiveDbContext db = new ArchiveDbContext(Settings.Global.DataRoot + "archive.db");
 
-                var urlEntry = db.Urls.Where(x => x.Id == dbDocID).Include(x => x.Snapshots).FirstOrDefault();
+                var urlEntry = db.Urls
+                    .Where(x => x.Id == dbDocID)
+                    .Include(x => x.Snapshots).
+                    FirstOrDefault();
 
                 if (urlEntry == null)
                 {
@@ -60,7 +63,7 @@ namespace Kennedy.Server.Views
                 Response.WriteLine("Found this URL in time machine!");
                 Response.WriteLine($"URL: {urlEntry.GeminiUrl.NormalizedUrl}");
 
-                var snapshots = urlEntry.Snapshots.ToArray();
+                var snapshots = urlEntry.Snapshots.OrderBy(x => x.Captured).ToArray();
 
                 var first = snapshots.First();
                 var last = snapshots.Last();
@@ -78,7 +81,7 @@ namespace Kennedy.Server.Views
                     {
                         contentLabel = "";
                     }
-                    Response.WriteLine($"=> /cached-full?sid={snapshot.Id} {contentLabel}{snapshot.Captured} - {FormatSize(snapshot.Size)} Mime: \"{snapshot.Meta}\"");
+                    Response.WriteLine($"=> /cached-full?sid={snapshot.Id} {contentLabel}{snapshot.Captured}. {FormatSize(snapshot.Size)}");
                 }
             }
             catch (Exception)
