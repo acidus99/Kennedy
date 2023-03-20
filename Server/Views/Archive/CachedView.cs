@@ -62,7 +62,7 @@ namespace Kennedy.Server.Views.Archive
 
             var text = reader.ReadText(Snapshot);
             Response.Success();
-            Response.Write($"> This is the archive verision of {Snapshot.Url.FullUrl} as seen by the Kennedy Crawler on {Snapshot.Captured.ToString("yyyy-MM-dd")}. ");
+            Response.Write($"> This an archived version of {Snapshot.Url.FullUrl} as seen by the Kennedy Crawler on {Snapshot.Captured.ToString("yyyy-MM-dd")}. ");
             if (Snapshot.IsGemtext)
             {
                 Response.Write("Gemini links have been rewritten to link to archived content");
@@ -98,10 +98,7 @@ namespace Kennedy.Server.Views.Archive
 
             if (AttemptedUrl!= null)
             {
-                if (!DateTime.TryParse(args["t"], out AttemptedTime))
-                {
-                    AttemptedTime = DateTime.Now;
-                }
+                AttemptedTime = new DateTime(Convert.ToInt64(args["t"]));
                 Snapshot = GetSnapshot(AttemptedUrl.ProperID, AttemptedTime);
             }
         }
