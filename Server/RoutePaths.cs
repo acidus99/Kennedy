@@ -28,7 +28,7 @@ namespace Kennedy.Server
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={snapshotTime.Ticks}&raw={useRaw}";
 
         public static string ViewUrlHistory(GeminiUrl url)
-            => $"{ViewUrlHistoryRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}";
+            => $"{ViewUrlHistoryRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";
 
     }
 }
