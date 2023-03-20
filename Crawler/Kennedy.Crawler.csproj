@@ -23,6 +23,10 @@
     <None Remove="Domains\" />
     <None Remove="Support\" />
     <None Remove="TopicIndexes\" />
+    <None Remove="config\" />
+    <None Remove="config\block-list.txt" />
+    <None Remove="config\capsules-to-scan.txt" />
+    <None Remove="config\Core14.profile.xml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Dns\" />
@@ -31,5 +35,17 @@
     <Folder Include="Domains\" />
     <Folder Include="Support\" />
     <Folder Include="TopicIndexes\" />
+    <Folder Include="config\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="config\block-list.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="config\capsules-to-scan.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="config\Core14.profile.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

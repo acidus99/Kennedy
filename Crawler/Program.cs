@@ -36,7 +36,7 @@ namespace Kennedy.Crawler
         {
             if (args.Length == 1)
             {
-                CrawlerOptions.OutputBase = args[1];
+                CrawlerOptions.OutputBase = args[0];
             }
             
             CrawlerOptions.OutputBase = CrawlerOptions.OutputBase.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) +'/');
@@ -46,8 +46,7 @@ namespace Kennedy.Crawler
             }
             if(!Directory.Exists(CrawlerOptions.OutputBase))
             {
-                Console.WriteLine($"Output directory '{CrawlerOptions.OutputBase}' does not exist");
-                Environment.Exit(1);
+                Directory.CreateDirectory(CrawlerOptions.OutputBase);
             }
         }
     }

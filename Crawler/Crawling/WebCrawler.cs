@@ -121,20 +121,24 @@ public class WebCrawler : IWebCrawler
         int prevRequested = 0;
         do
         {
-            if (Console.KeyAvailable)
+            if (Console.In is StreamReader)
             {
-                Console.WriteLine("stop? type 'quit'");
-                Console.ReadKey(true);
-                if (Console.ReadLine() == "quit")
+                if (Console.KeyAvailable)
                 {
-                    Console.WriteLine("quiting...");
-                    UserQuit = true;
-                } else
-                {
-                    Console.WriteLine("resuming");
+                    Console.WriteLine("stop? type 'quit'");
+                    Console.ReadKey(true);
+                    if (Console.ReadLine() == "quit")
+                    {
+                        Console.WriteLine("quiting...");
+                        UserQuit = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("resuming");
+                    }
                 }
-            }
 
+            }
             Thread.Sleep(StatusIntervalScreen);
 
             int currRequested = TotalUrlsRequested.Count;

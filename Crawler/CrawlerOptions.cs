@@ -7,7 +7,7 @@
 
         public static string ErrorLog => Logs + "error.txt";
 
-        public static string ConfigDir => OutputBase + "config/";
+        public static string ConfigDir => "config/";
 
         public static string DataStore => OutputBase + "crawl-data/";
 
