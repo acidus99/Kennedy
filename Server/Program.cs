@@ -2,8 +2,6 @@
 using System.IO;
 using System.Net;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-
 
 using Kennedy.Server.Controllers;
 
@@ -16,16 +14,6 @@ namespace Kennedy.Server
         static void Main(string[] args)
         {
             LoadSettings(args);
-
-            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-                builder.AddSimpleConsole(options =>
-                {
-                    options.SingleLine = true;
-                    options.TimestampFormat = "hh:mm:ss ";
-                })
-                .SetMinimumLevel(LogLevel.Debug)
-            );
-
             Console.WriteLine($"settings '{Settings.Global.DataRoot}'");
 
             GeminiServer server = new GeminiServer(
@@ -34,7 +22,6 @@ namespace Kennedy.Server
                 CertificateUtils.LoadCertificate(Settings.Global.CertificateFile, Settings.Global.KeyFile),
                 Settings.Global.PublicRoot)
             {
-                Logger = loggerFactory.CreateLogger<AbstractGeminiApp>(),
                 IsMaskingRemoteIPs = false
             };
 
