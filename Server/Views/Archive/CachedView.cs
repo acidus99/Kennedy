@@ -94,12 +94,13 @@ namespace Kennedy.Server.Views.Archive
                 return;
             }
 
-            AttemptedUrl = GeminiUrl.MakeUrl(args["url"]);
+            //TODO use the new MakeUrl constructor
+            AttemptedUrl = new GeminiUrl(args["url"]);
 
             if (AttemptedUrl!= null)
             {
                 AttemptedTime = new DateTime(Convert.ToInt64(args["t"]));
-                Snapshot = GetSnapshot(AttemptedUrl.ProperID, AttemptedTime);
+                Snapshot = GetSnapshot(AttemptedUrl.ID, AttemptedTime);
             }
         }
 

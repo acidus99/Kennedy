@@ -25,7 +25,6 @@
     <None Remove="TopicIndexes\" />
     <None Remove="config\" />
     <None Remove="config\block-list.txt" />
-    <None Remove="config\capsules-to-scan.txt" />
     <None Remove="config\Core14.profile.xml" />
   </ItemGroup>
   <ItemGroup>
@@ -39,9 +38,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="config\block-list.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="config\capsules-to-scan.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="config\Core14.profile.xml">

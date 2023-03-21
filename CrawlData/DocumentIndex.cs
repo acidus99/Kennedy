@@ -73,12 +73,6 @@ namespace Kennedy.CrawlData
             ///nop since we are not caching any writes
         }
 
-        public static long toLong(ulong ulongValue)
-            => unchecked((long)ulongValue);
-
-        public static ulong toULong(long longValue)
-            => unchecked((ulong)longValue);
-
         /// <summary>
         /// Returns the DBDocID just for fun
         /// </summary>
@@ -90,21 +84,22 @@ namespace Kennedy.CrawlData
         /// <param name="lines"></param>
         /// <param name="language"></param>
         /// <returns></returns>
-        internal long StoreMetaData(ParsedResponse parsedResponse, bool bodySaved)
+        internal void StoreMetaData(ParsedResponse parsedResponse, bool bodySaved)
         {
-            var dbDocID = toLong(parsedResponse.RequestUrl.HashID);
             StoredDocEntry entry = null;
             using (var db = new DocIndexDbContext(StoragePath))
             {
                 bool isNew = false;
 
-                entry = db.DocEntries.Where(x => (x.DBDocID == dbDocID)).FirstOrDefault();
+                entry = db.DocEntries
+                    .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
+                    .FirstOrDefault();
                 if (entry == null)
                 {
                     isNew = true;
                     entry = new StoredDocEntry
                     {
-                        DBDocID = dbDocID,
+                        UrlID = parsedResponse.RequestUrl.ID,
                         FirstSeen = System.DateTime.Now,
 
                         ErrorCount = 0,
@@ -122,7 +117,6 @@ namespace Kennedy.CrawlData
                 }
                 db.SaveChanges();
             }
-            return dbDocID;
         }
 
         internal void StoreImageMetaData(ImageResponse imageResponse)
@@ -131,7 +125,7 @@ namespace Kennedy.CrawlData
             {
                 StoredImageEntry imageEntry = new StoredImageEntry
                 {
-                    DBDocID = toLong(imageResponse.RequestUrl.HashID),
+                    UrlID = imageResponse.RequestUrl.ID,
                     IsTransparent = imageResponse.IsTransparent,
                     Height = imageResponse.Height,
                     Width = imageResponse.Width,
@@ -203,14 +197,14 @@ namespace Kennedy.CrawlData
         {
             using (var db = new DocIndexDbContext(StoragePath))
             {
-                var dbDocID = toLong(response.RequestUrl.HashID);
                 //first delete all source IDs
-                db.LinkEntries.RemoveRange(db.LinkEntries.Where(x => (x.DBSourceDocID == dbDocID)));
+                db.LinkEntries.RemoveRange(db.LinkEntries
+                    .Where(x => (x.SourceUrlID == response.RequestUrl.ID)));
                 db.SaveChanges();
                 db.BulkInsert(response.Links.Distinct().Select(link => new StoredLinkEntry
                 {
-                    DBSourceDocID = dbDocID,
-                    DBTargetDocID = toLong(link.Url.HashID),
+                    SourceUrlID = response.RequestUrl.ID,
+                    TrgetUrlID = link.Url.ID,
                     IsExternal = link.IsExternal,
                     LinkText = link.LinkText
                 }).ToList());

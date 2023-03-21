@@ -11,7 +11,7 @@ namespace Kennedy.Crawler.Frontiers
         /// <summary>
         /// Lookup table of URLs we have seen before
         /// </summary>
-        Dictionary<ulong, bool> SeenUrls;
+        Dictionary<long, bool> SeenUrls;
 
         object locker;
         ThreadSafeCounter seenCounter = new ThreadSafeCounter();
@@ -19,7 +19,7 @@ namespace Kennedy.Crawler.Frontiers
         public SeenUrlFilter()
         {
             locker = new object();
-            SeenUrls = new Dictionary<ulong, bool>();
+            SeenUrls = new Dictionary<long, bool>();
         }
 
         /// <summary>
@@ -31,9 +31,9 @@ namespace Kennedy.Crawler.Frontiers
         {
             lock (locker)
             {
-                if (!SeenUrls.ContainsKey(url.HashID))
+                if (!SeenUrls.ContainsKey(url.ID))
                 {
-                    SeenUrls[url.HashID] = true;
+                    SeenUrls[url.ID] = true;
                     return true;
                 }
             }

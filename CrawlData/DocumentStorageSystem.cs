@@ -50,10 +50,10 @@ namespace Kennedy.CrawlData
             //store the response in our document store, allowing us to do cool things like serve cached copies
             bool isBodySaved = StoreFullResponse(parsedResponse);
 
-            long dbID = StoreMetaData(parsedResponse, isBodySaved);
+            StoreMetaData(parsedResponse, isBodySaved);
 
             //Index the text
-            IndexResponse(parsedResponse, dbID);
+            IndexResponse(parsedResponse);
         }
 
         public void StoreDomain(DomainInfo domainInfo)
@@ -80,14 +80,14 @@ namespace Kennedy.CrawlData
             }
         }
 
-        private void IndexResponse(ParsedResponse parsedResponse, long dbID)
+        private void IndexResponse(ParsedResponse parsedResponse)
         {
             if (parsedResponse is GemTextResponse)
             {
                 GemTextResponse gemText = parsedResponse as GemTextResponse;
                 if (gemText.IsIndexable)
                 {
-                    ftsEngine.AddResponseToIndex(dbID, gemText.Title, gemText.FilteredBody);
+                    ftsEngine.AddResponseToIndex(parsedResponse.RequestUrl.ID, gemText.Title, gemText.FilteredBody);
                 }
             }
         }
@@ -95,10 +95,10 @@ namespace Kennedy.CrawlData
         private bool StoreFullResponse(ParsedResponse response)
             => documentStore.StoreDocument(response);
 
-        private long StoreMetaData(ParsedResponse parsedResponse, bool isBodySaved)
+        private void StoreMetaData(ParsedResponse parsedResponse, bool isBodySaved)
         {
             //store in in the doc index (inserting or updating as appropriate)
-            long dbID = documentIndex.StoreMetaData(parsedResponse, isBodySaved);
+            documentIndex.StoreMetaData(parsedResponse, isBodySaved);
 
             //if its an image, we store extra meta data
             if (parsedResponse is ImageResponse)
@@ -107,8 +107,7 @@ namespace Kennedy.CrawlData
             }
 
             //store the links
-            documentIndex.StoreLinks(parsedResponse);
-            return dbID;
+            documentIndex.StoreLinks(parsedResponse); 
         }
     }
 }

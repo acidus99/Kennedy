@@ -26,7 +26,7 @@ namespace Kennedy.CrawlData
         {
             if (resp.IsSuccess & resp.HasBody)
             {
-                var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(resp.RequestUrl.HashID))).ToLower();
+                var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(resp.RequestUrl.ID))).ToLower();
                 if(!store.StoreObject(key, resp.BodyBytes))
                 {
                     throw new ApplicationException("Failed to store resp!");
@@ -36,9 +36,16 @@ namespace Kennedy.CrawlData
             return false;
         }
 
-        public byte [] GetDocument(ulong docID)
+        private ulong GetLegacyID(long urlID)
         {
-            var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(docID))).ToLower();
+            //hack, we used to use ulong here. continue that here so we can read old page-store directories
+            return unchecked((ulong)urlID);
+        }
+
+        public byte [] GetDocument(long urlID)
+        {
+            ulong id = GetLegacyID(urlID);
+            var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(id))).ToLower();
             return store.GetObject(key);            
         }
     }

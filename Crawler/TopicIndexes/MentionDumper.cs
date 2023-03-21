@@ -55,8 +55,10 @@ namespace Kennedy.Crawler.TopicIndexes
                 urls.Sort();
                 foreach (var url in urls)
                 {
-                    var dbID = DocumentIndex.toLong(url.HashID);
-                    var title = (Db.DocEntries.Where(x => x.DBDocID == dbID).Select(x => x.Title).FirstOrDefault());
+                    var title = (Db.DocEntries
+                        .Where(x => x.UrlID == url.ID)
+                        .Select(x => x.Title)
+                        .FirstOrDefault());
                     title = title.Length > 0 ? title : $"{url.Hostname}{url.Path}";
                     fout.WriteLine($"=> {url.NormalizedUrl} {title}");
                 }

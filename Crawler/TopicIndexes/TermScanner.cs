@@ -33,7 +33,7 @@ namespace Kennedy.Crawler.TopicIndexes
                             .Where(x=>(x.Domain != "kennedy.gemi.dev"))
                             .Select(x => new
                             {
-                                DocID = DocumentIndex.toULong(x.DBDocID),
+                                UrlID = (x.UrlID),
                                 Url = new GeminiUrl(x.Url)
                             }).ToList();
 
@@ -46,13 +46,14 @@ namespace Kennedy.Crawler.TopicIndexes
                 {
                     Console.WriteLine($"{counter}\tof\t{total}\t|\tHashtags: {Hashtags.TermCount} on {Hashtags.UrlCount}\tMentions: {Mentions.TermCount} on {Mentions.UrlCount}");
                 }
-                ScanDocument(entry.DocID, entry.Url);
+                ScanDocument(entry.UrlID, entry.Url);
             }
         }
 
-        private void ScanDocument(ulong docID, GeminiUrl url)
+        //TODO: pretty sure I can just use the ID in the gemini URL class
+        private void ScanDocument(long urlID, GeminiUrl url)
         {
-            var body = docStore.GetDocument(docID);
+            var body = docStore.GetDocument(urlID);
             var bodyText = Encoding.UTF8.GetString(body);
             ScanDocument(url, bodyText);
         }

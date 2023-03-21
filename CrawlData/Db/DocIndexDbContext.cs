@@ -24,7 +24,7 @@ namespace Kennedy.CrawlData.Db
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<StoredLinkEntry>()
-                .HasKey(l => new { l.DBSourceDocID, l.DBTargetDocID });
+                .HasKey(l => new { l.SourceUrlID, l.TrgetUrlID });
 
             base.OnModelCreating(modelBuilder);
         }

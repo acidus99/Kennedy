@@ -67,9 +67,8 @@ namespace Kennedy.Crawler.Support
 
         public bool IsValidGemPub(StoredDocEntry entry)
         {
-            entry.SetDocID();
             //try and grab from doc store
-            string bodyText = System.Text.Encoding.UTF8.GetString(docStore.GetDocument(entry.DocID));
+            string bodyText = System.Text.Encoding.UTF8.GetString(docStore.GetDocument(entry.UrlID));
             if (bodyText.Length > 0)
             {
                 var gurl = new GeminiUrl(entry.Url);

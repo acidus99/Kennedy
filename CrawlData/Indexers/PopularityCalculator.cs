@@ -39,9 +39,9 @@ namespace Kennedy.CrawlData.Indexers
                 entry.PopularityRank = 1;
                 entry.ExternalInboundLinks = 0;
 
-                if(LinksToPage.ContainsKey(entry.DBDocID))
+                if(LinksToPage.ContainsKey(entry.UrlID))
                 {
-                    foreach (var sourceID in LinksToPage[entry.DBDocID])
+                    foreach (var sourceID in LinksToPage[entry.UrlID])
                     {
                         //they get 1 more for each cross domain link
                         //var voteValue = (1 / OutboundCount[sourceID]);
@@ -66,7 +66,7 @@ namespace Kennedy.CrawlData.Indexers
         {
             var outLinks = (from links in db.LinkEntries
                             where links.IsExternal
-                      group links by links.DBSourceDocID into grp
+                      group links by links.SourceUrlID into grp
                       select new { DBDocID = grp.Key, Count = grp.Count() });
             foreach (var page in outLinks)
             {
@@ -78,11 +78,11 @@ namespace Kennedy.CrawlData.Indexers
         {
             foreach (var link in db.LinkEntries.Where(x => (x.IsExternal)))
             {
-                if(!LinksToPage.ContainsKey(link.DBTargetDocID))
+                if(!LinksToPage.ContainsKey(link.TrgetUrlID))
                 {
-                    LinksToPage[link.DBTargetDocID] = new List<long>();
+                    LinksToPage[link.TrgetUrlID] = new List<long>();
                 }
-                LinksToPage[link.DBTargetDocID].Add(link.DBSourceDocID);
+                LinksToPage[link.TrgetUrlID].Add(link.SourceUrlID);
             }
         }
     }

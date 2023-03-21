@@ -30,18 +30,17 @@ namespace Kennedy.Archive
         public void CreateMirror(string domainToClone, int portToClone)
         {
             OutputLocation = EnsureSlash(BaseOutputLocation + domainToClone);
-            // /Users/billy/tmp/DD/   
+            
             DocIndexDbContext db = new DocIndexDbContext(DocDBLocation);
             DocumentStore docStore = new DocumentStore($"{DocDBLocation}page-store/");
 
-            foreach (var entry in db.DocEntries.Where(x => x.Domain == domainToClone && x.Port == portToClone && x.Status == 20))
+            foreach (var entry in db.DocEntries
+                .Where(x => x.Domain == domainToClone && x.Port == portToClone && x.Status == 20))
             {
-
-                entry.SetDocID();
                 byte[] data = null;
                 try
                 {
-                    data = docStore.GetDocument(entry.DocID);
+                    data = docStore.GetDocument(entry.UrlID);
                 }
                 catch (Exception)
                 {

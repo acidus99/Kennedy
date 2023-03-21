@@ -49,14 +49,14 @@ namespace Kennedy.Archive.Db
 
 		public Url(GeminiUrl url)
         {
-            Id = unchecked((long)url.HashID);
+            Id = unchecked((long)url.ID);
 			FullUrl = url.NormalizedUrl;
 			geminiUrl = url;
 			Domain = url.Hostname;
 			Port = url.Port;
 
 			Snapshots = new List<Snapshot>();
-			PackName = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(url.HashID))).ToLower();
+			PackName = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(url.ID))).ToLower();
 		}
 	}
 }

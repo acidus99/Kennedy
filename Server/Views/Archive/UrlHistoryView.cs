@@ -38,12 +38,10 @@ namespace Kennedy.Server.Views.Archive
 
             try
             {
-                long urlID = AttemptedUrl.ProperID;
-
                 ArchiveDbContext db = new ArchiveDbContext(Settings.Global.DataRoot + "archive.db");
 
                 var urlEntry = db.Urls
-                    .Where(x => x.Id == urlID)
+                    .Where(x => x.Id == AttemptedUrl.ID)
                     .Include(x => x.Snapshots).
                     FirstOrDefault();
 
@@ -90,10 +88,10 @@ namespace Kennedy.Server.Views.Archive
             }
         }
 
-
         private void ParseArgs()
         {
-            AttemptedUrl = GeminiUrl.MakeUrl(Request.Url.Query);
+            //TODO: FIX THIS
+            AttemptedUrl = new GeminiUrl(Request.Url.Query);
         }
     }
 }

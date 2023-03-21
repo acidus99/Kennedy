@@ -9,13 +9,7 @@ namespace ArchiveLoader
     [Table("Documents")]
     public class SimpleDocEntry
     {
-        /// <summary>
-        /// the actual unique ID for a document/URL. We are using ulong
-        /// since we are hashing our
-        /// </summary>
-        [NotMapped]
-        public ulong DocID 
-            => unchecked((ulong)DBDocID);
+
 
         /// <summary>
         /// the ID we are using in the DB for the DocID. DocID is a ulong,
@@ -23,7 +17,8 @@ namespace ArchiveLoader
         /// some unchecked casting with overflow to handle it
         /// </summary>
         [Key]
-        public long DBDocID { get; set; }
+        [Column("DBDocID")]
+        public long UrlID { get; set; }
 
         public DateTime FirstSeen { get; set; }
 
@@ -40,7 +35,7 @@ namespace ArchiveLoader
         public long TrueID()
         {
             GeminiUrl url = new GeminiUrl(Url);
-            return unchecked((long)url.HashID);
+            return unchecked((long)url.ID);
         }
 
         [Required]

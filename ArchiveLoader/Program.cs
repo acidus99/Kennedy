@@ -48,7 +48,7 @@ namespace ArchiveLoader
                 {
                     Console.WriteLine($"Crawl: {crawlLocation}: {count} of {docs.Length}");
                 }
-                var data = documentStore.GetDocument(doc.DocID);
+                var data = documentStore.GetDocument(doc.UrlID);
                 ArchiveEntry(doc, data);
             }
             watch.Stop();
