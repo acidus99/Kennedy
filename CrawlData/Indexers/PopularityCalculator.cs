@@ -78,11 +78,11 @@ namespace Kennedy.CrawlData.Indexers
         {
             foreach (var link in db.LinkEntries.Where(x => (x.IsExternal)))
             {
-                if(!LinksToPage.ContainsKey(link.TrgetUrlID))
+                if(!LinksToPage.ContainsKey(link.TargetUrlID))
                 {
-                    LinksToPage[link.TrgetUrlID] = new List<long>();
+                    LinksToPage[link.TargetUrlID] = new List<long>();
                 }
-                LinksToPage[link.TrgetUrlID].Add(link.SourceUrlID);
+                LinksToPage[link.TargetUrlID].Add(link.SourceUrlID);
             }
         }
     }

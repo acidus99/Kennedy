@@ -156,7 +156,7 @@ namespace Kennedy.Server.Views.Search
 
             var outboundLinks = (from links in db.LinkEntries
                                  where links.SourceUrlID == entry.UrlID
-                                 join docs in db.DocEntries on links.TrgetUrlID equals docs.UrlID
+                                 join docs in db.DocEntries on links.TargetUrlID equals docs.UrlID
                                  select new
                                  {
                                      docs.Url,
@@ -239,7 +239,7 @@ namespace Kennedy.Server.Views.Search
 
             var outboundLinks = (from links in db.LinkEntries
                                  where links.SourceUrlID == entry.UrlID
-                                 join docs in db.DocEntries on links.TrgetUrlID equals docs.UrlID
+                                 join docs in db.DocEntries on links.TargetUrlID equals docs.UrlID
                                  select new
                                  {
                                      docs.Url,
