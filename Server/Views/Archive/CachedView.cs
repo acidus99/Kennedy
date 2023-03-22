@@ -94,8 +94,7 @@ namespace Kennedy.Server.Views.Archive
                 return;
             }
 
-            //TODO use the new MakeUrl constructor
-            AttemptedUrl = new GeminiUrl(args["url"]);
+            AttemptedUrl = GeminiUrl.MakeUrl(args["url"]);
 
             if (AttemptedUrl!= null)
             {

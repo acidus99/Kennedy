@@ -90,8 +90,7 @@ namespace Kennedy.Server.Views.Archive
 
         private void ParseArgs()
         {
-            //TODO: FIX THIS
-            AttemptedUrl = new GeminiUrl(Request.Url.Query);
+            AttemptedUrl = GeminiUrl.MakeUrl(Request.Url.Query);
         }
     }
 }
