@@ -189,7 +189,7 @@ public class WebCrawler : IWebCrawler
         {
             bool isReachable = true;
 
-            if (resp.ConnectStatus != ConnectStatus.Success)
+            if (resp.ConnectStatus == ConnectStatus.Error)
             {
                 var msg = ex?.Message ?? resp.Meta;
                 errorLog.LogError(msg, resp.RequestUrl.NormalizedUrl);
