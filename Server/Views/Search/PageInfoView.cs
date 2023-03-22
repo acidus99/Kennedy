@@ -101,7 +101,7 @@ namespace Kennedy.Server.Views.Search
         {
 
             var inboundLinks = (from links in db.LinkEntries
-                                where links.TrgetUrlID == entry.UrlID && !links.IsExternal
+                                where links.TargetUrlID == entry.UrlID && !links.IsExternal
                                 join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
@@ -128,7 +128,7 @@ namespace Kennedy.Server.Views.Search
             }
 
             inboundLinks = (from links in db.LinkEntries
-                                where links.TrgetUrlID == entry.UrlID && links.IsExternal
+                                where links.TargetUrlID == entry.UrlID && links.IsExternal
                                 join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
@@ -184,7 +184,7 @@ namespace Kennedy.Server.Views.Search
         private void RenderOtherLinks()
         {
             var inboundLinks = (from links in db.LinkEntries
-                                where links.TrgetUrlID == entry.UrlID && !links.IsExternal
+                                where links.TargetUrlID == entry.UrlID && !links.IsExternal
                                 join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
@@ -211,7 +211,7 @@ namespace Kennedy.Server.Views.Search
             }
 
             inboundLinks = (from links in db.LinkEntries
-                                where links.TrgetUrlID == entry.UrlID && links.IsExternal
+                                where links.TargetUrlID == entry.UrlID && links.IsExternal
                                 join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new

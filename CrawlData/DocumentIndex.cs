@@ -204,7 +204,7 @@ namespace Kennedy.CrawlData
                 db.BulkInsert(response.Links.Distinct().Select(link => new StoredLinkEntry
                 {
                     SourceUrlID = response.RequestUrl.ID,
-                    TrgetUrlID = link.Url.ID,
+                    TargetUrlID = link.Url.ID,
                     IsExternal = link.IsExternal,
                     LinkText = link.LinkText
                 }).ToList());

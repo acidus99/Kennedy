@@ -18,7 +18,7 @@ namespace Kennedy.CrawlData.Db
         public long SourceUrlID { get; set; }
 
         [Column("DBTargetDocID")]
-        public long TrgetUrlID { get; set; }
+        public long TargetUrlID { get; set; }
 
         public bool IsExternal { get; set; }
         public string LinkText { get; set; }
