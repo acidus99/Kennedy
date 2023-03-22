@@ -19,11 +19,14 @@ internal class WebCrawlWorker
     public IWebCrawler Crawler;
     public int CrawlerID;
 
+    HostHealthTracker hostTracker;
+
     // The constructor obtains the state information.
     public WebCrawlWorker(IWebCrawler crawler, int id)
     {
         Crawler = crawler;
         CrawlerID = id;
+        hostTracker = new HostHealthTracker();
     }
 
     // The thread procedure performs the task, such as formatting
@@ -37,13 +40,21 @@ internal class WebCrawlWorker
         do
         {
             url = Crawler.GetUrl(CrawlerID);
+
             if (url != null)
             {
+                if (hostTracker.ShouldSendRequest(url))
+                {
+                    var resp = requestor.Request(url);
 
-
-                var resp = requestor.Request(url);
-                Crawler.ProcessRequestResponse(resp, requestor.LastException);
-                Thread.Sleep(delayMs);
+                    hostTracker.AddResponse(resp);
+                    Crawler.ProcessRequestResponse(resp, requestor.LastException);
+                    if (resp.ConnectStatus != ConnectStatus.Skipped)
+                    {
+                        Thread.Sleep(delayMs);
+                    }
+                }
+            
             }
             else
             {
