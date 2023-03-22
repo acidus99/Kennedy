@@ -23,5 +23,8 @@ namespace Kennedy.CrawlData.Db
         public bool IsExternal { get; set; }
         public string LinkText { get; set; }
 
+        public StoredDocEntry SourceUrl { get; set; }
+        public StoredDocEntry TargetUrl { get; set; }
+
     }
 }
