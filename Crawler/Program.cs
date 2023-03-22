@@ -14,6 +14,12 @@ namespace Kennedy.Crawler
         {
             HandleArgs(args);
 
+            //Support.GraphGenerator graph = new Support.GraphGenerator(CrawlerOptions.DataStore);
+
+            //Support.SiteHealthReport report = new Support.SiteHealthReport(CrawlerOptions.DataStore);
+            //report.WriteReport("/tmp/report.gmi", "gemi.dev");
+            //return;
+
             //var url = "gemini://billy.flounder.online/tech-links.gmi";
             //var url = "gemini://makeworld.gq/cgi-bin/gemini-irc";
             //var url = "gemini://gemini.circumlunar.space/docs/faq.gmi";
