@@ -16,25 +16,95 @@ namespace ArchiveLoader
 {
     class Program
     {
-        const string ArchiveLocation = "/tmp/archive.db";
-        const string ArchiveStoreRoot = "/tmp/Packs/";
+        static string ArchiveDBPath
+            => ArchiveRootDir + "archive.db";
+
+        static string PacksPath
+            => ArchiveRootDir + "Packs" + Path.DirectorySeparatorChar;
+
+        static string ArchiveRootDir = "";
+        static string Operation = "";
+        static string argument = "";
+
 
         static void Main(string[] args)
         {
-            using(ArchiveDbContext archiveDb = new ArchiveDbContext(ArchiveLocation))
+            if(!ValidateArgs(args))
+            {
+                return;
+            }
+
+            switch(Operation)
+            {
+                case "add":
+                    Console.WriteLine("Adding to archive");
+                    AddCrawlToArchive(argument);
+                    break;
+            }
+        }
+
+        static string EnsureTrailingSlash(string path)
+            => (path.EndsWith(Path.DirectorySeparatorChar)) ?
+                path :
+                path + Path.DirectorySeparatorChar;
+
+        static bool ValidateArgs(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                Console.WriteLine("not enough arguments");
+                Console.WriteLine("Usage: [operation] [path to archive root] [[additional args]]");
+                return false;
+            }
+
+            Operation = args[0].ToLower();
+            ArchiveRootDir = EnsureTrailingSlash(args[1]);
+
+            if(!File.Exists(ArchiveDBPath))
+            {
+                Console.WriteLine($"Could not locate archive database at '{ArchiveDBPath}'");
+                return false;
+            }
+            if (!Directory.Exists(PacksPath))
+            {
+                Console.WriteLine($"Could not locate Packs directory at '{PacksPath}'");
+                return false;
+            }
+
+            switch(Operation)
+            {
+                case "add":
+                    {
+                        if(args.Length != 3)
+                        {
+                            Console.WriteLine($"Not enough arguments for operation {Operation}");
+                            Console.WriteLine($"Usage: {Operation} [path to archive root] path to crawler output to add");
+                            return false;
+                        }
+
+                        argument = EnsureTrailingSlash(args[2]);
+                        if (!Directory.Exists(argument))
+                        {
+                            Console.WriteLine($"Could need file valid crawler output at '{argument}'");
+                            return false;
+                        }
+                        return true;
+                    }
+
+                default:
+                    Console.WriteLine($"Unknown operation '{Operation}'");
+                    return false;
+
+            }
+        }
+
+        static void AddCrawlToArchive(string crawlLocation)
+        {
+            using (ArchiveDbContext archiveDb = new ArchiveDbContext(ArchiveDBPath))
             {
                 archiveDb.Database.EnsureCreated();
             }
 
-            foreach (var line in File.ReadAllLines("/Users/billy/Desktop/crawls.txt"))
-            {
-                LoadCrawlArchive(line);
-            }
-
-        }
-
-        static void LoadCrawlArchive(string crawlLocation)
-        {
             SimpleDocumentIndexDbContext db = new SimpleDocumentIndexDbContext(crawlLocation);
             DocumentStore documentStore = new DocumentStore(crawlLocation + "page-store/");
 
@@ -42,25 +112,37 @@ namespace ArchiveLoader
             int count = 0;
             var docs = db.Documents.Where(x => (x.Status == 20 && x.BodySaved)).ToArray();
             watch.Start();
+            int added = 0;
             foreach (var doc in docs) {
                 count++;
                 if (count % 100 == 0)
                 {
-                    Console.WriteLine($"Crawl: {crawlLocation}: {count} of {docs.Length}");
+                    Console.WriteLine($"Crawl: {crawlLocation}: Processed {count} of {docs.Length}. Added to archive: {added}");
                 }
                 var data = documentStore.GetDocument(doc.UrlID);
-                ArchiveEntry(doc, data);
+                if(ArchiveEntry(doc, data))
+                {
+                    added++;
+                }
             }
             watch.Stop();
-            Console.WriteLine("total Seconds:" + watch.Elapsed.TotalSeconds);
+            Console.WriteLine($"Completed processing {crawlLocation}");
+            Console.WriteLine($"Total Seconds:\t{watch.Elapsed.TotalSeconds}");
+            Console.WriteLine($"Snapshots Added:\t{added}");
         }
 
-        static void ArchiveEntry(SimpleDocEntry entry, byte [] data)
+        /// <summary>
+        /// returns if an entry was added into the archive or not
+        /// </summary>
+        /// <param name="entry"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        static bool ArchiveEntry(SimpleDocEntry entry, byte [] data)
         {
-            ArchiveDbContext db = new ArchiveDbContext(ArchiveLocation);
+            ArchiveDbContext db = new ArchiveDbContext(ArchiveDBPath);
             var trueID = entry.TrueID();
 
-            PackManager packManager = new PackManager(ArchiveStoreRoot);
+            PackManager packManager = new PackManager(PacksPath);
 
             var url = db.Urls.Where(x => x.Id == trueID).FirstOrDefault();
             bool newUrl = false;
@@ -87,6 +169,7 @@ namespace ArchiveLoader
                 .Where(x => x.UrlId == url.Id &&
                         x.DataHash == dataHash).FirstOrDefault();
 
+            //assume that we will add this to the archive
             bool shouldAddSnapshot = true;
 
             var snapshot = new Snapshot
@@ -126,6 +209,8 @@ namespace ArchiveLoader
                 db.Snapshots.Add(snapshot);
                 db.SaveChanges();
             }
+
+            return shouldAddSnapshot;
         }
 
         static ContentType GetContentType(SimpleDocEntry entry)
