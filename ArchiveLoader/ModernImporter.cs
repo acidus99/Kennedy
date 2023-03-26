@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Kennedy.Archive;
+using Kennedy.CrawlData.Db;
 using Kennedy.CrawlData;
 
 namespace ArchiveLoader
@@ -21,12 +22,12 @@ namespace ArchiveLoader
 
 		public void Import()
 		{
-            SimpleDocumentIndexDbContext db = new SimpleDocumentIndexDbContext(CrawlLocation);
+            DocIndexDbContext db = new DocIndexDbContext(CrawlLocation);
             DocumentStore documentStore = new DocumentStore(CrawlLocation + "page-store/");
 
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             int count = 0;
-            var docs = db.Documents.Where(x => (x.Status == 20 && x.BodySaved)).ToArray();
+            var docs = db.DocEntries.Where(x => (x.Status == 20 && x.BodySaved)).ToArray();
             watch.Start();
             int added = 0;
             foreach (var doc in docs)
