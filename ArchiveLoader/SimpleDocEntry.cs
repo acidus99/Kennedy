@@ -9,8 +9,6 @@ namespace ArchiveLoader
     [Table("Documents")]
     public class SimpleDocEntry
     {
-
-
         /// <summary>
         /// the ID we are using in the DB for the DocID. DocID is a ulong,
         /// but Sqlite3 doesn't support UInt64s, so we use a Int64 here and doing
@@ -31,12 +29,20 @@ namespace ArchiveLoader
         [Required]
         public string Domain { get; set; }
 
-
-        public long TrueID()
+        [NotMapped]
+        public GeminiUrl GeminiUrl
         {
-            GeminiUrl url = new GeminiUrl(Url);
-            return unchecked((long)url.ID);
+            get
+            {
+                if (geminiUrl == null)
+                {
+                    geminiUrl = new GeminiUrl(Url);
+                }
+                return geminiUrl;
+            }
         }
+
+        private GeminiUrl? geminiUrl = null;
 
         [Required]
         public int Port { get; set; }
