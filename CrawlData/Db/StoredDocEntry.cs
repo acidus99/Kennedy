@@ -29,10 +29,24 @@ namespace Kennedy.CrawlData.Db
 
         public int ErrorCount { get; set; } = 0;
 
-
         [MaxLength(1024)]
         [Required]
         public string Url { get; set; }
+
+        [NotMapped]
+        public GeminiUrl GeminiUrl
+        {
+            get
+            {
+                if (geminiUrl == null)
+                {
+                    geminiUrl = new GeminiUrl(Url);
+                }
+                return geminiUrl;
+            }
+        }
+
+        private GeminiUrl? geminiUrl = null;
 
         [Required]
         public string Domain { get; set; }
