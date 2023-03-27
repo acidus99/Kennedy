@@ -60,8 +60,14 @@ namespace Kennedy.Server.Views.Archive
             {
                 return line;
             }
+            
+            var linkText = (match.Groups.Count > 2) ? match.Groups[2].Value.Trim() : "";
+            if(linkText == "")
+            {
+                //if no link text, use the original URL so client's don't display the URL to the cached view
+                linkText = match.Groups[1].Value;
+            }
 
-            var linkText = (match.Groups.Count > 2) ? match.Groups[2].Value : "";
             return $"=> {RoutePaths.ViewCached(geminiUrl, snapshot.Captured)} {linkText}";
         }
     }
