@@ -12,8 +12,9 @@ namespace Kennedy.Server
 
         public const string ViewCachedRoute = "/archive/cached";
         public const string ViewUrlHistoryRoute = "/archive/history";
-        public const string SearchArchive = "/archive/search";
+        public const string SearchArchiveRoute = "/archive/search";
 
+        public const string SiteHealthRoute = "/reports/site-health";
 
         public static string ViewCached(GeminiUrl url)
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={DateTime.Now}";

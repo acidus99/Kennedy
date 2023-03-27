@@ -34,7 +34,9 @@ namespace Kennedy.Server
 
             server.OnRequest(RoutePaths.ViewUrlHistoryRoute, ArchiveController.UrlHistory);
             server.OnRequest(RoutePaths.ViewCachedRoute, ArchiveController.Cached);
-            server.OnRequest(RoutePaths.SearchArchive, ArchiveController.Search);
+            server.OnRequest(RoutePaths.SearchArchiveRoute, ArchiveController.Search);
+
+            server.OnRequest(RoutePaths.SiteHealthRoute, ReportsController.SiteHealth);
 
             server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
             server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
