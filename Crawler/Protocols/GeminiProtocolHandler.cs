@@ -8,7 +8,6 @@ namespace Kennedy.Crawler.Protocols
 {
     public class GeminiProtocolHandler : Gemini.Net.GeminiRequestor
     {
-
         public new GeminiResponse Request(GeminiUrl url)
         {
             //use the DnsCache
