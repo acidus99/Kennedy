@@ -8,6 +8,7 @@ using System.Collections.Generic;
 
 
 using Gemini.Net;
+using Kennedy.Crawler.RobotsTxt;
 using Kennedy.Crawler.Frontiers;
 using Kennedy.Crawler.Logging;
 using Kennedy.Crawler.Protocols;
@@ -78,7 +79,7 @@ public class WebCrawler : IWebCrawler
 
         documentStorage = new DocumentStorageSystem(CrawlerOptions.DataStore);
 
-        domainAnalyzer = new DomainAnalyzer(documentStorage);
+        domainAnalyzer = new DomainAnalyzer(documentStorage, this);
 
     }
 
@@ -111,6 +112,7 @@ public class WebCrawler : IWebCrawler
 
     public void DoCrawl()
     {
+        RobotsChecker.Global.Crawler = this;
         ConfigureTimers();
         for (int i = 0; i < CrawlerThreads; i++)
         {

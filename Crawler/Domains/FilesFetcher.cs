@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Gemini.Net;
+using Kennedy.Crawler.Crawling;
 using Kennedy.Crawler.RobotsTxt;
 
 namespace Kennedy.Crawler.Domains
@@ -20,11 +21,14 @@ namespace Kennedy.Crawler.Domains
         public bool HasValidFavionTxt => !String.IsNullOrEmpty(FaviconTxt);
         public bool HasValidSecurityTxt => !String.IsNullOrEmpty(SecurityTxt);
 
-        public FilesFetcher(string host, int port)
+        IWebCrawler Crawler;
+
+        public FilesFetcher(string host, int port, IWebCrawler crawler)
         {
             Host = host;
             Port = port;
             IsReachable = false;
+            Crawler = crawler;
         }
 
         public void FetchFiles(bool isReachable)
@@ -77,6 +81,8 @@ namespace Kennedy.Crawler.Domains
             var resp = GetFile(path);
             if(resp.IsSuccess && resp.HasBody && resp.IsTextResponse)
             {
+                //beacon it out
+                Crawler.ProcessRequestResponse(resp, null);
                 return resp.BodyText.Trim();
             }
             return "";

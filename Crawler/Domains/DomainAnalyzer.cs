@@ -2,7 +2,9 @@
 
 using Gemini.Net;
 
+
 using Kennedy.CrawlData;
+using Kennedy.Crawler.Crawling;
 using Kennedy.Crawler.Utils;
 using Kennedy.Data;
 
@@ -11,13 +13,12 @@ namespace Kennedy.Crawler.Domains
 {
 	public class DomainAnalyzer
 	{
-
 		bool IsRunning = true;
 
 		bool StayAlive = true;
 
-
 		IDocumentStorage Storage;
+		IWebCrawler Crawler;
 
 		object locker;
 
@@ -25,12 +26,13 @@ namespace Kennedy.Crawler.Domains
 		Bag<string> SeenAuthorities;
 
 
-		public DomainAnalyzer(IDocumentStorage storage)
+		public DomainAnalyzer(IDocumentStorage storage, IWebCrawler crawler)
 		{
 			locker = new object();
 			Storage = storage;
 			Pending = new Queue<Tuple<string, int, bool>>();
 			SeenAuthorities = new Bag<string>();
+			Crawler = crawler;
 		}
 
 
@@ -97,7 +99,7 @@ namespace Kennedy.Crawler.Domains
 		{
 			Console.WriteLine("Analyzing " + host);
 
-			FilesFetcher fetcher = new FilesFetcher(host, port);
+			FilesFetcher fetcher = new FilesFetcher(host, port, Crawler);
 			fetcher.FetchFiles(isReachable);
             
             Storage.StoreDomain(new DomainInfo

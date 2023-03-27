@@ -2,6 +2,7 @@
 
 using Gemini.Net;
 using Kennedy.Crawler.Dns;
+using Kennedy.Crawler.Crawling;
 
 namespace Kennedy.Crawler.RobotsTxt;
 
@@ -19,6 +20,8 @@ public class RobotsChecker
     {
         Cache = new Dictionary<string, Robots>();
     }
+
+    public IWebCrawler? Crawler { get; set; } = null;
 
     public bool IsAllowed(string url)
         => IsAllowed(new GeminiUrl(url));
@@ -95,7 +98,14 @@ public class RobotsChecker
         string ret = "";
         if (ipAddress != null)
         {
+
             var resp = requestor.Request(robotsUrl, ipAddress);
+
+            if (Crawler != null && resp.IsSuccess)
+            {
+                Crawler.ProcessRequestResponse(resp, requestor.LastException);
+            }
+
             ret = (resp.IsSuccess && resp.HasBody) ?
                 resp.BodyText :
                 "";
