@@ -64,10 +64,6 @@ namespace Kennedy.Crawler.Support
 
             fout.Close();
         }
-
-		private string UrlIDToGraphID(long urlID)
-			=> "ID_" + urlID.ToString().Replace('-', '_');
-
 	}
 }
 
