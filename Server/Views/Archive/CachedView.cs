@@ -67,8 +67,6 @@ namespace Kennedy.Server.Views.Archive
             {
                 Response.Write("Gemini links have been rewritten to link to archived content");
 
-                GemtextRewriter gemtextRewriter = new GemtextRewriter();
-                text = gemtextRewriter.Rewrite(Snapshot, text);
 
             }
             Response.WriteLine();
@@ -76,7 +74,18 @@ namespace Kennedy.Server.Views.Archive
             Response.WriteLine($"=> {RoutePaths.ViewCached(Snapshot, true)} View Raw");
             Response.WriteLine();
 
-            Response.Write(text);
+            if (Snapshot.IsGemtext)
+            {
+                GemtextRewriter gemtextRewriter = new GemtextRewriter();
+                text = gemtextRewriter.Rewrite(Snapshot, text);
+                Response.Write(text);
+            }
+            else
+            {
+                Response.WriteLine("```");
+                Response.WriteLine(text);
+                Response.WriteLine("```");
+            }            
         }
 
         private void ParseArgs()
