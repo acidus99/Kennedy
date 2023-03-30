@@ -26,7 +26,6 @@ namespace Kennedy.Server.Views.Archive
         {
             string query = SanitizedQuery;
 
-
             var urls = archive.Urls
                 .Where(x => x.FullUrl.Contains(query));
 
