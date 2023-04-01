@@ -18,6 +18,10 @@ namespace Kennedy.CrawlData
         public ObjectStore(string path)
         {
             RootDir = path;
+            if (!RootDir.EndsWith(Path.DirectorySeparatorChar))
+            {
+                RootDir += Path.DirectorySeparatorChar;
+            }
             InvalidPathChars = Path.GetInvalidPathChars();
             InvalidFileChars = Path.GetInvalidFileNameChars();
         }
@@ -28,7 +32,7 @@ namespace Kennedy.CrawlData
             {
                 return RootDir;
             }
-            return RootDir + Path.DirectorySeparatorChar + key[0] + key[1] + Path.DirectorySeparatorChar + key[2] + key[3] + Path.DirectorySeparatorChar;
+            return RootDir + key[0] + key[1] + Path.DirectorySeparatorChar + key[2] + key[3] + Path.DirectorySeparatorChar;
         }
 
         /// <summary>
