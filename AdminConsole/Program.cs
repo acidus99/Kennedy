@@ -6,6 +6,7 @@ using Gemini.Net;
 
 using Kennedy.Archive;
 using Kennedy.CrawlData;
+using Kennedy.CrawlData.Db;
 using Kennedy.Data;
 
 using Microsoft.EntityFrameworkCore;
@@ -16,12 +17,12 @@ namespace ArchiveLoader
     class Program
     {
         static string ArchiveDBPath
-            => ArchiveRootDir + "archive.db";
+            => DataRootDirectory + "archive.db";
 
         static string PacksPath
-            => ArchiveRootDir + "Packs" + Path.DirectorySeparatorChar;
+            => DataRootDirectory + "Packs" + Path.DirectorySeparatorChar;
 
-        static string ArchiveRootDir = "";
+        static string DataRootDirectory = "";
         static string Operation = "";
         static string argument = "";
 
@@ -38,6 +39,11 @@ namespace ArchiveLoader
                     Console.WriteLine("Adding to archive");
                     AddCrawlToArchive(argument);
                     break;
+
+                case "delete":
+
+                    break;
+
             }
         }
 
@@ -56,7 +62,7 @@ namespace ArchiveLoader
             }
 
             Operation = args[0].ToLower();
-            ArchiveRootDir = EnsureTrailingSlash(args[1]);
+            DataRootDirectory = EnsureTrailingSlash(args[1]);
 
             if(!File.Exists(ArchiveDBPath))
             {
@@ -89,6 +95,12 @@ namespace ArchiveLoader
                         return true;
                     }
 
+                case "delete":
+                    {
+                        argument = args[2];
+                        return true;
+                    }
+
                 default:
                     Console.WriteLine($"Unknown operation '{Operation}'");
                     return false;
@@ -101,6 +113,18 @@ namespace ArchiveLoader
             var archiver = new Archiver(ArchiveDBPath, PacksPath);
             ModernImporter importer = new ModernImporter(archiver, crawlLocation);
             importer.Import();
+        }
+
+        static void DeleteFromCrawl(string url)
+        {
+            DocIndexDbContext index = new DocIndexDbContext(DataRootDirectory);
+            GeminiUrl gurl = new GeminiUrl(url);
+            index.DocEntries.Where(x => x.UrlID == gurl.ID).Include(x=>x.sn).FirstOrDefault();
+
+            index.do
+
+
+
         }
 
     }
