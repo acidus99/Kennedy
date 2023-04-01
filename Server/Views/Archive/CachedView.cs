@@ -16,7 +16,6 @@ namespace Kennedy.Server.Views.Archive
 {
     internal class CachedView :AbstractView
     {
-
         public CachedView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
