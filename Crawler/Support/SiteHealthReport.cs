@@ -49,7 +49,7 @@ namespace Kennedy.Crawler.Support
 				fout.WriteLine($"=> {doc.Url}");
 				fout.WriteLine("Incoming Links:");
 
-				var links = db.LinkEntries.Include(x => x.SourceUrl)
+				var links = db.Links.Include(x => x.SourceUrl)
                     .Where(x => x.TargetUrlID == doc.UrlID);
 
                 foreach (var link in links)

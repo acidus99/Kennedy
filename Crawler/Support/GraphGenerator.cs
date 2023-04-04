@@ -45,7 +45,7 @@ namespace Kennedy.Crawler.Support
 			{
 				var graphID = UrlIDToGraphID(doc.UrlID);
 
-				var links = db.LinkEntries.Include(x => x.SourceUrl).Include(x => x.TargetUrl)
+				var links = db.Links.Include(x => x.SourceUrl).Include(x => x.TargetUrl)
 					.Where(x => x.SourceUrlID == doc.UrlID && !x.IsExternal && x.TargetUrl != null);
 
                 foreach (var link in links)

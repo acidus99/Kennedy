@@ -198,10 +198,10 @@ namespace Kennedy.SearchIndex
             using (var db = new SearchIndexDbContext(StoragePath))
             {
                 //first delete all source IDs
-                db.LinkEntries.RemoveRange(db.LinkEntries
+                db.Links.RemoveRange(db.Links
                     .Where(x => (x.SourceUrlID == response.RequestUrl.ID)));
                 db.SaveChanges();
-                db.BulkInsert(response.Links.Distinct().Select(link => new StoredLinkEntry
+                db.BulkInsert(response.Links.Distinct().Select(link => new DocumentLink
                 {
                     SourceUrlID = response.RequestUrl.ID,
                     TargetUrlID = link.Url.ID,

@@ -7,7 +7,7 @@ namespace Kennedy.SearchIndex.Db
         protected string StorageDirectory;
 
         public DbSet<Document> Documents { get; set; }
-        public DbSet<StoredLinkEntry> LinkEntries { get; set; }
+        public DbSet<DocumentLink> Links { get; set; }
         public DbSet<StoredDomainsEntry> DomainEntries { get; set; }
         public DbSet<StoredImageEntry> ImageEntries { get; set; }
 
@@ -23,7 +23,7 @@ namespace Kennedy.SearchIndex.Db
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<StoredLinkEntry>()
+            modelBuilder.Entity<DocumentLink>()
                 .HasKey(l => new { l.SourceUrlID, l.TargetUrlID });
 
             base.OnModelCreating(modelBuilder);

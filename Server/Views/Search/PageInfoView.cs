@@ -100,7 +100,7 @@ namespace Kennedy.Server.Views.Search
         private void RenderGemtextLinks()
         {
 
-            var inboundLinks = (from links in db.LinkEntries
+            var inboundLinks = (from links in db.Links
                                 where links.TargetUrlID == entry.UrlID && !links.IsExternal
                                 join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
@@ -127,7 +127,7 @@ namespace Kennedy.Server.Views.Search
                 Response.WriteLine("No internal links");
             }
 
-            inboundLinks = (from links in db.LinkEntries
+            inboundLinks = (from links in db.Links
                                 where links.TargetUrlID == entry.UrlID && links.IsExternal
                                 join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
@@ -154,7 +154,7 @@ namespace Kennedy.Server.Views.Search
                 Response.WriteLine("No incoming links");
             }
 
-            var outboundLinks = (from links in db.LinkEntries
+            var outboundLinks = (from links in db.Links
                                  where links.SourceUrlID == entry.UrlID
                                  join docs in db.Documents on links.TargetUrlID equals docs.UrlID
                                  select new
@@ -183,7 +183,7 @@ namespace Kennedy.Server.Views.Search
 
         private void RenderOtherLinks()
         {
-            var inboundLinks = (from links in db.LinkEntries
+            var inboundLinks = (from links in db.Links
                                 where links.TargetUrlID == entry.UrlID && !links.IsExternal
                                 join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
@@ -210,7 +210,7 @@ namespace Kennedy.Server.Views.Search
                 Response.WriteLine("No internal links");
             }
 
-            inboundLinks = (from links in db.LinkEntries
+            inboundLinks = (from links in db.Links
                                 where links.TargetUrlID == entry.UrlID && links.IsExternal
                                 join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
@@ -237,7 +237,7 @@ namespace Kennedy.Server.Views.Search
                 Response.WriteLine("No incoming links");
             }
 
-            var outboundLinks = (from links in db.LinkEntries
+            var outboundLinks = (from links in db.Links
                                  where links.SourceUrlID == entry.UrlID
                                  join docs in db.Documents on links.TargetUrlID equals docs.UrlID
                                  select new

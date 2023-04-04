@@ -64,7 +64,7 @@ namespace Kennedy.SearchIndex.Indexers
 
         private void BuildOutlinkCache()
         {
-            var outLinks = (from links in db.LinkEntries
+            var outLinks = (from links in db.Links
                             where links.IsExternal
                       group links by links.SourceUrlID into grp
                       select new { DBDocID = grp.Key, Count = grp.Count() });
@@ -76,7 +76,7 @@ namespace Kennedy.SearchIndex.Indexers
 
         private void BuildLinkToPageCache()
         {
-            foreach (var link in db.LinkEntries.Where(x => (x.IsExternal)))
+            foreach (var link in db.Links.Where(x => (x.IsExternal)))
             {
                 if(!LinksToPage.ContainsKey(link.TargetUrlID))
                 {

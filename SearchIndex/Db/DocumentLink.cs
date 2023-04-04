@@ -7,7 +7,7 @@ using Gemini.Net;
 namespace Kennedy.SearchIndex.Db
 {
     [Table("Links")]
-    public class StoredLinkEntry
+    public class DocumentLink
     {
         /// <summary>
         /// the ID we are using in the DB for the DocID. DocID is a ulong,

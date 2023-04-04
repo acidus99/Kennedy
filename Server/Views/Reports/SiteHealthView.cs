@@ -61,7 +61,7 @@ namespace Kennedy.Server.Views.Reports
                 Response.WriteLine($"=> {doc.Url}");
                 Response.WriteLine("Incoming Links:");
 
-                var links = db.LinkEntries.Include(x => x.SourceUrl)
+                var links = db.Links.Include(x => x.SourceUrl)
                     .Where(x => x.TargetUrlID == doc.UrlID);
 
                 foreach (var link in links)
