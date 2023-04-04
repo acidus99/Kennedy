@@ -38,7 +38,7 @@ namespace Kennedy.Server.Views.Reports
 
             Response.WriteLine($"# {Domain} - 🩺 Site Health Report");
 
-            var docs = db.DocEntries
+            var docs = db.Documents
                 .Where(x => x.Domain == Domain);
 
             var totalDocs = docs.Count();

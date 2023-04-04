@@ -119,7 +119,7 @@ namespace ArchiveLoader
         {
             SearchIndexDbContext index = new SearchIndexDbContext(DataRootDirectory);
             GeminiUrl gurl = new GeminiUrl(url);
-            index.DocEntries.Where(x => x.UrlID == gurl.ID).FirstOrDefault();
+            index.Documents.Where(x => x.UrlID == gurl.ID).FirstOrDefault();
 
 
 

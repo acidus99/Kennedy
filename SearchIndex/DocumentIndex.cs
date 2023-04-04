@@ -86,18 +86,18 @@ namespace Kennedy.SearchIndex
         /// <returns></returns>
         internal void StoreMetaData(ParsedResponse parsedResponse, bool bodySaved)
         {
-            StoredDocEntry entry = null;
+            Document entry = null;
             using (var db = new SearchIndexDbContext(StoragePath))
             {
                 bool isNew = false;
 
-                entry = db.DocEntries
+                entry = db.Documents
                     .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
                     .FirstOrDefault();
                 if (entry == null)
                 {
                     isNew = true;
-                    entry = new StoredDocEntry
+                    entry = new Document
                     {
                         UrlID = parsedResponse.RequestUrl.ID,
                         FirstSeen = System.DateTime.Now,
@@ -113,7 +113,7 @@ namespace Kennedy.SearchIndex
 
                 if(isNew)
                 {
-                    db.DocEntries.Add(entry);
+                    db.Documents.Add(entry);
                 }
                 db.SaveChanges();
             }
@@ -136,7 +136,7 @@ namespace Kennedy.SearchIndex
             }
         }
 
-        private StoredDocEntry PopulateEntry(ParsedResponse parsedResponse, bool bodySaved, StoredDocEntry entry)
+        private Document PopulateEntry(ParsedResponse parsedResponse, bool bodySaved, Document entry)
         {
             entry.LastVisit = DateTime.Now;
 

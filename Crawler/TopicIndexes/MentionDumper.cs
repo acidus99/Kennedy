@@ -55,7 +55,7 @@ namespace Kennedy.Crawler.TopicIndexes
                 urls.Sort();
                 foreach (var url in urls)
                 {
-                    var title = (Db.DocEntries
+                    var title = (Db.Documents
                         .Where(x => x.UrlID == url.ID)
                         .Select(x => x.Title)
                         .FirstOrDefault());

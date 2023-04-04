@@ -10,7 +10,7 @@ namespace Kennedy.SearchIndex.Db
 {
     [Table("Documents")]
     [Index(nameof(Status))]
-    public class StoredDocEntry
+    public class Document
     {
         /// <summary>
         /// the ID we are using in the DB for the DocID. DocID is a ulong,

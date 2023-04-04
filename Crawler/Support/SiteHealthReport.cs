@@ -26,7 +26,7 @@ namespace Kennedy.Crawler.Support
 			fout.WriteLine("# 🩺 Site Health Report");
             fout.WriteLine($"## {domain}");
 
-			var docs = db.DocEntries
+			var docs = db.Documents
 				.Where(x => x.Domain == domain);
 
 			var totalDocs = docs.Count();

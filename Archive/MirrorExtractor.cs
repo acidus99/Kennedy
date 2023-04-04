@@ -34,7 +34,7 @@ namespace Kennedy.Archive
             SearchIndexDbContext db = new SearchIndexDbContext(DocDBLocation);
             DocumentStore docStore = new DocumentStore($"{DocDBLocation}page-store/");
 
-            foreach (var entry in db.DocEntries
+            foreach (var entry in db.Documents
                 .Where(x => x.Domain == domainToClone && x.Port == portToClone && x.Status == 20))
             {
                 byte[] data = null;

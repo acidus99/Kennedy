@@ -28,7 +28,7 @@ namespace Kennedy.Crawler.TopicIndexes
             SearchIndexDbContext db = new SearchIndexDbContext(CrawlerOptions.DataStore);
             
 
-            var entries = db.DocEntries
+            var entries = db.Documents
                             .Where(x => (x.BodySaved && x.MimeType.StartsWith("text/gemini"))).ToList()
                             .Where(x=>(x.Domain != "kennedy.gemi.dev"))
                             .Select(x => new

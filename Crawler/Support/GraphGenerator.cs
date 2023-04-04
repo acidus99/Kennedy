@@ -24,7 +24,7 @@ namespace Kennedy.Crawler.Support
 
 			fout.WriteLine("digraph SiteMap {");
 			fout.WriteLine(" rankdir=\"LR\"");
-			var docs = db.DocEntries.Where(x => x.Domain == domain).OrderBy(x=>x.Url.Length);
+			var docs = db.Documents.Where(x => x.Domain == domain).OrderBy(x=>x.Url.Length);
 
             foreach (var doc in docs)
             {

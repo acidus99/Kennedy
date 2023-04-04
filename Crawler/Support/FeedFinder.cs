@@ -32,7 +32,7 @@ namespace Kennedy.Crawler.Support
         {
             SearchIndexDbContext db = new SearchIndexDbContext(CrawlerOptions.DataStore);
 
-            return db.DocEntries
+            return db.Documents
                 .Where(x => (x.ErrorCount == 0 && x.MimeType.StartsWith("application/xml")))
                 .Select(x=>x.Url).ToList();
         }
@@ -43,7 +43,7 @@ namespace Kennedy.Crawler.Support
 
             SearchIndexDbContext db = new SearchIndexDbContext(CrawlerOptions.DataStore);
 
-            var entries = db.DocEntries
+            var entries = db.Documents
                 .Where(x => (x.ErrorCount == 0 && x.BodySize > 0 && x.MimeType.StartsWith("text/gemini"))).ToList();
 
             int total = entries.Count;
@@ -65,7 +65,7 @@ namespace Kennedy.Crawler.Support
             return ret;
         } 
 
-        public bool IsValidGemPub(StoredDocEntry entry)
+        public bool IsValidGemPub(Document entry)
         {
             //try and grab from doc store
             string bodyText = System.Text.Encoding.UTF8.GetString(docStore.GetDocument(entry.UrlID));

@@ -18,7 +18,7 @@ namespace Kennedy.Server.Views.Search
 
         private SearchIndexDbContext db;
         private DocumentIndex documentIndex;
-        StoredDocEntry entry;
+        Document entry;
 
         public override void Render()
         {
@@ -32,7 +32,7 @@ namespace Kennedy.Server.Views.Search
             if (query.StartsWith("id=") && query.Length > 3)
             {
                 dbDocID = Convert.ToInt64(query.Substring(3));
-                entry = db.DocEntries.Where(x => x.UrlID == dbDocID).FirstOrDefault();
+                entry = db.Documents.Where(x => x.UrlID == dbDocID).FirstOrDefault();
             }
             if (entry == null)
             {
@@ -102,7 +102,7 @@ namespace Kennedy.Server.Views.Search
 
             var inboundLinks = (from links in db.LinkEntries
                                 where links.TargetUrlID == entry.UrlID && !links.IsExternal
-                                join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
+                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
                                 {
@@ -129,7 +129,7 @@ namespace Kennedy.Server.Views.Search
 
             inboundLinks = (from links in db.LinkEntries
                                 where links.TargetUrlID == entry.UrlID && links.IsExternal
-                                join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
+                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
                                 {
@@ -156,7 +156,7 @@ namespace Kennedy.Server.Views.Search
 
             var outboundLinks = (from links in db.LinkEntries
                                  where links.SourceUrlID == entry.UrlID
-                                 join docs in db.DocEntries on links.TargetUrlID equals docs.UrlID
+                                 join docs in db.Documents on links.TargetUrlID equals docs.UrlID
                                  select new
                                  {
                                      docs.Url,
@@ -185,7 +185,7 @@ namespace Kennedy.Server.Views.Search
         {
             var inboundLinks = (from links in db.LinkEntries
                                 where links.TargetUrlID == entry.UrlID && !links.IsExternal
-                                join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
+                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
                                 {
@@ -212,7 +212,7 @@ namespace Kennedy.Server.Views.Search
 
             inboundLinks = (from links in db.LinkEntries
                                 where links.TargetUrlID == entry.UrlID && links.IsExternal
-                                join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
+                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
                                 {
@@ -239,7 +239,7 @@ namespace Kennedy.Server.Views.Search
 
             var outboundLinks = (from links in db.LinkEntries
                                  where links.SourceUrlID == entry.UrlID
-                                 join docs in db.DocEntries on links.TargetUrlID equals docs.UrlID
+                                 join docs in db.Documents on links.TargetUrlID equals docs.UrlID
                                  select new
                                  {
                                      docs.Url,

@@ -23,8 +23,8 @@ namespace Kennedy.SearchIndex.Db
         public bool IsExternal { get; set; }
         public string LinkText { get; set; }
 
-        public StoredDocEntry SourceUrl { get; set; }
-        public StoredDocEntry TargetUrl { get; set; }
+        public Document SourceUrl { get; set; }
+        public Document TargetUrl { get; set; }
 
     }
 }

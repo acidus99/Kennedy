@@ -2,16 +2,16 @@
 
 namespace Kennedy.SearchIndex.Db
 {
-    public class DocIndexDbContext : DbContext
+    public class SearchIndexDbContext : DbContext
     {
         protected string StorageDirectory;
 
-        public DbSet<StoredDocEntry> DocEntries { get; set; }
+        public DbSet<Document> Documents { get; set; }
         public DbSet<StoredLinkEntry> LinkEntries { get; set; }
         public DbSet<StoredDomainsEntry> DomainEntries { get; set; }
         public DbSet<StoredImageEntry> ImageEntries { get; set; }
 
-        public DocIndexDbContext(string storageDir)
+        public SearchIndexDbContext(string storageDir)
         {
             StorageDirectory = storageDir;
         }
