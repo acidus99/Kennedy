@@ -8,8 +8,8 @@ namespace Kennedy.SearchIndex.Db
 
         public DbSet<Document> Documents { get; set; }
         public DbSet<DocumentLink> Links { get; set; }
-        public DbSet<StoredDomainsEntry> DomainEntries { get; set; }
-        public DbSet<StoredImageEntry> ImageEntries { get; set; }
+        public DbSet<Domain> Domains { get; set; }
+        public DbSet<Image> Images { get; set; }
 
         public SearchIndexDbContext(string storageDir)
         {

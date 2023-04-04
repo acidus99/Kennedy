@@ -2,7 +2,7 @@
 using System.IO;
 
 using Gemini.Net;
-using Kennedy.SearchIndex.Search;
+using Kennedy.SearchIndex.Engines;
 using RocketForce;
 
 namespace Kennedy.Server.Views.Search

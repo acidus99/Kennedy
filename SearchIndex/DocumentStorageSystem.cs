@@ -3,7 +3,7 @@
 using Gemini.Net;
 using Kennedy.SearchIndex.Db;
 using Kennedy.SearchIndex.Indexers;
-using Kennedy.SearchIndex.Search;
+using Kennedy.SearchIndex.Engines;
 
 using Kennedy.Data;
 

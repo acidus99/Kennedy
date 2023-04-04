@@ -1,7 +1,7 @@
 ﻿using System;
 using Gemini.Net;
 
-namespace Kennedy.SearchIndex.Search
+namespace Kennedy.SearchIndex.Engines
 {
     public class FullTextSearchResult
     {
