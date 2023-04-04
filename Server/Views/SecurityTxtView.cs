@@ -31,7 +31,7 @@ namespace Kennedy.Server.Views
             Response.WriteLine("=> https://securitytxt.org About Security.txt");
             Response.WriteLine();
 
-            var knownHosts = db.DomainEntries.Where(x => x.IsReachable && x.HasSecurityTxt).OrderBy(x => x.Domain).Select(x => new
+            var knownHosts = db.Domains.Where(x => x.IsReachable && x.HasSecurityTxt).OrderBy(x => x.Domain).Select(x => new
             {
                 Hostname = x.Domain,
                 Port = x.Port,

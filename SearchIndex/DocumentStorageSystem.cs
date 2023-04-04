@@ -60,8 +60,8 @@ namespace Kennedy.SearchIndex
         {
             using (var db = documentIndex.GetContext())
             {
-                db.DomainEntries.Add(
-                    new StoredDomainsEntry
+                db.Domains.Add(
+                    new Domain
                     {
                         Domain = domainInfo.Domain,
                         Port = domainInfo.Port,

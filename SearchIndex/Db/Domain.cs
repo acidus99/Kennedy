@@ -7,7 +7,7 @@ using Gemini.Net;
 namespace Kennedy.SearchIndex.Db
 {
     [Table("Domains")]
-    public class StoredDomainsEntry
+    public class Domain
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

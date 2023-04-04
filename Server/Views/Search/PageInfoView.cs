@@ -68,7 +68,7 @@ namespace Kennedy.Server.Views.Search
 
                 case ContentType.Image:
 
-                    var imgmeta = (from img in db.ImageEntries
+                    var imgmeta = (from img in db.Images
                                    where img.UrlID == dbDocID
                                    select new
                                    {

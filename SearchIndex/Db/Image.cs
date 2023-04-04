@@ -8,7 +8,7 @@ using Gemini.Net;
 namespace Kennedy.SearchIndex.Db
 {
     [Table("Images")]
-    public class StoredImageEntry
+    public class Image
     {
         /// <summary>
         /// the ID we are using in the DB for the DocID. DocID is a ulong,

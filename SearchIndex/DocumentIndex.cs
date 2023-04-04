@@ -123,7 +123,7 @@ namespace Kennedy.SearchIndex
         {
             using (var db = new SearchIndexDbContext(StoragePath))
             {
-                StoredImageEntry imageEntry = new StoredImageEntry
+                Image imageEntry = new Image
                 {
                     UrlID = imageResponse.RequestUrl.ID,
                     IsTransparent = imageResponse.IsTransparent,
@@ -131,7 +131,7 @@ namespace Kennedy.SearchIndex
                     Width = imageResponse.Width,
                     ImageType = imageResponse.ImageType
                 };
-                db.ImageEntries.Add(imageEntry);
+                db.Images.Add(imageEntry);
                 db.SaveChanges();
             }
         }

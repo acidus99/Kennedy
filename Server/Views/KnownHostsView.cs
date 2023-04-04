@@ -33,7 +33,7 @@ namespace Kennedy.Server.Views
             Response.WriteLine("The following are capsules are known to Kennedy and are reachable.");
 
 
-            var knownHosts = db.DomainEntries.Where(x => x.IsReachable).OrderBy(x => x.Domain).Select(x => new
+            var knownHosts = db.Domains.Where(x => x.IsReachable).OrderBy(x => x.Domain).Select(x => new
             {
                 Hostname = x.Domain,
                 Port = x.Port,
