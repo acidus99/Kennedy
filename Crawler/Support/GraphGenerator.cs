@@ -9,13 +9,13 @@ namespace Kennedy.Crawler.Support
 	public class GraphGenerator
 	{
 
-		DocIndexDbContext db;
+		SearchIndexDbContext db;
 
 		StreamWriter fout;
 
         public GraphGenerator(string storageDir)
 		{
-			db = new DocIndexDbContext(storageDir);
+			db = new SearchIndexDbContext(storageDir);
 		}
 
 		public void WriteGraph(string filename, string domain)

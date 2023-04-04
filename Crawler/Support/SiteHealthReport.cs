@@ -11,13 +11,13 @@ namespace Kennedy.Crawler.Support
 	public class SiteHealthReport
 	{
 
-		DocIndexDbContext db;
+		SearchIndexDbContext db;
 
 		StreamWriter fout;
 
         public SiteHealthReport(string storageDir)
 		{
-			db = new DocIndexDbContext(storageDir);
+			db = new SearchIndexDbContext(storageDir);
 		}
 
 		public void WriteReport(string filename, string domain)

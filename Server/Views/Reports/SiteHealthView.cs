@@ -33,7 +33,7 @@ namespace Kennedy.Server.Views.Reports
                 return;
             }
 
-            DocIndexDbContext db = new DocIndexDbContext(Settings.Global.DataRoot);
+            SearchIndexDbContext db = new SearchIndexDbContext(Settings.Global.DataRoot);
             
 
             Response.WriteLine($"# {Domain} - 🩺 Site Health Report");

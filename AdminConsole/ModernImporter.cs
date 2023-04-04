@@ -22,7 +22,7 @@ namespace ArchiveLoader
 
 		public void Import()
 		{
-            DocIndexDbContext db = new DocIndexDbContext(CrawlLocation);
+            SearchIndexDbContext db = new SearchIndexDbContext(CrawlLocation);
             DocumentStore documentStore = new DocumentStore(CrawlLocation + "page-store/");
 
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();

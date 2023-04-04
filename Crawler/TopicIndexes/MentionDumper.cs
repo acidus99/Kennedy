@@ -11,14 +11,14 @@ namespace Kennedy.Crawler.TopicIndexes
 {
     internal class MentionsDumper
     {
-        DocIndexDbContext Db;
+        SearchIndexDbContext Db;
         TermTracker Tracker;
         string OutDir;
 
         public MentionsDumper(TermTracker tracker)
         {
             Tracker = tracker;
-            Db = new DocIndexDbContext(CrawlerOptions.DataStore);
+            Db = new SearchIndexDbContext(CrawlerOptions.DataStore);
         }
 
 

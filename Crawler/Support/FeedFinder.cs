@@ -30,7 +30,7 @@ namespace Kennedy.Crawler.Support
 
         public List<string> FindXmlFeeds()
         {
-            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataStore);
+            SearchIndexDbContext db = new SearchIndexDbContext(CrawlerOptions.DataStore);
 
             return db.DocEntries
                 .Where(x => (x.ErrorCount == 0 && x.MimeType.StartsWith("application/xml")))
@@ -41,7 +41,7 @@ namespace Kennedy.Crawler.Support
         {
             List<string> ret = new List<string>();
 
-            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataStore);
+            SearchIndexDbContext db = new SearchIndexDbContext(CrawlerOptions.DataStore);
 
             var entries = db.DocEntries
                 .Where(x => (x.ErrorCount == 0 && x.BodySize > 0 && x.MimeType.StartsWith("text/gemini"))).ToList();

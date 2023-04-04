@@ -13,14 +13,14 @@ namespace Kennedy.Crawler.TopicIndexes
 {
     internal class HashtagDumper
     {
-        DocIndexDbContext Db;
+        SearchIndexDbContext Db;
         TermTracker Tracker;
         string OutDir;
 
         public HashtagDumper(TermTracker tracker)
         {
             Tracker = tracker;
-            Db = new DocIndexDbContext(CrawlerOptions.DataStore);
+            Db = new SearchIndexDbContext(CrawlerOptions.DataStore);
         }
 
 

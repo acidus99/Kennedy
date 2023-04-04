@@ -16,7 +16,7 @@ namespace Kennedy.Server.Views.Search
         public PageInfoView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
-        private DocIndexDbContext db;
+        private SearchIndexDbContext db;
         private DocumentIndex documentIndex;
         StoredDocEntry entry;
 

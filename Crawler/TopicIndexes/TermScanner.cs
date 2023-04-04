@@ -25,7 +25,7 @@ namespace Kennedy.Crawler.TopicIndexes
         public void ScanDocs()
         {
 
-            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataStore);
+            SearchIndexDbContext db = new SearchIndexDbContext(CrawlerOptions.DataStore);
             
 
             var entries = db.DocEntries

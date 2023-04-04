@@ -31,7 +31,7 @@ namespace Kennedy.Archive
         {
             OutputLocation = EnsureSlash(BaseOutputLocation + domainToClone);
             
-            DocIndexDbContext db = new DocIndexDbContext(DocDBLocation);
+            SearchIndexDbContext db = new SearchIndexDbContext(DocDBLocation);
             DocumentStore docStore = new DocumentStore($"{DocDBLocation}page-store/");
 
             foreach (var entry in db.DocEntries

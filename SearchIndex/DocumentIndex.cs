@@ -20,12 +20,12 @@ namespace Kennedy.SearchIndex
         {
             StoragePath = storagePath;
             //create and destory a DBContext to force the DB to be there
-            var db = new DocIndexDbContext(storagePath);
+            var db = new SearchIndexDbContext(storagePath);
             db.Database.EnsureCreated();
             EnsureFullTextSearch(db);
         }
 
-        private void EnsureFullTextSearch(DocIndexDbContext db)
+        private void EnsureFullTextSearch(SearchIndexDbContext db)
         {
             using (var connection = db.Database.GetDbConnection())
             {
@@ -54,7 +54,7 @@ namespace Kennedy.SearchIndex
 
         public string GetImageIndexText(long dbDocId)
         {
-            var db = new DocIndexDbContext(StoragePath);
+            var db = new SearchIndexDbContext(StoragePath);
 
             using (var connection = (db.Database.GetDbConnection()))
             {
@@ -65,8 +65,8 @@ namespace Kennedy.SearchIndex
             }
         }
 
-        public DocIndexDbContext GetContext()
-            => new DocIndexDbContext(StoragePath);
+        public SearchIndexDbContext GetContext()
+            => new SearchIndexDbContext(StoragePath);
 
         public void Close()
         {
@@ -87,7 +87,7 @@ namespace Kennedy.SearchIndex
         internal void StoreMetaData(ParsedResponse parsedResponse, bool bodySaved)
         {
             StoredDocEntry entry = null;
-            using (var db = new DocIndexDbContext(StoragePath))
+            using (var db = new SearchIndexDbContext(StoragePath))
             {
                 bool isNew = false;
 
@@ -121,7 +121,7 @@ namespace Kennedy.SearchIndex
 
         internal void StoreImageMetaData(ImageResponse imageResponse)
         {
-            using (var db = new DocIndexDbContext(StoragePath))
+            using (var db = new SearchIndexDbContext(StoragePath))
             {
                 StoredImageEntry imageEntry = new StoredImageEntry
                 {
@@ -195,7 +195,7 @@ namespace Kennedy.SearchIndex
 
         internal void StoreLinks(ParsedResponse response)
         {
-            using (var db = new DocIndexDbContext(StoragePath))
+            using (var db = new SearchIndexDbContext(StoragePath))
             {
                 //first delete all source IDs
                 db.LinkEntries.RemoveRange(db.LinkEntries

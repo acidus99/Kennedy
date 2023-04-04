@@ -9,7 +9,7 @@ namespace Kennedy.SearchIndex.Indexers
 {
     public class PopularityCalculator
     {
-        DocIndexDbContext db;
+        SearchIndexDbContext db;
 
         public PopularityCalculator(DocumentIndex documentIndex)
         {

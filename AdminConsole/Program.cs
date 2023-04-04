@@ -117,7 +117,7 @@ namespace ArchiveLoader
 
         static void DeleteFromCrawl(string url)
         {
-            DocIndexDbContext index = new DocIndexDbContext(DataRootDirectory);
+            SearchIndexDbContext index = new SearchIndexDbContext(DataRootDirectory);
             GeminiUrl gurl = new GeminiUrl(url);
             index.DocEntries.Where(x => x.UrlID == gurl.ID).FirstOrDefault();
 
