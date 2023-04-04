@@ -9,9 +9,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
-    <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
-    <ProjectReference Include="..\Kennedy.Parsers\Kennedy.Parsers.csproj" />
-    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
+    <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
+    <ProjectReference Include="..\Parsers\Kennedy.Parsers.csproj" />
+    <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DnsClient" Version="1.7.0" />

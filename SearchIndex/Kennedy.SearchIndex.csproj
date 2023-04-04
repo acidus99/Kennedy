@@ -23,7 +23,7 @@
     <PackageReference Include="EFCore.BulkExtensions" Version="7.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
+    <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
   </ItemGroup>
 </Project>

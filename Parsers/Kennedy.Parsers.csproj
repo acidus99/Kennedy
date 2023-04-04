@@ -7,17 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Pack\" />
-    <None Remove="Db\" />
+    <None Remove="GemText\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Pack\" />
-    <Folder Include="Db\" />
+    <Folder Include="GemText\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
-    <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
-    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
-    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
+    <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
   </ItemGroup>
 </Project>
