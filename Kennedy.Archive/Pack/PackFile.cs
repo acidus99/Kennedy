@@ -4,7 +4,7 @@ namespace Kennedy.Archive.Pack
 {
 	public class PackFile
 	{
-		string Filename;
+		public string Filename { get; private set; }
 
 		public PackFile(string filename)
 		{

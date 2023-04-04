@@ -44,7 +44,7 @@
 
         private string getPathForPackName(string packName)
         {
-            var path = ArchiveRoot + Path.DirectorySeparatorChar + packName[0] + packName[1] + Path.DirectorySeparatorChar +
+            return ArchiveRoot + Path.DirectorySeparatorChar + packName[0] + packName[1] + Path.DirectorySeparatorChar +
                 packName[2] + packName[3] + Path.DirectorySeparatorChar;
         }
 

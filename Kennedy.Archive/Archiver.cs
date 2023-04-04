@@ -26,7 +26,6 @@ namespace Kennedy.Archive
             packManager = new PackManager(packsPath);
         }
 
-
 		public bool ArchiveContent(DateTime captured, GeminiUrl url, int statusCode, string meta, byte[] contentData)
 		{
 
@@ -119,6 +118,17 @@ namespace Kennedy.Archive
                 return ContentType.Binary;
             }
             return ContentType.Unknown;
+        }
+
+        public void RemoveContent(Url url)
+        {
+            db.Urls.Remove(url);
+
+            PackFile pack = packManager.GetPack(url.PackName);
+            if(File.Exists(pack.Filename))
+            { 
+                File.Delete(pack.Filename);
+            }
         }
     }
 }
