@@ -3,7 +3,7 @@
 using Gemini.Net;
 
 
-using Kennedy.CrawlData;
+using Kennedy.SearchIndex;
 using Kennedy.Crawler.Crawling;
 using Kennedy.Crawler.Utils;
 using Kennedy.Data;

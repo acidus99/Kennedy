@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Db;
 using Kennedy.Data;
 using Kennedy.Parsers.GemText;
 

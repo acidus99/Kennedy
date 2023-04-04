@@ -3,8 +3,8 @@ using System.Text;
 using System.Linq;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Db;
 using Kennedy.Parsers.GemText;
 
 namespace Kennedy.Crawler.TopicIndexes

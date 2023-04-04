@@ -2,7 +2,7 @@
 using Gemini.Net;
 using Kennedy.Data;
 
-namespace Kennedy.CrawlData
+namespace Kennedy.SearchIndex
 {
 	public interface IDocumentStorage
 	{

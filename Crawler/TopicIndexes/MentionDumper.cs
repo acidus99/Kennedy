@@ -2,8 +2,8 @@
 
 using System.Linq;
 using System.Collections.Generic;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Db;
 using System.IO;
 
 

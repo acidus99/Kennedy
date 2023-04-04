@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Gemini.Net;
 
 
-namespace Kennedy.CrawlData.Db
+namespace Kennedy.SearchIndex.Db
 {
     [Table("Domains")]
     public class StoredDomainsEntry

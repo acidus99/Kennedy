@@ -1,7 +1,7 @@
 ﻿using System;
 using Gemini.Net;
 
-namespace Kennedy.CrawlData.Search
+namespace Kennedy.SearchIndex.Search
 {
     public class ImageSearchResult
     {

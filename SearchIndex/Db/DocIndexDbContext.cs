@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Kennedy.CrawlData.Db
+namespace Kennedy.SearchIndex.Db
 {
     public class DocIndexDbContext : DbContext
     {

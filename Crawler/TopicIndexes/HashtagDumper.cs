@@ -6,8 +6,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Db;
 
 namespace Kennedy.Crawler.TopicIndexes
 {

@@ -1,15 +1,15 @@
 ﻿using System;
 
 using Gemini.Net;
-using Kennedy.CrawlData.Db;
-using Kennedy.CrawlData.Indexers;
-using Kennedy.CrawlData.Search;
+using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Indexers;
+using Kennedy.SearchIndex.Search;
 
 using Kennedy.Data;
 
 
 
-namespace Kennedy.CrawlData
+namespace Kennedy.SearchIndex
 {
 	/// <summary>
     /// Allows documents to be 

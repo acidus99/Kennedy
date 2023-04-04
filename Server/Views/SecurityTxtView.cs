@@ -3,8 +3,8 @@ using System.Linq;
 using System.IO;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Db;
 using RocketForce;
 
 namespace Kennedy.Server.Views

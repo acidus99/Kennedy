@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
 
-namespace Kennedy.CrawlData.Db
+namespace Kennedy.SearchIndex.Db
 {
     [Table("Images")]
     public class StoredImageEntry

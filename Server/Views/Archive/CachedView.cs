@@ -6,8 +6,8 @@ using System.Web;
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Db;
 using RocketForce;
 using Kennedy.Archive.Db;
 using Kennedy.Archive;

@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
 using Kennedy.Data;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex.Db;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace Kennedy.CrawlData
+namespace Kennedy.SearchIndex
 { 
     public class DocumentIndex
     {

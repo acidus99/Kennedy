@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Kennedy.CrawlData.Db;
-using Kennedy.CrawlData;
+using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex;
 
-namespace Kennedy.CrawlData.Indexers
+namespace Kennedy.SearchIndex.Indexers
 {
     public class PopularityCalculator
     {

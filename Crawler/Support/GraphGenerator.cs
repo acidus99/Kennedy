@@ -2,7 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex.Db;
 
 namespace Kennedy.Crawler.Support
 {

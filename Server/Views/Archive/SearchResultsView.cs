@@ -5,7 +5,7 @@ using Gemini.Net;
 
 using Kennedy.Archive.Db;
 using Kennedy.Archive.Pack;
-using Kennedy.CrawlData;
+using Kennedy.SearchIndex;
 using Microsoft.EntityFrameworkCore;
 using RocketForce;
 

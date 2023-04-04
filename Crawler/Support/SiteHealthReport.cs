@@ -4,7 +4,7 @@ using System.Web;
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex.Db;
 
 namespace Kennedy.Crawler.Support
 {

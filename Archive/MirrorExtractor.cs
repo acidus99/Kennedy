@@ -6,8 +6,8 @@ using System.Text.RegularExpressions;
 
 using Gemini.Net;
 
-using Kennedy.CrawlData.Db;
-using Kennedy.CrawlData;
+using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex;
 
 namespace Kennedy.Archive
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Gemini.Net;
 using Kennedy.Archive;
-using Kennedy.CrawlData;
+using Kennedy.SearchIndex;
 
 namespace Kennedy.AdminConsole
 {

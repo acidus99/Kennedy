@@ -1,8 +1,8 @@
 ﻿using System;
 
 using Kennedy.Archive;
-using Kennedy.CrawlData.Db;
-using Kennedy.CrawlData;
+using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex;
 
 namespace ArchiveLoader
 {
