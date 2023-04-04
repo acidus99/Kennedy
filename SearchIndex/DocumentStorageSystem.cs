@@ -63,7 +63,7 @@ namespace Kennedy.SearchIndex
                 db.Domains.Add(
                     new Domain
                     {
-                        Domain = domainInfo.Domain,
+                        DomainName = domainInfo.Domain,
                         Port = domainInfo.Port,
 
                         IsReachable = domainInfo.IsReachable,
