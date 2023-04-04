@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex;
 
 namespace Kennedy.SearchIndex.Indexers
 {
     public class PopularityCalculator
     {
-        SearchIndexDbContext db;
+        SearchIndexContext db;
 
         public PopularityCalculator(DocumentIndex documentIndex)
         {

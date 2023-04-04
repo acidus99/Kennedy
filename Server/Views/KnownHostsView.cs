@@ -4,7 +4,7 @@ using System.IO;
 
 using Gemini.Net;
 using Kennedy.SearchIndex;
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 using RocketForce;
 
 namespace Kennedy.Server.Views

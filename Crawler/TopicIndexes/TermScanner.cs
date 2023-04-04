@@ -4,7 +4,7 @@ using System.Linq;
 
 using Gemini.Net;
 using Kennedy.SearchIndex;
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 using Kennedy.Parsers.GemText;
 
 namespace Kennedy.Crawler.TopicIndexes
@@ -25,7 +25,7 @@ namespace Kennedy.Crawler.TopicIndexes
         public void ScanDocs()
         {
 
-            SearchIndexDbContext db = new SearchIndexDbContext(CrawlerOptions.DataStore);
+            SearchIndexContext db = new SearchIndexContext(CrawlerOptions.DataStore);
             
 
             var entries = db.Documents

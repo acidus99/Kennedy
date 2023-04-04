@@ -1,7 +1,7 @@
 ﻿using System;
 
 using Gemini.Net;
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Indexers;
 using Kennedy.SearchIndex.Engines;
 

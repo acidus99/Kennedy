@@ -9,12 +9,10 @@
     <None Remove="Microsoft.EntityFrameworkCore" />
     <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
     <None Remove="EFCore.BulkExtensions" />
-    <None Remove="Search\" />
     <None Remove="Indexers\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Db\" />
-    <Folder Include="Search\" />
     <Folder Include="Indexers\" />
   </ItemGroup>
   <ItemGroup>

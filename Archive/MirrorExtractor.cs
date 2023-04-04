@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 using Gemini.Net;
 
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex;
 
 namespace Kennedy.Archive
@@ -31,7 +31,7 @@ namespace Kennedy.Archive
         {
             OutputLocation = EnsureSlash(BaseOutputLocation + domainToClone);
             
-            SearchIndexDbContext db = new SearchIndexDbContext(DocDBLocation);
+            SearchIndexContext db = new SearchIndexContext(DocDBLocation);
             DocumentStore docStore = new DocumentStore($"{DocDBLocation}page-store/");
 
             foreach (var entry in db.Documents

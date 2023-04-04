@@ -6,7 +6,7 @@ using Gemini.Net;
 
 using Kennedy.Archive;
 using Kennedy.SearchIndex;
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 using Kennedy.Data;
 
 using Microsoft.EntityFrameworkCore;
@@ -117,7 +117,7 @@ namespace ArchiveLoader
 
         static void DeleteFromCrawl(string url)
         {
-            SearchIndexDbContext index = new SearchIndexDbContext(DataRootDirectory);
+            SearchIndexContext index = new SearchIndexContext(DataRootDirectory);
             GeminiUrl gurl = new GeminiUrl(url);
             index.Documents.Where(x => x.UrlID == gurl.ID).FirstOrDefault();
 

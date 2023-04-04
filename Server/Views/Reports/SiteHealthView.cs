@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
 using Kennedy.SearchIndex;
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 using RocketForce;
 using Kennedy.Archive.Db;
 using Kennedy.Archive;
@@ -33,7 +33,7 @@ namespace Kennedy.Server.Views.Reports
                 return;
             }
 
-            SearchIndexDbContext db = new SearchIndexDbContext(Settings.Global.DataRoot);
+            SearchIndexContext db = new SearchIndexContext(Settings.Global.DataRoot);
             
 
             Response.WriteLine($"# {Domain} - 🩺 Site Health Report");

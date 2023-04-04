@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
 
-namespace Kennedy.SearchIndex.Db
+namespace Kennedy.SearchIndex.Models
 {
     [Table("Images")]
     public class Image

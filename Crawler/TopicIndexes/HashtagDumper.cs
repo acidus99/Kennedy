@@ -7,20 +7,20 @@ using System.Text.RegularExpressions;
 
 using Gemini.Net;
 using Kennedy.SearchIndex;
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 
 namespace Kennedy.Crawler.TopicIndexes
 {
     internal class HashtagDumper
     {
-        SearchIndexDbContext Db;
+        SearchIndexContext Db;
         TermTracker Tracker;
         string OutDir;
 
         public HashtagDumper(TermTracker tracker)
         {
             Tracker = tracker;
-            Db = new SearchIndexDbContext(CrawlerOptions.DataStore);
+            Db = new SearchIndexContext(CrawlerOptions.DataStore);
         }
 
 

@@ -2,20 +2,20 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 
 namespace Kennedy.Crawler.Support
 {
 	public class GraphGenerator
 	{
 
-		SearchIndexDbContext db;
+		SearchIndexContext db;
 
 		StreamWriter fout;
 
         public GraphGenerator(string storageDir)
 		{
-			db = new SearchIndexDbContext(storageDir);
+			db = new SearchIndexContext(storageDir);
 		}
 
 		public void WriteGraph(string filename, string domain)
