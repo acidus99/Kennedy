@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 
 using Gemini.Net;
 using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Storage;
 using Kennedy.SearchIndex.Models;
 using Kennedy.Data;
 using Kennedy.Parsers.GemText;

@@ -2,6 +2,7 @@
 
 using Kennedy.Archive;
 using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex.Storage;
 using Kennedy.SearchIndex;
 
 namespace ArchiveLoader

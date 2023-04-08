@@ -8,6 +8,7 @@ using Gemini.Net;
 
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Storage;
 
 namespace Kennedy.Archive
 {

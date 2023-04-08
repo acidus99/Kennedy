@@ -4,6 +4,8 @@ using System.Linq;
 
 using Gemini.Net;
 using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Storage;
+
 using Kennedy.SearchIndex.Models;
 using Kennedy.Parsers.GemText;
 
