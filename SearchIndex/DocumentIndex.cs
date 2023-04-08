@@ -25,14 +25,15 @@ namespace Kennedy.SearchIndex
 
         public string GetImageIndexText(long dbDocId)
         {
-            var db = new SearchIndexContext(StoragePath);
-
-            using (var connection = (db.Database.GetDbConnection()))
+            using (var db = GetContext())
             {
-                connection.Open();
-                var cmd = db.Database.GetDbConnection().CreateCommand();
-                cmd.CommandText = "SELECT Terms FROM ImageSearch WHERE ROWID = " + dbDocId;
-                return (string)cmd.ExecuteScalar();
+                using (var connection = (db.Database.GetDbConnection()))
+                {
+                    connection.Open();
+                    var cmd = db.Database.GetDbConnection().CreateCommand();
+                    cmd.CommandText = "SELECT Terms FROM ImageSearch WHERE ROWID = " + dbDocId;
+                    return (string)cmd.ExecuteScalar();
+                }
             }
         }
 
@@ -58,7 +59,7 @@ namespace Kennedy.SearchIndex
         internal void StoreMetaData(ParsedResponse parsedResponse, bool bodySaved)
         {
             Document entry = null;
-            using (var db = new SearchIndexContext(StoragePath))
+            using (var db = GetContext())
             {
                 bool isNew = false;
 
@@ -90,9 +91,38 @@ namespace Kennedy.SearchIndex
             }
         }
 
+        internal void DeleteDocument(GeminiUrl url)
+        {
+            //first delete it from the search index database
+            using (var db = GetContext())
+            {
+                var document = db.Documents.Where(x => x.UrlID == url.ID).FirstOrDefault();
+                if (document != null)
+                {
+                    db.Documents.Remove(document);
+                }
+
+                //older search databases didn't have foreign key constraints, so ensure related rows are cleaned up
+
+                var image = db.Images.Where(x => x.UrlID == url.ID).FirstOrDefault();
+                if(image != null)
+                {
+                    db.Images.Remove(image);
+                }
+
+                var links = db.Links.Where(x => x.SourceUrlID == url.ID);
+                if(links.Count() > 0)
+                {
+                    db.Links.RemoveRange(links);
+                }
+                //need to mak
+
+            }
+        }
+
         internal void StoreImageMetaData(ImageResponse imageResponse)
         {
-            using (var db = new SearchIndexContext(StoragePath))
+            using (var db = GetContext())
             {
                 Image imageEntry = new Image
                 {
@@ -166,7 +196,7 @@ namespace Kennedy.SearchIndex
 
         internal void StoreLinks(ParsedResponse response)
         {
-            using (var db = new SearchIndexContext(StoragePath))
+            using (var db = GetContext())
             {
                 //first delete all source IDs
                 db.Links.RemoveRange(db.Links

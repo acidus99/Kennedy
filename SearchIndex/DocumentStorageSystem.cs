@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+
 
 using Gemini.Net;
 using Kennedy.SearchIndex.Models;

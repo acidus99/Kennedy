@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Net;
 
 using Kennedy.SearchIndex.Engines;
+using Kennedy.SearchIndex.Models;
 using RocketForce;
 using System.Diagnostics;
 
@@ -78,7 +79,7 @@ namespace Kennedy.Server.Views.Search
         private void WriteResultEntry(Response resp, ImageSearchResult result, int resultNumber)
         {
             Response.WriteLine($"=> {result.Url} {resultNumber}. {result.ImageType} • {result.Width} x {result.Height} • {result.Url.Path}");
-            Response.WriteLine($"=> /page-info?id={result.DBDocID} {FormatSize(result.BodySize)} • {FormatDomain(result.Url.Hostname, result.Favicon)} • More info...");
+            Response.WriteLine($"=> /page-info?id={result.UrlID} {FormatSize(result.BodySize)} • {FormatDomain(result.Url.Hostname, result.Favicon)} • More info...");
             Response.WriteLine(">" + FormatSnippet(result.Snippet));
             Response.WriteLine("");
         }

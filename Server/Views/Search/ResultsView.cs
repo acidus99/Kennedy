@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Net;
 
 using Kennedy.SearchIndex.Engines;
+using Kennedy.SearchIndex.Models;
 using RocketForce;
 using System.Diagnostics;
 using Kennedy.Gemipedia;
@@ -99,7 +100,7 @@ namespace Kennedy.Server.Views.Search
         {
 
             Response.WriteLine($"=> {result.Url} {resultNumber}. {FormatPageTitle(result.Url, result.Title)}");
-            Response.Write($"=> /page-info?id={result.DBDocID} {result.LineCount} Lines • ");
+            Response.Write($"=> /page-info?id={result.UrlID} {result.LineCount} Lines • ");
 
             var language = FormatLanguage(result.Language);
 

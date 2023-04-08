@@ -1,15 +1,18 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore;
 using Gemini.Net;
 
-namespace Kennedy.SearchIndex.Engines
+namespace Kennedy.SearchIndex.Models
 {
+    [Keyless]
     public class FullTextSearchResult
     {
+        public long UrlID { get; set; }
+
         public GeminiUrl Url { get; set; }
         public int BodySize { get; set; }
         public string Title { get; set; }
         public string Snippet { get; set; }
-        public long DBDocID { get; set; }
 
         public string Language { get; set; }
         public int LineCount { get; set; }

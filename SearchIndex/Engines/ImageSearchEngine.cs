@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 
 using Gemini.Net;
+using Kennedy.SearchIndex.Models;
 
 namespace Kennedy.SearchIndex.Engines
 {
@@ -71,7 +72,7 @@ LIMIT $limit OFFSET $offset";
                             Url = new GeminiUrl(reader["Url"].ToString()),
                             BodySize = reader.GetInt32(reader.GetOrdinal("BodySize")),
                             Snippet = reader["snip"].ToString(),
-                            DBDocID = reader.GetInt64(reader.GetOrdinal("DBDocID")),
+                            UrlID = reader.GetInt64(reader.GetOrdinal("DBDocID")),
                             BodySaved = reader.GetBoolean(reader.GetOrdinal("BodySaved")),
                             Favicon = favicon,
                             Width = reader.GetInt32(reader.GetOrdinal("Width")),
