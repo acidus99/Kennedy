@@ -10,13 +10,10 @@ namespace Kennedy.SearchIndex.Web
 {
 	public class WebDatabase : IWebDatabase
 	{
-        string StorageDirectory;
-
         public WebDatabaseContext Context { get; private set; }
 
 		public WebDatabase(string storageDir)
         {
-            StorageDirectory = storageDir;
             Context = new WebDatabaseContext(storageDir);
 		}
 
