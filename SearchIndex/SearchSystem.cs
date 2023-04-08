@@ -8,13 +8,14 @@ using Kennedy.SearchIndex.Indexers;
 using Kennedy.SearchIndex.Engines;
 
 using Kennedy.Data;
+using Kennedy.SearchIndex.Storage;
 
 namespace Kennedy.SearchIndex
 {
 	/// <summary>
     /// Allows documents to be 
     /// </summary>
-	public class DocumentStorageSystem : IDocumentStorage
+	public class SearchSystem : IDocumentStorage
 	{
         //holds meta data about the documents
         DocumentIndex documentIndex;
@@ -27,7 +28,7 @@ namespace Kennedy.SearchIndex
         ImageIndexer imageIndexer;
 
 
-        public DocumentStorageSystem(string dataDirectory)
+        public SearchSystem(string dataDirectory)
 		{
             documentIndex = new DocumentIndex(dataDirectory);
             documentStore = new DocumentStore(dataDirectory + "page-store/");
