@@ -60,8 +60,7 @@
                 throw new ArgumentException("Packname contains invalid characters", "packName");
             }
 
-            var path = ArchiveRoot + Path.DirectorySeparatorChar + packName[0] + packName[1] + Path.DirectorySeparatorChar +
-                packName[2] + packName[3]+ Path.DirectorySeparatorChar;
+            var path = getPathForPackName(packName);
 
             //Ensure the file path exists
             Directory.CreateDirectory(path);
@@ -69,12 +68,20 @@
             return new PackFile(path + packName);
         }
 
-        public void DeletePack(string packName)
+        public bool DeletePack(string packName)
         {
             if (!IsKeyIsValid(packName))
             {
                 throw new ArgumentException("Packname contains invalid characters", "packName");
             }
+
+            var path = getPathForPackName(packName);
+            if(File.Exists(path + packName))
+            {
+                File.Delete(path + packName);
+                return true;
+            }
+            return false;
         }
     }
 }
