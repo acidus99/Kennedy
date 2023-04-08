@@ -6,11 +6,13 @@ namespace Kennedy.CrawlData
 {
 	public interface IDocumentStorage
 	{
-		public void StoreDocument(ParsedResponse parsedResponse);
+        public void Finalize();
+
+        public void StoreDocument(ParsedResponse parsedResponse);
 
 		public void StoreDomain(DomainInfo domainInfo);
 
-		public void Finalize();
+		
 	}
 }
 
