@@ -2,13 +2,16 @@
 using System.Security.Cryptography;
 
 using Kennedy.Data;
+using Gemini.Net;
 
-namespace Kennedy.SearchIndex
+namespace Kennedy.SearchIndex.Storage
 {
     /// <summary>
+    /// DocumentStore stores the contents of a URL, and retrieves it
     /// Document store implemented using an Object Store, backed onto a disk
+    /// It it use
     /// </summary>
-    public class DocumentStore
+    public class DocumentStore : IDocumentStore
     {
         ObjectStore store;
 
@@ -41,6 +44,9 @@ namespace Kennedy.SearchIndex
             //hack, we used to use ulong here. continue that here so we can read old page-store directories
             return unchecked((ulong)urlID);
         }
+
+        public byte[] GetDocument(GeminiUrl url)
+            => GetDocument(url.ID);
 
         public byte [] GetDocument(long urlID)
         {
