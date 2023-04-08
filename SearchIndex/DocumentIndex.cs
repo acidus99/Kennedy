@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
 using Kennedy.Data;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex.Models;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace Kennedy.CrawlData
+namespace Kennedy.SearchIndex
 { 
     public class DocumentIndex
     {
@@ -20,41 +20,12 @@ namespace Kennedy.CrawlData
         {
             StoragePath = storagePath;
             //create and destory a DBContext to force the DB to be there
-            var db = new DocIndexDbContext(storagePath);
-            db.Database.EnsureCreated();
-            EnsureFullTextSearch(db);
-        }
-
-        private void EnsureFullTextSearch(DocIndexDbContext db)
-        {
-            using (var connection = db.Database.GetDbConnection())
-            {
-                connection.Open();
-                var cmd = db.Database.GetDbConnection().CreateCommand();
-                cmd.CommandText = "SELECT Count(*) FROM sqlite_master WHERE type='table' AND name='FTS';";
-                var count = Convert.ToInt32(cmd.ExecuteScalar());
-
-                if (count == 0)
-                {
-                    cmd.CommandText = "CREATE VIRTUAL TABLE FTS using fts5(Title, Body, tokenize = 'porter');";
-                    cmd.ExecuteNonQuery();
-                }
-
-                cmd.CommandText = "SELECT Count(*) FROM sqlite_master WHERE type='table' AND name='ImageSearch';";
-                count = Convert.ToInt32(cmd.ExecuteScalar());
-
-                if (count == 0)
-                {
-                    cmd.CommandText = "CREATE VIRTUAL TABLE ImageSearch using fts5(Terms, tokenize = 'porter');";
-                    cmd.ExecuteNonQuery();
-                }
-
-            }
+            var db = new SearchIndexContext(storagePath);
         }
 
         public string GetImageIndexText(long dbDocId)
         {
-            var db = new DocIndexDbContext(StoragePath);
+            var db = new SearchIndexContext(StoragePath);
 
             using (var connection = (db.Database.GetDbConnection()))
             {
@@ -65,8 +36,8 @@ namespace Kennedy.CrawlData
             }
         }
 
-        public DocIndexDbContext GetContext()
-            => new DocIndexDbContext(StoragePath);
+        public SearchIndexContext GetContext()
+            => new SearchIndexContext(StoragePath);
 
         public void Close()
         {
@@ -86,18 +57,18 @@ namespace Kennedy.CrawlData
         /// <returns></returns>
         internal void StoreMetaData(ParsedResponse parsedResponse, bool bodySaved)
         {
-            StoredDocEntry entry = null;
-            using (var db = new DocIndexDbContext(StoragePath))
+            Document entry = null;
+            using (var db = new SearchIndexContext(StoragePath))
             {
                 bool isNew = false;
 
-                entry = db.DocEntries
+                entry = db.Documents
                     .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
                     .FirstOrDefault();
                 if (entry == null)
                 {
                     isNew = true;
-                    entry = new StoredDocEntry
+                    entry = new Document
                     {
                         UrlID = parsedResponse.RequestUrl.ID,
                         FirstSeen = System.DateTime.Now,
@@ -113,7 +84,7 @@ namespace Kennedy.CrawlData
 
                 if(isNew)
                 {
-                    db.DocEntries.Add(entry);
+                    db.Documents.Add(entry);
                 }
                 db.SaveChanges();
             }
@@ -121,9 +92,9 @@ namespace Kennedy.CrawlData
 
         internal void StoreImageMetaData(ImageResponse imageResponse)
         {
-            using (var db = new DocIndexDbContext(StoragePath))
+            using (var db = new SearchIndexContext(StoragePath))
             {
-                StoredImageEntry imageEntry = new StoredImageEntry
+                Image imageEntry = new Image
                 {
                     UrlID = imageResponse.RequestUrl.ID,
                     IsTransparent = imageResponse.IsTransparent,
@@ -131,12 +102,12 @@ namespace Kennedy.CrawlData
                     Width = imageResponse.Width,
                     ImageType = imageResponse.ImageType
                 };
-                db.ImageEntries.Add(imageEntry);
+                db.Images.Add(imageEntry);
                 db.SaveChanges();
             }
         }
 
-        private StoredDocEntry PopulateEntry(ParsedResponse parsedResponse, bool bodySaved, StoredDocEntry entry)
+        private Document PopulateEntry(ParsedResponse parsedResponse, bool bodySaved, Document entry)
         {
             entry.LastVisit = DateTime.Now;
 
@@ -195,13 +166,13 @@ namespace Kennedy.CrawlData
 
         internal void StoreLinks(ParsedResponse response)
         {
-            using (var db = new DocIndexDbContext(StoragePath))
+            using (var db = new SearchIndexContext(StoragePath))
             {
                 //first delete all source IDs
-                db.LinkEntries.RemoveRange(db.LinkEntries
+                db.Links.RemoveRange(db.Links
                     .Where(x => (x.SourceUrlID == response.RequestUrl.ID)));
                 db.SaveChanges();
-                db.BulkInsert(response.Links.Distinct().Select(link => new StoredLinkEntry
+                db.BulkInsert(response.Links.Distinct().Select(link => new DocumentLink
                 {
                     SourceUrlID = response.RequestUrl.ID,
                     TargetUrlID = link.Url.ID,

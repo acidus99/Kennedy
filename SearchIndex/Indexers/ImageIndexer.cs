@@ -3,7 +3,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-namespace Kennedy.CrawlData.Indexers
+namespace Kennedy.SearchIndex.Indexers
 {
     public class ImageIndexer
     {

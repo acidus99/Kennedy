@@ -6,8 +6,8 @@ using System.Web;
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Models;
 using RocketForce;
 using Kennedy.Archive.Db;
 using Kennedy.Archive;
@@ -33,12 +33,12 @@ namespace Kennedy.Server.Views.Reports
                 return;
             }
 
-            DocIndexDbContext db = new DocIndexDbContext(Settings.Global.DataRoot);
+            SearchIndexContext db = new SearchIndexContext(Settings.Global.DataRoot);
             
 
             Response.WriteLine($"# {Domain} - 🩺 Site Health Report");
 
-            var docs = db.DocEntries
+            var docs = db.Documents
                 .Where(x => x.Domain == Domain);
 
             var totalDocs = docs.Count();
@@ -61,7 +61,7 @@ namespace Kennedy.Server.Views.Reports
                 Response.WriteLine($"=> {doc.Url}");
                 Response.WriteLine("Incoming Links:");
 
-                var links = db.LinkEntries.Include(x => x.SourceUrl)
+                var links = db.Links.Include(x => x.SourceUrl)
                     .Where(x => x.TargetUrlID == doc.UrlID);
 
                 foreach (var link in links)

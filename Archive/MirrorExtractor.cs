@@ -6,8 +6,8 @@ using System.Text.RegularExpressions;
 
 using Gemini.Net;
 
-using Kennedy.CrawlData.Db;
-using Kennedy.CrawlData;
+using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex;
 
 namespace Kennedy.Archive
 {
@@ -31,10 +31,10 @@ namespace Kennedy.Archive
         {
             OutputLocation = EnsureSlash(BaseOutputLocation + domainToClone);
             
-            DocIndexDbContext db = new DocIndexDbContext(DocDBLocation);
+            SearchIndexContext db = new SearchIndexContext(DocDBLocation);
             DocumentStore docStore = new DocumentStore($"{DocDBLocation}page-store/");
 
-            foreach (var entry in db.DocEntries
+            foreach (var entry in db.Documents
                 .Where(x => x.Domain == domainToClone && x.Port == portToClone && x.Status == 20))
             {
                 byte[] data = null;

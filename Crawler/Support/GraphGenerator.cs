@@ -1,21 +1,21 @@
 ﻿using System;
-
 using Microsoft.EntityFrameworkCore;
 
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex;
 
 namespace Kennedy.Crawler.Support
 {
 	public class GraphGenerator
 	{
 
-		DocIndexDbContext db;
+		SearchIndexContext db;
 
 		StreamWriter fout;
 
         public GraphGenerator(string storageDir)
 		{
-			db = new DocIndexDbContext(storageDir);
+			db = new SearchIndexContext(storageDir);
 		}
 
 		public void WriteGraph(string filename, string domain)
@@ -24,7 +24,7 @@ namespace Kennedy.Crawler.Support
 
 			fout.WriteLine("digraph SiteMap {");
 			fout.WriteLine(" rankdir=\"LR\"");
-			var docs = db.DocEntries.Where(x => x.Domain == domain).OrderBy(x=>x.Url.Length);
+			var docs = db.Documents.Where(x => x.Domain == domain).OrderBy(x=>x.Url.Length);
 
             foreach (var doc in docs)
             {
@@ -40,13 +40,15 @@ namespace Kennedy.Crawler.Support
 
                 fout.WriteLine($"{graphID} [label=\"{label}\"];");
             }
-			
+
+			var validInternalUrlIds = docs.Select(x => x.UrlID).Distinct();
+
             foreach (var doc in docs)
 			{
 				var graphID = UrlIDToGraphID(doc.UrlID);
 
-				var links = db.LinkEntries.Include(x => x.SourceUrl).Include(x => x.TargetUrl)
-					.Where(x => x.SourceUrlID == doc.UrlID && !x.IsExternal && x.TargetUrl != null);
+				var links = db.Links
+					.Where(x => x.SourceUrlID == doc.UrlID && !x.IsExternal && validInternalUrlIds.Contains(x.TargetUrlID));
 
                 foreach (var link in links)
 				{

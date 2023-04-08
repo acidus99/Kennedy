@@ -14,7 +14,7 @@ using Kennedy.Crawler.Logging;
 using Kennedy.Crawler.Protocols;
 using Kennedy.Crawler.Utils;
 
-using Kennedy.CrawlData;
+using Kennedy.SearchIndex;
 
 using Kennedy.Data;
 using Kennedy.Parsers;

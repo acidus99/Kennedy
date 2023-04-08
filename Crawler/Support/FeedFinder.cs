@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Models;
 using Kennedy.Data;
 using Kennedy.Parsers.GemText;
 
@@ -30,9 +30,9 @@ namespace Kennedy.Crawler.Support
 
         public List<string> FindXmlFeeds()
         {
-            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataStore);
+            SearchIndexContext db = new SearchIndexContext(CrawlerOptions.DataStore);
 
-            return db.DocEntries
+            return db.Documents
                 .Where(x => (x.ErrorCount == 0 && x.MimeType.StartsWith("application/xml")))
                 .Select(x=>x.Url).ToList();
         }
@@ -41,9 +41,9 @@ namespace Kennedy.Crawler.Support
         {
             List<string> ret = new List<string>();
 
-            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataStore);
+            SearchIndexContext db = new SearchIndexContext(CrawlerOptions.DataStore);
 
-            var entries = db.DocEntries
+            var entries = db.Documents
                 .Where(x => (x.ErrorCount == 0 && x.BodySize > 0 && x.MimeType.StartsWith("text/gemini"))).ToList();
 
             int total = entries.Count;
@@ -65,7 +65,7 @@ namespace Kennedy.Crawler.Support
             return ret;
         } 
 
-        public bool IsValidGemPub(StoredDocEntry entry)
+        public bool IsValidGemPub(Document entry)
         {
             //try and grab from doc store
             string bodyText = System.Text.Encoding.UTF8.GetString(docStore.GetDocument(entry.UrlID));

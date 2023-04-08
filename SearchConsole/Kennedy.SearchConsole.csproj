@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
+    <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
   </ItemGroup>
 </Project>

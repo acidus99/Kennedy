@@ -3,8 +3,8 @@ using System.Linq;
 using System.IO;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Models;
 using RocketForce;
 
 namespace Kennedy.Server.Views
@@ -33,9 +33,9 @@ namespace Kennedy.Server.Views
             Response.WriteLine("The following are capsules are known to Kennedy and are reachable.");
 
 
-            var knownHosts = db.DomainEntries.Where(x => x.IsReachable).OrderBy(x => x.Domain).Select(x => new
+            var knownHosts = db.Domains.Where(x => x.IsReachable).OrderBy(x => x.DomainName).Select(x => new
             {
-                Hostname = x.Domain,
+                Hostname = x.DomainName,
                 Port = x.Port,
                 Favicon = !string.IsNullOrEmpty(x.FaviconTxt) ? x.FaviconTxt : ""
             }) ;

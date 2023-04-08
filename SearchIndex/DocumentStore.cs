@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 using Kennedy.Data;
 
-namespace Kennedy.CrawlData
+namespace Kennedy.SearchIndex
 {
     /// <summary>
     /// Document store implemented using an Object Store, backed onto a disk

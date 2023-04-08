@@ -6,21 +6,21 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Models;
 
 namespace Kennedy.Crawler.TopicIndexes
 {
     internal class HashtagDumper
     {
-        DocIndexDbContext Db;
+        SearchIndexContext Db;
         TermTracker Tracker;
         string OutDir;
 
         public HashtagDumper(TermTracker tracker)
         {
             Tracker = tracker;
-            Db = new DocIndexDbContext(CrawlerOptions.DataStore);
+            Db = new SearchIndexContext(CrawlerOptions.DataStore);
         }
 
 
@@ -70,7 +70,7 @@ namespace Kennedy.Crawler.TopicIndexes
                 urls.Sort();
                 foreach (var url in urls)
                 {
-                    var title = (Db.DocEntries
+                    var title = (Db.Documents
                         .Where(x => x.UrlID == url.ID)
                         .Select(x => x.Title)
                         .FirstOrDefault());

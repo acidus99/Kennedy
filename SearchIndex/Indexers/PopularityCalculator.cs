@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Kennedy.CrawlData.Db;
-using Kennedy.CrawlData;
+using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex;
 
-namespace Kennedy.CrawlData.Indexers
+namespace Kennedy.SearchIndex.Indexers
 {
     public class PopularityCalculator
     {
-        DocIndexDbContext db;
+        SearchIndexContext db;
 
         public PopularityCalculator(DocumentIndex documentIndex)
         {
@@ -23,7 +23,7 @@ namespace Kennedy.CrawlData.Indexers
         public void Rank()
         {
 
-            var reachableEntries = db.DocEntries.Where(x => (x.ErrorCount == 0)).ToList();
+            var reachableEntries = db.Documents.Where(x => (x.ErrorCount == 0)).ToList();
 
             var totalPages = reachableEntries.Count;
 
@@ -64,7 +64,7 @@ namespace Kennedy.CrawlData.Indexers
 
         private void BuildOutlinkCache()
         {
-            var outLinks = (from links in db.LinkEntries
+            var outLinks = (from links in db.Links
                             where links.IsExternal
                       group links by links.SourceUrlID into grp
                       select new { DBDocID = grp.Key, Count = grp.Count() });
@@ -76,7 +76,7 @@ namespace Kennedy.CrawlData.Indexers
 
         private void BuildLinkToPageCache()
         {
-            foreach (var link in db.LinkEntries.Where(x => (x.IsExternal)))
+            foreach (var link in db.Links.Where(x => (x.IsExternal)))
             {
                 if(!LinksToPage.ContainsKey(link.TargetUrlID))
                 {

@@ -9,12 +9,10 @@
     <None Remove="Microsoft.EntityFrameworkCore" />
     <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
     <None Remove="EFCore.BulkExtensions" />
-    <None Remove="Search\" />
     <None Remove="Indexers\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Db\" />
-    <Folder Include="Search\" />
     <Folder Include="Indexers\" />
   </ItemGroup>
   <ItemGroup>
@@ -23,7 +21,7 @@
     <PackageReference Include="EFCore.BulkExtensions" Version="7.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Kennedy.Data\Kennedy.Data.csproj" />
+    <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
   </ItemGroup>
 </Project>

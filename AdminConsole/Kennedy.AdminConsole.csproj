@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
-    <ProjectReference Include="..\Kennedy.Archive\Kennedy.Archive.csproj" />
-    <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
+    <ProjectReference Include="..\Archive\Kennedy.Archive.csproj" />
+    <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
   </ItemGroup>
 </Project>

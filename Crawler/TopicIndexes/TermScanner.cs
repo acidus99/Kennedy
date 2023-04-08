@@ -3,8 +3,8 @@ using System.Text;
 using System.Linq;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Models;
 using Kennedy.Parsers.GemText;
 
 namespace Kennedy.Crawler.TopicIndexes
@@ -25,10 +25,10 @@ namespace Kennedy.Crawler.TopicIndexes
         public void ScanDocs()
         {
 
-            DocIndexDbContext db = new DocIndexDbContext(CrawlerOptions.DataStore);
+            SearchIndexContext db = new SearchIndexContext(CrawlerOptions.DataStore);
             
 
-            var entries = db.DocEntries
+            var entries = db.Documents
                             .Where(x => (x.BodySaved && x.MimeType.StartsWith("text/gemini"))).ToList()
                             .Where(x=>(x.Domain != "kennedy.gemi.dev"))
                             .Select(x => new

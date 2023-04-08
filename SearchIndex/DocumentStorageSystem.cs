@@ -1,15 +1,13 @@
 ﻿using System;
 
 using Gemini.Net;
-using Kennedy.CrawlData.Db;
-using Kennedy.CrawlData.Indexers;
-using Kennedy.CrawlData.Search;
+using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex.Indexers;
+using Kennedy.SearchIndex.Engines;
 
 using Kennedy.Data;
 
-
-
-namespace Kennedy.CrawlData
+namespace Kennedy.SearchIndex
 {
 	/// <summary>
     /// Allows documents to be 
@@ -60,10 +58,10 @@ namespace Kennedy.CrawlData
         {
             using (var db = documentIndex.GetContext())
             {
-                db.DomainEntries.Add(
-                    new StoredDomainsEntry
+                db.Domains.Add(
+                    new Domain
                     {
-                        Domain = domainInfo.Domain,
+                        DomainName = domainInfo.Domain,
                         Port = domainInfo.Port,
 
                         IsReachable = domainInfo.IsReachable,

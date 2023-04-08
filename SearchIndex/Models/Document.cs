@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Gemini.Net;
 using Kennedy.Data;
 
-namespace Kennedy.CrawlData.Db
+namespace Kennedy.SearchIndex.Models
 {
     [Table("Documents")]
     [Index(nameof(Status))]
-    public class StoredDocEntry
+    public class Document
     {
         /// <summary>
         /// the ID we are using in the DB for the DocID. DocID is a ulong,

@@ -1,13 +1,15 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 using Gemini.Net;
 
 
-namespace Kennedy.CrawlData.Db
+namespace Kennedy.SearchIndex.Models
 {
     [Table("Links")]
-    public class StoredLinkEntry
+    [PrimaryKey(nameof(SourceUrlID), nameof(TargetUrlID))]
+    public class DocumentLink
     {
         /// <summary>
         /// the ID we are using in the DB for the DocID. DocID is a ulong,
@@ -16,15 +18,12 @@ namespace Kennedy.CrawlData.Db
         /// </summary>
         [Column("DBSourceDocID")]
         public long SourceUrlID { get; set; }
+        public Document SourceUrl { get; set; }
 
         [Column("DBTargetDocID")]
         public long TargetUrlID { get; set; }
 
         public bool IsExternal { get; set; }
         public string LinkText { get; set; }
-
-        public StoredDocEntry SourceUrl { get; set; }
-        public StoredDocEntry TargetUrl { get; set; }
-
     }
 }

@@ -4,8 +4,8 @@ using System.IO;
 using System.Web;
 
 using Gemini.Net;
-using Kennedy.CrawlData;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Models;
 using Kennedy.Data;
 using RocketForce;
 
@@ -16,9 +16,9 @@ namespace Kennedy.Server.Views.Search
         public PageInfoView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
-        private DocIndexDbContext db;
+        private SearchIndexContext db;
         private DocumentIndex documentIndex;
-        StoredDocEntry entry;
+        Document entry;
 
         public override void Render()
         {
@@ -32,7 +32,7 @@ namespace Kennedy.Server.Views.Search
             if (query.StartsWith("id=") && query.Length > 3)
             {
                 dbDocID = Convert.ToInt64(query.Substring(3));
-                entry = db.DocEntries.Where(x => x.UrlID == dbDocID).FirstOrDefault();
+                entry = db.Documents.Where(x => x.UrlID == dbDocID).FirstOrDefault();
             }
             if (entry == null)
             {
@@ -68,7 +68,7 @@ namespace Kennedy.Server.Views.Search
 
                 case ContentType.Image:
 
-                    var imgmeta = (from img in db.ImageEntries
+                    var imgmeta = (from img in db.Images
                                    where img.UrlID == dbDocID
                                    select new
                                    {
@@ -100,9 +100,9 @@ namespace Kennedy.Server.Views.Search
         private void RenderGemtextLinks()
         {
 
-            var inboundLinks = (from links in db.LinkEntries
+            var inboundLinks = (from links in db.Links
                                 where links.TargetUrlID == entry.UrlID && !links.IsExternal
-                                join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
+                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
                                 {
@@ -127,9 +127,9 @@ namespace Kennedy.Server.Views.Search
                 Response.WriteLine("No internal links");
             }
 
-            inboundLinks = (from links in db.LinkEntries
+            inboundLinks = (from links in db.Links
                                 where links.TargetUrlID == entry.UrlID && links.IsExternal
-                                join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
+                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
                                 {
@@ -154,9 +154,9 @@ namespace Kennedy.Server.Views.Search
                 Response.WriteLine("No incoming links");
             }
 
-            var outboundLinks = (from links in db.LinkEntries
+            var outboundLinks = (from links in db.Links
                                  where links.SourceUrlID == entry.UrlID
-                                 join docs in db.DocEntries on links.TargetUrlID equals docs.UrlID
+                                 join docs in db.Documents on links.TargetUrlID equals docs.UrlID
                                  select new
                                  {
                                      docs.Url,
@@ -183,9 +183,9 @@ namespace Kennedy.Server.Views.Search
 
         private void RenderOtherLinks()
         {
-            var inboundLinks = (from links in db.LinkEntries
+            var inboundLinks = (from links in db.Links
                                 where links.TargetUrlID == entry.UrlID && !links.IsExternal
-                                join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
+                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
                                 {
@@ -210,9 +210,9 @@ namespace Kennedy.Server.Views.Search
                 Response.WriteLine("No internal links");
             }
 
-            inboundLinks = (from links in db.LinkEntries
+            inboundLinks = (from links in db.Links
                                 where links.TargetUrlID == entry.UrlID && links.IsExternal
-                                join docs in db.DocEntries on links.SourceUrlID equals docs.UrlID
+                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
                                 orderby docs.Url
                                 select new
                                 {
@@ -237,9 +237,9 @@ namespace Kennedy.Server.Views.Search
                 Response.WriteLine("No incoming links");
             }
 
-            var outboundLinks = (from links in db.LinkEntries
+            var outboundLinks = (from links in db.Links
                                  where links.SourceUrlID == entry.UrlID
-                                 join docs in db.DocEntries on links.TargetUrlID equals docs.UrlID
+                                 join docs in db.Documents on links.TargetUrlID equals docs.UrlID
                                  select new
                                  {
                                      docs.Url,

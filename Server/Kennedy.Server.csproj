@@ -7,9 +7,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\RocketForce\RocketForce\RocketForce.csproj" />
-    <ProjectReference Include="..\CrawlData\Kennedy.CrawlData.csproj" />
+    <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
-    <ProjectReference Include="..\Kennedy.Archive\Kennedy.Archive.csproj" />
+    <ProjectReference Include="..\Archive\Kennedy.Archive.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Microsoft.Extensions.Logging.Console" />

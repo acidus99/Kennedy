@@ -4,7 +4,7 @@ using Microsoft.Data.Sqlite;
 
 using Gemini.Net;
 
-namespace Kennedy.CrawlData.Search
+namespace Kennedy.SearchIndex.Engines
 {
     public class FullTextSearchEngine
     {

@@ -4,20 +4,21 @@ using System.Web;
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
-using Kennedy.CrawlData.Db;
+using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex;
 
 namespace Kennedy.Crawler.Support
 {
 	public class SiteHealthReport
 	{
 
-		DocIndexDbContext db;
+		SearchIndexContext db;
 
 		StreamWriter fout;
 
         public SiteHealthReport(string storageDir)
 		{
-			db = new DocIndexDbContext(storageDir);
+			db = new SearchIndexContext(storageDir);
 		}
 
 		public void WriteReport(string filename, string domain)
@@ -26,7 +27,7 @@ namespace Kennedy.Crawler.Support
 			fout.WriteLine("# 🩺 Site Health Report");
             fout.WriteLine($"## {domain}");
 
-			var docs = db.DocEntries
+			var docs = db.Documents
 				.Where(x => x.Domain == domain);
 
 			var totalDocs = docs.Count();
@@ -49,7 +50,7 @@ namespace Kennedy.Crawler.Support
 				fout.WriteLine($"=> {doc.Url}");
 				fout.WriteLine("Incoming Links:");
 
-				var links = db.LinkEntries.Include(x => x.SourceUrl)
+				var links = db.Links.Include(x => x.SourceUrl)
                     .Where(x => x.TargetUrlID == doc.UrlID);
 
                 foreach (var link in links)
