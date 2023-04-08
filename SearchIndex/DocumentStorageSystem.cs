@@ -7,8 +7,6 @@ using Kennedy.SearchIndex.Engines;
 
 using Kennedy.Data;
 
-
-
 namespace Kennedy.SearchIndex
 {
 	/// <summary>

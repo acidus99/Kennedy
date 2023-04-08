@@ -5,7 +5,7 @@ using System.Web;
 
 using Gemini.Net;
 using Kennedy.SearchIndex;
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 using Kennedy.Data;
 using RocketForce;
 
@@ -16,7 +16,7 @@ namespace Kennedy.Server.Views.Search
         public PageInfoView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
-        private SearchIndexDbContext db;
+        private SearchIndexContext db;
         private DocumentIndex documentIndex;
         Document entry;
 

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Gemini.Net;
 using Kennedy.Data;
 
-namespace Kennedy.SearchIndex.Db
+namespace Kennedy.SearchIndex.Models
 {
     [Table("Documents")]
     [Index(nameof(Status))]

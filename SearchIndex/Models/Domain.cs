@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Gemini.Net;
 
 
-namespace Kennedy.SearchIndex.Db
+namespace Kennedy.SearchIndex.Models
 {
     [Table("Domains")]
     public class Domain

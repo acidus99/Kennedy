@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
 using Kennedy.Data;
-using Kennedy.SearchIndex.Db;
+using Kennedy.SearchIndex.Models;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Kennedy.SearchIndex
@@ -20,41 +20,12 @@ namespace Kennedy.SearchIndex
         {
             StoragePath = storagePath;
             //create and destory a DBContext to force the DB to be there
-            var db = new SearchIndexDbContext(storagePath);
-            db.Database.EnsureCreated();
-            EnsureFullTextSearch(db);
-        }
-
-        private void EnsureFullTextSearch(SearchIndexDbContext db)
-        {
-            using (var connection = db.Database.GetDbConnection())
-            {
-                connection.Open();
-                var cmd = db.Database.GetDbConnection().CreateCommand();
-                cmd.CommandText = "SELECT Count(*) FROM sqlite_master WHERE type='table' AND name='FTS';";
-                var count = Convert.ToInt32(cmd.ExecuteScalar());
-
-                if (count == 0)
-                {
-                    cmd.CommandText = "CREATE VIRTUAL TABLE FTS using fts5(Title, Body, tokenize = 'porter');";
-                    cmd.ExecuteNonQuery();
-                }
-
-                cmd.CommandText = "SELECT Count(*) FROM sqlite_master WHERE type='table' AND name='ImageSearch';";
-                count = Convert.ToInt32(cmd.ExecuteScalar());
-
-                if (count == 0)
-                {
-                    cmd.CommandText = "CREATE VIRTUAL TABLE ImageSearch using fts5(Terms, tokenize = 'porter');";
-                    cmd.ExecuteNonQuery();
-                }
-
-            }
+            var db = new SearchIndexContext(storagePath);
         }
 
         public string GetImageIndexText(long dbDocId)
         {
-            var db = new SearchIndexDbContext(StoragePath);
+            var db = new SearchIndexContext(StoragePath);
 
             using (var connection = (db.Database.GetDbConnection()))
             {
@@ -65,8 +36,8 @@ namespace Kennedy.SearchIndex
             }
         }
 
-        public SearchIndexDbContext GetContext()
-            => new SearchIndexDbContext(StoragePath);
+        public SearchIndexContext GetContext()
+            => new SearchIndexContext(StoragePath);
 
         public void Close()
         {
@@ -87,7 +58,7 @@ namespace Kennedy.SearchIndex
         internal void StoreMetaData(ParsedResponse parsedResponse, bool bodySaved)
         {
             Document entry = null;
-            using (var db = new SearchIndexDbContext(StoragePath))
+            using (var db = new SearchIndexContext(StoragePath))
             {
                 bool isNew = false;
 
@@ -121,7 +92,7 @@ namespace Kennedy.SearchIndex
 
         internal void StoreImageMetaData(ImageResponse imageResponse)
         {
-            using (var db = new SearchIndexDbContext(StoragePath))
+            using (var db = new SearchIndexContext(StoragePath))
             {
                 Image imageEntry = new Image
                 {
@@ -195,7 +166,7 @@ namespace Kennedy.SearchIndex
 
         internal void StoreLinks(ParsedResponse response)
         {
-            using (var db = new SearchIndexDbContext(StoragePath))
+            using (var db = new SearchIndexContext(StoragePath))
             {
                 //first delete all source IDs
                 db.Links.RemoveRange(db.Links

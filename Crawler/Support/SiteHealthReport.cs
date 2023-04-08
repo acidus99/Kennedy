@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
 using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex;
 
 namespace Kennedy.Crawler.Support
 {
