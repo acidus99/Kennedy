@@ -4,7 +4,8 @@ using System.IO;
 using System.Web;
 
 using Gemini.Net;
-using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Web;
+using Kennedy.SearchIndex.Search;
 using Kennedy.SearchIndex.Models;
 using Kennedy.Data;
 using RocketForce;
@@ -16,23 +17,20 @@ namespace Kennedy.Server.Views.Search
         public PageInfoView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
-        private SearchIndexContext db;
-        private DocumentIndex documentIndex;
+        WebDatabaseContext db;
         Document entry;
 
         public override void Render()
         {
-            documentIndex = new DocumentIndex(Settings.Global.DataRoot);
-
-            db = documentIndex.GetContext();
+            db = new WebDatabaseContext(Settings.Global.DataRoot);
             entry = null;
-            long dbDocID = 0;
+            long urlID = 0;
 
             var query = SanitizedQuery;
             if (query.StartsWith("id=") && query.Length > 3)
             {
-                dbDocID = Convert.ToInt64(query.Substring(3));
-                entry = db.Documents.Where(x => x.UrlID == dbDocID).FirstOrDefault();
+                urlID = Convert.ToInt64(query.Substring(3));
+                entry = db.Documents.Where(x => x.UrlID == urlID).FirstOrDefault();
             }
             if (entry == null)
             {
@@ -69,7 +67,7 @@ namespace Kennedy.Server.Views.Search
                 case ContentType.Image:
 
                     var imgmeta = (from img in db.Images
-                                   where img.UrlID == dbDocID
+                                   where img.UrlID == urlID
                                    select new
                                    {
                                        img.Height,
@@ -78,7 +76,9 @@ namespace Kennedy.Server.Views.Search
                                        img.IsTransparent,
                                    }).FirstOrDefault();
 
-                    var terms = documentIndex.GetImageIndexText(dbDocID);
+                    var searchEngine = new SearchDatabase(Settings.Global.DataRoot);
+
+                    var terms = searchEngine.GetImageIndexText(urlID);
 
                     Response.WriteLine($"* Dimensions: {imgmeta.Width} x {imgmeta.Height}");
                     Response.WriteLine($"* Format: {imgmeta.ImageType}");

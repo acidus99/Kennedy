@@ -5,20 +5,20 @@ using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
 using Kennedy.SearchIndex.Models;
-using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Web;
 
 namespace Kennedy.Crawler.Support
 {
 	public class SiteHealthReport
 	{
 
-		SearchIndexContext db;
+        WebDatabaseContext db;
 
 		StreamWriter fout;
 
         public SiteHealthReport(string storageDir)
 		{
-			db = new SearchIndexContext(storageDir);
+			db = new WebDatabaseContext(storageDir);
 		}
 
 		public void WriteReport(string filename, string domain)

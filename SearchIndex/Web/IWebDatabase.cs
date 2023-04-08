@@ -5,13 +5,11 @@ using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.SearchIndex.Models;
 
-namespace Kennedy.SearchIndex
+namespace Kennedy.SearchIndex.Web
 {
 	public interface IWebDatabase
 	{
-
         WebDatabaseContext Context { get; }
-
 
         /// <summary>
         /// Stores data about the response, and its links to other resources

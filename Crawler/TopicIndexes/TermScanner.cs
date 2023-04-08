@@ -8,6 +8,7 @@ using Kennedy.SearchIndex.Storage;
 
 using Kennedy.SearchIndex.Models;
 using Kennedy.Parsers.GemText;
+using Kennedy.SearchIndex.Web;
 
 namespace Kennedy.Crawler.TopicIndexes
 {
@@ -26,10 +27,8 @@ namespace Kennedy.Crawler.TopicIndexes
 
         public void ScanDocs()
         {
-
-            SearchIndexContext db = new SearchIndexContext(CrawlerOptions.DataStore);
+            var db = new WebDatabaseContext(CrawlerOptions.DataStore);
             
-
             var entries = db.Documents
                             .Where(x => (x.BodySaved && x.MimeType.StartsWith("text/gemini"))).ToList()
                             .Where(x=>(x.Domain != "kennedy.gemi.dev"))

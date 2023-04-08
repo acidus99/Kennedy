@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 
 using Gemini.Net;
-using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Web;
 using Kennedy.SearchIndex.Storage;
 using Kennedy.SearchIndex.Models;
 using Kennedy.Data;
@@ -31,7 +31,7 @@ namespace Kennedy.Crawler.Support
 
         public List<string> FindXmlFeeds()
         {
-            SearchIndexContext db = new SearchIndexContext(CrawlerOptions.DataStore);
+            WebDatabaseContext db = new WebDatabaseContext(CrawlerOptions.DataStore);
 
             return db.Documents
                 .Where(x => (x.ErrorCount == 0 && x.MimeType.StartsWith("application/xml")))
@@ -42,7 +42,7 @@ namespace Kennedy.Crawler.Support
         {
             List<string> ret = new List<string>();
 
-            SearchIndexContext db = new SearchIndexContext(CrawlerOptions.DataStore);
+            WebDatabaseContext db = new WebDatabaseContext(CrawlerOptions.DataStore);
 
             var entries = db.Documents
                 .Where(x => (x.ErrorCount == 0 && x.BodySize > 0 && x.MimeType.StartsWith("text/gemini"))).ToList();

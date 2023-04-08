@@ -2,7 +2,7 @@
 using System.IO;
 
 using Gemini.Net;
-using Kennedy.SearchIndex.Engines;
+using Kennedy.SearchIndex.Search;
 using RocketForce;
 
 namespace Kennedy.Server.Views.Search
@@ -15,8 +15,8 @@ namespace Kennedy.Server.Views.Search
         public override void Render()
         {
             string query = SanitizedQuery;
-            var engine = new FullTextSearchEngine(Settings.Global.DataRoot);
-            var results = engine.DoSearch(query, 0, 1);
+            var engine = new SearchDatabase(Settings.Global.DataRoot);
+            var results = engine.DoTextSearch(query, 0, 1);
             if (results.Count > 0)
             {
                 Response.Redirect(results[0].Url.NormalizedUrl);

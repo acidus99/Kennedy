@@ -9,6 +9,7 @@ using Gemini.Net;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex;
 using Kennedy.SearchIndex.Storage;
+using Kennedy.SearchIndex.Web;
 
 namespace Kennedy.Archive
 {
@@ -31,8 +32,8 @@ namespace Kennedy.Archive
         public void CreateMirror(string domainToClone, int portToClone)
         {
             OutputLocation = EnsureSlash(BaseOutputLocation + domainToClone);
-            
-            SearchIndexContext db = new SearchIndexContext(DocDBLocation);
+
+            WebDatabaseContext db = new WebDatabaseContext(DocDBLocation);
             IDocumentStore docStore = new DocumentStore($"{DocDBLocation}page-store/");
 
             foreach (var entry in db.Documents

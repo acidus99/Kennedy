@@ -3,7 +3,7 @@
 using Gemini.Net;
 
 
-using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Web;
 using Kennedy.Crawler.Crawling;
 using Kennedy.Crawler.Utils;
 using Kennedy.Data;
@@ -17,7 +17,7 @@ namespace Kennedy.Crawler.Domains
 
 		bool StayAlive = true;
 
-		IDocumentStorage Storage;
+        IWebDatabase WebDB;
 		IWebCrawler Crawler;
 
 		object locker;
@@ -26,15 +26,14 @@ namespace Kennedy.Crawler.Domains
 		Bag<string> SeenAuthorities;
 
 
-		public DomainAnalyzer(IDocumentStorage storage, IWebCrawler crawler)
+		public DomainAnalyzer(IWebDatabase webDB, IWebCrawler crawler)
 		{
 			locker = new object();
-			Storage = storage;
+			WebDB = webDB;
 			Pending = new Queue<Tuple<string, int, bool>>();
 			SeenAuthorities = new Bag<string>();
 			Crawler = crawler;
 		}
-
 
 		public void Start()
 		{
@@ -102,7 +101,7 @@ namespace Kennedy.Crawler.Domains
 			FilesFetcher fetcher = new FilesFetcher(host, port, Crawler);
 			fetcher.FetchFiles(isReachable);
             
-            Storage.StoreDomain(new DomainInfo
+            WebDB.StoreDomain(new DomainInfo
             {
                 Domain = host,
                 Port = port,
@@ -120,4 +119,3 @@ namespace Kennedy.Crawler.Domains
         }
 	}
 }
-

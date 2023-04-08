@@ -3,7 +3,7 @@
 using Kennedy.SearchIndex.Models;
 using System;
 
-namespace Kennedy.SearchIndex
+namespace Kennedy.SearchIndex.Web
 {
     public class WebDatabaseContext : DbContext
     {
