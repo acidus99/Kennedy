@@ -1,8 +1,8 @@
 ﻿using System;
-
 using Microsoft.EntityFrameworkCore;
 
 using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex;
 
 namespace Kennedy.Crawler.Support
 {
@@ -40,13 +40,15 @@ namespace Kennedy.Crawler.Support
 
                 fout.WriteLine($"{graphID} [label=\"{label}\"];");
             }
-			
+
+			var validInternalUrlIds = docs.Select(x => x.UrlID).Distinct();
+
             foreach (var doc in docs)
 			{
 				var graphID = UrlIDToGraphID(doc.UrlID);
 
-				var links = db.Links.Include(x => x.SourceUrl).Include(x => x.TargetUrl)
-					.Where(x => x.SourceUrlID == doc.UrlID && !x.IsExternal && x.TargetUrl != null);
+				var links = db.Links
+					.Where(x => x.SourceUrlID == doc.UrlID && !x.IsExternal && validInternalUrlIds.Contains(x.TargetUrlID));
 
                 foreach (var link in links)
 				{
