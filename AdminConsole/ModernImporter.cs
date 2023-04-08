@@ -24,7 +24,7 @@ namespace ArchiveLoader
 		public void Import()
 		{
             SearchIndexContext db = new SearchIndexContext(CrawlLocation);
-            DocumentStore documentStore = new DocumentStore(CrawlLocation + "page-store/");
+            IDocumentStore documentStore = new DocumentStore(CrawlLocation + "page-store/");
 
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             int count = 0;

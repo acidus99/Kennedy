@@ -3,9 +3,9 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-namespace Kennedy.SearchIndex.Indexers
+namespace Kennedy.SearchIndex.Search
 {
-    public class ImageIndexer
+    internal class ImageIndexer
     {
         Dictionary<long, string> imageTextContent;
         PathTokenizer pathTokenizer;
@@ -15,9 +15,9 @@ namespace Kennedy.SearchIndex.Indexers
         SqliteParameter parameterDbDocID;
         SqliteParameter parameterTerms;
 
-        public ImageIndexer(DocumentIndex documentIndex)
+        public ImageIndexer(string connectionString)
         {
-            connection = new SqliteConnection(documentIndex.GetContext().Database.GetConnectionString());
+            connection = new SqliteConnection(connectionString);
             pathTokenizer = new PathTokenizer();
             imageTextContent = new Dictionary<long, string>();
         }

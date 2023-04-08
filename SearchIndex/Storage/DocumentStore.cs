@@ -20,6 +20,18 @@ namespace Kennedy.SearchIndex.Storage
             store = new ObjectStore(outputDir);
         }
 
+        public byte[] GetDocument(long urlID)
+        {
+            var key = GeyKey(urlID);
+            return store.GetObject(key);
+        }
+
+        public bool RemoveDocument(long urlID)
+        {
+            var key = GeyKey(urlID);
+            return store.RemoveObject(key);
+        }
+
         /// <summary>
         /// returns if we successfully stored this response
         /// </summary>
@@ -29,7 +41,7 @@ namespace Kennedy.SearchIndex.Storage
         {
             if (resp.IsSuccess & resp.HasBody)
             {
-                var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(resp.RequestUrl.ID))).ToLower();
+                var key = GeyKey(resp.RequestUrl.ID);
                 if(!store.StoreObject(key, resp.BodyBytes))
                 {
                     throw new ApplicationException("Failed to store resp!");
@@ -39,20 +51,9 @@ namespace Kennedy.SearchIndex.Storage
             return false;
         }
 
-        private ulong GetLegacyID(long urlID)
-        {
-            //hack, we used to use ulong here. continue that here so we can read old page-store directories
-            return unchecked((ulong)urlID);
-        }
+        private string GeyKey(long urlID)
+            => Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(urlID))).ToLower();
 
-        public byte[] GetDocument(GeminiUrl url)
-            => GetDocument(url.ID);
 
-        public byte [] GetDocument(long urlID)
-        {
-            ulong id = GetLegacyID(urlID);
-            var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(id))).ToLower();
-            return store.GetObject(key);            
-        }
     }
 }

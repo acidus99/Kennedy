@@ -13,7 +13,7 @@ namespace Kennedy.Crawler.TopicIndexes
 {
     internal class TermScanner
     {
-        DocumentStore docStore;
+        IDocumentStore docStore;
         public TermTracker Mentions;
         public TermTracker Hashtags;
 

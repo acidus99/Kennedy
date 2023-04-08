@@ -18,7 +18,7 @@ namespace Kennedy.Crawler.Support
     /// </summary>
     public class FeedFinder
     {
-        DocumentStore docStore = new DocumentStore(CrawlerOptions.DataStore+ "page-store/");
+        IDocumentStore docStore = new DocumentStore(CrawlerOptions.DataStore+ "page-store/");
         Regex regex = new Regex(@"^\d{4}-\d{2}-\d{2}\s+");
 
         public void Doit()
