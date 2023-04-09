@@ -264,7 +264,18 @@ LIMIT $limit OFFSET $offset";
 
         public void RemoveFromIndex(long urlID)
         {
-            throw new NotImplementedException();
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+                //first delete all FTS entries for this
+                SqliteCommand cmd = new SqliteCommand(@"DELETE From FTS WHERE ROWID = $urlid", connection);
+                cmd.Parameters.Add(new SqliteParameter("$urlid", urlID));
+                cmd.ExecuteNonQuery();
+
+                cmd = new SqliteCommand(@"DELETE From ImageSearch WHERE ROWID = $urlid", connection); 
+                cmd.Parameters.Add(new SqliteParameter("$urlid", urlID));
+                cmd.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
