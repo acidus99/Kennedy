@@ -33,6 +33,8 @@ namespace ArchiveLoader
                 return;
             }
 
+
+
             switch (Operation)
             {
                 case "add":
@@ -41,7 +43,7 @@ namespace ArchiveLoader
                     break;
 
                 case "delete":
-
+                    DeleteFromCrawl(argument);
                     break;
 
             }
@@ -115,11 +117,26 @@ namespace ArchiveLoader
             importer.Import();
         }
 
-        static void DeleteFromCrawl(string url)
+        static void DeleteFromCrawl(string pattern)
         {
-           
 
+            Archiver archiver = new Archiver(ArchiveDBPath, PacksPath);
+            SearchStorageWrapper wrapper = new SearchStorageWrapper(DataRootDirectory);
 
+            var docs = wrapper.WebDB.Context.Documents
+                .Where(x=>x.Url.Contains(pattern))
+                .ToList();
+
+            int i = 0;
+            foreach(var doc in docs)
+            {
+                i++;
+                Console.WriteLine($"{i} of {docs.Count}\tDeleting {doc.Url}");
+                wrapper.RemoveResponse(doc.GeminiUrl);
+                archiver.RemoveContent(doc.GeminiUrl);
+
+                int fff = 65;
+            }
 
         }
 
