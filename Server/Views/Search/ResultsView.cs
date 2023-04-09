@@ -4,7 +4,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Net;
 
-using Kennedy.SearchIndex.Engines;
+using Kennedy.SearchIndex.Search;
+using Kennedy.SearchIndex.Models;
 using RocketForce;
 using System.Diagnostics;
 using Kennedy.Gemipedia;
@@ -20,7 +21,7 @@ namespace Kennedy.Server.Views.Search
 
         ArticleSummary TopGemipediaHit = null;
         List<FullTextSearchResult> SearchResults = null;
-        FullTextSearchEngine FullTextEngine;
+        SearchDatabase SearchEngine;
         int ImageHits = 0;
 
         SearchOptions Options;
@@ -29,14 +30,14 @@ namespace Kennedy.Server.Views.Search
         {
             var query = PrepareQuery(SanitizedQuery);
             Options = new SearchOptions(Request.Url, "/search");
-            FullTextEngine = new FullTextSearchEngine(Settings.Global.DataRoot);
+            SearchEngine = new SearchDatabase(Settings.Global.DataRoot);
 
             Response.Success();
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Search");
             Response.WriteLine("=> /search New Search");
             Response.WriteLine();
             
-            var resultCount = FullTextEngine.GetResultsCount(query);
+            var resultCount = SearchEngine.GetTextResultsCount(query);
             if (resultCount > 0)
             {
                 Stopwatch stopwatch = new Stopwatch();
@@ -99,7 +100,7 @@ namespace Kennedy.Server.Views.Search
         {
 
             Response.WriteLine($"=> {result.Url} {resultNumber}. {FormatPageTitle(result.Url, result.Title)}");
-            Response.Write($"=> /page-info?id={result.DBDocID} {result.LineCount} Lines • ");
+            Response.Write($"=> /page-info?id={result.UrlID} {result.LineCount} Lines • ");
 
             var language = FormatLanguage(result.Language);
 
@@ -135,15 +136,13 @@ namespace Kennedy.Server.Views.Search
 
         private void QueryFullText(string query)
         {
-            bool usePopRank = (Options.Algorithm == 1);
             int baseCounter = Options.SearchPage - 1;
-            SearchResults = FullTextEngine.DoSearch(query, baseCounter * resultsInPage, resultsInPage, usePopRank);
+            SearchResults = SearchEngine.DoTextSearch(query, baseCounter * resultsInPage, resultsInPage);
         }
 
         private void QueryImageSearch(string query)
         {
-            ImageSearchEngine img = new ImageSearchEngine(Settings.Global.DataRoot);
-            ImageHits = img.GetResultsCount(query);
+            ImageHits = SearchEngine.GetImageResultsCount(query);
         }
 
         private void DoFullQuery(string query)

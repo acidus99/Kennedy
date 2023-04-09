@@ -2,7 +2,7 @@
 
 using System.Linq;
 using System.Collections.Generic;
-using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Web;
 using Kennedy.SearchIndex.Models;
 using System.IO;
 
@@ -11,14 +11,14 @@ namespace Kennedy.Crawler.TopicIndexes
 {
     internal class MentionsDumper
     {
-        SearchIndexContext Db;
+        WebDatabaseContext Db;
         TermTracker Tracker;
         string OutDir;
 
         public MentionsDumper(TermTracker tracker)
         {
             Tracker = tracker;
-            Db = new SearchIndexContext(CrawlerOptions.DataStore);
+            Db = new WebDatabaseContext(CrawlerOptions.DataStore);
         }
 
 

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Net;
 using Gemini.Net;
 
-namespace Kennedy.SearchIndex.Indexers
+namespace Kennedy.SearchIndex.Search
 {
-	public class PathTokenizer
+	internal class PathTokenizer
 	{
         static char[] splitTokens = { '-', '_', '.', ',', };
 

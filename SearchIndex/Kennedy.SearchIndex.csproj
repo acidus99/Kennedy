@@ -5,15 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Db\" />
     <None Remove="Microsoft.EntityFrameworkCore" />
     <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
     <None Remove="EFCore.BulkExtensions" />
-    <None Remove="Indexers\" />
+    <None Remove="Storage\" />
+    <None Remove="Search\" />
+    <None Remove="Web\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Db\" />
-    <Folder Include="Indexers\" />
+    <Folder Include="Storage\" />
+    <Folder Include="Search\" />
+    <Folder Include="Web\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.4" />

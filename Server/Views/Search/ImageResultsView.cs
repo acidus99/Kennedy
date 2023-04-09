@@ -4,7 +4,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Net;
 
-using Kennedy.SearchIndex.Engines;
+using Kennedy.SearchIndex.Search;
+using Kennedy.SearchIndex.Models;
 using RocketForce;
 using System.Diagnostics;
 
@@ -18,21 +19,21 @@ namespace Kennedy.Server.Views.Search
             : base(request, response, app) { }
 
         List<ImageSearchResult> SearchResults = null;
-        ImageSearchEngine ImageEngine;
+        ISearchDatabase ImageEngine;
         SearchOptions Options;
 
         public override void Render()
         {
             var query = PrepareQuery(SanitizedQuery);
             Options = new SearchOptions(Request.Url, "/image-search");
-            ImageEngine = new ImageSearchEngine(Settings.Global.DataRoot);
+            ImageEngine = new SearchDatabase(Settings.Global.DataRoot);
 
             Response.Success();
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Image Search");
             Response.WriteLine("=> /image-search 🖼 New Image Search ");
             Response.WriteLine();
             
-            var resultCount = ImageEngine.GetResultsCount(query);
+            var resultCount = ImageEngine.GetImageResultsCount(query);
             if (resultCount > 0)
             {
                 Stopwatch stopwatch = new Stopwatch();
@@ -78,7 +79,7 @@ namespace Kennedy.Server.Views.Search
         private void WriteResultEntry(Response resp, ImageSearchResult result, int resultNumber)
         {
             Response.WriteLine($"=> {result.Url} {resultNumber}. {result.ImageType} • {result.Width} x {result.Height} • {result.Url.Path}");
-            Response.WriteLine($"=> /page-info?id={result.DBDocID} {FormatSize(result.BodySize)} • {FormatDomain(result.Url.Hostname, result.Favicon)} • More info...");
+            Response.WriteLine($"=> /page-info?id={result.UrlID} {FormatSize(result.BodySize)} • {FormatDomain(result.Url.Hostname, result.Favicon)} • More info...");
             Response.WriteLine(">" + FormatSnippet(result.Snippet));
             Response.WriteLine("");
         }
@@ -86,7 +87,7 @@ namespace Kennedy.Server.Views.Search
         private void DoQuery(string query)
         {
             int baseCounter = Options.SearchPage - 1;
-            SearchResults = ImageEngine.DoSearch(query, baseCounter * resultsInPage, resultsInPage);
+            SearchResults = ImageEngine.DoImageSearch(query, baseCounter * resultsInPage, resultsInPage);
         }
       
         private string PageLink(string linkText, int page)

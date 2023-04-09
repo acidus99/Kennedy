@@ -2,19 +2,34 @@
 using System.Security.Cryptography;
 
 using Kennedy.Data;
+using Gemini.Net;
 
-namespace Kennedy.SearchIndex
+namespace Kennedy.SearchIndex.Storage
 {
     /// <summary>
+    /// DocumentStore stores the contents of a URL, and retrieves it
     /// Document store implemented using an Object Store, backed onto a disk
+    /// It it use
     /// </summary>
-    public class DocumentStore
+    public class DocumentStore : IDocumentStore
     {
         ObjectStore store;
 
         public DocumentStore(string outputDir)
         {
             store = new ObjectStore(outputDir);
+        }
+
+        public byte[] GetDocument(long urlID)
+        {
+            var key = GeyKey(urlID);
+            return store.GetObject(key);
+        }
+
+        public bool RemoveDocument(long urlID)
+        {
+            var key = GeyKey(urlID);
+            return store.RemoveObject(key);
         }
 
         /// <summary>
@@ -26,7 +41,7 @@ namespace Kennedy.SearchIndex
         {
             if (resp.IsSuccess & resp.HasBody)
             {
-                var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(resp.RequestUrl.ID))).ToLower();
+                var key = GeyKey(resp.RequestUrl.ID);
                 if(!store.StoreObject(key, resp.BodyBytes))
                 {
                     throw new ApplicationException("Failed to store resp!");
@@ -36,17 +51,9 @@ namespace Kennedy.SearchIndex
             return false;
         }
 
-        private ulong GetLegacyID(long urlID)
-        {
-            //hack, we used to use ulong here. continue that here so we can read old page-store directories
-            return unchecked((ulong)urlID);
-        }
+        private string GeyKey(long urlID)
+            => Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(urlID))).ToLower();
 
-        public byte [] GetDocument(long urlID)
-        {
-            ulong id = GetLegacyID(urlID);
-            var key = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(id))).ToLower();
-            return store.GetObject(key);            
-        }
+
     }
 }

@@ -50,7 +50,7 @@ public class WebCrawler : IWebCrawler
 
     ResponseParser responseParser;
 
-    DocumentStorageSystem documentStorage;
+    SearchStorageWrapper searchWrapper;
 
     DomainAnalyzer domainAnalyzer;
 
@@ -77,9 +77,9 @@ public class WebCrawler : IWebCrawler
         FrontierWrapper = new UrlFrontierWrapper(UrlFrontier);
         seenContentTracker = new SeenContentTracker();
 
-        documentStorage = new DocumentStorageSystem(CrawlerOptions.DataStore);
+        searchWrapper = new SearchStorageWrapper(CrawlerOptions.DataStore);
 
-        domainAnalyzer = new DomainAnalyzer(documentStorage, this);
+        domainAnalyzer = new DomainAnalyzer(searchWrapper.WebDB, this);
 
     }
 
@@ -158,7 +158,7 @@ public class WebCrawler : IWebCrawler
 
     private void FinalizeCrawl()
     {
-        documentStorage.Finalize();
+        searchWrapper.FinalizeDatabases();
     }
 
     private void SpawnWorker(int workerNum)
@@ -202,8 +202,7 @@ public class WebCrawler : IWebCrawler
             {
                 var parsedResponse = responseParser.Parse(resp);
                 FrontierWrapper.AddUrls(parsedResponse.Links);
-                documentStorage.StoreDocument(parsedResponse);
-
+                searchWrapper.AddResponse(parsedResponse);
                 domainAnalyzer.AddDomain(resp.RequestUrl.Hostname, resp.RequestUrl.Port, isReachable);
             }
         }

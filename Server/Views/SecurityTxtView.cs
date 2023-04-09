@@ -3,7 +3,7 @@ using System.Linq;
 using System.IO;
 
 using Gemini.Net;
-using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Web;
 using Kennedy.SearchIndex.Models;
 using RocketForce;
 
@@ -18,8 +18,7 @@ namespace Kennedy.Server.Views
         public override void Render()
         {
 
-            var db = (new DocumentIndex(Settings.Global.DataRoot)).GetContext();
-
+            var db = new WebDatabaseContext(Settings.Global.DataRoot);
             Response.Success();
             /*
              * # 🔭 Kennedy: Search Gemini Space

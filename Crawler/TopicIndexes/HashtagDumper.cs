@@ -6,21 +6,21 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using Gemini.Net;
-using Kennedy.SearchIndex;
 using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex.Web;
 
 namespace Kennedy.Crawler.TopicIndexes
 {
     internal class HashtagDumper
     {
-        SearchIndexContext Db;
+        WebDatabaseContext Db;
         TermTracker Tracker;
         string OutDir;
 
         public HashtagDumper(TermTracker tracker)
         {
             Tracker = tracker;
-            Db = new SearchIndexContext(CrawlerOptions.DataStore);
+            Db = new WebDatabaseContext(CrawlerOptions.DataStore);
         }
 
 

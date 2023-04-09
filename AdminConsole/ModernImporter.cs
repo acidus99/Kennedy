@@ -2,7 +2,8 @@
 
 using Kennedy.Archive;
 using Kennedy.SearchIndex.Models;
-using Kennedy.SearchIndex;
+using Kennedy.SearchIndex.Storage;
+using Kennedy.SearchIndex.Web;
 
 namespace ArchiveLoader
 {
@@ -22,8 +23,8 @@ namespace ArchiveLoader
 
 		public void Import()
 		{
-            SearchIndexContext db = new SearchIndexContext(CrawlLocation);
-            DocumentStore documentStore = new DocumentStore(CrawlLocation + "page-store/");
+            var db = new WebDatabaseContext(CrawlLocation);
+            IDocumentStore documentStore = new DocumentStore(CrawlLocation + "page-store/");
 
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             int count = 0;

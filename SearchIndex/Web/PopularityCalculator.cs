@@ -5,15 +5,15 @@ using System.Linq;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex;
 
-namespace Kennedy.SearchIndex.Indexers
+namespace Kennedy.SearchIndex.Web
 {
     public class PopularityCalculator
     {
-        SearchIndexContext db;
+        WebDatabaseContext db;
 
-        public PopularityCalculator(DocumentIndex documentIndex)
+        public PopularityCalculator(WebDatabaseContext context)
         {
-            db = documentIndex.GetContext();
+            db = context;
         }
 
         Dictionary<long, int> OutboundCount = new Dictionary<long, int>();
