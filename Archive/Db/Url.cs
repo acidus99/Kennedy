@@ -25,6 +25,8 @@ namespace Kennedy.Archive.Db
 
 		public string PackName { get; set; }
 
+		public bool IsPublic { get; set; }
+
 		public ICollection<Snapshot> Snapshots;
 
         [NotMapped]

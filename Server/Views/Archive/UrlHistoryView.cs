@@ -41,7 +41,7 @@ namespace Kennedy.Server.Views.Archive
                 ArchiveDbContext db = new ArchiveDbContext(Settings.Global.DataRoot + "archive.db");
 
                 var urlEntry = db.Urls
-                    .Where(x => x.Id == AttemptedUrl.ID)
+                    .Where(x => x.Id == AttemptedUrl.ID && x.IsPublic)
                     .Include(x => x.Snapshots).
                     FirstOrDefault();
 

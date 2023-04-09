@@ -26,14 +26,17 @@ namespace Kennedy.Archive
             packManager = new PackManager(packsPath);
         }
 
-		public bool ArchiveContent(DateTime captured, GeminiUrl url, int statusCode, string meta, byte[] contentData)
+		public bool ArchiveContent(DateTime captured, GeminiUrl url, int statusCode, string meta, byte[] contentData, bool isPublic = true)
 		{
 
             var urlEntry = db.Urls.Where(x => x.Id == url.ID).FirstOrDefault();
             bool newUrl = false;
             if (urlEntry == null)
             {
-                urlEntry = new Url(url);
+                urlEntry = new Url(url)
+                {
+                    IsPublic = isPublic
+                };
                 db.Urls.Add(urlEntry);
                 newUrl = true;
                 //need to save for foreign key constraint
@@ -120,15 +123,17 @@ namespace Kennedy.Archive
             return ContentType.Unknown;
         }
 
-        public void RemoveContent(Url url)
+        public bool RemoveContent(GeminiUrl gurl)
         {
-            db.Urls.Remove(url);
-
-            PackFile pack = packManager.GetPack(url.PackName);
-            if(File.Exists(pack.Filename))
-            { 
-                File.Delete(pack.Filename);
+            var url = db.Urls.Where(x => x.Id == gurl.ID).FirstOrDefault();
+            if (url != null)
+            {
+                db.Urls.Remove(url);
+                db.SaveChanges();
+                packManager.DeletePack(url.PackName);
+                return true;
             }
+            return false;
         }
     }
 }
