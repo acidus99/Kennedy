@@ -33,6 +33,7 @@ namespace Kennedy.Server.Views.Archive
 
              urls = urls.OrderBy(x => x.FullUrl.IndexOf(query))
                 .ThenBy(x => x.FullUrl.Length)
+                .ThenBy(x=> x.FullUrl)
                 .Take(50);
 
             Response.Success();
