@@ -198,6 +198,7 @@ namespace Kennedy.SearchIndex.Web
             {
                 Context.Links.RemoveRange(links);
             }
+            Context.SaveChanges();
 
             return result;
         }
