@@ -8,18 +8,14 @@ using System.Collections.Generic;
 
 
 using Gemini.Net;
-using Kennedy.Crawler.RobotsTxt;
+using Kennedy.Crawler.Domains;
 using Kennedy.Crawler.Frontiers;
 using Kennedy.Crawler.Logging;
 using Kennedy.Crawler.Protocols;
 using Kennedy.Crawler.Utils;
-
-using Kennedy.SearchIndex;
-
 using Kennedy.Data;
 using Kennedy.Parsers;
-using Kennedy.Crawler.Domains;
-
+using Kennedy.SearchIndex;
 
 namespace Kennedy.Crawler.Crawling;
 

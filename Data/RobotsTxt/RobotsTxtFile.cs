@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Kennedy.Crawler.RobotsTxt
+namespace Kennedy.Data.RobotsTxt
 {
-    public class Robots
+    public class RobotsTxtFile
     {
         public bool IsMalformed { get; private set; }
 
@@ -26,7 +26,7 @@ namespace Kennedy.Crawler.RobotsTxt
 
         public string Contents;
 
-        public Robots(string contents)
+        public RobotsTxtFile(string contents)
         {
             if (String.IsNullOrWhiteSpace(contents))
             {

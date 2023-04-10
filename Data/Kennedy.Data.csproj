@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Utils\" />
+    <Folder Include="RobotsTxt\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
@@ -18,5 +19,6 @@
   <ItemGroup>
     <None Remove="Utils\" />
     <None Remove="Magick.NET-Q8-AnyCPU" />
+    <None Remove="Robots\" />
   </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@
 
 using Gemini.Net;
 using Kennedy.Crawler.Crawling;
-using Kennedy.Crawler.RobotsTxt;
+using Kennedy.Crawler.Protocols;
 
 namespace Kennedy.Crawler.Domains
 {

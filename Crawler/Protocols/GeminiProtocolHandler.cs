@@ -2,7 +2,6 @@
 
 using Gemini.Net;
 using Kennedy.Crawler.Dns;
-using Kennedy.Crawler.RobotsTxt;
 
 namespace Kennedy.Crawler.Protocols
 {
