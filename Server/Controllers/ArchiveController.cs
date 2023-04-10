@@ -9,7 +9,7 @@ namespace Kennedy.Server.Controllers
     {
         public static void UrlHistory(GeminiRequest request, Response response, GeminiServer app)
         {
-            if(!request.Url.HasQuery)
+            if (!request.Url.HasQuery)
             {
                 response.Input("Enter specific URL");
                 return;
@@ -18,11 +18,16 @@ namespace Kennedy.Server.Controllers
             view.Render();
         }
 
+        public static void Redirect(GeminiRequest request, Response response, GeminiServer app)
+        {
+            response.Redirect("/archive/");
+        }
+
         public static void Search(GeminiRequest request, Response response, GeminiServer app)
         {
             if (!request.Url.HasQuery)
             {
-                response.Input("Enter search query");
+                response.Input("Search for URLs containing");
                 return;
             }
             var view = new SearchResultsView(request, response, app);
