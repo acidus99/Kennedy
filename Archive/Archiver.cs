@@ -12,7 +12,8 @@ namespace Kennedy.Archive
 {
 	public class Archiver
 	{
-        ArchiveDbContext db;
+        public ArchiveDbContext Context { get; private set; }
+
         PackManager packManager;
 
         string ArchiveDBPath;
@@ -21,15 +22,14 @@ namespace Kennedy.Archive
 
         public Archiver(string archiveDB, string packsPath)
 		{
-			db = new ArchiveDbContext(archiveDB);
-            db.Database.EnsureCreated();
+			Context = new ArchiveDbContext(archiveDB);
+            Context.Database.EnsureCreated();
             packManager = new PackManager(packsPath);
         }
 
 		public bool ArchiveContent(DateTime captured, GeminiUrl url, int statusCode, string meta, byte[] contentData, bool isPublic = true)
 		{
-
-            var urlEntry = db.Urls.Where(x => x.Id == url.ID).FirstOrDefault();
+            var urlEntry = Context.Urls.Where(x => x.Id == url.ID).FirstOrDefault();
             bool newUrl = false;
             if (urlEntry == null)
             {
@@ -37,10 +37,10 @@ namespace Kennedy.Archive
                 {
                     IsPublic = isPublic
                 };
-                db.Urls.Add(urlEntry);
+                Context.Urls.Add(urlEntry);
                 newUrl = true;
                 //need to save for foreign key constraint
-                db.SaveChanges();
+                Context.SaveChanges();
             }
 
             var packFile = packManager.GetPack(urlEntry.PackName);
@@ -53,7 +53,7 @@ namespace Kennedy.Archive
             //OK, create a new snapshot
             var dataHash = GetDataHash(contentData);
 
-            var previousSnapshot = db.Snapshots
+            var previousSnapshot = Context.Snapshots
                 .Where(x => x.UrlId == urlEntry.Id &&
                         x.DataHash == dataHash).FirstOrDefault();
 
@@ -92,9 +92,9 @@ namespace Kennedy.Archive
             if (shouldAddSnapshot)
             {
                 urlEntry.Snapshots.Add(snapshot);
-                db.Urls.Update(urlEntry);
-                db.Snapshots.Add(snapshot);
-                db.SaveChanges();
+                Context.Urls.Update(urlEntry);
+                Context.Snapshots.Add(snapshot);
+                Context.SaveChanges();
             }
 
             return shouldAddSnapshot;
@@ -125,11 +125,11 @@ namespace Kennedy.Archive
 
         public bool RemoveContent(GeminiUrl gurl)
         {
-            var url = db.Urls.Where(x => x.Id == gurl.ID).FirstOrDefault();
+            var url = Context.Urls.Where(x => x.Id == gurl.ID).FirstOrDefault();
             if (url != null)
             {
-                db.Urls.Remove(url);
-                db.SaveChanges();
+                Context.Urls.Remove(url);
+                Context.SaveChanges();
                 packManager.DeletePack(url.PackName);
                 return true;
             }
