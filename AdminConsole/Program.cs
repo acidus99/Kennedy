@@ -1,16 +1,15 @@
 ﻿using System.Linq;
 
+using Microsoft.EntityFrameworkCore;
 using HashDepot;
 
 using Gemini.Net;
-
 using Kennedy.Archive;
+using Kennedy.Data;
+using Kennedy.Data.RobotsTxt;
 using Kennedy.SearchIndex;
 using Kennedy.SearchIndex.Models;
-using Kennedy.Data;
-
-using Microsoft.EntityFrameworkCore;
-
+using Kennedy.SearchIndex.Web;
 
 namespace ArchiveLoader
 {
@@ -33,8 +32,6 @@ namespace ArchiveLoader
                 return;
             }
 
-
-
             switch (Operation)
             {
                 case "add":
@@ -44,6 +41,10 @@ namespace ArchiveLoader
 
                 case "delete":
                     DeleteFromCrawl(argument);
+                    break;
+
+                case "robots":
+                    ExcludeFilesFromArchive();
                     break;
 
             }
@@ -103,6 +104,11 @@ namespace ArchiveLoader
                         return true;
                     }
 
+                case "robots":
+                    {
+                        return true;
+                    }
+
                 default:
                     Console.WriteLine($"Unknown operation '{Operation}'");
                     return false;
@@ -137,8 +143,48 @@ namespace ArchiveLoader
 
                 int fff = 65;
             }
-
         }
+
+        static void ExcludeFilesFromArchive()
+        {
+
+            Archiver archiver = new Archiver(ArchiveDBPath, PacksPath);
+            WebDatabaseContext context = new WebDatabaseContext(DataRootDirectory);
+
+            int count = 0;
+            foreach(var domain in context.Domains
+                .Where(x=>x.HasRobotsTxt))
+            {
+                RobotsTxtFile robots = new RobotsTxtFile(domain.RobotsTxt);
+                if(robots.IsMalformed)
+                {
+                    continue;
+                }
+                //we only care about Robots.txt files that have archiver rules.
+                if(!robots.UserAgents.Contains("archiver"))
+                {
+                    continue;
+                }
+
+                //grab all the URLs for this domain and port
+                foreach(var url in archiver.Context.Urls
+                    .Where(x=>x.Domain == domain.DomainName && x.Port == domain.Port &&x.IsPublic))
+                {
+                    if (!robots.IsPathAllowed("archiver", url.GeminiUrl.Path))
+                    {
+                        count++;
+                        Console.WriteLine($"{count}\tGoing to excludde {url.FullUrl}");
+                        url.IsPublic = false;
+                    }
+                }
+            }
+
+            archiver.Context.SaveChanges();
+
+            int x = 4;
+        
+        }
+
 
     }
 }
