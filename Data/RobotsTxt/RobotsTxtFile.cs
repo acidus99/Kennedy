@@ -45,6 +45,12 @@ namespace Kennedy.Data.RobotsTxt
             parseLines(lines);
         }
 
+        /// <summary>
+        /// Exposes which user-agents have specific rules
+        /// </summary>
+        public List<string> UserAgents
+            => SpecificRules.Keys.ToList();
+
         private void parseLines(string[] lines)
         {
             IsMalformed = false;
