@@ -11,6 +11,7 @@ using Kennedy.SearchIndex.Models;
 using RocketForce;
 using Kennedy.Archive.Db;
 using Kennedy.Archive;
+using System.Reflection.PortableExecutable;
 
 namespace Kennedy.Server.Views.Archive
 {
@@ -33,35 +34,31 @@ namespace Kennedy.Server.Views.Archive
 
             if (Snapshot == null)
             {
-                Response.Success();
-                Response.WriteLine("Sorry, 🏎 Delorean Time Machine couldn't find a snapshot of that URL in its Archive.");
-                if (AttemptedUrl != null)
-                {
-                    Response.WriteLine("> " + AttemptedUrl);
-                }
-                Response.WriteLine("Possible reaons:");
-                Response.WriteLine("* Link to this URL was a typo in the original source");
-                Response.WriteLine("* This URL was excluded from crawling or archiving via robots.txt");
-                Response.WriteLine("* You found a bug in Time Machine! Beware world ending paradoxes!");
-                Response.WriteLine("Options:");
-                Response.WriteLine($"=> {RoutePaths.ViewCached(AttemptedUrl.RootUrl, AttemptedTime)} Try looking at the cached version of capsule's home page");
-                return;
+                RenderNoSnapshot();
             }
+            else if (!Snapshot.HasBodyContent)
+            {
+                RenderNoBodyResponse();
+            }
+            else
+            {
+                RenderBodyResponse();
+            }
+        }
 
+        private void RenderBodyResponse()
+        {
             SnapshotReader reader = new SnapshotReader(Settings.Global.DataRoot + "Packs/");
 
-
-            if (RawMode || Snapshot.ContentType != Data.ContentType.Text)
+            if (RawMode || Snapshot?.ContentType != Data.ContentType.Text)
             {
-                Response.Success(Snapshot.Meta); 
+                Response.Success(Snapshot.Meta);
                 Response.Write(reader.ReadBytes(Snapshot));
                 return;
             }
-
-
             var text = reader.ReadText(Snapshot);
             Response.Success();
-            Response.Write($"> This an archived version of {Snapshot.Url.FullUrl} as seen by the Kennedy Crawler on {Snapshot.Captured.ToString("yyyy-MM-dd")}. ");
+            Response.Write($"> This an archived version of {Snapshot.Url.FullUrl} captured on {Snapshot.Captured.ToString("yyyy-MM-dd")}. ");
             if (Snapshot.IsGemtext)
             {
                 Response.Write("Gemini links have been rewritten to link to archived content");
@@ -84,7 +81,39 @@ namespace Kennedy.Server.Views.Archive
                 Response.WriteLine("```");
                 Response.WriteLine(text);
                 Response.WriteLine("```");
-            }            
+            }
+        }
+
+        private void RenderNoSnapshot()
+        {
+            Response.Success();
+            Response.WriteLine("Sorry, 🏎 Delorean Time Machine couldn't find a snapshot of that URL in its Archive.");
+            if (AttemptedUrl != null)
+            {
+                Response.WriteLine("> " + AttemptedUrl);
+            }
+            Response.WriteLine("Possible reaons:");
+            Response.WriteLine("* Link to this URL was a typo in the original source");
+            Response.WriteLine("* This URL was excluded from crawling or archiving via robots.txt");
+            Response.WriteLine("* You found a bug in Time Machine! Beware world ending paradoxes!");
+            Response.WriteLine("Options:");
+            Response.WriteLine($"=> {RoutePaths.ViewCached(AttemptedUrl.RootUrl, AttemptedTime)} Try looking at the cached version of capsule's home page");
+            return;
+        }
+
+        private void RenderNoBodyResponse()
+        {
+            Response.Success();
+            Response.WriteLine($"> This an archived version of {Snapshot.Url.FullUrl} captured on {Snapshot.Captured.ToString("yyyy-MM-dd")}. ");
+            Response.WriteLine();
+            Response.WriteLine("> The server sent no content for this URL when it was captured. Instead, the server sent the following response:");
+            Response.WriteLine("```");
+            Response.WriteLine($"{Snapshot.StatusCode} {Snapshot.Meta}");
+            Response.WriteLine("```");
+            if (GeminiParser.IsRedirectStatus(Snapshot.StatusCode))
+            {
+                Response.WriteLine($"=> {RoutePaths.ViewCached(Snapshot.Meta, AttemptedTime)} Follow this Redirect");
+            }
         }
 
         private void ParseArgs()
