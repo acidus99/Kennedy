@@ -3,7 +3,7 @@ using Gemini.Net;
 using Kennedy.Archive;
 using Kennedy.SearchIndex;
 
-namespace Kennedy.AdminConsole
+namespace Kennedy.AdminConsole.Importers
 {
     /// <summary>
     /// Given the crawl-data stored in the modern Kennedy crawl format, import it into the archive
@@ -45,7 +45,7 @@ namespace Kennedy.AdminConsole
                     continue;
                 }
 
-                Archiver.ArchiveContent(captured, url, statusCode, mimeType, data);
+                Archiver.ArchiveResponse(captured, url, statusCode, mimeType, data);
 
                 success++;
             }

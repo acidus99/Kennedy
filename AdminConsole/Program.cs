@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using HashDepot;
 
 using Gemini.Net;
+
+using Kennedy.AdminConsole.Importers;
 using Kennedy.Archive;
 using Kennedy.Data;
 using Kennedy.Data.RobotsTxt;
@@ -11,7 +13,7 @@ using Kennedy.SearchIndex;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Web;
 
-namespace ArchiveLoader
+namespace Kennedy.AdminConsole
 {
     class Program
     {
@@ -119,8 +121,12 @@ namespace ArchiveLoader
         static void AddCrawlToArchive(string crawlLocation)
         {
             var archiver = new Archiver(ArchiveDBPath, PacksPath);
-            ModernImporter importer = new ModernImporter(archiver, crawlLocation);
+
+            DomainImporter importer = new DomainImporter(archiver, crawlLocation);
             importer.Import();
+
+            ModernImporter modern = new ModernImporter(archiver, crawlLocation);
+            modern.Import();
         }
 
         static void DeleteFromCrawl(string pattern)
@@ -173,7 +179,7 @@ namespace ArchiveLoader
                     if (!robots.IsPathAllowed("archiver", url.GeminiUrl.Path))
                     {
                         count++;
-                        Console.WriteLine($"{count}\tGoing to excludde {url.FullUrl}");
+                        Console.WriteLine($"{count}\tGoing to exclude {url.FullUrl}");
                         url.IsPublic = false;
                     }
                 }

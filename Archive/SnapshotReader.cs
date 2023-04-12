@@ -34,8 +34,13 @@ namespace Kennedy.Archive
 
         private PackRecord GetRecord(Snapshot snapshot)
 		{
+			if(snapshot.Offset == null)
+			{
+				throw new NullReferenceException("Snapshot doesn't have an Offset value");
+			}
+
             var pack = manager.GetPack(snapshot.Url.PackName);
-            return pack.Read(snapshot.Offset);
+            return pack.Read(snapshot.Offset.Value);
         }
 
 		private byte[] ReadPackData(PackRecord record)

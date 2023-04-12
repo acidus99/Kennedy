@@ -12,4 +12,10 @@
     <ProjectReference Include="..\Archive\Kennedy.Archive.csproj" />
     <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Importers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Importers\" />
+  </ItemGroup>
 </Project>

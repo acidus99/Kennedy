@@ -94,7 +94,7 @@ namespace Kennedy.SearchIndex.Search
                 {
                     connection.Open();
                     SqliteCommand cmd = new SqliteCommand(@"Select count(*) From ImageSearch WHERE Terms match $query", connection);
-                    
+                    cmd.Parameters.Add(new SqliteParameter("$query", query));
                     return Convert.ToInt32(cmd.ExecuteScalar());
                 }
             }
