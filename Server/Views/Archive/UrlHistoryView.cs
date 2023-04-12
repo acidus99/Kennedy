@@ -80,7 +80,7 @@ namespace Kennedy.Server.Views.Archive
                     {
                         contentLabel = "";
                     }
-                    Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot)} {contentLabel}{snapshot.Captured}. {FormatSize(snapshot.Size)}");
+                    Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot)} {contentLabel}{snapshot.Captured}. {FormatSize(snapshot?.Size ?? 0)}");
                 }
             }
             catch (Exception)
