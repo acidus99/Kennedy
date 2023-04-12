@@ -52,8 +52,10 @@ namespace Kennedy.SearchIndex.Storage
         }
 
         private string GeyKey(long urlID)
-            => Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(urlID))).ToLower();
-
-
+        {
+            //hack, we used to use ulong here. continue that here so we can read old page-store directories
+            ulong legacyUrlID = unchecked((ulong)urlID);
+            return Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(legacyUrlID))).ToLower();
+        }
     }
 }
