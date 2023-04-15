@@ -12,3 +12,12 @@
         - Include text about when it was captured
         - have link to the file
         - have link to other verions
+
+
+
+- Delorean
+
+	- Show number of captures in match view?
+	- Increase number of match views
+	- Maybe should a filetype icon?
+		probably makes sense to do this for the PAge Info page aas well.
