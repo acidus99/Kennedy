@@ -82,6 +82,7 @@ namespace Kennedy.Crawler.Domains
             if(resp.IsSuccess && resp.HasBody && resp.IsTextResponse)
             {
                 //beacon it out
+                Crawler.AddRequested();
                 Crawler.ProcessRequestResponse(resp, null);
                 return resp.BodyText.Trim();
             }

@@ -206,6 +206,15 @@ public class WebCrawler : IWebCrawler
     }
 
 
+    /// <summary>
+    /// kind of a hack. Used to make sure the total requested doesn't get out of sync with the total processed
+    /// for responses we force be proceesed (robots, favicons, etc) without formally being requested.
+    /// </summary>
+    public void AddRequested()
+    {
+        TotalUrlsRequested.Increment();
+    }
+
     public GeminiUrl GetUrl(int crawlerID = 0)
     {
         if (HitUrlLimit || UserQuit)
