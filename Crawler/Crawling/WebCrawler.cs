@@ -181,6 +181,12 @@ public class WebCrawler : IWebCrawler
     }
 
     public void ProcessRequestResponse(GeminiResponse resp, Exception ex)
+        => ProcessRequestResponse(resp, ex, true);
+
+    public void ProcessSpecialRequestResponse(GeminiResponse resp, Exception ex)
+        => ProcessRequestResponse(resp, ex, false);
+
+    private void ProcessRequestResponse(GeminiResponse resp, Exception ex, bool shouldIncrease)
     {
         //null means it was ignored by robots
         if (resp != null)
@@ -202,7 +208,10 @@ public class WebCrawler : IWebCrawler
                 domainAnalyzer.AddDomain(resp.RequestUrl.Hostname, resp.RequestUrl.Port, isReachable);
             }
         }
-        TotalUrlsProcessed.Increment();
+        if (shouldIncrease)
+        {
+            TotalUrlsProcessed.Increment();
+        }
     }
 
 

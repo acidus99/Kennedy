@@ -8,7 +8,8 @@ public interface IWebCrawler
 
     GeminiUrl GetUrl(int crawlerID = 0);
 
-    void AddRequested();
-
     void ProcessRequestResponse(GeminiResponse resp, Exception ex);
+
+    void ProcessSpecialRequestResponse(GeminiResponse resp, Exception ex);
+
 }
