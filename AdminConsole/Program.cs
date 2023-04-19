@@ -135,7 +135,7 @@ namespace Kennedy.AdminConsole
             Archiver archiver = new Archiver(ArchiveDBPath, PacksPath);
             SearchStorageWrapper wrapper = new SearchStorageWrapper(DataRootDirectory);
 
-            var docs = wrapper.WebDB.Context.Documents
+            var docs = wrapper.WebDB.GetContext().Documents
                 .Where(x=>x.Url.Contains(pattern))
                 .ToList();
 

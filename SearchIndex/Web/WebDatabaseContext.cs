@@ -17,8 +17,10 @@ namespace Kennedy.SearchIndex.Web
         public WebDatabaseContext(string storageDir)
         {
             StorageDirectory = storageDir;
-            Database.EnsureCreated();
         }
+
+        public void EnsureExists()
+            => Database.EnsureCreated();
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
