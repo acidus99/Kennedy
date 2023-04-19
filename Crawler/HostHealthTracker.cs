@@ -22,6 +22,11 @@ namespace Kennedy.Crawler
 
 		public void AddResponse(GeminiResponse response)
 		{
+			if(response == null)
+			{
+				return;
+			}
+
 			string key = GetKey(response.RequestUrl);
 			if(!Hosts.ContainsKey(key))
 			{
