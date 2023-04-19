@@ -106,9 +106,8 @@ namespace Kennedy.Crawler.Protocols
 
                 if (Crawler != null && resp.IsSuccess)
                 {
-                    Crawler.ProcessSpecialRequestResponse(resp, requestor.LastException);
+                    Crawler.ProcessRequestResponse(resp, requestor.LastException);
                 }
-
                 ret = (resp.IsSuccess && resp.HasBody) ?
                     resp.BodyText :
                     "";

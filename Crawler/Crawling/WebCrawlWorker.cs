@@ -46,17 +46,14 @@ internal class WebCrawlWorker
                 if (hostTracker.ShouldSendRequest(url))
                 {
                     var resp = requestor.Request(url);
-                    if (resp != null)
+                    hostTracker.AddResponse(resp);
+                    Crawler.ProcessRequestResponse(resp, requestor.LastException);
+                    if (resp?.ConnectStatus != ConnectStatus.Skipped)
                     {
-                        hostTracker.AddResponse(resp);
-                        Crawler.ProcessRequestResponse(resp, requestor.LastException);
-                        if (resp.ConnectStatus != ConnectStatus.Skipped)
-                        {
-                            Thread.Sleep(delayMs);
-                        }
+                        Thread.Sleep(delayMs);
                     }
                 }
-            
+                Crawler.MarkComplete(url);
             }
             else
             {
