@@ -14,8 +14,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Importers\" />
+    <None Remove="Warc\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Importers\" />
+    <Folder Include="Warc\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Toimik.WarcProtocol" Version="0.3.0" />
   </ItemGroup>
 </Project>
