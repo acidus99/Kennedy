@@ -114,6 +114,5 @@ namespace Kennedy.Crawler.Protocols
             }
             return ret;
         }
-
     }
 }
