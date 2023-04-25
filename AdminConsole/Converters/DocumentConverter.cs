@@ -60,6 +60,7 @@ namespace Kennedy.AdminConsole.Converters
                     bool isTruncated = false;
 
                     byte[] data = null;
+                    //older crawls didn't explicitly set a status code for connection errors, so do that now
                     if(doc.ConnectStatus == ConnectStatus.Error)
                     {
                         doc.Status = 49;
