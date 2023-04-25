@@ -10,5 +10,5 @@ public interface IWebCrawler
 
     void MarkComplete(GeminiUrl url);
 
-    void ProcessRequestResponse(GeminiResponse resp, Exception? ex = null);
+    void ProcessRequestResponse(GeminiResponse resp);
 }

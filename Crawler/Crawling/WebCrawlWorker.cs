@@ -47,7 +47,7 @@ internal class WebCrawlWorker
                 {
                     var resp = requestor.Request(url);
                     hostTracker.AddResponse(resp);
-                    Crawler.ProcessRequestResponse(resp, requestor.LastException);
+                    Crawler.ProcessRequestResponse(resp);
                     if (resp?.ConnectStatus != ConnectStatus.Skipped)
                     {
                         Thread.Sleep(delayMs);

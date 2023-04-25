@@ -42,13 +42,11 @@ public class WebCrawler : IWebCrawler
     IUrlFrontier UrlFrontier;
     UrlFrontierWrapper FrontierWrapper;
 
+    ILinksFinder ResponseLinkFinder;
+    ILinksFinder ProactiveLinksFinder;
+
     SeenContentTracker seenContentTracker;
 
-    ResponseParser responseParser;
-
-    SearchStorageWrapper searchWrapper;
-
-    DomainAnalyzer domainAnalyzer;
 
 
     System.Timers.Timer DiskStatusTimer;
@@ -56,15 +54,12 @@ public class WebCrawler : IWebCrawler
 
     bool UserQuit = false;
 
-
     public WebCrawler(int crawlerThreads, int urlLimit)
     {
         CrawlerThreads = crawlerThreads;
         UrlLimit = urlLimit;
 
         ConfigureDirectories();
-
-        responseParser = new ResponseParser();
         
         TotalUrlsRequested = new ThreadSafeCounter();
         TotalUrlsProcessed = new ThreadSafeCounter();
@@ -73,10 +68,8 @@ public class WebCrawler : IWebCrawler
         FrontierWrapper = new UrlFrontierWrapper(UrlFrontier);
         seenContentTracker = new SeenContentTracker();
 
-        searchWrapper = new SearchStorageWrapper(CrawlerOptions.DataStore);
-
-        domainAnalyzer = new DomainAnalyzer(searchWrapper.WebDB, this);
-
+        ProactiveLinksFinder = new ProactiveLinksFinder();
+        ResponseLinkFinder = new ResponseLinkFinder();
     }
 
     private void ConfigureDirectories()
@@ -114,7 +107,6 @@ public class WebCrawler : IWebCrawler
         {
             SpawnWorker(i);
         }
-        domainAnalyzer.Start();
 
         int prevRequested = 0;
         do
@@ -146,7 +138,6 @@ public class WebCrawler : IWebCrawler
 
         } while (KeepWorkersAlive);
         CrawlerStopwatch.Stop();
-        domainAnalyzer.Stop();
         FinalizeCrawl();
 
         Console.WriteLine($"Complete! {CrawlerStopwatch.Elapsed.TotalSeconds}");
@@ -154,7 +145,7 @@ public class WebCrawler : IWebCrawler
 
     private void FinalizeCrawl()
     {
-        searchWrapper.FinalizeDatabases();
+        //TODO: Flush WARC here
     }
 
     private void SpawnWorker(int workerNum)
@@ -180,27 +171,25 @@ public class WebCrawler : IWebCrawler
         logger.LogStatus(UrlFrontier);
     }
 
-    public void ProcessRequestResponse(GeminiResponse resp, Exception? ex)
+    public void ProcessRequestResponse(GeminiResponse response)
     { 
         //null means it was ignored by robots
-        if (resp != null)
+        if (response != null)
         {
-            bool isReachable = true;
-
-            if (resp.ConnectStatus == ConnectStatus.Error)
+            if (response.ConnectStatus == ConnectStatus.Error)
             {
-                var msg = ex?.Message ?? resp.Meta;
-                errorLog.LogError(msg, resp.RequestUrl.NormalizedUrl);
-                isReachable = false;
+                errorLog.LogError(response.Meta, response.RequestUrl.NormalizedUrl);
             }
 
-            if (!seenContentTracker.CheckAndRecord(resp))
+            //TODO: Write result to WARC
+
+            //if we haven't seen this content before, parse it for links and add them to the frontier
+            if (!seenContentTracker.CheckAndRecord(response))
             {
-                var parsedResponse = responseParser.Parse(resp);
-                FrontierWrapper.AddUrls(parsedResponse.Links);
-                searchWrapper.AddResponse(parsedResponse);
-                domainAnalyzer.AddDomain(resp.RequestUrl.Hostname, resp.RequestUrl.Port, isReachable);
+                FrontierWrapper.AddUrls(ResponseLinkFinder.FindLinks(response));
             }
+            //add proactive URLs
+            FrontierWrapper.AddUrls(ProactiveLinksFinder.FindLinks(response));
         }
     }
 
