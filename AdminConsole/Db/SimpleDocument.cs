@@ -3,7 +3,7 @@ using Gemini.Net;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Kennedy.AdminConsole.Importers
+namespace Kennedy.AdminConsole.Db
 {
     public class SimpleDocument
     {
@@ -57,6 +57,8 @@ namespace Kennedy.AdminConsole.Importers
         /// everything after the status code
         /// </summary>
         public string Meta { get; set; }
+
+        public string? MimeType { get; set; }
 
         public bool BodySaved { get; set; } = false;
 

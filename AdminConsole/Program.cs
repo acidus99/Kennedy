@@ -6,6 +6,10 @@ using HashDepot;
 using Gemini.Net;
 
 using Kennedy.AdminConsole.Importers;
+using Kennedy.AdminConsole.Converters;
+using Kennedy.AdminConsole.Warc;
+
+
 using Kennedy.Archive;
 using Kennedy.Data;
 using Kennedy.Data.RobotsTxt;
@@ -29,6 +33,8 @@ namespace Kennedy.AdminConsole
 
         static void Main(string[] args)
         {
+            ConvertToWarc(args[0], args[1]);
+
             if (!ValidateArgs(args))
             {
                 return;
@@ -189,6 +195,19 @@ namespace Kennedy.AdminConsole
 
             int x = 4;
         
+        }
+
+        static void ConvertToWarc(string crawlLocation, string warcFile)
+        {
+            using (var warcCreator = new GeminiWarcCreator(warcFile))
+            {
+
+                DomainConverter domains = new DomainConverter(warcCreator, crawlLocation);
+                domains.ToWarc();
+
+                DocumentConverter documents = new DocumentConverter(warcCreator, crawlLocation);
+                documents.ToWarc();
+            }
         }
 
 

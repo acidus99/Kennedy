@@ -1,16 +1,16 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 
-namespace Kennedy.AdminConsole.Importers
+namespace Kennedy.AdminConsole.Db
 {
     //only support documents
-	public class ModernCrawlDbContext : DbContext
+	public class DocumentDbContext : DbContext
 	{
         protected string StorageDirectory;
 
         public DbSet<SimpleDocument> Documents { get; set; }
         
-        public ModernCrawlDbContext(string storageDir)
+        public DocumentDbContext(string storageDir)
         {
             StorageDirectory = storageDir;
         }

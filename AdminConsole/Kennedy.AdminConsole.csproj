@@ -11,16 +11,18 @@
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
     <ProjectReference Include="..\Archive\Kennedy.Archive.csproj" />
     <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
+    <ProjectReference Include="..\..\WarcProtocol\src\Toimik.WarcProtocol\Toimik.WarcProtocol.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Importers\" />
     <None Remove="Warc\" />
+    <None Remove="Converters\" />
+    <None Remove="Db\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Importers\" />
     <Folder Include="Warc\" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Toimik.WarcProtocol" Version="0.3.0" />
+    <Folder Include="Converters\" />
+    <Folder Include="Db\" />
   </ItemGroup>
 </Project>
