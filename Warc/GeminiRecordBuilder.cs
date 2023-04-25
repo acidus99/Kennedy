@@ -6,19 +6,67 @@ using System.Text;
 
 using Gemini.Net;
 
+using System.Collections.Specialized;
+
 namespace Kennedy.Warc
 {
-	public class GeminiRecordBuilder : RecordBuilder
+    /// <summary>
+    /// Builds WARC records for Gemini requests/responses
+    /// </summary>
+	public class GeminiRecordBuilder
 	{
-		public GeminiRecordBuilder(string version)
-			: base(version)
-		{
-		}
 
-        public RequestRecord RequestRecord(DateTime sent, GeminiUrl url, Uri warcID)
+        DigestFactory DigestFactory { get; }
+
+        PayloadTypeIdentifier PayloadTypeIdentifier { get; }
+
+        // Always use 1.1
+        const string Version = "1.1";
+
+        public GeminiRecordBuilder()
         {
-			var requestString = $"{url}\r\n";
-			return RequestRecord(sent, url._url, toBytes(requestString), "application/gemini; msgtype=request", warcID);
+            //use sha1 for now
+            DigestFactory = new DigestFactory("sha1");
+
+            //use a generic, empty identifier for now, until
+            //WarcProtocol supports better identification of payloads
+            PayloadTypeIdentifier = new PayloadTypeIdentifier();
+        }
+
+        public WarcinfoRecord Warcinfo(NameValueCollection metaData = null)
+        {
+            return new WarcinfoRecord(Version, CreateId(), DateTime.Now, CreatePayload(metaData), "application/warc-fields");
+        }
+
+
+        private Uri CreateId()
+            => new Uri($"urn:uuid:{Guid.NewGuid()}");
+
+        private string CreatePayload(NameValueCollection metaData)
+        {
+            if (metaData == null || !metaData.HasKeys())
+            {
+                return "";
+            }
+
+            StringBuilder sb = new StringBuilder();
+            foreach (var key in metaData.AllKeys)
+            {
+                sb.AppendLine($"{key}: {metaData[key]}");
+            }
+            return sb.ToString();
+        }
+
+        public RequestRecord RequestRecord(DateTime timestamp, GeminiUrl url, Uri warcID)
+        {
+            return new RequestRecord(Version,
+                                    CreateId(),
+                                    timestamp,
+                                    PayloadTypeIdentifier,
+                                    toBytes($"{url}\r\n"),
+                                    "application/gemini; msgtype=request",
+                                    warcID,
+                                    url._url);
         }
 
         public ResponseRecord ResponseRecord(DateTime received, GeminiUrl requestUrl, int statusCode, string meta, byte [] bodyBytes, Uri warcID, Uri requestId, string? truncatedReason = null)
@@ -35,8 +83,14 @@ namespace Kennedy.Warc
 			return ResponseRecord(received, requestUrl._url, requestId, fullResponseBytes.ToArray(), "application/gemini; msgtype=response", warcID, truncatedReason);
 		}
 
-		private byte[] toBytes(string s)
+        public ResponseRecord ResponseRecord(DateTime received, Uri targetUri, Uri requestId, byte[] responseBytes, string contentType, Uri warcID, string? truncatedReason = null)
+        {
+            var response = new ResponseRecord(Version, CreateId(), received, PayloadTypeIdentifier, responseBytes, contentType, warcID, targetUri, digestFactory: DigestFactory, truncatedReason: truncatedReason);
+            response.ConcurrentTos.Add(requestId);
+            return response;
+        }
+
+        private byte[] toBytes(string s)
 			=> Encoding.UTF8.GetBytes(s);
     }
 }
-
