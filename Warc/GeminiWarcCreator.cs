@@ -33,7 +33,7 @@ namespace Kennedy.Warc
 			var warcinfo = recordBuilder.Warcinfo(data);
 			warcID = warcinfo.Id;
 
-			writer.WriteRecord(warcinfo);
+			writer.Write(warcinfo);
 		}
 
 		public void RecordSession(DateTime sent, GeminiResponse geminiResp)
@@ -43,22 +43,22 @@ namespace Kennedy.Warc
 		{
             //create a request record
             var request = recordBuilder.RequestRecord(sent, requestUrl, warcID);
-            writer.WriteRecord(request);
+            writer.Write(request);
 
 			//DateTime received, GeminiUrl requestUrl, int statusCode, string meta, byte [] bodyBytes, Uri warcID, Uri requestId)
             var response = recordBuilder.ResponseRecord(sent.AddSeconds(2), requestUrl, statusCode, meta, bodyBytes, warcID, request.Id);
-            writer.WriteRecord(response);
+            writer.Write(response);
         }
 
         public void RecordTruncatedSession(DateTime sent, GeminiUrl requestUrl, int statusCode, string meta, string truncatedReason = "length")
         {
             //create a request record
             var request = recordBuilder.RequestRecord(sent, requestUrl, warcID);
-            writer.WriteRecord(request);
+            writer.Write(request);
 
             //DateTime received, GeminiUrl requestUrl, int statusCode, string meta, byte [] bodyBytes, Uri warcID, Uri requestId)
             var response = recordBuilder.ResponseRecord(sent.AddSeconds(2), requestUrl, statusCode, meta, null, warcID, request.Id, truncatedReason);
-            writer.WriteRecord(response);
+            writer.Write(response);
         }
 
         public void Dispose()
