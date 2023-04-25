@@ -51,19 +51,25 @@ namespace Kennedy.Crawler.Frontiers
             UrlFrontier.AddUrl(url);
         }
 
-        public void AddUrls(IEnumerable<GeminiUrl> urls)
+        public void AddUrls(IEnumerable<GeminiUrl>? urls)
         {
-            foreach(var url in urls)
+            if (urls != null)
             {
-                AddUrl(url);
+                foreach (var url in urls)
+                {
+                    AddUrl(url);
+                }
             }
         }
 
-        public void AddUrls(List<FoundLink> links)
+        public void AddUrls(IEnumerable<FoundLink>? links)
         {
-            foreach (var link in links)
+            if (links != null)
             {
-                AddUrl(link.Url);
+                foreach (var link in links)
+                {
+                    AddUrl(link.Url);
+                }
             }
         }
 
