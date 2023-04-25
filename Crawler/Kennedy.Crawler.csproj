@@ -12,6 +12,7 @@
     <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
     <ProjectReference Include="..\Parsers\Kennedy.Parsers.csproj" />
     <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
+    <ProjectReference Include="..\Warc\Kennedy.Warc.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DnsClient" Version="1.7.0" />
@@ -20,7 +21,6 @@
     <None Remove="Dns\" />
     <None Remove="Utils\" />
     <None Remove="Logging\" />
-    <None Remove="Domains\" />
     <None Remove="Support\" />
     <None Remove="TopicIndexes\" />
     <None Remove="config\" />
@@ -31,7 +31,6 @@
     <Folder Include="Dns\" />
     <Folder Include="Utils\" />
     <Folder Include="Logging\" />
-    <Folder Include="Domains\" />
     <Folder Include="Support\" />
     <Folder Include="TopicIndexes\" />
     <Folder Include="config\" />

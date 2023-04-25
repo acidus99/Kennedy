@@ -8,7 +8,6 @@ using System.Collections.Generic;
 
 
 using Gemini.Net;
-using Kennedy.Crawler.Domains;
 using Kennedy.Crawler.Frontiers;
 using Kennedy.Crawler.Logging;
 using Kennedy.Crawler.Protocols;
