@@ -23,6 +23,7 @@ namespace Kennedy.Parsers.GemText
         public static string GetLinkText(string line)
             => getLinkText(linkLine.Match(line));
 
+        //FIXME: This has a bug and finds link lines inside of preformatted code blocks!
         public static IEnumerable<FoundLink> ExtractBodyLinks(GeminiUrl requestUrl, string bodyText)
         {
             var foundLinks =
