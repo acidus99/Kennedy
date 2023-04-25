@@ -12,7 +12,7 @@ using Kennedy.SearchIndex.Web;
 using Microsoft.EntityFrameworkCore;
 
 using Kennedy.AdminConsole.Db;
-using Kennedy.AdminConsole.Warc;
+using Kennedy.Warc;
 
 using Kennedy.AdminConsole.Importers;
 using static System.Runtime.InteropServices.JavaScript.JSType;

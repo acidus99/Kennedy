@@ -6,7 +6,7 @@ using Gemini.Net;
 
 using Toimik.WarcProtocol;
 
-namespace Kennedy.AdminConsole.Warc
+namespace Kennedy.Warc
 {
 	public class GeminiWarcCreator :IDisposable
 	{

@@ -6,7 +6,7 @@ using System.Text;
 
 using Gemini.Net;
 
-namespace Kennedy.AdminConsole.Warc
+namespace Kennedy.Warc
 {
 	public class GeminiRecordBuilder : RecordBuilder
 	{

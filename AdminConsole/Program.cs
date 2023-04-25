@@ -7,7 +7,7 @@ using Gemini.Net;
 
 using Kennedy.AdminConsole.Importers;
 using Kennedy.AdminConsole.Converters;
-using Kennedy.AdminConsole.Warc;
+using Kennedy.Warc;
 
 
 using Kennedy.Archive;

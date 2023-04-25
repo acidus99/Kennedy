@@ -10,7 +10,7 @@ using Kennedy.SearchIndex.Storage;
 using Kennedy.SearchIndex.Web;
 using Microsoft.EntityFrameworkCore;
 
-using Kennedy.AdminConsole.Warc;
+using Kennedy.Warc;
 using System.IO.Compression;
 
 using Kennedy.AdminConsole.Db;

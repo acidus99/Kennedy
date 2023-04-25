@@ -29,6 +29,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.AdminConsole", "Adm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toimik.WarcProtocol", "..\WarcProtocol\src\Toimik.WarcProtocol\Toimik.WarcProtocol.csproj", "{9D4D1F61-EE13-4441-B874-AA0E9EEFE039}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Indexer", "Indexer\Kennedy.Indexer.csproj", "{FB666DDE-AB58-4924-AD2D-751838EF74D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Warc", "Warc\Kennedy.Warc.csproj", "{4B29A80A-6845-4751-930F-917210FC3C1C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +83,14 @@ Global
 		{9D4D1F61-EE13-4441-B874-AA0E9EEFE039}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D4D1F61-EE13-4441-B874-AA0E9EEFE039}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D4D1F61-EE13-4441-B874-AA0E9EEFE039}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB666DDE-AB58-4924-AD2D-751838EF74D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB666DDE-AB58-4924-AD2D-751838EF74D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB666DDE-AB58-4924-AD2D-751838EF74D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB666DDE-AB58-4924-AD2D-751838EF74D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B29A80A-6845-4751-930F-917210FC3C1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B29A80A-6845-4751-930F-917210FC3C1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B29A80A-6845-4751-930F-917210FC3C1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B29A80A-6845-4751-930F-917210FC3C1C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

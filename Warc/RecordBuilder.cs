@@ -5,7 +5,7 @@ using System.Text;
 using Toimik.WarcProtocol;
 
 
-namespace Kennedy.AdminConsole.Warc
+namespace Kennedy.Warc
 {
 	public class RecordBuilder
 	{
@@ -61,9 +61,6 @@ namespace Kennedy.AdminConsole.Warc
 			}
 			return sb.ToString();
 		}
-
-
-
 	}
 }
 
