@@ -19,7 +19,7 @@ namespace Kennedy.Warc
 		public GeminiWarcCreator(string outputFile)
 		{
 			writer = new WarcWriter(outputFile);
-			recordBuilder = new GeminiRecordBuilder("1.1");
+			recordBuilder = new GeminiRecordBuilder();
 			WriteInfo();
 		}
 
