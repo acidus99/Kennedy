@@ -46,7 +46,7 @@ public class WebCrawler : IWebCrawler
 
     SeenContentTracker seenContentTracker;
 
-
+    ResultsWriter ResultsWarc;
 
     System.Timers.Timer DiskStatusTimer;
     Stopwatch CrawlerStopwatch;
@@ -69,12 +69,14 @@ public class WebCrawler : IWebCrawler
 
         ProactiveLinksFinder = new ProactiveLinksFinder();
         ResponseLinkFinder = new ResponseLinkFinder();
+
+        ResultsWarc = new ResultsWriter(CrawlerOptions.WarcDir);
+
     }
 
     private void ConfigureDirectories()
     {
-        Directory.CreateDirectory(CrawlerOptions.DataStore);
-        Directory.CreateDirectory(CrawlerOptions.PublicRoot);
+        Directory.CreateDirectory(CrawlerOptions.WarcDir);
         Directory.CreateDirectory(CrawlerOptions.Logs);
         LanguageDetector.ConfigFileDirectory = CrawlerOptions.ConfigDir;
         errorLog = new ErrorLog(CrawlerOptions.ErrorLog);
@@ -91,21 +93,19 @@ public class WebCrawler : IWebCrawler
             AutoReset = true,
         };
         DiskStatusTimer.Elapsed += LogStatusToDisk;
-
         DiskStatusTimer.Start();
     }
 
     public void AddSeed(string url)
-        => UrlFrontier.AddUrl(new GeminiUrl(url));
+        => UrlFrontier.AddSeed(new GeminiUrl(url));
 
     public void DoCrawl()
     {
         RobotsChecker.Global.Crawler = this;
         ConfigureTimers();
-        for (int i = 0; i < CrawlerThreads; i++)
-        {
-            SpawnWorker(i);
-        }
+
+        SpawnCrawlThreads();
+        SpawnResultsWriter();
 
         int prevRequested = 0;
         do
@@ -126,7 +126,6 @@ public class WebCrawler : IWebCrawler
                         Console.WriteLine("resuming");
                     }
                 }
-
             }
             Thread.Sleep(StatusIntervalScreen);
 
@@ -136,24 +135,47 @@ public class WebCrawler : IWebCrawler
             prevRequested = TotalUrlsRequested.Count;
 
         } while (KeepWorkersAlive);
-        CrawlerStopwatch.Stop();
-        FinalizeCrawl();
 
-        Console.WriteLine($"Complete! {CrawlerStopwatch.Elapsed.TotalSeconds}");
+        Console.WriteLine("COMPLETE!");
+        Console.WriteLine($"Elapsed: {CrawlerStopwatch.Elapsed}\tTotal Requested: {TotalUrlsRequested.Count}\tTotal Processed: {TotalUrlsProcessed.Count}\tRemaining: {UrlFrontier.Count}");
+        FinalizeCrawl();
+    }
+
+    private void WritePendingResults()
+    {
+        do
+        {
+            Thread.Sleep(10000);
+            if (KeepWorkersAlive)
+            {
+                ResultsWarc.Flush();
+            }
+        } while (KeepWorkersAlive);
     }
 
     private void FinalizeCrawl()
     {
-        //TODO: Flush WARC here
+        CrawlerStopwatch.Stop();
+        ResultsWarc.Flush();
     }
 
-    private void SpawnWorker(int workerNum)
+    private void SpawnCrawlThreads()
     {
-        var worker = new WebCrawlWorker(this, workerNum);
+        for (int workerNum = 0; workerNum < CrawlerThreads; workerNum++)
+        {
+            var worker = new WebCrawlWorker(this, workerNum);
+            var threadDelegate = new ThreadStart(worker.DoWork);
+            var newThread = new Thread(threadDelegate);
+            newThread.Name = $"Worker {workerNum}";
+            newThread.Start();
+        }
+    }
 
-        var threadDelegate = new ThreadStart(worker.DoWork);
+    private void SpawnResultsWriter()
+    {
+        var threadDelegate = new ThreadStart(WritePendingResults);
         var newThread = new Thread(threadDelegate);
-        newThread.Name = $"Worker {workerNum}";
+        newThread.Name = $"Results Writer";
         newThread.Start();
     }
 
@@ -170,7 +192,18 @@ public class WebCrawler : IWebCrawler
         logger.LogStatus(UrlFrontier);
     }
 
-    public void ProcessRequestResponse(GeminiResponse response)
+    public void ProcessRobotsResponse(GeminiResponse response)
+    {
+        TotalUrlsRequested.Increment();
+        ProcessRequestResponse(new UrlFrontierEntry
+        {
+            Url = response.RequestUrl,
+            DepthFromSeed = 0,
+            IsRobotsLimited = false
+        }, response);
+    }
+
+    public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse response)
     { 
         //null means it was ignored by robots
         if (response != null)
@@ -180,28 +213,20 @@ public class WebCrawler : IWebCrawler
                 errorLog.LogError(response.Meta, response.RequestUrl.NormalizedUrl);
             }
 
-            //TODO: Write result to WARC
+            ResultsWarc.AddToQueue(response);
 
             //if we haven't seen this content before, parse it for links and add them to the frontier
             if (!seenContentTracker.CheckAndRecord(response))
             {
-                FrontierWrapper.AddUrls(ResponseLinkFinder.FindLinks(response));
+                FrontierWrapper.AddUrls(entry.DepthFromSeed, ResponseLinkFinder.FindLinks(response));
             }
             //add proactive URLs
-            FrontierWrapper.AddUrls(ProactiveLinksFinder.FindLinks(response));
+            FrontierWrapper.AddUrls(entry.DepthFromSeed, ProactiveLinksFinder.FindLinks(response), false);
         }
-    }
-
-    /// <summary>
-    /// kind of a hack. Used to make sure the total requested doesn't get out of sync with the total processed
-    /// for responses we force be proceesed (robots, favicons, etc) without formally being requested.
-    /// </summary>
-    public void MarkComplete(GeminiUrl url)
-    {
         TotalUrlsProcessed.Increment();
     }
 
-    public GeminiUrl GetUrl(int crawlerID = 0)
+    public UrlFrontierEntry GetUrl(int crawlerID = 0)
     {
         if (HitUrlLimit || UserQuit)
         {

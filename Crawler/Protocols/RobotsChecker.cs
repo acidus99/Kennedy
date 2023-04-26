@@ -104,9 +104,9 @@ namespace Kennedy.Crawler.Protocols
 
                 var resp = requestor.Request(robotsUrl, ipAddress);
 
-                if (Crawler != null && resp.IsSuccess)
+                if (Crawler != null)
                 {
-                    Crawler.ProcessRequestResponse(resp);
+                    Crawler.ProcessRobotsResponse(resp);
                 }
                 ret = (resp.IsSuccess && resp.HasBody) ?
                     resp.BodyText :

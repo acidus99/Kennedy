@@ -2,33 +2,41 @@
 
 using Gemini.Net;
 using Kennedy.Crawler.Dns;
+using Kennedy.Data;
 
 namespace Kennedy.Crawler.Protocols
 {
-    public class GeminiProtocolHandler : Gemini.Net.GeminiRequestor
+    public class GeminiProtocolHandler
     {
-        public new GeminiResponse Request(GeminiUrl url)
+        GeminiRequestor requestor = new GeminiRequestor();
+
+        public GeminiResponse Request(UrlFrontierEntry entry)
         {
             //use the DnsCache
-            var ipAddress = DnsCache.Global.GetLookup(url.Hostname);
+            var ipAddress = DnsCache.Global.GetLookup(entry.Url.Hostname);
 
             if(ipAddress == null)
             {
                 //could not resolve
-                return new GeminiResponse(url)
+                return new GeminiResponse(entry.Url)
                 {
                     ConnectStatus = ConnectStatus.Error,
                     Meta = "Could not resolve hostname"
                 };
             }
 
-            //check if robots allows it
-            if (RobotsChecker.Global.IsAllowed(url))
+            if (entry.IsRobotsLimited)
             {
-                return base.Request(url, ipAddress);
+                if (RobotsChecker.Global.IsAllowed(entry.Url))
+                {
+                    return requestor.Request(entry.Url, ipAddress);
+                }
+                return null;
             }
-            //not allowed
-            return null;
+            else
+            {
+                return requestor.Request(entry.Url, ipAddress);
+            }
         }
     }
 }

@@ -16,6 +16,7 @@ namespace Kennedy.Crawler.Frontiers
     {
         IUrlFrontier UrlFrontier;
         List<IUrlFilter> UrlFilters;
+        IUrlFilter SeenUrlFilter;
 
         public ThreadSafeCounter TotalUrls;
         public ThreadSafeCounter PassedUrls;
@@ -23,9 +24,11 @@ namespace Kennedy.Crawler.Frontiers
         public UrlFrontierWrapper(IUrlFrontier frontier)
         {
             UrlFrontier = frontier;
+            SeenUrlFilter = new SeenUrlFilter();
+
             UrlFilters = new List<IUrlFilter>
             {
-                new SeenUrlFilter(),
+                new DepthFilter(),
                 new DenyListFilter(),
                 new DomainLimitFilter(),
             };
@@ -36,39 +39,39 @@ namespace Kennedy.Crawler.Frontiers
 
         public string ModuleName => "Url Filters";
 
-        public void AddUrl(GeminiUrl url)
+        private void AddUrl(UrlFrontierEntry entry)
         {
             TotalUrls.Increment();
             foreach (var filter in UrlFilters)
             {
-                if (!filter.IsUrlAllowed(url))
+                if (!filter.IsUrlAllowed(entry))
                 {
                     return;
                 }
             }
-            //all allowed, pass it to the UrlFrontier
-            PassedUrls.Increment();
-            UrlFrontier.AddUrl(url);
-        }
 
-        public void AddUrls(IEnumerable<GeminiUrl>? urls)
-        {
-            if (urls != null)
+            //if everything else passed, then check the SeenUrlFilter
+            //since that also makes note of the URL's hash
+            if(SeenUrlFilter.IsUrlAllowed(entry))
             {
-                foreach (var url in urls)
-                {
-                    AddUrl(url);
-                }
+                //all allowed, pass it to the UrlFrontier
+                PassedUrls.Increment();
+                UrlFrontier.AddUrl(entry);
             }
         }
 
-        public void AddUrls(IEnumerable<FoundLink>? links)
+        public void AddUrls(int parentDepth, IEnumerable<FoundLink>? links, bool isRobotsLimits = true)
         {
             if (links != null)
             {
                 foreach (var link in links)
                 {
-                    AddUrl(link.Url);
+                    AddUrl(new UrlFrontierEntry
+                    {
+                        Url = link.Url,
+                        IsRobotsLimited = isRobotsLimits,
+                        DepthFromSeed = parentDepth + 1
+                    });
                 }
             }
         }

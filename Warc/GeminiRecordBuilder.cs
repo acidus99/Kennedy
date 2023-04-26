@@ -15,7 +15,6 @@ namespace Kennedy.Warc
     /// </summary>
 	public class GeminiRecordBuilder
 	{
-
         DigestFactory DigestFactory { get; }
 
         PayloadTypeIdentifier PayloadTypeIdentifier { get; }
@@ -85,7 +84,10 @@ namespace Kennedy.Warc
 
         public ResponseRecord ResponseRecord(DateTime received, Uri targetUri, Uri requestId, byte[] responseBytes, string contentType, Uri warcID, string? truncatedReason = null)
         {
-            var response = new ResponseRecord(Version, CreateId(), received, PayloadTypeIdentifier, responseBytes, contentType, warcID, targetUri, digestFactory: DigestFactory, truncatedReason: truncatedReason);
+            var response = new ResponseRecord(
+                Version,
+                CreateId(),
+                received, PayloadTypeIdentifier, responseBytes, contentType, warcID, targetUri, digestFactory: DigestFactory, truncatedReason: truncatedReason);
             response.ConcurrentTos.Add(requestId);
             return response;
         }

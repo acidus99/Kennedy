@@ -28,6 +28,7 @@ namespace Kennedy.Warc
 			NameValueCollection data = new NameValueCollection();
 			data.Add("hostname", "kennedy.gemi.dev");
 			data.Add("software", "Kennedy Gemini crawler");
+			data.Add("timestamp", DateTime.Now.ToString());
 			data.Add("operator", "Acidus");
 
 			var warcinfo = recordBuilder.Warcinfo(data);
@@ -36,28 +37,37 @@ namespace Kennedy.Warc
 			writer.Write(warcinfo);
 		}
 
-		public void RecordSession(DateTime sent, GeminiResponse geminiResp)
-			=> RecordSession(sent, geminiResp.RequestUrl, geminiResp.StatusCode, geminiResp.Meta, geminiResp.BodyBytes);
+		public void RecordSession(GeminiResponse geminiResp)
+			=> RecordSession(geminiResp.RequestSent, geminiResp.RequestUrl, geminiResp.ResponseReceived, geminiResp.StatusCode, geminiResp.Meta, geminiResp.BodyBytes);
 
-		public void RecordSession(DateTime sent, GeminiUrl requestUrl, int statusCode, string meta, byte[] bodyBytes)
+		public void RecordSession(DateTime? requestSent, GeminiUrl requestUrl, DateTime? responseReceived, int statusCode, string meta, byte[] bodyBytes)
 		{
+			requestSent = requestSent ?? DateTime.Now;
+			responseReceived = responseReceived ?? DateTime.Now;
+
             //create a request record
-            var request = recordBuilder.RequestRecord(sent, requestUrl, warcID);
+            var request = recordBuilder.RequestRecord(requestSent.Value, requestUrl, warcID!);
             writer.Write(request);
 
 			//DateTime received, GeminiUrl requestUrl, int statusCode, string meta, byte [] bodyBytes, Uri warcID, Uri requestId)
-            var response = recordBuilder.ResponseRecord(sent.AddSeconds(2), requestUrl, statusCode, meta, bodyBytes, warcID, request.Id);
+            var response = recordBuilder.ResponseRecord(responseReceived.Value, requestUrl, statusCode, meta, bodyBytes, warcID!, request.Id);
             writer.Write(response);
         }
 
-        public void RecordTruncatedSession(DateTime sent, GeminiUrl requestUrl, int statusCode, string meta, string truncatedReason = "length")
+        public void RecordTruncatedSession(GeminiResponse geminiResp, string truncatedReason = "length")
+			//uses MimeType, since the Meta contains the reason it was truncated, but Mime is still correct
+            => RecordTruncatedSession(geminiResp.RequestSent, geminiResp.RequestUrl, geminiResp.ResponseReceived, geminiResp.StatusCode, geminiResp.MimeType, truncatedReason);
+
+        public void RecordTruncatedSession(DateTime? requestSent, GeminiUrl requestUrl, DateTime? responseReceived, int statusCode, string mimeType, string truncatedReason = "length")
         {
+            requestSent = requestSent ?? DateTime.Now;
+            responseReceived = responseReceived ?? DateTime.Now;
+
             //create a request record
-            var request = recordBuilder.RequestRecord(sent, requestUrl, warcID);
+            var request = recordBuilder.RequestRecord(requestSent.Value, requestUrl, warcID!);
             writer.Write(request);
 
-            //DateTime received, GeminiUrl requestUrl, int statusCode, string meta, byte [] bodyBytes, Uri warcID, Uri requestId)
-            var response = recordBuilder.ResponseRecord(sent.AddSeconds(2), requestUrl, statusCode, meta, null, warcID, request.Id, truncatedReason);
+            var response = recordBuilder.ResponseRecord(responseReceived.Value, requestUrl, statusCode, mimeType, null, warcID!, request.Id, truncatedReason);
             writer.Write(response);
         }
 
