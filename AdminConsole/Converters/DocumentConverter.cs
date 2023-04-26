@@ -71,13 +71,15 @@ namespace Kennedy.AdminConsole.Converters
                         data = documentStore.GetDocument(doc.UrlID);
                     }
 
+                    //we don't actually have responseReceived times, so approximate them
+
                     if (DownloadWasSkipped(doc))
                     {
-                        WarcCreator.RecordTruncatedSession(doc.FirstSeen, doc.GeminiUrl, doc.Status.Value, doc.MimeType);
+                        WarcCreator.RecordTruncatedSession(doc.FirstSeen, doc.GeminiUrl, doc.FirstSeen.AddSeconds(2), doc.Status.Value, doc.MimeType);
                     }
                     else
                     {
-                        WarcCreator.RecordSession(doc.FirstSeen, doc.GeminiUrl, doc.Status.Value, doc.Meta, data);
+                        WarcCreator.RecordSession(doc.FirstSeen, doc.GeminiUrl, doc.FirstSeen.AddSeconds(2), doc.Status.Value, doc.Meta, data);
                     }
                     added++;
                 }

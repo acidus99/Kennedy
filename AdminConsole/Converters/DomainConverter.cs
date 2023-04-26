@@ -91,7 +91,8 @@ namespace Kennedy.AdminConsole.Converters
         {
             var url = MakeSpecialUrl(domain, filename);
 
-            WarcWriter.RecordSession(captured, url, 20, "text/plain", Encoding.UTF8.GetBytes(contents));
+            //we don't actually have the responseReceived time, so approximate it
+            WarcWriter.RecordSession(captured, url, captured.AddSeconds(2), 20, "text/plain", Encoding.UTF8.GetBytes(contents));
         }
 
         private GeminiUrl MakeSpecialUrl(SimpleDomain domain, string specialFilename)
