@@ -181,9 +181,9 @@ namespace Kennedy.SearchIndex.Web
             }
             else
             {
-                entry.Language = "";
+                entry.Language = null;
                 entry.LineCount = 0;
-                entry.Title = "";
+                entry.Title = null;
             }
 
             return entry;
