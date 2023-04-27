@@ -20,17 +20,18 @@ namespace Kennedy.Parsers
 			langClassifier = factory.Load(ConfigFileDirectory + "Core14.profile.xml");
 		}
 
-		public string DetectLanguage(string filteredBody)
+		public string? DetectLanguage(string filteredBody)
 		{
 			if (filteredBody.Length > MinSizeForLanguage)
 			{
 				var mostCertainLanguage = langClassifier.Identify(filteredBody).FirstOrDefault();
 				return (mostCertainLanguage != null) ? mostCertainLanguage.Item1.Iso639_3 : "";
 			}
-			return "";
+			return null;
 		}
 
 
 	}
 }
 
+ 

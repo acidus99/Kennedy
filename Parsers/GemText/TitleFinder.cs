@@ -18,36 +18,39 @@ namespace Kennedy.Parsers.GemText
 
         static readonly Regex headingRegex = new Regex(@"^(#+)\s*(.+)", RegexOptions.Compiled);
 
-        public static string ExtractTitle(GeminiResponse resp)
+        public static string? ExtractTitle(GeminiResponse resp)
         {
             if (resp.IsSuccess && resp.HasBody && resp.MimeType.StartsWith("text/gemini"))
             {
                 return ExtractTitle(resp.BodyText);
             }
-            return "";
+            return null;
         }
 
-        public static string ExtractTitle(string gemText)
+        public static string? ExtractTitle(string gemText)
         {
             var title = TryHeaders(gemText);
-            if(title.Length > 0)
+            if(title?.Length > 0)
             {
                 return title;
             }
             return TryPreformatted(gemText);
         }
 
-        private static string TryHeaders(string gemText)
+        private static string? TryHeaders(string gemText)
         {
             var t = gemText.Split("\n")
                    .Where(x => x.StartsWith("#") && x.Length > 2)
-                   .FirstOrDefault() ?? "";
-            var match = headingRegex.Match(t);
-            if (match.Success)
+                   .FirstOrDefault();
+            if (t != null)
             {
-                t = match.Groups[2].Value.Trim();
+                var match = headingRegex.Match(t);
+                if (match.Success)
+                {
+                    t = match.Groups[2].Value.Trim();
+                }
             }
-            return t ?? "";
+            return t;
         }
 
         private static string TryPreformatted(string gemText)
