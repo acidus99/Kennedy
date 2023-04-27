@@ -106,6 +106,8 @@ namespace Kennedy.Crawler.Protocols
 
                 if (Crawler != null)
                 {
+                    // reset the URL to remove the special note we sent about our crawler
+                    resp.RequestUrl = new GeminiUrl($"gemini://{hostname}:{port}/robots.txt");
                     Crawler.ProcessRobotsResponse(resp);
                 }
                 ret = (resp.IsSuccess && resp.HasBody) ?
