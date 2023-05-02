@@ -14,9 +14,6 @@ using Microsoft.EntityFrameworkCore;
 using Kennedy.AdminConsole.Db;
 using Kennedy.Warc;
 
-using Kennedy.AdminConsole.Importers;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 namespace Kennedy.AdminConsole.Converters
 {
     /// <summary>
@@ -77,7 +74,7 @@ namespace Kennedy.AdminConsole.Converters
                     //older crawls didn't explicitly set a status code for connection errors, so do that now
                     if(doc.ConnectStatus == ConnectStatus.Error && doc.Status != 20) 
                     {
-                        doc.Status = 49;
+                        doc.Status = GeminiParser.ConnectionErrorStatusCode;
                     }
 
                     if (doc.BodySaved)

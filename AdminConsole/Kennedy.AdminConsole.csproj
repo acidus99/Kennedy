@@ -8,12 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Importers\" />
     <None Remove="Converters\" />
     <None Remove="Db\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Importers\" />
     <Folder Include="Converters\" />
     <Folder Include="Db\" />
   </ItemGroup>
