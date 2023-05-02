@@ -5,6 +5,7 @@ using Gemini.Net;
 using Kennedy.Data;
 
 using Kennedy.SearchIndex.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Kennedy.SearchIndex.Web
 {
@@ -32,22 +33,17 @@ namespace Kennedy.SearchIndex.Web
         {
             using (var context = GetContext())
             {
-                context.Domains.Add(
-                    new Domain
-                    {
-                        DomainName = domainInfo.Domain,
-                        Port = domainInfo.Port,
-
-                        IsReachable = domainInfo.IsReachable,
-
-                        HasFaviconTxt = domainInfo.HasFaviconTxt,
-                        HasRobotsTxt = domainInfo.HasRobotsTxt,
-                        HasSecurityTxt = domainInfo.HasSecurityTxt,
-
-                        FaviconTxt = domainInfo.FaviconTxt,
-                        RobotsTxt = domainInfo.RobotsTxt,
-                        SecurityTxt = domainInfo.SecurityTxt
-                    });
+                context.Domains.Add(new Domain
+                {
+                    DomainName = domainInfo.Domain,
+                    Port = domainInfo.Port,
+                    IsReachable = domainInfo.IsReachable,
+                    ErrorMessage = domainInfo.ErrorMessage,
+                    FaviconTxt = domainInfo.FaviconTxt,
+                    RobotsUrlID = domainInfo.RobotsUrlID,
+                    FaviconUrlID = domainInfo.FaviconUrlID,
+                    SecurityUrlID = domainInfo.SecurityUrlID,
+                });
                 context.SaveChanges();
             }
         }
@@ -106,17 +102,30 @@ namespace Kennedy.SearchIndex.Web
 
         internal void StoreImageMetaData(ImageResponse imageResponse)
         {
-            Image imageEntry = new Image
-            {
-                UrlID = imageResponse.RequestUrl.ID,
-                IsTransparent = imageResponse.IsTransparent,
-                Height = imageResponse.Height,
-                Width = imageResponse.Width,
-                ImageType = imageResponse.ImageType
-            };
             using (var context = GetContext())
             {
-                context.Images.Add(imageEntry);
+                bool isNew = false;
+
+                var imageEntry = context.Images
+                    .Where(x => (x.UrlID == imageResponse.RequestUrl.ID))
+                    .FirstOrDefault();
+
+                if(imageEntry == null)
+                {
+                    isNew = true;
+                    imageEntry = new Image
+                    {
+                        UrlID = imageResponse.RequestUrl.ID,
+                    };
+                }
+                imageEntry.IsTransparent = imageResponse.IsTransparent;
+                imageEntry.Height = imageResponse.Height;
+                imageEntry.Width = imageResponse.Width;
+                imageEntry.ImageType = imageResponse.ImageType;
+                if (isNew)
+                {
+                    context.Images.Add(imageEntry);
+                }
                 context.SaveChanges();
             }
         }
@@ -149,15 +158,16 @@ namespace Kennedy.SearchIndex.Web
             entry.Status = parsedResponse.StatusCode;
             entry.Meta = parsedResponse.Meta;
 
+            entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
+
+            entry.Charset = parsedResponse.Charset;
             entry.MimeType = parsedResponse.MimeType;
-            entry.BodySkipped = parsedResponse.BodySkipped;
+
             entry.BodySaved = bodySaved;
             entry.BodySize = parsedResponse.BodySize;
             entry.BodyHash = parsedResponse.BodyHash;
             entry.OutboundLinks = parsedResponse.Links.Count;
 
-            entry.ConnectTime = parsedResponse.ConnectTime;
-            entry.DownloadTime = parsedResponse.DownloadTime;
             entry.ContentType = parsedResponse.ContentType;
 
             if (IsError(parsedResponse))
@@ -188,7 +198,6 @@ namespace Kennedy.SearchIndex.Web
 
             return entry;
         }
-
 
         /// <summary>
         /// does this response represent an error?

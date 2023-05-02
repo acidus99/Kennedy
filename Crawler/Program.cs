@@ -13,10 +13,12 @@ namespace Kennedy.Crawler
 
             var url = "gemini://mozz.us/";
 
-            var crawler = new WebCrawler(40, 500000);
+            var crawler = new WebCrawler(1, 500000);
 
-            crawler.AddSeed(url);
-            crawler.AddSeed("gemini://kennedy.gemi.dev/observatory/known-hosts");
+            //crawler.AddSeed(url);
+            //crawler.AddSeed("gemini://kennedy.gemi.dev/observatory/known-hosts");
+            crawler.AddSeed("gemini://idiomdrottning.org/inventory.svg");
+            //crawler.AddSeed("gemini://gemi.dev/warez-book/");
             crawler.DoCrawl();
 
             return;

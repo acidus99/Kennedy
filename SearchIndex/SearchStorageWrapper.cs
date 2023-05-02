@@ -19,26 +19,26 @@ namespace Kennedy.SearchIndex
 
         public IWebDatabase WebDB { get; private set; }
 
-        public IDocumentStore DocumentStore { get; private set; }
+        //public IDocumentStore DocumentStore { get; private set; }
 
         public SearchStorageWrapper(string storageDirectory)
 		{
 			WebDB = new WebDatabase(storageDirectory);
 			//searchDB has to be after WebDB, because the WebDB DB initialization creates the tables for the entities
 			SearchDB = new SearchDatabase(storageDirectory);
-            DocumentStore = new DocumentStore(storageDirectory + "page-store/");
+            //DocumentStore = new DocumentStore(storageDirectory + "page-store/");
         }
 
 		public void AddResponse(ParsedResponse response)
 		{
-			bool IsSaved = DocumentStore.StoreDocument(response);
-			WebDB.StoreResponse(response, IsSaved);
+			//bool IsSaved = DocumentStore.StoreDocument(response);
+			WebDB.StoreResponse(response, true);
 			SearchDB.AddToIndex(response);
 		}
 
 		public void RemoveResponse(GeminiUrl url)
 		{
-			DocumentStore.RemoveDocument(url.ID);
+			//DocumentStore.RemoveDocument(url.ID);
 			WebDB.RemoveResponse(url);
 			SearchDB.RemoveFromIndex(url.ID);
 		}

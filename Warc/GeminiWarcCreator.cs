@@ -56,9 +56,9 @@ namespace Kennedy.Warc
 
         public void RecordTruncatedSession(GeminiResponse geminiResp, string truncatedReason = "length")
 			//uses MimeType, since the Meta contains the reason it was truncated, but Mime is still correct
-            => RecordTruncatedSession(geminiResp.RequestSent, geminiResp.RequestUrl, geminiResp.ResponseReceived, geminiResp.StatusCode, geminiResp.MimeType, truncatedReason);
+            => RecordTruncatedSession(geminiResp.RequestSent, geminiResp.RequestUrl, geminiResp.ResponseReceived, geminiResp.StatusCode, geminiResp.MimeType, geminiResp.BodyBytes, truncatedReason);
 
-        public void RecordTruncatedSession(DateTime? requestSent, GeminiUrl requestUrl, DateTime? responseReceived, int statusCode, string mimeType, string truncatedReason = "length")
+        public void RecordTruncatedSession(DateTime? requestSent, GeminiUrl requestUrl, DateTime? responseReceived, int statusCode, string mimeType, byte [] bodyBytes, string truncatedReason = "length")
         {
             requestSent = requestSent ?? DateTime.Now;
             responseReceived = responseReceived ?? DateTime.Now;
@@ -67,7 +67,7 @@ namespace Kennedy.Warc
             var request = recordBuilder.RequestRecord(requestSent.Value, requestUrl, warcID!);
             writer.Write(request);
 
-            var response = recordBuilder.ResponseRecord(responseReceived.Value, requestUrl, statusCode, mimeType, null, warcID!, request.Id, truncatedReason);
+            var response = recordBuilder.ResponseRecord(responseReceived.Value, requestUrl, statusCode, mimeType, bodyBytes, warcID!, request.Id, truncatedReason);
             writer.Write(response);
         }
 

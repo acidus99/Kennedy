@@ -43,7 +43,7 @@ namespace Kennedy.Crawler
 		private void WriteResponseToWarc(GeminiResponse response)
 		{
 			//was it truncated?
-			if (ResponseWasTruncated(response))
+			if (response.IsBodyTruncated)
 			{
 				warcCreator.RecordTruncatedSession(response);
 			}
@@ -53,9 +53,6 @@ namespace Kennedy.Crawler
 			}
             Saved++;
         }
-
-		private bool ResponseWasTruncated(GeminiResponse response)
-			=> response.ConnectStatus == ConnectStatus.Error && response.StatusCode != 49;
 	}
 }
 

@@ -46,7 +46,7 @@ namespace Kennedy.SearchIndex.Models
             }
         }
 
-        private GeminiUrl? geminiUrl = null;
+        private GeminiUrl geminiUrl = null;
 
         [Required]
         public string Domain { get; set; }
@@ -58,17 +58,14 @@ namespace Kennedy.SearchIndex.Models
 
         #region Things we get after fetching/parsing
 
-        public int? Status { get; set; }
+        public int Status { get; set; }
 
         /// <summary>
         /// everything after the status code
         /// </summary>
         public string Meta { get; set; }
 
-        /// <summary>
-        /// Did we deliberately skip downloading this body?
-        /// </summary>
-        public bool BodySkipped { get; set; } = false;
+        public bool IsBodyTruncated { get; set; } = false;
 
         public bool BodySaved { get; set; } = false;
         public int BodySize { get; set; }
@@ -76,22 +73,17 @@ namespace Kennedy.SearchIndex.Models
 
         public int OutboundLinks { get; set; }
 
-        /// <summary>
-        /// Latency of the request/resp, in ms
-        /// </summary>
-        public int ConnectTime { get; internal set; }
-
-        public int DownloadTime { get; internal set; }
-
         #endregion
 
         #region Computed Fields that make it easier to query
 
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
-        public string MimeType { get; set; }
+        public string? MimeType { get; set; }
 
-        public string Language { get; set; }
+        public string? Charset { get; set; }
+
+        public string? Language { get; set; }
 
         public int LineCount { get; set; }
 

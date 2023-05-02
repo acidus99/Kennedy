@@ -3,20 +3,20 @@ namespace Kennedy.Data
 {
 	public class DomainInfo
 	{
-        public int Id { get; set; }
-
         public string Domain { get; set; }
         public int Port { get; set; }
 
         public bool IsReachable { get; set; }
+        public string? ErrorMessage { get; set; }
 
-        public bool HasRobotsTxt { get; set; }
-        public bool HasFaviconTxt { get; set; }
-        public bool HasSecurityTxt { get; set; }
+        public long? RobotsUrlID { get; set; }
+        public long? FaviconUrlID { get; set; }
+        public long? SecurityUrlID { get; set; }
 
-        public string FaviconTxt { get; set; }
-        public string SecurityTxt { get; set; }
-        public string RobotsTxt { get; set; }
+        public string? FaviconTxt { get; set; }
 
     }
+
+
+
 }

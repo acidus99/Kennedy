@@ -14,7 +14,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NTextCat" Version="0.3.65" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="13.0.0" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Utils\" />

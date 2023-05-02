@@ -18,6 +18,12 @@ namespace Kennedy.Parsers
             };
         }
 
+        public ParsedResponse Parse(GeminiUrl url, byte[] completeResponse)
+        {
+            GeminiResponse resp = GeminiParser.ParseBytes(url, completeResponse);
+            return Parse(resp);
+        }
+
         public ParsedResponse Parse(GeminiResponse resp)
         {
             foreach (var parser in parsers)

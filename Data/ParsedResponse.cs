@@ -15,15 +15,15 @@ namespace Kennedy.Data
 			ConnectStatus = resp.ConnectStatus;
 
             BodyBytes = resp.BodyBytes;
-            BodySkipped = resp.BodySkipped;
+			IsBodyTruncated = resp.IsBodyTruncated;
 			BodyText = resp.BodyText;
 
 			MimeType = resp.MimeType;
+			Charset = resp.Charset;
 			Meta = resp.Meta;
 
 			ConnectTime = resp.ConnectTime;
 			DownloadTime = resp.DownloadTime;
-
 
 			RequestUrl = resp.RequestUrl;
 			ResponseLine = resp.ResponseLine;
