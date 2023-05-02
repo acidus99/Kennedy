@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocketForce", "..\RocketFor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Data", "Data\Kennedy.Data.csproj", "{ABEE71CE-D457-404D-A613-E23B36843831}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Parsers", "Parsers\Kennedy.Parsers.csproj", "{B86CB593-FD5B-4518-9D59-0D61C0C1FB20}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Crawler", "Crawler\Kennedy.Crawler.csproj", "{26D51D53-751E-42FF-8F5E-78B712E82CE3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Archive", "Archive\Kennedy.Archive.csproj", "{0E8628DB-9F9E-4846-A4CD-68C2EA0A088A}"
@@ -63,10 +61,6 @@ Global
 		{ABEE71CE-D457-404D-A613-E23B36843831}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABEE71CE-D457-404D-A613-E23B36843831}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ABEE71CE-D457-404D-A613-E23B36843831}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B86CB593-FD5B-4518-9D59-0D61C0C1FB20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B86CB593-FD5B-4518-9D59-0D61C0C1FB20}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B86CB593-FD5B-4518-9D59-0D61C0C1FB20}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B86CB593-FD5B-4518-9D59-0D61C0C1FB20}.Release|Any CPU.Build.0 = Release|Any CPU
 		{26D51D53-751E-42FF-8F5E-78B712E82CE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{26D51D53-751E-42FF-8F5E-78B712E82CE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26D51D53-751E-42FF-8F5E-78B712E82CE3}.Release|Any CPU.ActiveCfg = Release|Any CPU

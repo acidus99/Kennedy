@@ -83,8 +83,6 @@ namespace Kennedy.SearchIndex.Web
                         UrlID = parsedResponse.RequestUrl.ID,
                         FirstSeen = System.DateTime.Now,
 
-                        ErrorCount = 0,
-
                         Url = parsedResponse.RequestUrl.NormalizedUrl,
                         Domain = parsedResponse.RequestUrl.Hostname,
                         Port = parsedResponse.RequestUrl.Port
@@ -154,29 +152,23 @@ namespace Kennedy.SearchIndex.Web
         {
             entry.LastVisit = DateTime.Now;
 
-            entry.ConnectStatus = parsedResponse.ConnectStatus;
+            entry.IsAvailable = parsedResponse.IsAvailable;
             entry.Status = parsedResponse.StatusCode;
             entry.Meta = parsedResponse.Meta;
 
             entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
+            entry.BodySize = parsedResponse.BodySize;
+            entry.BodyHash = parsedResponse.BodyHash;
 
             entry.Charset = parsedResponse.Charset;
             entry.MimeType = parsedResponse.MimeType;
-
-            entry.BodySaved = bodySaved;
-            entry.BodySize = parsedResponse.BodySize;
-            entry.BodyHash = parsedResponse.BodyHash;
+            
             entry.OutboundLinks = parsedResponse.Links.Count;
 
             entry.ContentType = parsedResponse.ContentType;
 
-            if (IsError(parsedResponse))
+            if (!parsedResponse.IsFail)
             {
-                entry.ErrorCount++;
-            }
-            else
-            {
-                entry.ErrorCount = 0;
                 entry.LastSuccessfulVisit = entry.LastVisit;
             }
 
@@ -198,15 +190,6 @@ namespace Kennedy.SearchIndex.Web
 
             return entry;
         }
-
-        /// <summary>
-        /// does this response represent an error?
-        /// </summary>
-        /// <param name="resp"></param>
-        /// <returns></returns>
-        private bool IsError(ParsedResponse resp)
-            => (resp.ConnectStatus != ConnectStatus.Success) ||
-                resp.IsTempFail || resp.IsPermFail;
 
         public bool RemoveResponse(GeminiUrl url)
         {

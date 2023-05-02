@@ -13,8 +13,7 @@ using Kennedy.Crawler.Logging;
 using Kennedy.Crawler.Protocols;
 using Kennedy.Crawler.Utils;
 using Kennedy.Data;
-using Kennedy.Parsers;
-using Kennedy.SearchIndex;
+using Kennedy.Data.Parsers;
 
 namespace Kennedy.Crawler.Crawling;
 
@@ -208,7 +207,7 @@ public class WebCrawler : IWebCrawler
         //null means it was ignored by robots
         if (response != null)
         {
-            if (response.ConnectStatus == ConnectStatus.Error)
+            if (response.IsConnectionError)
             {
                 errorLog.LogError(response.Meta, response.RequestUrl.NormalizedUrl);
             }

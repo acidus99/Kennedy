@@ -23,7 +23,7 @@ namespace Kennedy.SearchIndex.Web
         public void Rank()
         {
 
-            var reachableEntries = db.Documents.Where(x => (x.ErrorCount == 0)).ToList();
+            var reachableEntries = db.Documents.Where(x => (x.IsAvailable)).ToList();
 
             var totalPages = reachableEntries.Count;
 

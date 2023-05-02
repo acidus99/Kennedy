@@ -2,7 +2,7 @@
 using Gemini.Net;
 using Kennedy.Data;
 
-using Kennedy.Parsers;
+using Kennedy.Data.Parsers;
 
 namespace Kennedy.Crawler.Crawling
 {

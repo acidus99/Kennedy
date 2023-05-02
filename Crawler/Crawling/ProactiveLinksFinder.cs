@@ -3,7 +3,6 @@ using System.IO;
 using Gemini.Net;
 using Kennedy.Crawler.Utils;
 using Kennedy.Data;
-using Kennedy.SearchIndex.Web;
 
 namespace Kennedy.Crawler.Crawling
 {
@@ -24,7 +23,7 @@ namespace Kennedy.Crawler.Crawling
         public IEnumerable<FoundLink>? FindLinks(GeminiResponse response)
         {
             //if we couldn't reach the domain, there are no proactive requests for it
-            if(response.ConnectStatus == ConnectStatus.Error)
+            if(!response.IsAvailable)
             {
                 return null;
             }

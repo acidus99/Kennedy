@@ -21,13 +21,20 @@ namespace Kennedy.SearchIndex.Models
         [Column("DBDocID")]
         public long UrlID { get; set; }
 
+        /// <summary>
+        /// When was the record first seen
+        /// </summary>
         public DateTime FirstSeen { get; set; }
 
+        /// <summary>
+        /// When did we last visit this document
+        /// </summary>
         public DateTime? LastVisit { get; set; }
 
+        /// <summary>
+        /// When did we last successfully visit this document?
+        /// </summary>
         public DateTime? LastSuccessfulVisit { get; set; }
-
-        public int ErrorCount { get; set; } = 0;
 
         [MaxLength(1024)]
         [Required]
@@ -54,10 +61,14 @@ namespace Kennedy.SearchIndex.Models
         [Required]
         public int Port { get; set; }
 
-        public ConnectStatus ConnectStatus { get; set; } = ConnectStatus.Unknown;
+        [Required]
+        public string Protocol { get; set; }
+
+        public bool IsAvailable { get; set; }
 
         #region Things we get after fetching/parsing
 
+        [Required]
         public int Status { get; set; }
 
         /// <summary>
@@ -65,9 +76,11 @@ namespace Kennedy.SearchIndex.Models
         /// </summary>
         public string Meta { get; set; }
 
+        /// <summary>
+        /// Do we not have the entire body?
+        /// </summary>
         public bool IsBodyTruncated { get; set; } = false;
 
-        public bool BodySaved { get; set; } = false;
         public int BodySize { get; set; }
         public uint? BodyHash { get; set; }
 

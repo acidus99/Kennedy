@@ -49,7 +49,9 @@ internal class WebCrawlWorker
                     var response = requestor.Request(entry);
                     hostTracker.AddResponse(response);
                     Crawler.ProcessRequestResponse(entry, response);
-                    if (response?.ConnectStatus != ConnectStatus.Skipped)
+
+                    //if we got a response, we need to wait before doing the next
+                    if (response != null)
                     {
                         Thread.Sleep(delayMs);
                     }

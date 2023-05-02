@@ -20,7 +20,7 @@ namespace Kennedy.Crawler.Protocols
                 //could not resolve
                 return new GeminiResponse(entry.Url)
                 {
-                    ConnectStatus = ConnectStatus.Error,
+                    StatusCode = GeminiParser.ConnectionErrorStatusCode,
                     Meta = "Could not resolve hostname"
                 };
             }
