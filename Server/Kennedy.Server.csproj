@@ -24,6 +24,7 @@
     <None Remove="Views\Search\" />
     <None Remove="Controllers\" />
     <None Remove="Views\Reports\" />
+    <None Remove="Reports\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\" />
@@ -33,6 +34,7 @@
     <Folder Include="Views\Search\" />
     <Folder Include="Controllers\" />
     <Folder Include="Views\Reports\" />
+    <Folder Include="Reports\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.PROD.json">

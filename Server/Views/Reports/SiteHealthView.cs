@@ -44,7 +44,7 @@ namespace Kennedy.Server.Views.Reports
             var totalDocs = docs.Count();
 
             var docsWithProblems = docs.Where(x => x.Domain == Domain &&
-                                            x.ConnectStatus != ConnectStatus.Error &&
+                                            x.IsAvailable &&
                                             x.Status >= 40 &&
                                             x.Status < 60).ToArray();
 

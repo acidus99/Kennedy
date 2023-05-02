@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Web;
 
 using Microsoft.EntityFrameworkCore;
@@ -7,11 +9,10 @@ using Gemini.Net;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Web;
 
-namespace Kennedy.Crawler.Support
+namespace Kennedy.Server.Reports
 {
 	public class SiteHealthReport
 	{
-
         WebDatabaseContext db;
 
 		StreamWriter fout;
@@ -33,7 +34,7 @@ namespace Kennedy.Crawler.Support
 			var totalDocs = docs.Count();
 
 			var docsWithProblems = docs.Where(x => x.Domain == domain &&
-											x.ConnectStatus != ConnectStatus.Error &&
+											x.IsAvailable &&
 											x.Status >= 40 &&
 											x.Status < 60).ToArray();
 
