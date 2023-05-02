@@ -4,8 +4,6 @@ using Gemini.Net;
 using Kennedy.Warc;
 
 using System.Collections.Concurrent;
-using Kennedy.SearchIndex.Storage;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Kennedy.Crawler
 {
