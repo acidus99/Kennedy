@@ -8,7 +8,7 @@
 //using Kennedy.SearchIndex.Storage;
 //using Kennedy.SearchIndex.Models;
 //using Kennedy.Data;
-//using Kennedy.Parsers.GemText;
+//using Kennedy.Data.Parsers.GemText;
 
 //namespace Kennedy.Crawler.Support
 //{
