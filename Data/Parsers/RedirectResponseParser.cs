@@ -2,7 +2,7 @@
 using Gemini.Net;
 using Kennedy.Data;
 
-namespace Kennedy.Parsers
+namespace Kennedy.Data.Parsers
 {
     public class RedirectResponseParser : AbstractResponseParser
     {

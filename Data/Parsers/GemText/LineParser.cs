@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Kennedy.Parsers.GemText
+namespace Kennedy.Data.Parsers.GemText
 {
     //Extracts
     public static class LineParser

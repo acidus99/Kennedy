@@ -2,7 +2,7 @@
 
 using NTextCat;
 
-namespace Kennedy.Parsers
+namespace Kennedy.Data.Parsers
 {
 	public class LanguageDetector
 	{

@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Gemini.Net;
 using Kennedy.Data;
 
-namespace Kennedy.Parsers.GemText
+namespace Kennedy.Data.Parsers.GemText
 {
     /// <summary>
     /// Finds hyperlinks in Gemini Text Documents

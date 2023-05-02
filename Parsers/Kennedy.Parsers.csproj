@@ -7,12 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="GemText\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="GemText\" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
     <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
   </ItemGroup>

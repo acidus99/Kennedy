@@ -14,9 +14,5 @@ namespace Kennedy.Data
         public long? SecurityUrlID { get; set; }
 
         public string? FaviconTxt { get; set; }
-
     }
-
-
-
 }

@@ -2,9 +2,9 @@
 using Gemini.Net;
 using Kennedy.Data;
 
-using Kennedy.Parsers.GemText;
+using Kennedy.Data.Parsers.GemText;
 
-namespace Kennedy.Parsers
+namespace Kennedy.Data.Parsers
 {
 	public class GemTextResponseParser : AbstractResponseParser
 	{

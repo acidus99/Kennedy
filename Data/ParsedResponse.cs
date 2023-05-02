@@ -12,8 +12,6 @@ namespace Kennedy.Data
 
 		public ParsedResponse(GeminiResponse resp)
 		{
-			ConnectStatus = resp.ConnectStatus;
-
             BodyBytes = resp.BodyBytes;
 			IsBodyTruncated = resp.IsBodyTruncated;
 			BodyText = resp.BodyText;
