@@ -9,13 +9,13 @@ using Kennedy.AdminConsole.Importers;
 using Kennedy.AdminConsole.Converters;
 using Kennedy.Warc;
 
-
 using Kennedy.Archive;
 using Kennedy.Data;
 using Kennedy.Data.RobotsTxt;
 using Kennedy.SearchIndex;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Web;
+using System.Formats.Tar;
 
 namespace Kennedy.AdminConsole
 {
@@ -33,8 +33,6 @@ namespace Kennedy.AdminConsole
 
         static void Main(string[] args)
         {
-            ConvertToWarc(args[0], args[1]);
-
             if (!ValidateArgs(args))
             {
                 return;
@@ -160,56 +158,84 @@ namespace Kennedy.AdminConsole
         static void ExcludeFilesFromArchive()
         {
 
-            Archiver archiver = new Archiver(ArchiveDBPath, PacksPath);
-            WebDatabaseContext context = new WebDatabaseContext(DataRootDirectory);
+            //Archiver archiver = new Archiver(ArchiveDBPath, PacksPath);
+            //WebDatabaseContext context = new WebDatabaseContext(DataRootDirectory);
 
-            int count = 0;
-            foreach(var domain in context.Domains
-                .Where(x=>x.HasRobotsTxt))
-            {
-                RobotsTxtFile robots = new RobotsTxtFile(domain.RobotsTxt);
-                if(robots.IsMalformed)
-                {
-                    continue;
-                }
-                //we only care about Robots.txt files that have archiver rules.
-                if(!robots.UserAgents.Contains("archiver"))
-                {
-                    continue;
-                }
+            //int count = 0;
+            //foreach(var domain in context.Domains
+            //    .Where(x=>x.HasRobotsTxt))
+            //{
+            //    //RobotsTxtFile robots = new RobotsTxtFile(domain.RobotsTxt);
+            //    //if(robots.IsMalformed)
+            //    //{
+            //    //    continue;
+            //    //}
+            //    ////we only care about Robots.txt files that have archiver rules.
+            //    //if(!robots.UserAgents.Contains("archiver"))
+            //    //{
+            //    //    continue;
+            //    //}
 
-                //grab all the URLs for this domain and port
-                foreach(var url in archiver.Context.Urls
-                    .Where(x=>x.Domain == domain.DomainName && x.Port == domain.Port &&x.IsPublic))
-                {
-                    if (!robots.IsPathAllowed("archiver", url.GeminiUrl.Path))
-                    {
-                        count++;
-                        Console.WriteLine($"{count}\tGoing to exclude {url.FullUrl}");
-                        url.IsPublic = false;
-                    }
-                }
-            }
+            //    //grab all the URLs for this domain and port
+            //    foreach(var url in archiver.Context.Urls
+            //        .Where(x=>x.Domain == domain.DomainName && x.Port == domain.Port &&x.IsPublic))
+            //    {
+            //        if (!robots.IsPathAllowed("archiver", url.GeminiUrl.Path))
+            //        {
+            //            count++;
+            //            Console.WriteLine($"{count}\tGoing to exclude {url.FullUrl}");
+            //            url.IsPublic = false;
+            //        }
+            //    }
+            //}
 
-            archiver.Context.SaveChanges();
+            //archiver.Context.SaveChanges();
 
-            int x = 4;
+            //int x = 4;
         
         }
 
-        static void ConvertToWarc(string crawlLocation, string warcFile)
+        static void ConvertToWarc()
         {
-            using (var warcCreator = new GeminiWarcCreator(warcFile))
+            string warcLocation = "";
+
+            foreach (string crawlLocation in File.ReadLines("list-of-search.txt"))
             {
-
-                DomainConverter domains = new DomainConverter(warcCreator, crawlLocation);
-                domains.ToWarc();
-
-                DocumentConverter documents = new DocumentConverter(warcCreator, crawlLocation);
-                documents.ToWarc();
+                var warcFile = CreateWarcName(crawlLocation);
+                using (var warcCreator = new GeminiWarcCreator(warcLocation + warcFile))
+                {
+                    LegacyConverter documents = new LegacyConverter(warcCreator, crawlLocation);
+                    documents.ToWarc();
+                }
             }
+            //foreach (string crawlLocation in File.ReadLines(""))
+            //{
+            //    var warcFile = CreateWarcName(crawlLocation);
+            //    using (var warcCreator = new GeminiWarcCreator(warcLocation + warcFile))
+            //    {
+            //        BareConverter documents = new BareConverter(warcCreator, crawlLocation);
+            //        documents.ToWarc();
+            //    }
+            //}
+
+            //foreach (string crawlLocation in File.ReadLines(""))
+            //{
+            //    var warcFile = CreateWarcName(crawlLocation);
+            //    using (var warcCreator = new GeminiWarcCreator(warcLocation + warcFile))
+            //    {
+
+            //        DomainConverter domains = new DomainConverter(warcCreator, crawlLocation);
+            //        domains.ToWarc();
+
+            //        DocumentConverter documents = new DocumentConverter(warcCreator, crawlLocation);
+            //        documents.ToWarc();
+            //    }
+            //}
         }
 
-
+        static string CreateWarcName(string crawlLocation)
+        {
+            return Path.GetDirectoryName(crawlLocation).Split(Path.DirectorySeparatorChar).Reverse().First() + ".warc";
+        }
     }
 }

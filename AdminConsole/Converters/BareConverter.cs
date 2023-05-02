@@ -16,13 +16,14 @@ using Kennedy.Warc;
 
 using Kennedy.AdminConsole.Importers;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.Data.Sqlite;
 
 namespace Kennedy.AdminConsole.Converters
 {
     /// <summary>
     /// Converts the "Documents" table from Kennedy Crawls into WARC files
     /// </summary>
-	public class DocumentConverter
+	public class BareConverter
 	{
 		string CrawlLocation;
 
@@ -30,15 +31,64 @@ namespace Kennedy.AdminConsole.Converters
         IDocumentStore documentStore;
         GeminiWarcCreator WarcCreator;
 
-        public DocumentConverter(GeminiWarcCreator warcCreator, string crawlLocation)
+        string ftsTable;
+
+        public BareConverter(GeminiWarcCreator warcCreator, string crawlLocation)
 		{
 			CrawlLocation = crawlLocation;
+            db = new DocumentDbContext(CrawlLocation);
             WarcCreator = warcCreator;
+            ftsTable = GetFTSTableName();
 		}
 
-		public void ToWarc()
+        private string GetFTSTableName()
+        {
+
+            if (TableExists("DocumentFTS"))
+            {
+                return "DocumentFTS";
+            }
+            else
+            {
+                return "FTS";
+            }
+        }
+
+        private bool TableExists(string name)
+        {
+            using (var connection = new SqliteConnection(db.Database.GetConnectionString()))
+            {
+                connection.Open();
+                var cmd = new SqliteCommand($"SELECT Count(*) FROM sqlite_schema WHERE type ='table' and name = '{name}';", connection);
+                var count = Convert.ToInt32(cmd.ExecuteScalar());
+
+                return count == 1;
+            }
+        }
+
+        private string GetBodyText(long dbDocID)
+        {
+            using (var connection = new SqliteConnection(db.Database.GetConnectionString()))
+            {
+                connection.Open();
+                var cmd = new SqliteCommand($"SELECT Body FROM {ftsTable} where ROWID = {dbDocID}", connection);
+                var reader = cmd.ExecuteReader();
+                if (reader.Read())
+                {
+                    return reader[0].ToString();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+
+        public void ToWarc()
 		{
-            db = new DocumentDbContext(CrawlLocation);
+            
+            documentStore = new DocumentStore(CrawlLocation + "page-store/");
 
             int DocumentEntrys = 0;
             int warcResponses = 0;
@@ -65,6 +115,14 @@ namespace Kennedy.AdminConsole.Converters
                         continue;
                     }
 
+                    byte[] data = null;
+                    string bodyText = GetBodyText(doc.UrlID);
+                    if(bodyText?.Length > 0)
+                    {
+                        int x = 4;
+                        data = System.Text.Encoding.UTF8.GetBytes(bodyText);
+                    }
+
                     count++;
                     if (count % 100 == 0)
                     {
@@ -73,21 +131,15 @@ namespace Kennedy.AdminConsole.Converters
 
                     bool isTruncated = false;
 
-                    byte[] data = null;
                     //older crawls didn't explicitly set a status code for connection errors, so do that now
                     if(doc.ConnectStatus == ConnectStatus.Error && doc.Status != 20) 
                     {
                         doc.Status = 49;
                     }
 
-                    if (doc.BodySaved)
-                    {
-                        data = documentStore.GetDocument(doc.UrlID);
-                    }
-
                     //we don't actually have responseReceived times, so approximate them
 
-                    if (DownloadWasSkipped(doc))
+                    if (DownloadWasSkipped(doc, data))
                     {
                         warcResponsesTruncated++;
                         WarcCreator.RecordTruncatedSession(doc.FirstSeen, doc.GeminiUrl, doc.FirstSeen.AddSeconds(2), doc.Status.Value, doc.MimeType, data);
@@ -114,12 +166,13 @@ namespace Kennedy.AdminConsole.Converters
             }
         }
 
-        private bool DownloadWasSkipped(SimpleDocument document)
+        private bool DownloadWasSkipped(SimpleDocument document, byte [] data)
         {
-            if(document?.Status == 20 && document.ConnectStatus == ConnectStatus.Error)
+            if(document?.Status == 20 && data == null)
             {
                 return true;
             }
+
             return false;
         }
 

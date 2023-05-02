@@ -52,7 +52,7 @@ namespace Kennedy.AdminConsole.Converters
             {
                 //find the first datetime for this
                 count++;
-                Console.WriteLine($"Importing domain {count} - Added: {added}");
+                //Console.WriteLine($"Importing domain {count} - Added: {added}");
 
                 var firstDoc = db.Documents.Where(x => x.Domain == domain.Domain && x.Port == domain.Port).OrderBy(x => x.FirstSeen).FirstOrDefault();
 
@@ -82,7 +82,7 @@ namespace Kennedy.AdminConsole.Converters
                 }
             }
             watch.Stop();
-            Console.WriteLine($"Completed processing {CrawlLocation}");
+            Console.WriteLine($"Completed DOMAIN processing {CrawlLocation}");
             Console.WriteLine($"Total Seconds:\t{watch.Elapsed.TotalSeconds}");
             Console.WriteLine($"Snapshots Added:\t{added}");
         }
