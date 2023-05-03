@@ -97,9 +97,20 @@ namespace Kennedy.SearchIndex.Models
 
         public string? MimeType { get; set; }
 
+        /// <summary>
+        /// Charset parsed out of the Meta field
+        /// </summary>
         public string? Charset { get; set; }
 
+        /// <summary>
+        /// 2 letter ISO Language code parsed out of the Meta field
+        /// </summary>
         public string? Language { get; set; }
+
+        /// <summary>
+        /// 2 letter ISO Language code we detected for this, if any
+        /// </summary>
+        public string? DetectedLanguage { get; set; }
 
         public int LineCount { get; set; }
 
