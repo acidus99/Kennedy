@@ -19,6 +19,7 @@ namespace Kennedy.Data
 			MimeType = resp.MimeType;
 			Charset = resp.Charset;
 			Meta = resp.Meta;
+			Language = resp.Language;
 
 			ConnectTime = resp.ConnectTime;
 			DownloadTime = resp.DownloadTime;
