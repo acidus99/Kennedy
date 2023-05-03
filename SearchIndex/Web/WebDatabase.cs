@@ -259,13 +259,15 @@ namespace Kennedy.SearchIndex.Web
                 {
                     var gemtext = (GemTextResponse)parsedResponse;
 
+                    entry.DetectedLanguage = gemtext.DetectedLanguage;
                     entry.Language = gemtext.Language;
                     entry.LineCount = gemtext.LineCount;
                     entry.Title = gemtext.Title;
                 }
                 else
                 {
-                    entry.Language = null;
+                    entry.Language = parsedResponse.Language;
+                    entry.DetectedLanguage = null;
                     entry.LineCount = 0;
                     entry.Title = null;
                 }

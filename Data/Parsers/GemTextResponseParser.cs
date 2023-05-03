@@ -24,7 +24,7 @@ namespace Kennedy.Data.Parsers
                 Links = LinkFinder.ExtractBodyLinks(resp.RequestUrl, resp.BodyText).ToList(),
                 Title = TitleFinder.ExtractTitle(resp),
                 LineCount = CountLines(resp.BodyText),
-                Language = languageDetector.DetectLanguage(filteredBody)
+                DetectedLanguage = languageDetector.DetectLanguage(filteredBody),
             };
         }
 
