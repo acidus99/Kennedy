@@ -16,11 +16,9 @@ namespace Kennedy.SearchIndex.Models
         /// but Sqlite3 doesn't support UInt64s, so we use a Int64 here and doing
         /// some unchecked casting with overflow to handle it
         /// </summary>
-        [Column("DBSourceDocID")]
         public long SourceUrlID { get; set; }
         public Document SourceUrl { get; set; }
 
-        [Column("DBTargetDocID")]
         public long TargetUrlID { get; set; }
 
         public bool IsExternal { get; set; }
