@@ -31,17 +31,17 @@ namespace Kennedy.SearchIndex.Search
         private void GetContent()
         {
             connection.Open();
-            using (var cmd = new SqliteCommand(@"select Images.DBDocID, LinkText, url from Images
+            using (var cmd = new SqliteCommand(@"select Images.UrlID, LinkText, url from Images
 Inner Join Documents
-on Documents.DBDocID = Images.DBDocID
+on Documents.UrlID = Images.UrlID
 INNER Join Links
-on Images.DBDocID = Links.DBTargetDocID
+on Images.UrlID = UrlID.DBTargetDocID
 where length(LinkText) > 0", connection))
             {
                 var r = cmd.ExecuteReader();
                 while (r.Read())
                 {
-                    long dbDocID = r.GetInt64(r.GetOrdinal("DBDocID"));
+                    long dbDocID = r.GetInt64(r.GetOrdinal("UrlID"));
                     string url = r.GetString(r.GetOrdinal("Url"));
                     string linkText = r.GetString(r.GetOrdinal("LinkText"));
                     if (!imageTextContent.ContainsKey(dbDocID))
