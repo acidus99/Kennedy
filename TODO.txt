@@ -26,3 +26,22 @@
 Diff/stuff in archive is odd:
 
 gemini://localhost/archive/history?gemini%3a%2f%2fnicksphere.ch%2f2021%2f01%2f31%2fsite-update-008%2f
+
+//crawler
+- Support 44 slow down
+
+
+
+
+// WARC refactor:
+- Need to make sure detected language is normalized to ISO lang codes
+- When converting older crawls to WARC, not properly seeing truncated header in output WARCs
+- 44 slow downs probably shouldn't be imported into the search DB or archive
+
+- WarcProtocol parser is pretty slow. 2x slower than warcio on my laptop, and about 100x slower than a raw read baseline
+
+- File extension needs to be added to Documents data to better support future "ext:" search operator
+- File type detection needs to be added to support future "type:png" search operator
+
+Archive maintenance
+- need a daily/weekly job that grabs robots.txt and updates the archive to remove content from it
