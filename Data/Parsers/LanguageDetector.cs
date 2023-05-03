@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 using NTextCat;
 
@@ -25,7 +26,13 @@ namespace Kennedy.Data.Parsers
 			if (filteredBody.Length > MinSizeForLanguage)
 			{
 				var mostCertainLanguage = langClassifier.Identify(filteredBody).FirstOrDefault();
-				return (mostCertainLanguage != null) ? mostCertainLanguage.Item1.Iso639_3 : "";
+				if(mostCertainLanguage != null)
+				{
+					CultureInfo info = new CultureInfo(mostCertainLanguage.Item1.Iso639_2T);
+					var lang = info.TwoLetterISOLanguageName;
+					return lang;
+				}
+				return null;
 			}
 			return null;
 		}
