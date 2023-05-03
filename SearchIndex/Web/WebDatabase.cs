@@ -10,32 +10,46 @@ namespace Kennedy.SearchIndex.Web
 {
 	public class WebDatabase : IWebDatabase
 	{
-        public WebDatabaseContext Context { get; private set; }
+        
+
+        private string StorageDirectory;
+
 
 		public WebDatabase(string storageDir)
         {
-            Context = new WebDatabaseContext(storageDir);
-		}
+            StorageDirectory = storageDir;
+            //create it once it ensure we have it
+            using(var context = GetContext())
+            {
+                context.EnsureExists();
+            }
+        }
+
+        public WebDatabaseContext GetContext()
+            => new WebDatabaseContext(StorageDirectory);
 
         public void StoreDomain(DomainInfo domainInfo)
         {
-            Context.Domains.Add(
-                new Domain
-                {
-                    DomainName = domainInfo.Domain,
-                    Port = domainInfo.Port,
+            using (var context = GetContext())
+            {
+                context.Domains.Add(
+                    new Domain
+                    {
+                        DomainName = domainInfo.Domain,
+                        Port = domainInfo.Port,
 
-                    IsReachable = domainInfo.IsReachable,
+                        IsReachable = domainInfo.IsReachable,
 
-                    HasFaviconTxt = domainInfo.HasFaviconTxt,
-                    HasRobotsTxt = domainInfo.HasRobotsTxt,
-                    HasSecurityTxt = domainInfo.HasSecurityTxt,
+                        HasFaviconTxt = domainInfo.HasFaviconTxt,
+                        HasRobotsTxt = domainInfo.HasRobotsTxt,
+                        HasSecurityTxt = domainInfo.HasSecurityTxt,
 
-                    FaviconTxt = domainInfo.FaviconTxt,
-                    RobotsTxt = domainInfo.RobotsTxt,
-                    SecurityTxt = domainInfo.SecurityTxt
-                });
-            Context.SaveChanges();
+                        FaviconTxt = domainInfo.FaviconTxt,
+                        RobotsTxt = domainInfo.RobotsTxt,
+                        SecurityTxt = domainInfo.SecurityTxt
+                    });
+                context.SaveChanges();
+            }
         }
 
         public void StoreResponse(ParsedResponse parsedResponse, bool bodyWasSaved)
@@ -59,31 +73,35 @@ namespace Kennedy.SearchIndex.Web
             Document entry = null;
             bool isNew = false;
 
-            entry = Context.Documents
-                .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
-                .FirstOrDefault();
-            if (entry == null)
+            using (var context = GetContext())
             {
-                isNew = true;
-                entry = new Document
+
+                entry = context.Documents
+                    .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
+                    .FirstOrDefault();
+                if (entry == null)
                 {
-                    UrlID = parsedResponse.RequestUrl.ID,
-                    FirstSeen = System.DateTime.Now,
+                    isNew = true;
+                    entry = new Document
+                    {
+                        UrlID = parsedResponse.RequestUrl.ID,
+                        FirstSeen = System.DateTime.Now,
 
-                    ErrorCount = 0,
+                        ErrorCount = 0,
 
-                    Url = parsedResponse.RequestUrl.NormalizedUrl,
-                    Domain = parsedResponse.RequestUrl.Hostname,
-                    Port = parsedResponse.RequestUrl.Port
-                };
+                        Url = parsedResponse.RequestUrl.NormalizedUrl,
+                        Domain = parsedResponse.RequestUrl.Hostname,
+                        Port = parsedResponse.RequestUrl.Port
+                    };
+                }
+                entry = PopulateEntry(parsedResponse, bodyWasSaved, entry);
+
+                if (isNew)
+                {
+                    context.Documents.Add(entry);
+                }
+                context.SaveChanges();
             }
-            entry = PopulateEntry(parsedResponse, bodyWasSaved, entry);
-
-            if (isNew)
-            {
-                Context.Documents.Add(entry);
-            }
-            Context.SaveChanges();
         }
 
         internal void StoreImageMetaData(ImageResponse imageResponse)
@@ -96,24 +114,31 @@ namespace Kennedy.SearchIndex.Web
                 Width = imageResponse.Width,
                 ImageType = imageResponse.ImageType
             };
-            Context.Images.Add(imageEntry);
-            Context.SaveChanges();
+            using (var context = GetContext())
+            {
+                context.Images.Add(imageEntry);
+                context.SaveChanges();
+            }
         }
 
         private void StoreLinks(ParsedResponse response)
         {
-            //first delete all source IDs
-            Context.Links.RemoveRange(Context.Links
-                .Where(x => (x.SourceUrlID == response.RequestUrl.ID)));
-            Context.SaveChanges();
-            Context.BulkInsert(response.Links.Distinct().Select(link => new DocumentLink
+            using (var context = GetContext())
             {
-                SourceUrlID = response.RequestUrl.ID,
-                TargetUrlID = link.Url.ID,
-                IsExternal = link.IsExternal,
-                LinkText = link.LinkText
-            }).ToList());
-            Context.SaveChanges();
+                //first delete all source IDs
+                context.Links.RemoveRange(context.Links
+                    .Where(x => (x.SourceUrlID == response.RequestUrl.ID)));
+                context.SaveChanges();
+
+                context.Links.AddRange(response.Links.Distinct().Select(link => new DocumentLink
+                {
+                    SourceUrlID = response.RequestUrl.ID,
+                    TargetUrlID = link.Url.ID,
+                    IsExternal = link.IsExternal,
+                    LinkText = link.LinkText
+                }).ToList());
+                context.SaveChanges();
+            }
         }
 
         private Document PopulateEntry(ParsedResponse parsedResponse, bool bodySaved, Document entry)
@@ -177,28 +202,31 @@ namespace Kennedy.SearchIndex.Web
         public bool RemoveResponse(GeminiUrl url)
         {
             bool result = false;
-
-            //first delete it from the search index database
-            var document = Context.Documents.Where(x => x.UrlID == url.ID).FirstOrDefault();
-            if (document != null)
+            using (var context = GetContext())
             {
-                Context.Documents.Remove(document);
-                result = true;
-            }
 
-            //older search databases didn't have foreign key constraints, so ensure related rows are cleaned up
-            var image = Context.Images.Where(x => x.UrlID == url.ID).FirstOrDefault();
-            if (image != null)
-            {
-                Context.Images.Remove(image);
-            }
+                //first delete it from the search index database
+                var document = context.Documents.Where(x => x.UrlID == url.ID).FirstOrDefault();
+                if (document != null)
+                {
+                    context.Documents.Remove(document);
+                    result = true;
+                }
 
-            var links = Context.Links.Where(x => x.SourceUrlID == url.ID);
-            if (links.Count() > 0)
-            {
-                Context.Links.RemoveRange(links);
+                //older search databases didn't have foreign key constraints, so ensure related rows are cleaned up
+                var image = context.Images.Where(x => x.UrlID == url.ID).FirstOrDefault();
+                if (image != null)
+                {
+                    context.Images.Remove(image);
+                }
+
+                var links = context.Links.Where(x => x.SourceUrlID == url.ID);
+                if (links.Count() > 0)
+                {
+                    context.Links.RemoveRange(links);
+                }
+                context.SaveChanges();
             }
-            Context.SaveChanges();
 
             return result;
         }

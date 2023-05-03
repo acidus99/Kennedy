@@ -23,9 +23,10 @@ namespace Kennedy.SearchIndex
 
         public SearchStorageWrapper(string storageDirectory)
 		{
-			SearchDB = new SearchDatabase(storageDirectory);
 			WebDB = new WebDatabase(storageDirectory);
-			DocumentStore = new DocumentStore(storageDirectory + "page-store/");
+			//searchDB has to be after WebDB, because the WebDB DB initialization creates the tables for the entities
+			SearchDB = new SearchDatabase(storageDirectory);
+            DocumentStore = new DocumentStore(storageDirectory + "page-store/");
         }
 
 		public void AddResponse(ParsedResponse response)
@@ -45,7 +46,7 @@ namespace Kennedy.SearchIndex
 		public void FinalizeDatabases()
 		{
 			SearchDB.IndexImages();
-			PopularityCalculator popularityCalculator = new PopularityCalculator(WebDB.Context);
+			PopularityCalculator popularityCalculator = new PopularityCalculator(WebDB.GetContext());
 			popularityCalculator.Rank();
 		}
 	}

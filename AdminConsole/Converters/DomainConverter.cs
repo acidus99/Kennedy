@@ -1,45 +1,44 @@
 ﻿using System;
 using System.Net.NetworkInformation;
-using System.Text.Encodings;
+using System.Text;
 
 using Gemini.Net;
 
-using Kennedy.AdminConsole.Db;
-
-
-using Kennedy.Archive;
 using Kennedy.Data.RobotsTxt;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Storage;
 using Kennedy.SearchIndex.Web;
 using Microsoft.EntityFrameworkCore;
 
-namespace Kennedy.AdminConsole.Importers
+using Kennedy.AdminConsole.Warc;
+using System.IO.Compression;
+
+using Kennedy.AdminConsole.Db;
+
+namespace Kennedy.AdminConsole.Converters
 {
+    //only support documents
+
     /// <summary>
     /// Given the crawl-data stored in the modern Kennedy crawl format, import it into the archive
     /// </summary>
-	public class DomainImporter
+	public class DomainConverter
 	{
-		Archiver Archiver;
 		string CrawlLocation;
 
         DomainDbContext db;
 
-        public DomainImporter(Archiver archiver, string crawlLocation)
-		{
-			Archiver = archiver;
-			CrawlLocation = crawlLocation;
-		}
+        GeminiWarcCreator WarcWriter;
 
-		public void Import()
+        public DomainConverter(GeminiWarcCreator warcWriter, string crawlLocation)
 		{
+            WarcWriter = warcWriter;
+			CrawlLocation = crawlLocation;
             db = new DomainDbContext(CrawlLocation);
-            ImportDomains();
         }
 
-        private void ImportDomains()
-        {
+		public void ToWarc()
+		{
             int count = 0;
             var domains = db.Domains
                 .Where(x => (x.IsReachable) &&
@@ -66,19 +65,19 @@ namespace Kennedy.AdminConsole.Importers
 
                 if (domain.HasFaviconTxt && !String.IsNullOrEmpty(domain.FaviconTxt))
                 {
-                    ArchiveSpecialFile(captured, domain, "favicon.txt", domain.FaviconTxt);
+                    ConvertSpecialFile(captured, domain, "favicon.txt", domain.FaviconTxt);
                     added++;
                 }
 
                 if (domain.HasRobotsTxt && !String.IsNullOrEmpty(domain.RobotsTxt))
                 {
-                    ArchiveSpecialFile(captured, domain, "robots.txt", domain.RobotsTxt);
+                    ConvertSpecialFile(captured, domain, "robots.txt", domain.RobotsTxt);
                     added++;
                 }
 
                 if (domain.HasSecurityTxt && !String.IsNullOrEmpty(domain.SecurityTxt))
                 {
-                    ArchiveSpecialFile(captured, domain, ".well-known/security.txt", domain.SecurityTxt);
+                    ConvertSpecialFile(captured, domain, ".well-known/security.txt", domain.SecurityTxt);
                     added++;
                 }
             }
@@ -88,20 +87,17 @@ namespace Kennedy.AdminConsole.Importers
             Console.WriteLine($"Snapshots Added:\t{added}");
         }
 
-        private void ArchiveSpecialFile(DateTime captured, SimpleDomain domain, string filename, string contents)
+        private void ConvertSpecialFile(DateTime captured, SimpleDomain domain, string filename, string contents)
         {
             var url = MakeSpecialUrl(domain, filename);
-            var data = GetBytes(contents);
 
-            Archiver.ArchiveResponse(captured, url, 20, "text/plain", data, true);
+            WarcWriter.RecordSession(captured, url, 20, "text/plain", Encoding.UTF8.GetBytes(contents));
         }
 
         private GeminiUrl MakeSpecialUrl(SimpleDomain domain, string specialFilename)
             => new GeminiUrl($"gemini://{domain.Domain}:{domain.Port}/{specialFilename}");
 
-        private byte[] GetBytes(string contents)
-            => System.Text.Encoding.UTF8.GetBytes(contents);
-
+      
     }
 }
 

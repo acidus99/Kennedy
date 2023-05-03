@@ -9,7 +9,7 @@ namespace Kennedy.SearchIndex.Web
 {
 	public interface IWebDatabase
 	{
-        WebDatabaseContext Context { get; }
+        WebDatabaseContext GetContext();
 
         /// <summary>
         /// Stores data about the response, and its links to other resources

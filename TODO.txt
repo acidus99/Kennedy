@@ -21,3 +21,8 @@
 	- Increase number of match views
 	- Maybe should a filetype icon?
 		probably makes sense to do this for the PAge Info page aas well.
+
+
+Diff/stuff in archive is odd:
+
+gemini://localhost/archive/history?gemini%3a%2f%2fnicksphere.ch%2f2021%2f01%2f31%2fsite-update-008%2f

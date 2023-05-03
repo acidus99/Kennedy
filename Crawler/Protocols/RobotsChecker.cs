@@ -108,7 +108,6 @@ namespace Kennedy.Crawler.Protocols
                 {
                     Crawler.ProcessRequestResponse(resp, requestor.LastException);
                 }
-
                 ret = (resp.IsSuccess && resp.HasBody) ?
                     resp.BodyText :
                     "";

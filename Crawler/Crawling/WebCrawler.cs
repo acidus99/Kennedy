@@ -180,8 +180,8 @@ public class WebCrawler : IWebCrawler
         logger.LogStatus(UrlFrontier);
     }
 
-    public void ProcessRequestResponse(GeminiResponse resp, Exception ex)
-    {
+    public void ProcessRequestResponse(GeminiResponse resp, Exception? ex)
+    { 
         //null means it was ignored by robots
         if (resp != null)
         {
@@ -202,9 +202,16 @@ public class WebCrawler : IWebCrawler
                 domainAnalyzer.AddDomain(resp.RequestUrl.Hostname, resp.RequestUrl.Port, isReachable);
             }
         }
-        TotalUrlsProcessed.Increment();
     }
 
+    /// <summary>
+    /// kind of a hack. Used to make sure the total requested doesn't get out of sync with the total processed
+    /// for responses we force be proceesed (robots, favicons, etc) without formally being requested.
+    /// </summary>
+    public void MarkComplete(GeminiUrl url)
+    {
+        TotalUrlsProcessed.Increment();
+    }
 
     public GeminiUrl GetUrl(int crawlerID = 0)
     {
