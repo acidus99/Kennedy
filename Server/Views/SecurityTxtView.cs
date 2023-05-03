@@ -17,13 +17,8 @@ namespace Kennedy.Server.Views
 
         public override void Render()
         {
-
             var db = new WebDatabaseContext(Settings.Global.DataRoot);
             Response.Success();
-            /*
-             * # 🔭 Kennedy: Search Gemini Space
-=> /search New Search
-=> /lucky I'm Feeling Lucky */
 
             Response.WriteLine($"# 🔭 Capsules with security.txt ");
             Response.WriteLine("The following are capsules using the \"security.txt\" standard, allowing people to easily contact capsule owners about security issues.");
@@ -39,9 +34,12 @@ namespace Kennedy.Server.Views
 
             Response.WriteLine($"## Capsules with security.txt ({knownHosts.Count()})");
 
+            int counter = 0;
+
             foreach (var host in knownHosts)
             {
-                var label = $"{host.Favicon}{host.Hostname}";
+                counter++;
+                var label = $"{counter}. {host.Favicon}{host.Hostname}";
                 if(host.Port != 1965)
                 {
                     label += ":" + host.Port;
