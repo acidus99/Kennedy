@@ -14,7 +14,6 @@
     <None Remove="Dns\" />
     <None Remove="Utils\" />
     <None Remove="Logging\" />
-    <None Remove="Support\" />
     <None Remove="config\" />
     <None Remove="config\block-list.txt" />
     <None Remove="config\Core14.profile.xml" />
@@ -23,7 +22,6 @@
     <Folder Include="Dns\" />
     <Folder Include="Utils\" />
     <Folder Include="Logging\" />
-    <Folder Include="Support\" />
     <Folder Include="config\" />
   </ItemGroup>
   <ItemGroup>
