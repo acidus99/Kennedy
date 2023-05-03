@@ -10,44 +10,48 @@ using Kennedy.SearchIndex.Web;
 namespace Kennedy.SearchIndex
 {
 	/// <summary>
-	/// Wraps the Search Database, Web Database, and Document Storage system
-	/// so you have a single interface to add new responses or remove responses
+	/// Wraps the Search Database and Web Database
+	/// so you have a single interface to add/update documents and search indexes
 	/// </summary>
 	public class SearchStorageWrapper
 	{
-		public ISearchDatabase SearchDB { get; private set; }
+		ISearchDatabase SearchDB;
 
-        public IWebDatabase WebDB { get; private set; }
+		IWebDatabase WebDB;
 
-        //public IDocumentStore DocumentStore { get; private set; }
+		bool anyContentChanged;
 
         public SearchStorageWrapper(string storageDirectory)
 		{
 			WebDB = new WebDatabase(storageDirectory);
 			//searchDB has to be after WebDB, because the WebDB DB initialization creates the tables for the entities
 			SearchDB = new SearchDatabase(storageDirectory);
-            //DocumentStore = new DocumentStore(storageDirectory + "page-store/");
+			anyContentChanged = false;
         }
 
-		public void AddResponse(ParsedResponse response)
+		public bool StoreResponse(ParsedResponse response)
 		{
-			//bool IsSaved = DocumentStore.StoreDocument(response);
-			WebDB.StoreResponse(response, true);
-			SearchDB.AddToIndex(response);
+			bool contentUpdated = WebDB.StoreResponse(response);
+			if(contentUpdated)
+			{
+				anyContentChanged = true;
+                SearchDB.UpdateIndex(response);
+            }
+
+			return contentUpdated;
 		}
 
-		public void RemoveResponse(GeminiUrl url)
-		{
-			//DocumentStore.RemoveDocument(url.ID);
-			WebDB.RemoveResponse(url);
-			SearchDB.RemoveFromIndex(url.ID);
-		}
+		public void StoreDomain(ServerInfo domain)
+			=> WebDB.StoreServer(domain);
 
 		public void FinalizeDatabases()
 		{
-			SearchDB.IndexImages();
-			PopularityCalculator popularityCalculator = new PopularityCalculator(WebDB.GetContext());
-			popularityCalculator.Rank();
+			if (anyContentChanged)
+			{
+				SearchDB.IndexImages();
+				PopularityCalculator popularityCalculator = new PopularityCalculator(WebDB.GetContext());
+				popularityCalculator.Rank();
+			}
 		}
 	}
 }

@@ -16,7 +16,6 @@ namespace Kennedy.SearchIndex.Models
         /// some unchecked casting with overflow to handle it
         /// </summary>
         [Key]
-        [Column("DbDocID")]
         public long UrlID { get; set; }
         
         public int Width { get; set; }

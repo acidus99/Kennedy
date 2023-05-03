@@ -37,7 +37,7 @@ namespace Kennedy.Archive
             IDocumentStore docStore = new DocumentStore($"{DocDBLocation}page-store/");
 
             foreach (var entry in db.Documents
-                .Where(x => x.Domain == domainToClone && x.Port == portToClone && x.Status == 20))
+                .Where(x => x.Domain == domainToClone && x.Port == portToClone && x.StatusCode == 20))
             {
                 byte[] data = null;
                 try

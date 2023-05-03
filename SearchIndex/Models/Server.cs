@@ -1,24 +1,20 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 using Gemini.Net;
 
 
 namespace Kennedy.SearchIndex.Models
 {
     [Table("Server")]
+    [PrimaryKey(nameof(Domain), nameof(Port), nameof(Protocol))]
     public class Server
     {
-        [Key]
-        [Column(Order = 0)]
         public string Domain { get; set; }
 
-        [Key]
-        [Column(Order = 1)]
         public int Port { get; set; }
 
-        [Key]
-        [Column(Order = 2)]
         public string Protocol { get; set; }
 
         public bool IsReachable { get; set; }

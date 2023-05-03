@@ -45,8 +45,8 @@ namespace Kennedy.Server.Views.Reports
 
             var docsWithProblems = docs.Where(x => x.Domain == Domain &&
                                             x.IsAvailable &&
-                                            x.Status >= 40 &&
-                                            x.Status < 60).ToArray();
+                                            x.StatusCode >= 40 &&
+                                            x.StatusCode < 60).ToArray();
 
             Response.WriteLine($"* Total URLs: {totalDocs}");
             Response.WriteLine($"* URLs with problems: {docsWithProblems.Count()}");
@@ -57,7 +57,7 @@ namespace Kennedy.Server.Views.Reports
             {
                 var geminiUrl = new GeminiUrl(doc.Url);
 
-                Response.WriteLine($"### {counter} Code {doc.Status} on {geminiUrl.Path} ");
+                Response.WriteLine($"### {counter} Code {doc.StatusCode} on {geminiUrl.Path} ");
                 Response.WriteLine($"=> {doc.Url}");
                 Response.WriteLine("Incoming Links:");
 

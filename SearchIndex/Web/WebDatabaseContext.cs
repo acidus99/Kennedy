@@ -11,7 +11,7 @@ namespace Kennedy.SearchIndex.Web
 
         public DbSet<Document> Documents { get; set; }
         public DbSet<DocumentLink> Links { get; set; }
-        public DbSet<Domain> Domains { get; set; }
+        public DbSet<Server> Servers { get; set; }
         public DbSet<Image> Images { get; set; }
 
         public WebDatabaseContext(string storageDir)

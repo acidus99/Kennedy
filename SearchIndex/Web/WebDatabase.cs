@@ -11,8 +11,6 @@ namespace Kennedy.SearchIndex.Web
 {
 	public class WebDatabase : IWebDatabase
 	{
-        
-
         private string StorageDirectory;
 
 
@@ -29,66 +27,122 @@ namespace Kennedy.SearchIndex.Web
         public WebDatabaseContext GetContext()
             => new WebDatabaseContext(StorageDirectory);
 
-        public void StoreDomain(DomainInfo domainInfo)
+        public void StoreServer(ServerInfo serverInfo)
         {
             using (var context = GetContext())
             {
-                context.Domains.Add(new Domain
+                bool isNew = false;
+
+                //see if it already exists
+                var server = context.Servers
+                    .Where(x => (x.Domain == serverInfo.Domain &&
+                                    x.Port == serverInfo.Port &&
+                                    x.Protocol == serverInfo.Protocol))
+                    .FirstOrDefault();
+
+                //if not, create a stub
+                if (server == null)
                 {
-                    DomainName = domainInfo.Domain,
-                    Port = domainInfo.Port,
-                    IsReachable = domainInfo.IsReachable,
-                    ErrorMessage = domainInfo.ErrorMessage,
-                    FaviconTxt = domainInfo.FaviconTxt,
-                    RobotsUrlID = domainInfo.RobotsUrlID,
-                    FaviconUrlID = domainInfo.FaviconUrlID,
-                    SecurityUrlID = domainInfo.SecurityUrlID,
-                });
+                    isNew = true;
+                    server = new Server
+                    {
+                        Domain = serverInfo.Domain,
+                        Port = serverInfo.Port,
+                        Protocol = serverInfo.Protocol,
+
+                        IsReachable = serverInfo.IsReachable,
+                        ErrorMessage = serverInfo.ErrorMessage,
+
+                        FaviconUrlID = serverInfo.FaviconUrlID,
+                        RobotsUrlID = serverInfo.RobotsUrlID,
+                        SecurityUrlID = serverInfo.SecurityUrlID,
+
+                        FaviconTxt = serverInfo.FaviconTxt,
+
+                        FirstSeen = serverInfo.FirstSeen,
+                        LastVisit = serverInfo.LastVisit,
+                        LastSuccessfulVisit = serverInfo.LastSuccessfulVisit,
+                    };
+                    context.Servers.Add(server);
+                }
+                else
+                {
+                    //does this have historic info?
+                    if (serverInfo.FirstSeen < server.FirstSeen)
+                    {
+                        server.FirstSeen = serverInfo.FirstSeen;
+                    }
+                    if (serverInfo.LastVisit > server.LastVisit)
+                    {
+                        server.LastVisit = serverInfo.LastVisit;
+
+                        //current info, so check other things
+                        server.IsReachable = serverInfo.IsReachable;
+                        server.ErrorMessage = serverInfo.ErrorMessage;
+                        if (server.LastSuccessfulVisit < serverInfo.LastSuccessfulVisit && serverInfo.IsReachable)
+                        {
+                            server.LastSuccessfulVisit = serverInfo.LastSuccessfulVisit;
+                        }
+                    }
+                }
+
                 context.SaveChanges();
             }
         }
 
-        public void StoreResponse(ParsedResponse parsedResponse, bool bodyWasSaved)
+        public bool StoreResponse(ParsedResponse parsedResponse)
         {
             //store in in the doc index (inserting or updating as appropriate)
-            StoreMetaData(parsedResponse, bodyWasSaved);
+            bool entryUpdated = UpdateDocuments(parsedResponse);
 
             //if its an image, we store extra meta data
-            if (parsedResponse is ImageResponse)
+            if (entryUpdated && parsedResponse is ImageResponse)
             {
-                StoreImageMetaData(parsedResponse as ImageResponse);
+                UpdateImageMetadata(parsedResponse as ImageResponse);
             }
 
-            //store the links
-            StoreLinks(parsedResponse);
+            //if the content is the same, no need to update the links since those are still accurate
+            if (entryUpdated)
+            {
+                //store the links
+                StoreLinks(parsedResponse);
+            }
+
+            return entryUpdated;
         }
 
-        private void StoreMetaData(ParsedResponse parsedResponse, bool bodyWasSaved)
+        private bool UpdateDocuments(ParsedResponse parsedResponse)
         {
-
+            bool isDiffResponse = false;
             Document entry = null;
             bool isNew = false;
 
             using (var context = GetContext())
             {
-
+                //see if it already exists
                 entry = context.Documents
                     .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
                     .FirstOrDefault();
+
+                //is this a dupe of the existing data?
+                if (entry?.LastVisit == parsedResponse.ResponseReceived)
+                {
+                    return false;
+                }
+
+                //if not, create a stub
                 if (entry == null)
                 {
                     isNew = true;
-                    entry = new Document
+                    entry = new Document(parsedResponse.RequestUrl)
                     {
-                        UrlID = parsedResponse.RequestUrl.ID,
-                        FirstSeen = System.DateTime.Now,
-
-                        Url = parsedResponse.RequestUrl.NormalizedUrl,
-                        Domain = parsedResponse.RequestUrl.Hostname,
-                        Port = parsedResponse.RequestUrl.Port
+                        FirstSeen = parsedResponse.ResponseReceived
                     };
                 }
-                entry = PopulateEntry(parsedResponse, bodyWasSaved, entry);
+
+                isDiffResponse = IsResponseDifferent(parsedResponse, entry);
+
+                entry = PopulateEntry(parsedResponse, entry, isDiffResponse);
 
                 if (isNew)
                 {
@@ -96,9 +150,35 @@ namespace Kennedy.SearchIndex.Web
                 }
                 context.SaveChanges();
             }
+            return isDiffResponse;
         }
 
-        internal void StoreImageMetaData(ImageResponse imageResponse)
+        private bool IsResponseDifferent(ParsedResponse response, Document existingEntry)
+        {
+            if(response.StatusCode != existingEntry.StatusCode)
+            {
+                return true;
+            }
+
+            if (response.Meta != existingEntry.Meta)
+            {
+                return true;
+            }
+
+            //new has body, old doesn't
+            if(response.BodyHash.HasValue && !existingEntry.BodyHash.HasValue)
+            {
+                return true;
+            }
+            //old has body, new doesn't
+            if(!response.BodyHash.HasValue && existingEntry.BodyHash.HasValue)
+            {
+                return true;
+            }
+            return (response.BodyHash == existingEntry.BodyHash);
+        }
+
+        internal void UpdateImageMetadata(ImageResponse imageResponse)
         {
             using (var context = GetContext())
             {
@@ -148,46 +228,48 @@ namespace Kennedy.SearchIndex.Web
             }
         }
 
-        private Document PopulateEntry(ParsedResponse parsedResponse, bool bodySaved, Document entry)
+        private Document PopulateEntry(ParsedResponse parsedResponse, Document entry, bool isDiffResponse)
         {
-            entry.LastVisit = DateTime.Now;
+            entry.LastVisit = parsedResponse.ResponseReceived;
 
-            entry.IsAvailable = parsedResponse.IsAvailable;
-            entry.Status = parsedResponse.StatusCode;
-            entry.Meta = parsedResponse.Meta;
-
-            entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
-            entry.BodySize = parsedResponse.BodySize;
-            entry.BodyHash = parsedResponse.BodyHash;
-
-            entry.Charset = parsedResponse.Charset;
-            entry.MimeType = parsedResponse.MimeType;
-            
-            entry.OutboundLinks = parsedResponse.Links.Count;
-
-            entry.ContentType = parsedResponse.ContentType;
-
-            if (!parsedResponse.IsFail)
+            if (isDiffResponse)
             {
-                entry.LastSuccessfulVisit = entry.LastVisit;
-            }
+                entry.IsAvailable = parsedResponse.IsAvailable;
+                entry.StatusCode = parsedResponse.StatusCode;
+                entry.Meta = parsedResponse.Meta;
 
-            //extra meta data
-            if (parsedResponse is GemTextResponse)
-            {
-                var gemtext = (GemTextResponse)parsedResponse;
+                entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
+                entry.BodySize = parsedResponse.BodySize;
+                entry.BodyHash = parsedResponse.BodyHash;
 
-                entry.Language = gemtext.Language;
-                entry.LineCount = gemtext.LineCount;
-                entry.Title = gemtext.Title;
-            }
-            else
-            {
-                entry.Language = null;
-                entry.LineCount = 0;
-                entry.Title = null;
-            }
+                entry.Charset = parsedResponse.Charset;
+                entry.MimeType = parsedResponse.MimeType;
 
+                entry.OutboundLinks = parsedResponse.Links.Count;
+
+                entry.ContentType = parsedResponse.ContentType;
+
+                if (!parsedResponse.IsFail)
+                {
+                    entry.LastSuccessfulVisit = entry.LastVisit;
+                }
+
+                //extra meta data
+                if (parsedResponse is GemTextResponse)
+                {
+                    var gemtext = (GemTextResponse)parsedResponse;
+
+                    entry.Language = gemtext.Language;
+                    entry.LineCount = gemtext.LineCount;
+                    entry.Title = gemtext.Title;
+                }
+                else
+                {
+                    entry.Language = null;
+                    entry.LineCount = 0;
+                    entry.Title = null;
+                }
+            }
             return entry;
         }
 

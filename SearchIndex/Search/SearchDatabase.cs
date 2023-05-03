@@ -22,7 +22,7 @@ namespace Kennedy.SearchIndex.Search
 
         #region Add to Index
 
-        public void AddToIndex(ParsedResponse parsedResponse)
+        public void UpdateIndex(ParsedResponse parsedResponse)
         {
             //for now, only gemtext is indexed
             if (parsedResponse is GemTextResponse)
@@ -30,12 +30,12 @@ namespace Kennedy.SearchIndex.Search
                 GemTextResponse gemText = parsedResponse as GemTextResponse;
                 if (gemText.IsIndexable)
                 {
-                    AddToTextIndex(parsedResponse.RequestUrl.ID, gemText.Title, gemText.FilteredBody);
+                    UpdateTextIndex(parsedResponse.RequestUrl.ID, gemText.Title, gemText.FilteredBody);
                 }
             }
         }
 
-        private void AddToTextIndex(long dbDocID, string title, string filteredBody)
+        private void UpdateTextIndex(long dbDocID, string title, string filteredBody)
         {
             using (var connection = new SqliteConnection(connectionString))
             {

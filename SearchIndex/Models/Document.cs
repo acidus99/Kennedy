@@ -9,7 +9,8 @@ using Kennedy.Data;
 namespace Kennedy.SearchIndex.Models
 {
     [Table("Documents")]
-    [Index(nameof(Status))]
+    [Index(nameof(StatusCode))]
+    [Index(nameof(Domain))]
     public class Document
     {
         /// <summary>
@@ -18,7 +19,6 @@ namespace Kennedy.SearchIndex.Models
         /// some unchecked casting with overflow to handle it
         /// </summary>
         [Key]
-        [Column("DBDocID")]
         public long UrlID { get; set; }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace Kennedy.SearchIndex.Models
         /// <summary>
         /// When did we last visit this document
         /// </summary>
-        public DateTime? LastVisit { get; set; }
+        public DateTime LastVisit { get; set; }
 
         /// <summary>
         /// When did we last successfully visit this document?
@@ -39,6 +39,18 @@ namespace Kennedy.SearchIndex.Models
         [MaxLength(1024)]
         [Required]
         public string Url { get; set; }
+
+        [Required]
+        public string Protocol { get; set; }
+
+        [Required]
+        public string Domain { get; set; }
+
+        [Required]
+        public int Port { get; set; }
+
+        [Required]
+        public string Path { get; set; }
 
         [NotMapped]
         public GeminiUrl GeminiUrl
@@ -55,21 +67,12 @@ namespace Kennedy.SearchIndex.Models
 
         private GeminiUrl geminiUrl = null;
 
-        [Required]
-        public string Domain { get; set; }
-
-        [Required]
-        public int Port { get; set; }
-
-        [Required]
-        public string Protocol { get; set; }
-
         public bool IsAvailable { get; set; }
 
         #region Things we get after fetching/parsing
 
         [Required]
-        public int Status { get; set; }
+        public int StatusCode { get; set; }
 
         /// <summary>
         /// everything after the status code
@@ -107,6 +110,20 @@ namespace Kennedy.SearchIndex.Models
         public ContentType ContentType { get; set; }
 
         #endregion
+
+        public Document()
+        {
+        }
+
+        public Document(GeminiUrl url)
+        {
+            UrlID = url.ID;
+            Protocol = url.Protocol;
+            Domain = url.Hostname;
+            Port = url.Port;
+            Path = url.Path;
+            Url = url.NormalizedUrl;
+        }
 
     }
 }

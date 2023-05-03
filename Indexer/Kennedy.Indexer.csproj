@@ -10,9 +10,11 @@
   <ItemGroup>
     <None Remove="config\" />
     <None Remove="config\Core14.profile.xml" />
+    <None Remove="WarcProcessors\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="config\" />
+    <Folder Include="WarcProcessors\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="config\Core14.profile.xml">

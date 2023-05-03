@@ -5,6 +5,8 @@ using Kennedy.Data.Parsers;
 
 using Toimik.WarcProtocol;
 
+using Kennedy.Indexer.WarcProcessors;
+
 namespace Kennedy.Indexer
 {
     class Program
@@ -15,18 +17,22 @@ namespace Kennedy.Indexer
         /// <param name="args"></param>
         static async Task Main(string[] args)
         {
-            RecordIngester ingester = new RecordIngester("", "config/");
+
+            SearchProcessor processor = new SearchProcessor("/Users/billy/tmp/", "config/");
 
             WarcParser warcParser = new WarcParser();
             int count = 0;
-            await foreach (Record record in warcParser.Parse(""))
+            await foreach (Record record in warcParser.Parse("/Users/billy/HDD Inside/Kennedy-Work/WARCs/2022-03-01.warc"))
             {
+                processor.ProcessRecord(record);
+
                 count++;
-                Console.WriteLine($"Ingesting\t{count} {record.Type} {record.Id}");
-                ingester.Ingest(record);
+                if(count % 100 == 0) Console.WriteLine($"Ingesting\t{count} {record.Type} {record.Id}");
+
             }
+            processor.FinalizeProcessing();
+
             Console.WriteLine("loop complete");
-            ingester.CompleteImport();
 
 
 

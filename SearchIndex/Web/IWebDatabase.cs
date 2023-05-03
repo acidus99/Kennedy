@@ -12,14 +12,13 @@ namespace Kennedy.SearchIndex.Web
         WebDatabaseContext GetContext();
 
         /// <summary>
-        /// Stores data about the response, and its links to other resources
+        /// Stores/updates a response in our web database.
         /// </summary>
         /// <param name="parsedResponse"></param>
-        void StoreResponse(ParsedResponse parsedResponse, bool bodyWasSaved);
+        /// <returns>true if the response's content changed</returns>
+        bool StoreResponse(ParsedResponse parsedResponse);
 
-        void StoreDomain(DomainInfo domainInfo);
-
-        bool RemoveResponse(GeminiUrl url);
+        void StoreServer(ServerInfo serverInfo);
     }
 }
 

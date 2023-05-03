@@ -5,12 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <PropertyGroup>
-    <MagickCopyNativeWindows>true</MagickCopyNativeWindows>
-    <MagickCopyNativeLinux>true</MagickCopyNativeLinux>
-    <MagickCopyNativeLinuxMusl>true</MagickCopyNativeLinuxMusl>
-    <MagickCopyNativeMacOS>true</MagickCopyNativeMacOS>
-  </PropertyGroup>
   <ItemGroup>
     <Folder Include="Utils\" />
     <Folder Include="RobotsTxt\" />
@@ -22,11 +16,11 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NTextCat" Version="0.3.65" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="13.1.0" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="12.2.2" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Utils\" />
     <None Remove="Magick.NET-Q8-AnyCPU" />
+    <None Remove="Utils\" />
     <None Remove="Robots\" />
     <None Remove="Parsers\" />
     <None Remove="Parsers\GemText\" />

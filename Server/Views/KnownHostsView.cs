@@ -32,23 +32,23 @@ namespace Kennedy.Server.Views
             Response.WriteLine("The following are capsules are known to Kennedy and are reachable.");
 
 
-            var knownHosts = db.Domains.Where(x => x.IsReachable).OrderBy(x => x.DomainName).Select(x => new
+            var knownServers = db.Servers.Where(x => x.IsReachable).OrderBy(x => x.Domain).Select(x => new
             {
-                Hostname = x.DomainName,
+                Domain = x.Domain,
                 Port = x.Port,
                 Favicon = !string.IsNullOrEmpty(x.FaviconTxt) ? x.FaviconTxt : ""
             }) ;
 
-            Response.WriteLine($"## Known Capsules ({knownHosts.Count()})");
+            Response.WriteLine($"## Known Capsules ({knownServers.Count()})");
 
-            foreach (var host in knownHosts)
+            foreach (var server in knownServers)
             {
-                var label = FormatDomain(host.Hostname, host.Favicon);
-                if(host.Port != 1965)
+                var label = FormatDomain(server.Domain, server.Favicon);
+                if(server.Port != 1965)
                 {
-                    label += ":" + host.Port;
+                    label += ":" + server.Port;
                 }
-                Response.WriteLine($"=> gemini://{host.Hostname}:{host.Port}/ {label}");
+                Response.WriteLine($"=> gemini://{server.Domain}:{server.Port}/ {label}");
             }
         }
     }

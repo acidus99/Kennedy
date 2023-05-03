@@ -30,9 +30,9 @@ namespace Kennedy.Server.Views
             Response.WriteLine("=> https://securitytxt.org About Security.txt");
             Response.WriteLine();
 
-            var knownHosts = db.Domains.Where(x => x.IsReachable && x.HasSecurityTxt).OrderBy(x => x.DomainName).Select(x => new
+            var knownHosts = db.Servers.Where(x => x.IsReachable && x.HasSecurityTxt).OrderBy(x => x.Domain).Select(x => new
             {
-                Hostname = x.DomainName,
+                Domain = x.Domain,
                 Port = x.Port,
                 Favicon = !string.IsNullOrEmpty(x.FaviconTxt) ? x.FaviconTxt : ""
             }) ;
@@ -41,12 +41,12 @@ namespace Kennedy.Server.Views
 
             foreach (var host in knownHosts)
             {
-                var label = $"{host.Favicon}{host.Hostname}";
+                var label = $"{host.Favicon}{host.Domain}";
                 if(host.Port != 1965)
                 {
                     label += ":" + host.Port;
                 }
-                Response.WriteLine($"=> gemini://{host.Hostname}:{host.Port}/.well-known/security.txt {label}");
+                Response.WriteLine($"=> gemini://{host.Domain}:{host.Port}/.well-known/security.txt {label}");
             }
         }
     }

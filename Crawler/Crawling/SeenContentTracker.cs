@@ -28,7 +28,7 @@ public class SeenContentTracker
     {
         if (resp.HasBody)
         {
-            uint hash = resp.BodyHash;
+            uint hash = resp.BodyHash!.Value;
             lock (locker)
             {
                 if (!seenHashes.ContainsKey(hash))
