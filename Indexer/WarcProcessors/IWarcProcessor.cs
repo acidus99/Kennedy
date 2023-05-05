@@ -1,12 +1,12 @@
 ﻿using System;
 
-using Toimik.WarcProtocol;
+using Warc;
 
 namespace Kennedy.Indexer.WarcProcessors
 {
 	public interface IWarcProcessor
 	{
-		public void ProcessRecord(Record record);
+		public void ProcessRecord(WarcRecord record);
 
 		public void FinalizeProcessing();
 	}

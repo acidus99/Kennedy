@@ -21,18 +21,15 @@ namespace Kennedy.AdminConsole.Converters
     /// <summary>
     /// Converts the "Documents" table from Kennedy Crawls into WARC files
     /// </summary>
-	public class LegacyConverter
+	public class LegacyConverter : AbstractConverter
 	{
 		string CrawlLocation;
-        GeminiWarcCreator WarcCreator;
         DateTime Captured;
-
         
         public LegacyConverter(GeminiWarcCreator warcCreator, string crawlLocation)
+            :base(warcCreator)
 		{
 			CrawlLocation = crawlLocation;
-            WarcCreator = warcCreator;
-
             string recoveredTime = GrabTime(crawlLocation);
             Captured = DateTime.ParseExact(recoveredTime, "yyyy-MM-dd (hhmmss)", null);
 
@@ -43,8 +40,9 @@ namespace Kennedy.AdminConsole.Converters
             return Path.GetDirectoryName(crawlLocation).Split(Path.DirectorySeparatorChar).Reverse().First();
         }
 
-        public void ToWarc()
-		{
+        public override void ToWarc()
+        {
+
             int warcResponses = 0;
             int warcResponsesTruncated = 0;
             int count = 0;
@@ -60,21 +58,26 @@ namespace Kennedy.AdminConsole.Converters
                 {
                     continue;
                 }
-                int statusCode = Convert.ToInt32(fields[0]);
 
-                string meta = fields[1];
                 GeminiUrl url = new GeminiUrl(fields[2]);
-                byte[] data = GetContentData(url);
+                int statusCode = Convert.ToInt32(fields[0]);
+                string meta = fields[1];
 
-                if (statusCode == 20 && data == null)
+                byte[]? data = GetContentData(url);
+
+                string mime = GetJustMimetype(meta);
+
+                bool isTruncated = (data == null);
+
+                WarcCreator.WriteLegacySession(url, Captured, statusCode, meta, mime, data, isTruncated);
+
+                if(isTruncated)
                 {
                     warcResponsesTruncated++;
-                    WarcCreator.RecordTruncatedSession(Captured, url, Captured, statusCode, meta, data);
                 }
                 else
                 {
                     warcResponses++;
-                    WarcCreator.RecordSession(Captured, url, Captured, statusCode, meta, data);
                 }
             }
             watch.Stop();
@@ -87,7 +90,7 @@ namespace Kennedy.AdminConsole.Converters
             Console.WriteLine($"Added:\t{added}");
         }
 
-        private byte[] GetContentData(GeminiUrl url)
+        private byte[]? GetContentData(GeminiUrl url)
         {
             try
             {
@@ -98,7 +101,6 @@ namespace Kennedy.AdminConsole.Converters
             { }
             return null;
         }
-
 
         private string GetStorageFilename(GeminiUrl url)
         {

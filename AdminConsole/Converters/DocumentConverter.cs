@@ -13,28 +13,30 @@ using Microsoft.EntityFrameworkCore;
 
 using Kennedy.AdminConsole.Db;
 using Kennedy.Warc;
+using Warc;
+using System.Reflection.Metadata;
 
 namespace Kennedy.AdminConsole.Converters
 {
     /// <summary>
     /// Converts the "Documents" table from Kennedy Crawls into WARC files
     /// </summary>
-	public class DocumentConverter
-	{
+	public class DocumentConverter : AbstractConverter
+    {
 		string CrawlLocation;
 
         DocumentDbContext db;
         IDocumentStore documentStore;
-        GeminiWarcCreator WarcCreator;
 
         public DocumentConverter(GeminiWarcCreator warcCreator, string crawlLocation)
+            :base(warcCreator)
 		{
 			CrawlLocation = crawlLocation;
-            WarcCreator = warcCreator;
+            documentStore = new DocumentStore(crawlLocation + "page-store/");
 		}
 
-		public void ToWarc()
-		{
+        public override void ToWarc()
+        {
             db = new DocumentDbContext(CrawlLocation);
 
             int DocumentEntrys = 0;
@@ -57,7 +59,7 @@ namespace Kennedy.AdminConsole.Converters
                         //e.g.: gemini://300:de6b:9ffb:a959::d:1965/
                         var dummy = doc.GeminiUrl;
 
-                     } catch(Exception ex)
+                    } catch(Exception ex)
                     {
                         continue;
                     }
@@ -68,32 +70,46 @@ namespace Kennedy.AdminConsole.Converters
                         Console.WriteLine($"Crawl: {CrawlLocation}: Processed {count} of {docs.Length}. Added to archive: {added}");
                     }
 
-                    bool isTruncated = false;
-
-                    byte[] data = null;
-                    //older crawls didn't explicitly set a status code for connection errors, so do that now
-                    if(doc.ConnectStatus == ConnectStatus.Error && doc.Status != 20) 
+                    ///====== Normalize the data
+                    //older crawls had a status of 0 if there was a connection error, so normalize that to our code 49
+                    if (doc.Status == 0)
                     {
                         doc.Status = GeminiParser.ConnectionErrorStatusCode;
                     }
 
-                    if (doc.BodySaved)
+                    //fix up meta for content that was too large
+                    if (doc.Status == 20 && doc.Meta.StartsWith("Requestor aborting due to reaching max download"))
                     {
-                        data = documentStore.GetDocument(doc.UrlID);
+                        doc.Meta = doc.MimeType;
                     }
 
-                    //we don't actually have responseReceived times, so approximate them
+                    //clean up the Mime to just be content-type
+                    if (doc.Status == 20)
+                    {
+                        doc.MimeType = GetJustMimetype(doc.MimeType);
+                    }
 
-                    if (DownloadWasSkipped(doc))
+                    bool isTruncated = IsTruncated(doc); ;
+                    byte[]? bodyBytes = doc.BodySaved ?
+                        documentStore.GetDocument(doc.UrlID) :
+                        null;
+
+                    if (doc.Status == 20 && bodyBytes == null)
+                    {
+                        isTruncated = true;
+                    }
+
+                    WarcCreator.WriteLegacySession(doc.GeminiUrl, doc.FirstSeen, doc.Status, doc.Meta, doc.MimeType, bodyBytes, isTruncated);
+
+                    if (isTruncated)
                     {
                         warcResponsesTruncated++;
-                        WarcCreator.RecordTruncatedSession(doc.FirstSeen, doc.GeminiUrl, doc.FirstSeen.AddSeconds(2), doc.Status.Value, doc.MimeType, data);
                     }
                     else
                     {
                         warcResponses++;
-                        WarcCreator.RecordSession(doc.FirstSeen, doc.GeminiUrl, doc.FirstSeen.AddSeconds(2), doc.Status.Value, doc.Meta, data);
                     }
+
                     added++;
                 }
                 watch.Stop();
@@ -109,16 +125,7 @@ namespace Kennedy.AdminConsole.Converters
             {
                 int x = 4;
             }
-        }
-
-        private bool DownloadWasSkipped(SimpleDocument document)
-        {
-            if(document?.Status == 20 && document.ConnectStatus == ConnectStatus.Error)
-            {
-                return true;
-            }
-            return false;
-        }
+        }      
 
     }
 }

@@ -22,22 +22,20 @@ namespace Kennedy.AdminConsole.Converters
     /// <summary>
     /// Given the crawl-data stored in the modern Kennedy crawl format, import it into the archive
     /// </summary>
-	public class DomainConverter
+	public class DomainConverter : AbstractConverter
 	{
 		string CrawlLocation;
 
         DomainDbContext db;
 
-        GeminiWarcCreator WarcWriter;
-
         public DomainConverter(GeminiWarcCreator warcWriter, string crawlLocation)
+            : base(warcWriter)
 		{
-            WarcWriter = warcWriter;
 			CrawlLocation = crawlLocation;
             db = new DomainDbContext(CrawlLocation);
         }
 
-		public void ToWarc()
+		public override void ToWarc()
 		{
             int count = 0;
             var domains = db.Domains
@@ -90,9 +88,7 @@ namespace Kennedy.AdminConsole.Converters
         private void ConvertSpecialFile(DateTime captured, SimpleDomain domain, string filename, string contents)
         {
             var url = MakeSpecialUrl(domain, filename);
-
-            //we don't actually have the responseReceived time, so approximate it
-            WarcWriter.RecordSession(captured, url, captured.AddSeconds(2), 20, "text/plain", Encoding.UTF8.GetBytes(contents));
+            WarcCreator.WriteLegacySession(url, captured, 20, "text/plain", "text/plain", Encoding.UTF8.GetBytes(contents), false);
         }
 
         private GeminiUrl MakeSpecialUrl(SimpleDomain domain, string specialFilename)

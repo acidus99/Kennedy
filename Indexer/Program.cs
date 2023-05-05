@@ -3,7 +3,7 @@
 using Gemini.Net;
 using Kennedy.Data.Parsers;
 
-using Toimik.WarcProtocol;
+using Warc;
 
 using Kennedy.Indexer.WarcProcessors;
 
@@ -18,17 +18,20 @@ namespace Kennedy.Indexer
         static async Task Main(string[] args)
         {
 
-            SearchProcessor processor = new SearchProcessor("/Users/billy/tmp/", "config/");
+            var outputDirectory = "/Users/billy/tmp/";
+            var inputWarc = "/Users/billy/HDD Inside/Kennedy-Work/WARCs/2022-03-01.warc";
 
-            WarcParser warcParser = new WarcParser();
+            SearchProcessor processor = new SearchProcessor(outputDirectory, "config/");
+
+            WarcParser warcParser = new WarcParser(inputWarc);
             int count = 0;
-            await foreach (Record record in warcParser.Parse("/Users/billy/HDD Inside/Kennedy-Work/WARCs/2022-03-01.warc"))
+            while(warcParser.HasRecords)
             {
-                processor.ProcessRecord(record);
+                var record = warcParser.GetNext();
+                processor.ProcessRecord(record!);
 
                 count++;
-                if(count % 100 == 0) Console.WriteLine($"Ingesting\t{count} {record.Type} {record.Id}");
-
+                if (count % 100 == 0) Console.WriteLine($"Ingesting\t{count} {record.Type} {record.Id}");
             }
             processor.FinalizeProcessing();
 

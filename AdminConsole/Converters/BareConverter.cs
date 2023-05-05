@@ -14,33 +14,33 @@ using Microsoft.EntityFrameworkCore;
 using Kennedy.AdminConsole.Db;
 using Kennedy.Warc;
 using Microsoft.Data.Sqlite;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Reflection.Metadata;
 
 namespace Kennedy.AdminConsole.Converters
 {
     /// <summary>
-    /// Converts the "Documents" table from Kennedy Crawls into WARC files
-    /// </summary>
-	public class BareConverter
+    /// Converts the "Documents" table from a bare scan database, but using the text in the FTS table
+    /// </summary> 
+	public class BareConverter :AbstractConverter
 	{
 		string CrawlLocation;
 
         DocumentDbContext db;
         IDocumentStore documentStore;
-        GeminiWarcCreator WarcCreator;
 
         string ftsTable;
 
         public BareConverter(GeminiWarcCreator warcCreator, string crawlLocation)
+            : base(warcCreator)
 		{
 			CrawlLocation = crawlLocation;
             db = new DocumentDbContext(CrawlLocation);
-            WarcCreator = warcCreator;
             ftsTable = GetFTSTableName();
 		}
 
         private string GetFTSTableName()
         {
-
             if (TableExists("DocumentFTS"))
             {
                 return "DocumentFTS";
@@ -82,9 +82,8 @@ namespace Kennedy.AdminConsole.Converters
         }
 
 
-        public void ToWarc()
+        public override void ToWarc()
 		{
-            
             documentStore = new DocumentStore(CrawlLocation + "page-store/");
 
             int DocumentEntrys = 0;
@@ -107,17 +106,9 @@ namespace Kennedy.AdminConsole.Converters
                         //e.g.: gemini://300:de6b:9ffb:a959::d:1965/
                         var dummy = doc.GeminiUrl;
 
-                     } catch(Exception ex)
+                    } catch(Exception ex)
                     {
                         continue;
-                    }
-
-                    byte[] data = null;
-                    string bodyText = GetBodyText(doc.UrlID);
-                    if(bodyText?.Length > 0)
-                    {
-                        int x = 4;
-                        data = System.Text.Encoding.UTF8.GetBytes(bodyText);
                     }
 
                     count++;
@@ -126,26 +117,50 @@ namespace Kennedy.AdminConsole.Converters
                         Console.WriteLine($"Crawl: {CrawlLocation}: Processed {count} of {docs.Length}. Added to archive: {added}");
                     }
 
-                    bool isTruncated = false;
-
-                    //older crawls didn't explicitly set a status code for connection errors, so do that now
-                    if(doc.ConnectStatus == ConnectStatus.Error && doc.Status != 20) 
+                    ///====== Normalize the data
+                    //older crawls had a status of 0 if there was a connection error, so normalize that to our code 49
+                    if (doc.Status == 0)
                     {
                         doc.Status = GeminiParser.ConnectionErrorStatusCode;
                     }
 
-                    //we don't actually have responseReceived times, so approximate them
+                    //fix up meta for content that was too large
+                    if (doc.Status == 20 && doc.Meta.StartsWith("Requestor aborting due to reaching max download"))
+                    {
+                        doc.Meta = doc.MimeType;
+                    }
 
-                    if (DownloadWasSkipped(doc, data))
+
+                    //clean up the Mime to just be content-type
+                    if (doc.Status == 20)
+                    {
+                        doc.MimeType = GetJustMimetype(doc.MimeType);
+                    }
+
+                    bool isTruncated = IsTruncated(doc);
+                    byte[]? bodyBytes = null;
+                    string bodyText = GetBodyText(doc.UrlID);
+                    if(bodyText?.Length > 0)
+                    {
+                        int x = 4;
+                        bodyBytes = System.Text.Encoding.UTF8.GetBytes(bodyText);
+                    }
+                    if (doc.Status == 20 && bodyBytes == null)
+                    {
+                        isTruncated = true;
+                    }
+
+                    WarcCreator.WriteLegacySession(doc.GeminiUrl, doc.FirstSeen, doc.Status, doc.Meta, doc.MimeType, bodyBytes, isTruncated);
+
+                    if (isTruncated)
                     {
                         warcResponsesTruncated++;
-                        WarcCreator.RecordTruncatedSession(doc.FirstSeen, doc.GeminiUrl, doc.FirstSeen.AddSeconds(2), doc.Status.Value, doc.MimeType, data);
                     }
                     else
                     {
                         warcResponses++;
-                        WarcCreator.RecordSession(doc.FirstSeen, doc.GeminiUrl, doc.FirstSeen.AddSeconds(2), doc.Status.Value, doc.Meta, data);
                     }
+
                     added++;
                 }
                 watch.Stop();
@@ -161,16 +176,6 @@ namespace Kennedy.AdminConsole.Converters
             {
                 int x = 4;
             }
-        }
-
-        private bool DownloadWasSkipped(SimpleDocument document, byte [] data)
-        {
-            if(document?.Status == 20 && data == null)
-            {
-                return true;
-            }
-
-            return false;
         }
 
     }

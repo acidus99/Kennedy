@@ -3,7 +3,10 @@
 using Gemini.Net;
 using Kennedy.Warc;
 
+using Warc;
+
 using System.Collections.Concurrent;
+using System.Collections.Specialized;
 
 namespace Kennedy.Crawler
 {
@@ -22,7 +25,14 @@ namespace Kennedy.Crawler
 			Saved = 0;
 			responses = new ConcurrentQueue<GeminiResponse>();
 			warcCreator = new GeminiWarcCreator(warcDirectory + "gemini.crawl.warc");
-		}
+			warcCreator.WriteWarcInfo(new WarcFields
+			{
+				{"software", "Kennedy Crawler"},
+				{"hostname", "kennedy.gemi.dev"},
+				{"timestamp", DateTime.Now },
+				{"operator", "Acidus"}
+			});
+        }
 
 		public void AddToQueue(GeminiResponse response)
 		{
@@ -40,15 +50,7 @@ namespace Kennedy.Crawler
 
 		private void WriteResponseToWarc(GeminiResponse response)
 		{
-			//was it truncated?
-			if (response.IsBodyTruncated)
-			{
-				warcCreator.RecordTruncatedSession(response);
-			}
-			else
-			{
-				warcCreator.RecordSession(response);
-			}
+			warcCreator.WriteSession(response);
             Saved++;
         }
 	}

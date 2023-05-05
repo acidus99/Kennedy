@@ -25,6 +25,6 @@
     <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
     <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
-    <ProjectReference Include="..\..\WarcProtocol\src\Toimik.WarcProtocol\Toimik.WarcProtocol.csproj" />
+    <ProjectReference Include="..\..\Warc.Net\Warc.Net.csproj" />
   </ItemGroup>
 </Project>

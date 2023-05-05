@@ -1,80 +1,128 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Text;
 
 using Gemini.Net;
 
-
-using Toimik.WarcProtocol;
+using Warc;
 
 namespace Kennedy.Warc
 {
-	public class GeminiWarcCreator :IDisposable
+	public class GeminiWarcCreator : WarcWriter
 	{
-		private WarcWriter writer;
+        public const string RequestContentType = "application/gemini; msgtype=request";
+        public const string ResponseContentType = "application/gemini; msgtype=response";
 
-		private GeminiRecordBuilder recordBuilder;
-
-		private Uri? warcID = null;
+        public Uri WarcInfoID { get; private set; }
 
 		public GeminiWarcCreator(string outputFile)
+            :base(outputFile)
 		{
-			writer = new WarcWriter(outputFile);
-			recordBuilder = new GeminiRecordBuilder();
-			WriteInfo();
+            WarcInfoID = WarcRecord.CreateId();
 		}
 
-		private void WriteInfo()
-		{
-			NameValueCollection data = new NameValueCollection();
-			data.Add("hostname", "kennedy.gemi.dev");
-			data.Add("software", "Kennedy Gemini crawler");
-			data.Add("timestamp", DateTime.Now.ToString());
-			data.Add("operator", "Acidus");
-
-			var warcinfo = recordBuilder.Warcinfo(data);
-			warcID = warcinfo.Id;
-
-			writer.Write(warcinfo);
-		}
-
-		public void RecordSession(GeminiResponse geminiResp)
-			=> RecordSession(geminiResp.RequestSent, geminiResp.RequestUrl, geminiResp.ResponseReceived, geminiResp.StatusCode, geminiResp.Meta, geminiResp.BodyBytes);
-
-		public void RecordSession(DateTime? requestSent, GeminiUrl requestUrl, DateTime? responseReceived, int statusCode, string meta, byte[] bodyBytes)
-		{
-			requestSent = requestSent ?? DateTime.Now;
-			responseReceived = responseReceived ?? DateTime.Now;
-
-            //create a request record
-            var request = recordBuilder.RequestRecord(requestSent.Value, requestUrl, warcID!);
-            writer.Write(request);
-
-			//DateTime received, GeminiUrl requestUrl, int statusCode, string meta, byte [] bodyBytes, Uri warcID, Uri requestId)
-            var response = recordBuilder.ResponseRecord(responseReceived.Value, requestUrl, statusCode, meta, bodyBytes, warcID!, request.Id);
-            writer.Write(response);
-        }
-
-        public void RecordTruncatedSession(GeminiResponse geminiResp, string truncatedReason = "length")
-			//uses MimeType, since the Meta contains the reason it was truncated, but Mime is still correct
-            => RecordTruncatedSession(geminiResp.RequestSent, geminiResp.RequestUrl, geminiResp.ResponseReceived, geminiResp.StatusCode, geminiResp.MimeType, geminiResp.BodyBytes, truncatedReason);
-
-        public void RecordTruncatedSession(DateTime? requestSent, GeminiUrl requestUrl, DateTime? responseReceived, int statusCode, string mimeType, byte [] bodyBytes, string truncatedReason = "length")
+        public void WriteWarcInfo(WarcFields fields)
         {
-            requestSent = requestSent ?? DateTime.Now;
-            responseReceived = responseReceived ?? DateTime.Now;
-
-            //create a request record
-            var request = recordBuilder.RequestRecord(requestSent.Value, requestUrl, warcID!);
-            writer.Write(request);
-
-            var response = recordBuilder.ResponseRecord(responseReceived.Value, requestUrl, statusCode, mimeType, bodyBytes, warcID!, request.Id, truncatedReason);
-            writer.Write(response);
+            Write(new WarcInfoRecord
+            {
+                Id = WarcInfoID,
+                ContentType = WarcFields.ContentType,
+                ContentText = fields.ToString()
+            });
         }
 
-        public void Dispose()
+        public void WriteSession(GeminiResponse geminiResp)
         {
-            ((IDisposable)writer).Dispose();
+            var requestRecord = CreateRequestRecord(geminiResp.RequestUrl);
+            requestRecord.Date = geminiResp.RequestSent;
+
+            Write(requestRecord);
+
+            var responseRecord = new ResponseRecord
+            {
+                ContentBlock = CreateResponseBytes(geminiResp),
+                ContentType = ResponseContentType,
+                Date = geminiResp.RequestSent,
+                WarcInfoId = WarcInfoID,
+                TargetUri = geminiResp.RequestUrl._url
+            };
+
+            responseRecord.ConcurrentTo.Add(requestRecord.Id);
+
+            if (geminiResp.MimeType != null)
+            {
+                responseRecord.IdentifiedPayloadType = geminiResp.MimeType;
+            }
+
+            if(geminiResp.IsBodyTruncated)
+            {
+                responseRecord.Truncated = "length";
+            }
+
+            Write(responseRecord);
         }
+
+        public void WriteLegacySession(GeminiUrl url, DateTime sent, int statusCode, string meta, string mime, byte[]? bytes, bool isTruncated = false)
+        {
+
+            var requestRecord = CreateRequestRecord(url);
+            requestRecord.Date = sent;
+
+            Write(requestRecord);
+
+            var responseRecord = new ResponseRecord
+            {
+                ContentBlock = CreateResponseBytes(statusCode, meta, bytes),
+                ContentType = ResponseContentType,
+                Date = sent,
+                WarcInfoId = WarcInfoID,
+                TargetUri = url._url
+            };
+
+            responseRecord.ConcurrentTo.Add(requestRecord.Id);
+
+            //do we have a mime?
+            if(!string.IsNullOrEmpty(mime))
+            {
+                responseRecord.IdentifiedPayloadType = mime;
+            }
+            //was it truncated?
+            if(isTruncated)
+            {
+                responseRecord.Truncated = "length";
+            }
+
+            Write(responseRecord);
+        }
+
+        public RequestRecord CreateRequestRecord(GeminiUrl url)
+            => new RequestRecord
+            {
+                ContentBlock = GeminiParser.RequestBytes(url),
+                ContentType = RequestContentType,
+                WarcInfoId = WarcInfoID,
+                TargetUri = url._url
+            };
+
+
+        public byte[] CreateResponseBytes(GeminiResponse geminiResponse)
+            => CreateResponseBytes(geminiResponse.StatusCode, geminiResponse.Meta, geminiResponse.BodyBytes);
+
+        public byte[] CreateResponseBytes(int statusCode, string meta, byte[]? bodyBytes)
+        {
+            var responseLine = $"{statusCode} {meta}\r\n";
+
+            byte[] fullResponseBytes = ToBytes(responseLine);
+
+            if (bodyBytes != null && bodyBytes.Length > 0)
+            {
+                fullResponseBytes = fullResponseBytes.Concat(bodyBytes).ToArray();
+            }
+            return fullResponseBytes;
+        }
+
+        private byte[] ToBytes(string s)
+            => Encoding.UTF8.GetBytes(s);
     }
 }
 

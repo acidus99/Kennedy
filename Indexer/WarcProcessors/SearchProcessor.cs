@@ -1,7 +1,7 @@
 ﻿namespace Kennedy.Indexer.WarcProcessors;
 
 using System;
-using Toimik.WarcProtocol;
+using Warc;
 
 using Gemini.Net;
 using Kennedy.Data;
@@ -36,7 +36,7 @@ public class SearchProcessor : IWarcProcessor
 
     }
 
-	public void ProcessRecord(Record record)
+	public void ProcessRecord(WarcRecord record)
 	{
         if(record.Type == "response")
         {
@@ -58,15 +58,13 @@ public class SearchProcessor : IWarcProcessor
         var parsedResponse = responseParser.Parse(url, record.ContentBlock!);
         parsedResponse.RequestSent = record.Date;
         parsedResponse.ResponseReceived = record.Date;
-        if (!string.IsNullOrEmpty(record.TruncatedReason))
+        if (!string.IsNullOrEmpty(record.Truncated))
         {
             parsedResponse.IsBodyTruncated = true;
         }
 
         return parsedResponse;
     }
-
-
 
     private void HandleServer(ParsedResponse response)
     {
