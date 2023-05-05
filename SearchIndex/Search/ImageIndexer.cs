@@ -35,7 +35,7 @@ namespace Kennedy.SearchIndex.Search
 Inner Join Documents
 on Documents.UrlID = Images.UrlID
 INNER Join Links
-on Images.UrlID = Links.DBTargetDocID
+on Images.UrlID = Links.TargetUrlID
 where length(LinkText) > 0", connection))
             {
                 var r = cmd.ExecuteReader();
