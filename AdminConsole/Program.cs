@@ -32,9 +32,9 @@ namespace Kennedy.AdminConsole
             string warcOutputDir = workingDir + "WARCs/";
             string sourceDir = workingDir + "pre-WARC/";
 
-            //ImportFullDatabases(warcOutputDir, sourceDir + "crawldb - docs and domains/foo.txt");
+            ImportFullDatabases(warcOutputDir, sourceDir + "crawldb - docs and domains/foo.txt");
 
-            //ImportPartialDatabase(warcOutputDir, sourceDir + "crawldb - docs only/2022-01-09/");
+            ImportPartialDatabase(warcOutputDir, sourceDir + "crawldb - docs only/2022-01-09/");
 
             ImportFullDatabasesNoPageStore(warcOutputDir,  sourceDir + "crawldb - bare db/foo.txt");
 
@@ -60,7 +60,7 @@ namespace Kennedy.AdminConsole
                     AbstractConverter converter = new DomainConverter(warcCreator, crawlLocation);
                     converter.ToWarc();
 
-                    converter = new BareConverter(warcCreator, crawlLocation);
+                    converter = new DocumentConverter(warcCreator, crawlLocation);
                     converter.ToWarc();
                 }
             }
