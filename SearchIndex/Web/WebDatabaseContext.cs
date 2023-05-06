@@ -9,11 +9,17 @@ namespace Kennedy.SearchIndex.Web
     {
         protected string StorageDirectory;
 
+        //Main entities
         public DbSet<Document> Documents { get; set; }
-        public DbSet<DocumentLink> Links { get; set; }
-        public DbSet<Server> Servers { get; set; }
         public DbSet<Image> Images { get; set; }
 
+        //aux entitites
+        public DbSet<Favicon> Favicons { get; set; }
+        public DbSet<RobotsTxt> RobotsTxts { get; set; }
+        public DbSet<SecurityTxt> SecurityTxts { get; set; }
+
+        public DbSet<DocumentLink> Links { get; set; }
+        
         public WebDatabaseContext(string storageDir)
         {
             StorageDirectory = storageDir;
