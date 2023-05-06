@@ -52,6 +52,9 @@ namespace Kennedy.SearchIndex.Models
         [Required]
         public string Path { get; set; }
 
+        [Required]
+        public string FileExtension { get; set; }
+
         [NotMapped]
         public GeminiUrl GeminiUrl
         {
@@ -134,6 +137,7 @@ namespace Kennedy.SearchIndex.Models
             Port = url.Port;
             Path = url.Path;
             Url = url.NormalizedUrl;
+            FileExtension = url.FileExtension;
         }
 
     }
