@@ -8,6 +8,7 @@ using Gemini.Net;
 namespace Kennedy.SearchIndex.Models
 {
     [Table("SecurityTxts")]
+    [PrimaryKey(nameof(Domain), nameof(Port), nameof(Protocol))]
     public class SecurityTxt
     {
         [Required]
@@ -21,8 +22,17 @@ namespace Kennedy.SearchIndex.Models
 
         public string Content { get; set; }
 
-        public long UrlID { get; set; }
+        public long SourceUrlID { get; set; }
 
-        public Document SourceUrl { get; set; }
+        public SecurityTxt()
+        { }
+
+        public SecurityTxt(GeminiUrl url)
+        {
+            Protocol = url.Protocol;
+            Domain = url.Hostname;
+            Port = url.Port;
+            SourceUrlID = url.ID;
+        }
     }
 }

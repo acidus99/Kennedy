@@ -13,7 +13,6 @@ namespace Kennedy.SearchIndex.Web
 	{
         private string StorageDirectory;
 
-
 		public WebDatabase(string storageDir)
         {
             StorageDirectory = storageDir;
@@ -26,69 +25,6 @@ namespace Kennedy.SearchIndex.Web
 
         public WebDatabaseContext GetContext()
             => new WebDatabaseContext(StorageDirectory);
-
-        public void StoreServer(ServerInfo serverInfo)
-        {
-            using (var context = GetContext())
-            {
-                bool isNew = false;
-
-                //see if it already exists
-                var server = context.Servers
-                    .Where(x => (x.Domain == serverInfo.Domain &&
-                                    x.Port == serverInfo.Port &&
-                                    x.Protocol == serverInfo.Protocol))
-                    .FirstOrDefault();
-
-                //if not, create a stub
-                if (server == null)
-                {
-                    isNew = true;
-                    server = new Server
-                    {
-                        Domain = serverInfo.Domain,
-                        Port = serverInfo.Port,
-                        Protocol = serverInfo.Protocol,
-
-                        IsReachable = serverInfo.IsReachable,
-                        ErrorMessage = serverInfo.ErrorMessage,
-
-                        FaviconUrlID = serverInfo.FaviconUrlID,
-                        RobotsUrlID = serverInfo.RobotsUrlID,
-                        SecurityUrlID = serverInfo.SecurityUrlID,
-
-                        FaviconTxt = serverInfo.FaviconTxt,
-
-                        FirstSeen = serverInfo.FirstSeen,
-                        LastVisit = serverInfo.LastVisit,
-                        LastSuccessfulVisit = serverInfo.LastSuccessfulVisit,
-                    };
-                    context.Servers.Add(server);
-                }
-                else
-                {
-                    //does this have historic info?
-                    if (serverInfo.FirstSeen < server.FirstSeen)
-                    {
-                        server.FirstSeen = serverInfo.FirstSeen;
-                    }
-                    if (serverInfo.LastVisit > server.LastVisit)
-                    {
-                        server.LastVisit = serverInfo.LastVisit;
-
-                        //current info, so check other things
-                        server.IsReachable = serverInfo.IsReachable;
-                        server.ErrorMessage = serverInfo.ErrorMessage;
-                        if (server.LastSuccessfulVisit < serverInfo.LastSuccessfulVisit && serverInfo.IsReachable)
-                        {
-                            server.LastSuccessfulVisit = serverInfo.LastSuccessfulVisit;
-                        }
-                    }
-                }
-
-                context.SaveChanges();
-            }
-        }
 
         public bool StoreResponse(ParsedResponse parsedResponse)
         {
@@ -124,8 +60,8 @@ namespace Kennedy.SearchIndex.Web
                     .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
                     .FirstOrDefault();
 
-                //is this a dupe of the existing data?
-                if (entry?.LastVisit == parsedResponse.ResponseReceived)
+                //is this a dupe of the existing data or is it older?
+                if (entry?.LastVisit >= parsedResponse.ResponseReceived)
                 {
                     return false;
                 }
@@ -150,6 +86,10 @@ namespace Kennedy.SearchIndex.Web
                 }
                 context.SaveChanges();
             }
+
+            //update the robots/security/favicon
+            UpdateSpecialFiles(parsedResponse);
+
             return isDiffResponse;
         }
 
@@ -178,7 +118,159 @@ namespace Kennedy.SearchIndex.Web
             return (response.BodyHash == existingEntry.BodyHash);
         }
 
-        internal void UpdateImageMetadata(ImageResponse imageResponse)
+        /// <summary>
+        /// Handles updating the Favicon, Security, or Robots tables
+        /// </summary>
+        /// <param name="response"></param>
+        private void UpdateSpecialFiles(ParsedResponse response)
+        {
+            if (response.RequestUrl.Path == "/robots.txt")
+            {
+                UpdateRobots(response);
+            }
+            else if (response.RequestUrl.Path == "/favicon.txt")
+            {
+                UpdateFavicon(response);
+            }
+            else if (response.RequestUrl.Path == "/.well-known/security.txt")
+            {
+                UpdateSecurity(response);
+            }
+        }
+
+        private void UpdateRobots(ParsedResponse response)
+        {
+            bool isRemove = !(response.IsSuccess && response.HasBody);
+
+            using (var context = GetContext())
+            {
+                bool isNew = false;
+                //see if it already exists
+                var entry = context.RobotsTxts
+                    .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
+                                x.Domain == response.RequestUrl.Hostname &&
+                                x.Port == response.RequestUrl.Port))
+                    .FirstOrDefault();
+
+                if (isRemove)
+                {
+                    if (entry != null)
+                    {
+                        //remove it
+                        context.RobotsTxts.Remove(entry);
+                    }
+                }
+                else
+                {
+                    //if not, create a stub
+                    if (entry == null)
+                    {
+                        isNew = true;
+                        entry = new RobotsTxt(response.RequestUrl);
+                    }
+
+                    entry.Content = response.BodyText;
+
+                    if (isNew)
+                    {
+                        context.RobotsTxts.Add(entry);
+                    }
+                }
+                context.SaveChanges();
+            }
+        }
+
+        private void UpdateFavicon(ParsedResponse response)
+        {
+
+            bool isRemove = !(response.IsSuccess && IsValidFavicon(response.BodyText));
+
+            using (var context = GetContext())
+            {
+                bool isNew = false;
+                //see if it already exists
+                var entry = context.Favicons
+                    .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
+                                x.Domain == response.RequestUrl.Hostname &&
+                                x.Port == response.RequestUrl.Port))
+                    .FirstOrDefault();
+
+                if (isRemove)
+                {
+                    if(entry != null)
+                    {
+                        context.Favicons.Remove(entry);
+                    }
+                }
+                else
+                {
+
+                    //if not, create a stub
+                    if (entry == null)
+                    {
+                        isNew = true;
+                        entry = new Favicon(response.RequestUrl);
+                    }
+
+                    entry.Emoji = response.BodyText;
+
+                    if (isNew)
+                    {
+                        context.Favicons.Add(entry);
+                    }
+                }
+                context.SaveChanges();
+            }
+        }
+
+        private void UpdateSecurity(ParsedResponse response)
+        {
+            bool isRemove = !(response.IsSuccess && IsValidSecurity(response.BodyText));
+
+            using (var context = GetContext())
+            {
+                bool isNew = false;
+                //see if it already exists
+                var entry = context.SecurityTxts
+                    .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
+                                x.Domain == response.RequestUrl.Hostname &&
+                                x.Port == response.RequestUrl.Port))
+                    .FirstOrDefault();
+
+                if (isRemove)
+                {
+                    if(entry != null)
+                    {
+                        context.SecurityTxts.Remove(entry);
+                    }
+                }
+                else
+                {
+                    //if not, create a stub
+                    if (entry == null)
+                    {
+                        isNew = true;
+                        entry = new SecurityTxt(response.RequestUrl);
+                    }
+
+                    entry.Content = response.BodyText;
+
+                    if (isNew)
+                    {
+                        context.SecurityTxts.Add(entry);
+                    }
+                    context.SaveChanges();
+                }
+            }
+        }
+
+        private bool IsValidFavicon(string contents)
+            => (contents != null && !contents.Contains(" ") && !contents.Contains("\n") && contents.Length < 20);
+
+        private bool IsValidSecurity(string contents)
+            => (contents != null && contents.ToLower().Contains("contact:"));
+
+        private void UpdateImageMetadata(ImageResponse imageResponse)
         {
             using (var context = GetContext())
             {

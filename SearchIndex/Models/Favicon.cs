@@ -8,6 +8,7 @@ using Gemini.Net;
 namespace Kennedy.SearchIndex.Models
 {
     [Table("Favicons")]
+    [PrimaryKey(nameof(Domain), nameof(Port), nameof(Protocol))]
     public class Favicon
     {
         [Required]
@@ -21,8 +22,18 @@ namespace Kennedy.SearchIndex.Models
 
         public string Emoji { get; set; }
 
-        public long UrlID { get; set; }
+        public long SourceUrlID { get; set; }
 
-        public Document SourceUrl { get; set; }
+        public Favicon()
+        { }
+
+        public Favicon(GeminiUrl url)
+        {
+            Protocol = url.Protocol;
+            Domain = url.Hostname;
+            Port = url.Port;
+            SourceUrlID = url.ID;
+        }
+
     }
 }

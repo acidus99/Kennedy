@@ -16,7 +16,6 @@ namespace Kennedy.SearchIndex
 	public class SearchStorageWrapper
 	{
 		ISearchDatabase SearchDB;
-
 		IWebDatabase WebDB;
 
 		bool anyContentChanged;
@@ -40,9 +39,6 @@ namespace Kennedy.SearchIndex
 
 			return contentUpdated;
 		}
-
-		public void StoreDomain(ServerInfo domain)
-			=> WebDB.StoreServer(domain);
 
 		public void FinalizeDatabases()
 		{

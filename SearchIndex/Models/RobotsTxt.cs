@@ -8,6 +8,7 @@ using Gemini.Net;
 namespace Kennedy.SearchIndex.Models
 {
     [Table("RobotsTxts")]
+    [PrimaryKey(nameof(Domain), nameof(Port), nameof(Protocol))]
     public class RobotsTxt
     {
         [Required]
@@ -21,8 +22,20 @@ namespace Kennedy.SearchIndex.Models
 
         public string Content { get; set; }
 
-        public long UrlID { get; set; }
+        [Required]
+        public long SourceUrlID { get; set; }
 
-        public Document SourceUrl { get; set; }
+        public RobotsTxt()
+        {
+        }
+
+        public RobotsTxt(GeminiUrl url)
+        {
+            Protocol = url.Protocol;
+            Domain = url.Hostname;
+            Port = url.Port;
+            SourceUrlID = url.ID;
+        }
+
     }
 }

@@ -17,8 +17,6 @@ namespace Kennedy.SearchIndex.Web
         /// <param name="parsedResponse"></param>
         /// <returns>true if the response's content changed</returns>
         bool StoreResponse(ParsedResponse parsedResponse);
-
-        void StoreServer(ServerInfo serverInfo);
     }
 }
 
