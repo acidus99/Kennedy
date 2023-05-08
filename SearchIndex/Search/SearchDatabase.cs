@@ -113,16 +113,20 @@ namespace Kennedy.SearchIndex.Search
                 using (var connection = new SqliteConnection(connectionString))
                 {
                     connection.Open();
-                    var cmd = new SqliteCommand(@"Select img.DBDocID, url, BodySize, BodySaved, Width, Height, ImageType, IsTransparent, HasFaviconTxt, FaviconTxt,  snippet(ImageSearch, 0, '[',']','…',20) as snip
+                    var cmd = new SqliteCommand(
+@"
+Select img.UrlID, url, BodySize, Emoji, Width, Height, ImageType, IsTransparent, snippet(ImageSearch, 0, '[',']','…',20) as snip, ( rank + (rank*0.3*PopularityRank)) as tot
 From ImageSearch as fts
  Inner Join Images as img
-On img.DBDocID = fts.ROWID
+On img.UrlID = fts.ROWID
  Inner join Documents as doc
-On doc.DBDocID = img.DBDocID
-Inner Join Domains as dom
-On doc.Domain = dom.Domain and doc.Port = dom.Port
+On doc.UrlID = img.UrlID
+left join Favicons as f
+on doc.Protocol = f.Protocol and doc.Port = f.Port and doc.Domain = f.Domain 
 WHERE Terms match $query
-LIMIT $limit OFFSET $offset", connection);
+order by tot
+LIMIT $limit OFFSET $offset
+", connection);
 
                     cmd.Parameters.Add(new SqliteParameter("$query", query));
                     cmd.Parameters.Add(new SqliteParameter("limit", limit));
@@ -130,19 +134,13 @@ LIMIT $limit OFFSET $offset", connection);
                     SqliteDataReader reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
-
-                        var favicon = reader.GetBoolean(reader.GetOrdinal("HasFaviconTxt"))
-                            ? reader["FaviconTxt"].ToString() :
-                            "";
-
                         ret.Add(new ImageSearchResult
                         {
                             Url = new GeminiUrl(reader["Url"].ToString()),
                             BodySize = reader.GetInt32(reader.GetOrdinal("BodySize")),
                             Snippet = reader["snip"].ToString(),
-                            UrlID = reader.GetInt64(reader.GetOrdinal("DBDocID")),
-                            BodySaved = reader.GetBoolean(reader.GetOrdinal("BodySaved")),
-                            Favicon = favicon,
+                            UrlID = reader.GetInt64(reader.GetOrdinal("UrlID")),
+                            Favicon = reader["Emoji"].ToString() ?? "",
                             Width = reader.GetInt32(reader.GetOrdinal("Width")),
                             Height = reader.GetInt32(reader.GetOrdinal("Height")),
                             ImageType = reader["ImageType"].ToString().ToUpper()
@@ -196,29 +194,22 @@ LIMIT $limit OFFSET $offset", connection);
                     SqliteDataReader reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
-
-                        var favicon = reader.GetBoolean(reader.GetOrdinal("HasFaviconTxt"))
-                            ? reader["FaviconTxt"].ToString() :
-                            "";
-
                         ret.Add(new FullTextSearchResult
                         {
                             Url = new GeminiUrl(reader["Url"].ToString()),
                             BodySize = reader.GetInt32(reader.GetOrdinal("BodySize")),
                             Title = reader["Title"].ToString(),
                             Snippet = reader["snip"].ToString(),
-                            UrlID = reader.GetInt64(reader.GetOrdinal("DBDocID")),
-                            Language = reader["Language"].ToString(),
-                            BodySaved = reader.GetBoolean(reader.GetOrdinal("BodySaved")),
+                            UrlID = reader.GetInt64(reader.GetOrdinal("UrlID")),
+                            Language = reader["DetectedLanguage"].ToString(),
                             LineCount = reader.GetInt32(reader.GetOrdinal("LineCount")),
-                            Favicon = favicon,
+                            Favicon = reader["Emoji"].ToString() ?? "",
                             ExternalInboundLinks = reader.GetInt32(reader.GetOrdinal("ExternalInboundLinks")),
 
                             FtsRank = reader.GetDouble(reader.GetOrdinal("rank")),
                             PopRank = reader.GetDouble(reader.GetOrdinal("PopularityRank")),
                             TotalRank = reader.GetDouble(reader.GetOrdinal("tot")),
-
-                        }); ;
+                        });
                     }
                     return ret;
                 }
@@ -230,34 +221,17 @@ LIMIT $limit OFFSET $offset", connection);
             return ret;
         }
 
-        private string GetAlgorithmString(bool usePopRank = true)
+        private string GetAlgorithmString()
         {
-            if (usePopRank)
-            {
-                return @"
-Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, BodySaved, HasFaviconTxt, FaviconTxt, ExternalInboundLinks, PopularityRank, rank, ( rank + (rank*0.3*PopularityRank)) as tot, snippet(FTS, 1, '[',']','…',20) as snip
+            return @"
+Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType,  Emoji,  ExternalInboundLinks, PopularityRank, rank, ( rank + (rank*0.3*PopularityRank)) as tot, snippet(FTS, 1, '[',']','…',20) as snip
 From FTS as fts
 Inner Join Documents as doc
-On doc.DBDocID = fts.ROWID
-Inner Join Domains as dom
-On doc.Domain = dom.Domain and doc.Port = dom.Port
+On doc.UrlID = fts.ROWID
+left join Favicons as f on doc.Protocol = f.Protocol and doc.Port = f.Port and doc.Domain = f.Domain 
 WHERE Body match $query
 order by tot
 LIMIT $limit OFFSET $offset";
-            }
-            else
-            {
-                return @"
-Select Url, BodySize, doc.Title, DBDocID, Language, LineCount, BodySaved, HasFaviconTxt, FaviconTxt, ExternalInboundLinks, PopularityRank, rank, rank as tot, snippet(FTS, 1, '[',']','…',20) as snip
-From FTS as fts
-Inner Join Documents as doc
-On doc.DBDocID = fts.ROWID
-Inner Join Domains as dom
-On doc.Domain = dom.Domain and doc.Port = dom.Port
-WHERE Body match $query
-order by rank
-LIMIT $limit OFFSET $offset";
-            }
         }
 
         #endregion 

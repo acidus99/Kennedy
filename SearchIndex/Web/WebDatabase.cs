@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using EFCore.BulkExtensions;
 using Gemini.Net;
 using Kennedy.Data;
+
+using Microsoft.Data.Sqlite;
+
 
 using Kennedy.SearchIndex.Models;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +50,36 @@ namespace Kennedy.SearchIndex.Web
 
             return entryUpdated;
         }
+
+        public List<ServerInfo> GetAllCapsules()
+        {
+
+            List<ServerInfo> servers = new List<ServerInfo>();
+
+            var connString = GetContext().Database.GetConnectionString();
+
+            using (var connection = new SqliteConnection(connString))
+            {
+                connection.Open();
+                var cmd = new SqliteCommand(@"select d.Protocol, d.Domain, d.port, f.Emoji, count(*) as pages from Documents as d left outer join Favicons as f on d.Protocol = f.Protocol and d.Port = f.Port and d.Domain = f.Domain where LastSuccessfulVisit  is not NULL group by d.Protocol, d.domain, d.port order by d.domain asc", connection);
+
+                var reader = cmd.ExecuteReader();
+                while(reader.Read())
+                {
+                    servers.Add(new ServerInfo
+                    {
+                        Protocol = reader["Protocol"].ToString(),
+                        Domain = reader["Domain"].ToString(),
+                        Port = reader.GetInt32(reader.GetOrdinal("Port")),
+                        Emoji = reader["Emoji"].ToString() ?? "",
+                        Pages = reader.GetInt32(reader.GetOrdinal("Pages"))
+                    });
+                }
+                connection.Close();
+            }
+            return servers;
+        }
+
 
         private bool UpdateDocuments(ParsedResponse parsedResponse)
         {

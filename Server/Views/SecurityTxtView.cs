@@ -17,7 +17,6 @@ namespace Kennedy.Server.Views
 
         public override void Render()
         {
-
             var db = new WebDatabaseContext(Settings.Global.DataRoot);
             Response.Success();
             /*
@@ -30,18 +29,16 @@ namespace Kennedy.Server.Views
             Response.WriteLine("=> https://securitytxt.org About Security.txt");
             Response.WriteLine();
 
-            var knownHosts = db.Servers.Where(x => x.IsReachable && x.HasSecurityTxt).OrderBy(x => x.Domain).Select(x => new
-            {
-                Domain = x.Domain,
-                Port = x.Port,
-                Favicon = !string.IsNullOrEmpty(x.FaviconTxt) ? x.FaviconTxt : ""
-            }) ;
 
-            Response.WriteLine($"## Capsules with security.txt ({knownHosts.Count()})");
+            var servers = db.SecurityTxts.OrderBy(x => x.Domain);
 
-            foreach (var host in knownHosts)
+            Response.WriteLine($"## Capsules with security.txt ({servers.Count()})");
+
+            int count = 0;
+            foreach (var host in servers)
             {
-                var label = $"{host.Favicon}{host.Domain}";
+                count++;
+                var label = $"{count}. {host.Domain}";
                 if(host.Port != 1965)
                 {
                     label += ":" + host.Port;

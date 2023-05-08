@@ -1,8 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Sqlite;
+
+
 using Gemini.Net;
+using Kennedy.Data;
 using Kennedy.SearchIndex.Web;
 using Kennedy.SearchIndex.Models;
 using RocketForce;
@@ -17,7 +23,7 @@ namespace Kennedy.Server.Views
 
         public override void Render()
         {
-            var db = new WebDatabaseContext(Settings.Global.DataRoot);
+            var webDatabase = new WebDatabase(Settings.Global.DataRoot);
 
             Response.Success();
             /*
@@ -31,24 +37,21 @@ namespace Kennedy.Server.Views
             Response.WriteLine();
             Response.WriteLine("The following are capsules are known to Kennedy and are reachable.");
 
+            var servers = webDatabase.GetAllCapsules();
 
-            var knownServers = db.Servers.Where(x => x.IsReachable).OrderBy(x => x.Domain).Select(x => new
+            Response.WriteLine($"## Known Capsules ({servers.Count()})");
+
+            int counter = 0;
+            foreach (var server in servers)
             {
-                Domain = x.Domain,
-                Port = x.Port,
-                Favicon = !string.IsNullOrEmpty(x.FaviconTxt) ? x.FaviconTxt : ""
-            }) ;
-
-            Response.WriteLine($"## Known Capsules ({knownServers.Count()})");
-
-            foreach (var server in knownServers)
-            {
-                var label = FormatDomain(server.Domain, server.Favicon);
+                counter++;
+                var label = $"{counter}. {FormatDomain(server.Domain, server.Emoji)}";
                 if(server.Port != 1965)
                 {
                     label += ":" + server.Port;
                 }
-                Response.WriteLine($"=> gemini://{server.Domain}:{server.Port}/ {label}");
+                label += $" ({server.Pages} URLs)";
+                Response.WriteLine($"=> {server.Protocol}://{server.Domain}:{server.Port}/ {label}");
             }
         }
     }

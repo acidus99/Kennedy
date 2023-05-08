@@ -19,7 +19,7 @@ namespace Kennedy.SearchIndex.Models
 
         public string Favicon { get; set; }
 
-        public bool BodySaved { get; set; }
+        public string Mime { get; set; }
 
         public int ExternalInboundLinks { get; set; }
 
