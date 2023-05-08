@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using EFCore.BulkExtensions;
 using Gemini.Net;
+
 using Kennedy.Data;
+using Kennedy.Data.RobotsTxt;
 
 using Microsoft.Data.Sqlite;
 
@@ -174,7 +176,7 @@ namespace Kennedy.SearchIndex.Web
 
         private void UpdateRobots(ParsedResponse response)
         {
-            bool isRemove = !(response.IsSuccess && response.HasBody);
+            bool isRemove = !(response.IsSuccess && IsValidRobotsTxtFile(response?.BodyText));
 
             using (var context = GetContext())
             {
@@ -217,7 +219,7 @@ namespace Kennedy.SearchIndex.Web
         private void UpdateFavicon(ParsedResponse response)
         {
 
-            bool isRemove = !(response.IsSuccess && IsValidFavicon(response.BodyText));
+            bool isRemove = !(response.IsSuccess && IsValidFavicon(response.BodyText?.Trim()));
 
             using (var context = GetContext())
             {
@@ -246,7 +248,7 @@ namespace Kennedy.SearchIndex.Web
                         entry = new Favicon(response.RequestUrl);
                     }
 
-                    entry.Emoji = response.BodyText;
+                    entry.Emoji = response.BodyText.Trim();
 
                     if (isNew)
                     {
@@ -303,6 +305,17 @@ namespace Kennedy.SearchIndex.Web
 
         private bool IsValidSecurity(string contents)
             => (contents != null && contents.ToLower().Contains("contact:"));
+
+
+        private bool IsValidRobotsTxtFile(string? contents)
+        {
+            if (contents != null)
+            {
+                RobotsTxtFile robotsTxt = new RobotsTxtFile(contents);
+                return !robotsTxt.IsMalformed;
+            }
+            return false;
+        }
 
         private void UpdateImageMetadata(ImageResponse imageResponse)
         {
