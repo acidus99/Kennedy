@@ -38,20 +38,30 @@ public class SearchProcessor : IWarcProcessor
     private void ProcessResponseRecord(ResponseRecord responseRecord)
     {
         var response = ParseResponseRecord(responseRecord);
-        wrapperDB.StoreResponse(response);
+        if (response != null)
+        {
+            wrapperDB.StoreResponse(response);
+        }
     }
 
-    public ParsedResponse ParseResponseRecord(ResponseRecord record)
+    public ParsedResponse? ParseResponseRecord(ResponseRecord record)
     {
         GeminiUrl url = new GeminiUrl(record.TargetUri);
-        var parsedResponse = responseParser.Parse(url, record.ContentBlock!);
-        parsedResponse.RequestSent = record.Date;
-        parsedResponse.ResponseReceived = record.Date;
-        if (!string.IsNullOrEmpty(record.Truncated))
-        {
-            parsedResponse.IsBodyTruncated = true;
-        }
 
-        return parsedResponse;
+        try
+        {
+            var parsedResponse = responseParser.Parse(url, record.ContentBlock!);
+            parsedResponse.RequestSent = record.Date;
+            parsedResponse.ResponseReceived = record.Date;
+            if (!string.IsNullOrEmpty(record.Truncated))
+            {
+                parsedResponse.IsBodyTruncated = true;
+            }
+
+            return parsedResponse;
+        } catch(Exception ex)
+        {
+            return null;
+        }
     }
 }
