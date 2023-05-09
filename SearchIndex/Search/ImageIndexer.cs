@@ -24,8 +24,18 @@ namespace Kennedy.SearchIndex.Search
 
         public void IndexImages()
         {
+            RemoveOldIndex();
             GetContent();
             InsertText();
+        }
+
+        private void RemoveOldIndex()
+        {
+            connection.Open();
+            //first delete all FTS entries for this
+            SqliteCommand cmd = new SqliteCommand(@"DELETE From ImageSearch", connection);
+            cmd.ExecuteNonQuery();
+            connection.Close();
         }
 
         private void GetContent()
