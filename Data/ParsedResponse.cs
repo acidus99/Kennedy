@@ -9,12 +9,10 @@ namespace Kennedy.Data
 		public ContentType ContentType { get; set; } = ContentType.Unknown;
 		public List<FoundLink> Links { get; set; } = new List<FoundLink>();
 
-
 		public ParsedResponse(GeminiResponse resp)
 		{
             BodyBytes = resp.BodyBytes;
 			IsBodyTruncated = resp.IsBodyTruncated;
-			BodyText = resp.BodyText;
 
 			MimeType = resp.MimeType;
 			Charset = resp.Charset;
