@@ -99,6 +99,20 @@ namespace Kennedy.SearchIndex.Web
                 //is this a dupe of the existing data or is it older?
                 if (entry?.LastVisit >= parsedResponse.ResponseReceived)
                 {
+
+                    if(entry.FirstSeen > parsedResponse.ResponseReceived)
+                    {
+                        entry.FirstSeen = parsedResponse.ResponseReceived;
+                        context.SaveChanges();
+                    }
+
+                    if(entry.LastSuccessfulVisit < parsedResponse.ResponseReceived
+                        && entry.IsAvailable)
+                    {
+                        entry.LastSuccessfulVisit = parsedResponse.ResponseReceived;
+                        context.SaveChanges();
+                    }
+
                     return false;
                 }
 
