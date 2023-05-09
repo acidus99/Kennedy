@@ -102,10 +102,6 @@ namespace Kennedy.Warc
                 ContentType = RequestContentType,
                 WarcInfoId = WarcInfoID,
                 TargetUri = url._url
-            };
-
-
-      
+            };      
     }
 }
-
