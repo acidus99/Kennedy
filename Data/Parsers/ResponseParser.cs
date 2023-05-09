@@ -20,7 +20,7 @@ namespace Kennedy.Data.Parsers
 
         public ParsedResponse Parse(GeminiUrl url, byte[] completeResponse)
         {
-            GeminiResponse resp = GeminiParser.ParseBytes(url, completeResponse);
+            GeminiResponse resp = GeminiParser.ParseResponseBytes(url, completeResponse);
             return Parse(resp);
         }
 

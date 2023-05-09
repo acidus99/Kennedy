@@ -40,7 +40,7 @@ namespace Kennedy.Warc
 
             var responseRecord = new ResponseRecord
             {
-                ContentBlock = CreateResponseBytes(geminiResp),
+                ContentBlock = GeminiParser.CreateResponseBytes(geminiResp),
                 ContentType = ResponseContentType,
                 Date = geminiResp.RequestSent,
                 WarcInfoId = WarcInfoID,
@@ -72,7 +72,7 @@ namespace Kennedy.Warc
 
             var responseRecord = new ResponseRecord
             {
-                ContentBlock = CreateResponseBytes(statusCode, meta, bytes),
+                ContentBlock = GeminiParser.CreateResponseBytes(statusCode, meta, bytes),
                 ContentType = ResponseContentType,
                 Date = sent,
                 WarcInfoId = WarcInfoID,
@@ -98,31 +98,14 @@ namespace Kennedy.Warc
         public RequestRecord CreateRequestRecord(GeminiUrl url)
             => new RequestRecord
             {
-                ContentBlock = GeminiParser.RequestBytes(url),
+                ContentBlock = GeminiParser.CreateRequestBytes(url),
                 ContentType = RequestContentType,
                 WarcInfoId = WarcInfoID,
                 TargetUri = url._url
             };
 
 
-        public byte[] CreateResponseBytes(GeminiResponse geminiResponse)
-            => CreateResponseBytes(geminiResponse.StatusCode, geminiResponse.Meta, geminiResponse.BodyBytes);
-
-        public byte[] CreateResponseBytes(int statusCode, string meta, byte[]? bodyBytes)
-        {
-            var responseLine = $"{statusCode} {meta}\r\n";
-
-            byte[] fullResponseBytes = ToBytes(responseLine);
-
-            if (bodyBytes != null && bodyBytes.Length > 0)
-            {
-                fullResponseBytes = fullResponseBytes.Concat(bodyBytes).ToArray();
-            }
-            return fullResponseBytes;
-        }
-
-        private byte[] ToBytes(string s)
-            => Encoding.UTF8.GetBytes(s);
+      
     }
 }
 
