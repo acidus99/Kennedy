@@ -17,21 +17,23 @@ namespace Kennedy.Indexer
 			Parser = warcParser;
 		}
 
+		DateTime prev = DateTime.Now;
 
 		public WarcRecord? GetNext()
 		{
 
 			WarcRecord? ret = null;
 
-			lock (locker)
+			ret = Parser.GetNext();
+            if (ret != null)
 			{
-				ret = Parser.GetNext();
-				if (ret != null)
+				Processed++;
+				if (Processed % 100 == 0)
 				{
-					Processed++;
-                    if (Processed % 100 == 0) Console.WriteLine($"Ingesting\t{Processed}");
-                }
-			}
+					Console.WriteLine($"{Parser.Filename}\t{Processed}\t{Math.Truncate(DateTime.Now.Subtract(prev).TotalMilliseconds)} ms");
+					prev = DateTime.Now;
+				}
+            }
 			return ret;
 		}
 	}
