@@ -27,6 +27,7 @@ namespace Kennedy.Server.Views.Archive
         bool RawMode = false;
 
         ArchiveDbContext archive = new ArchiveDbContext(Settings.Global.DataRoot + "archive.db");
+        SnapshotReader reader = new SnapshotReader(Settings.Global.DataRoot + "Packs/");
 
         public override void Render()
         {
@@ -36,39 +37,39 @@ namespace Kennedy.Server.Views.Archive
             {
                 RenderNoSnapshot();
             }
-            else if (!Snapshot.HasBodyContent)
+            else if (Snapshot.IsSuccess)
             {
-                RenderNoBodyResponse();
+                RenderSuccessSnapshot();
             }
             else
             {
-                RenderBodyResponse();
+                RenderOtherStatusSnapshot();
             }
         }
 
-        private void RenderBodyResponse()
+        private void RenderSuccessSnapshot()
         {
-            SnapshotReader reader = new SnapshotReader(Settings.Global.DataRoot + "Packs/");
-
-            if (RawMode || Snapshot?.ContentType != Data.ContentType.Text)
+            if (RawMode || !Snapshot.IsText)
             {
-                Response.Success(Snapshot.Meta);
                 Response.Write(reader.ReadBytes(Snapshot));
                 return;
             }
-            var text = reader.ReadText(Snapshot);
+
+            GeminiResponse response = reader.ReadResponse(Snapshot);
+
             Response.Success();
             Response.Write($"> This an archived version of {Snapshot.Url.FullUrl} captured on {Snapshot.Captured.ToString("yyyy-MM-dd")}. ");
             if (Snapshot.IsGemtext)
             {
                 Response.Write("Gemini links have been rewritten to link to archived content");
-
-
             }
+
             Response.WriteLine();
             Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(Snapshot.Url.GeminiUrl)} More Information in 🏎 Delorean Time Machine");
             Response.WriteLine($"=> {RoutePaths.ViewCached(Snapshot, true)} View Raw");
             Response.WriteLine();
+
+            var text = response.BodyText;
 
             if (Snapshot.IsGemtext)
             {
@@ -101,18 +102,21 @@ namespace Kennedy.Server.Views.Archive
             return;
         }
 
-        private void RenderNoBodyResponse()
+        private void RenderOtherStatusSnapshot()
         {
             Response.Success();
             Response.WriteLine($"> This an archived version of {Snapshot.Url.FullUrl} captured on {Snapshot.Captured.ToString("yyyy-MM-dd")}. ");
             Response.WriteLine();
-            Response.WriteLine("> The server sent no content for this URL when it was captured. Instead, the server sent the following response:");
+            Response.WriteLine("> The server sent the following response for this URL when it was captured:");
+
+            GeminiResponse response = reader.ReadResponse(Snapshot);
+
             Response.WriteLine("```");
-            Response.WriteLine($"{Snapshot.StatusCode} {Snapshot.Meta}");
+            Response.WriteLine($"{response.StatusCode} {response.Meta}");
             Response.WriteLine("```");
-            if (GeminiParser.IsRedirectStatus(Snapshot.StatusCode))
+            if (response.IsRedirect)
             {
-                Response.WriteLine($"=> {RoutePaths.ViewCached(Snapshot.Meta, AttemptedTime)} Follow this Redirect");
+                Response.WriteLine($"=> {RoutePaths.ViewCached(response.Meta, AttemptedTime)} Follow this Redirect");
             }
         }
 
