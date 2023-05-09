@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using Gemini.Net;
 using Kennedy.Data.Parsers;
@@ -17,28 +18,22 @@ namespace Kennedy.Indexer
         /// <param name="args"></param>
         static async Task Main(string[] args)
         {
+            var outputDirectory = "";
 
-            var outputDirectory = "/Users/billy/tmp/";
-            var inputWarc = "/Users/billy/HDD Inside/Kennedy-Work/WARCs/2022-03-01.warc";
-
-            SearchProcessor processor = new SearchProcessor(outputDirectory, "config/");
-
-            WarcParser warcParser = new WarcParser(inputWarc);
-            int count = 0;
-            while(warcParser.HasRecords)
+            foreach(var inputWarc in File.ReadAllLines("foo"))
             {
-                var record = warcParser.GetNext();
-                processor.ProcessRecord(record!);
+                //SearchProcessor processor = new SearchProcessor(outputDirectory, "config/");
+                IWarcProcessor processor = new ArchiveProcessor(outputDirectory, "config/");
 
-                count++;
-                if (count % 100 == 0) Console.WriteLine($"Ingesting\t{count} {record.Type} {record.Id}");
+                WarcWrapper warcWrapper = new WarcWrapper(new WarcParser(inputWarc));
+
+                WarcRecord? record = null;
+                while ((record = warcWrapper.GetNext()) != null)
+                {
+                    processor.ProcessRecord(record);
+                }
+                processor.FinalizeProcessing();
             }
-            processor.FinalizeProcessing();
-
-            Console.WriteLine("loop complete");
-
-
-
         }
 
     }

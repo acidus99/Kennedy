@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Gemini.Net;
 
 using Kennedy.Archive.Db;
 using Kennedy.Archive.Pack;
@@ -15,15 +16,11 @@ namespace Kennedy.Archive
 			manager = new PackManager(packsLocation);
 		}
 
-		public string ReadText(Snapshot snapshot)
+		public GeminiResponse ReadResponse(Snapshot snapshot)
 		{
 			var bytes = ReadBytes(snapshot);
-
-			return (bytes != null) ?
-				Encoding.UTF8.GetString(bytes) :
-				null;
+			return GeminiParser.ParseResponseBytes(snapshot.Url.GeminiUrl, bytes);
         }
-
 
         public byte[] ReadBytes(Snapshot snapshot)
         {
