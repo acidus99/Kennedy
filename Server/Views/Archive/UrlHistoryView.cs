@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using Gemini.Net;
@@ -71,15 +72,26 @@ namespace Kennedy.Server.Views.Archive
                 Response.WriteLine($"Unique Saves: {snapshots.GroupBy(x=>x.DataHash).Count()}");
 
                 Response.WriteLine("## Saved copies");
-                for (int i=0; i < snapshots.Length; i++)
-                {
-                    var snapshot = snapshots[i];
+                var seenHashes = new Dictionary<long, bool>();
 
-                    var contentLabel = "🆕 ";
-                    if (i > 0 && snapshots[i - 1].DataHash == snapshot.DataHash)
+                int currentYear = 0;
+
+                foreach(var snapshot in snapshots)
+                {
+                    if(currentYear < snapshot.Captured.Year)
                     {
-                        contentLabel = "";
+                        Response.WriteLine($"### {snapshot.Captured.Year}");
+                        currentYear = snapshot.Captured.Year;
                     }
+
+                    var contentLabel = "";
+
+                    if (!seenHashes.ContainsKey(snapshot.DataHash))
+                    {
+                        contentLabel = "🆕 ";
+                        seenHashes[snapshot.DataHash] = true;
+                    }
+
                     Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot)} {contentLabel}{snapshot.Captured}. {FormatSize(snapshot?.Size ?? 0)}");
                 }
             }
