@@ -12,18 +12,21 @@ namespace Kennedy.Archive.Db
 	[Table("Urls")]
 	[Index(nameof(Domain))]
 	[Index(nameof(Port))]
-	public class Url
+    [Index(nameof(Protocol))]
+    public class Url
 	{
 		[Key]
 		public long Id { get; set; }
 
-		public string FullUrl { get; set; }
+		public string FullUrl { get; set; } = "";
 
-		public string Domain { get; set; }
+		public string Domain { get; set; } = "";
 
-		public int Port { get; set; }
+		public string Protocol { get; set; } = "";
 
-		public string PackName { get; set; }
+		public int Port { get; set; } = 1965;
+
+		public string PackName { get; set; } = "";
 
 		public bool IsPublic { get; set; }
 
@@ -51,11 +54,12 @@ namespace Kennedy.Archive.Db
 
 		public Url(GeminiUrl url)
         {
-            Id = unchecked((long)url.ID);
+            Id = url.ID;
 			FullUrl = url.NormalizedUrl;
 			geminiUrl = url;
 			Domain = url.Hostname;
 			Port = url.Port;
+			Protocol = url.Protocol;
 
 			Snapshots = new List<Snapshot>();
 			PackName = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(url.ID))).ToLower();
