@@ -13,15 +13,11 @@ using Kennedy.SearchIndex.Web;
 
 public class ArchiveProcessor : IWarcProcessor
 {
-    ResponseParser responseParser;
-
     Archiver archiver;
 
     public ArchiveProcessor(string archiveDirectory, string configDirectory)
 	{
-        LanguageDetector.ConfigFileDirectory = configDirectory;
         archiver = new Archiver(archiveDirectory + "archive.db", archiveDirectory + "Packs/");
-        responseParser = new ResponseParser();
     }
 
     public void FinalizeProcessing()
@@ -46,9 +42,10 @@ public class ArchiveProcessor : IWarcProcessor
         }
     }
 
-    public GeminiResponse? ParseResponseRecord(ResponseRecord record)
+    private GeminiResponse? ParseResponseRecord(ResponseRecord record)
     {
-        GeminiUrl url = new GeminiUrl(record.TargetUri);
+        GeminiUrl url = new GeminiUrl(StripRobots(record.TargetUri));
+
 
         try
         {
@@ -62,4 +59,16 @@ public class ArchiveProcessor : IWarcProcessor
             return null;
         }
     }
+
+    private Uri StripRobots(Uri url)
+    {
+        if(url.PathAndQuery == "/robots.txt?kennedy-crawler")
+        {
+            UriBuilder uriBuilder = new UriBuilder(url);
+            uriBuilder.Query = "";
+            return uriBuilder.Uri;
+        }
+        return url;
+    }
+
 }
