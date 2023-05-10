@@ -71,7 +71,7 @@ namespace Kennedy.Server.Views.Search
                     WriteResultEntry(Response, result, counter);
                 }
 
-                Response.WriteLine($"Showing {start} - {counter}  of {resultCount} total results");
+                Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(counter)}  of {FormatCount(resultCount)} total results");
 
                 if (Options.SearchPage > 1)
                 {
@@ -99,8 +99,8 @@ namespace Kennedy.Server.Views.Search
         private void WriteResultEntry(Response resp, FullTextSearchResult result, int resultNumber)
         {
 
-            Response.WriteLine($"=> {result.Url} {resultNumber}. {FormatPageTitle(result.Url, result.Title)}");
-            Response.Write($"=> /page-info?id={result.UrlID} {result.LineCount} Lines • ");
+            Response.WriteLine($"=> {result.Url} {FormatCount(resultNumber)}. {FormatPageTitle(result.Url, result.Title)}");
+            Response.Write($"=> /page-info?id={result.UrlID} {FormatCount(result.LineCount)} Lines • ");
 
             var language = FormatLanguage(result.Language);
 
