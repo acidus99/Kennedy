@@ -14,25 +14,27 @@ namespace Kennedy.Archive
 {
 	public class Archiver
 	{
+        SnapshotReader snapshotReader;
         PackManager packManager;
-
         string ArchiveDBPath;
-
-		string PacksPath;
 
         public Archiver(string archiveDB, string packsPath)
 		{
             ArchiveDBPath = archiveDB;
-            using (var db = new ArchiveDbContext(ArchiveDBPath))
+            using (var db = GetContext())
             {
                 db.Database.EnsureCreated();
             }
             packManager = new PackManager(packsPath);
+            snapshotReader = new SnapshotReader(packManager);
         }
+
+        public ArchiveDbContext GetContext()
+            => new ArchiveDbContext(ArchiveDBPath);
 
         private bool AlreadyInArchive(GeminiResponse response)
         {
-            using (var db = new ArchiveDbContext(ArchiveDBPath))
+            using (var db = GetContext())
             {
 
                 //are the capture times the same? If so, don't save it, because we are adding something
@@ -86,7 +88,7 @@ namespace Kennedy.Archive
                 return false;
             }
 
-            using (var db = new ArchiveDbContext(ArchiveDBPath))
+            using (var db = GetContext())
             {
                 var urlEntry = db.Urls.Where(x => x.Id == response.RequestUrl.ID).FirstOrDefault();
                 bool newUrl = false;
@@ -130,7 +132,6 @@ namespace Kennedy.Archive
                     Url = urlEntry,
                     UrlId = urlEntry.Id,
                     IsBodyTruncated = response.IsBodyTruncated
-                    
                 };
 
                 if (previousSnapshot == null)
@@ -149,6 +150,27 @@ namespace Kennedy.Archive
                 return true;
             }
         }
+
+        public GeminiResponse? GetLatestResponse(long  urlID)
+        {
+            Snapshot? snapshot = null;
+
+            using (var db = GetContext())
+            {
+                snapshot = db.Snapshots
+                    .Where(x => x.UrlId == urlID)
+                    .OrderByDescending(x => x.Captured)
+                    .Include(x=>x.Url)
+                    .FirstOrDefault();
+            }
+
+            if(snapshot == null)
+            {
+                return null;
+            }
+            return snapshotReader.ReadResponse(snapshot);
+        }
+
 
         private long GetDataHash(byte[] bytes)
         {
