@@ -11,13 +11,18 @@ namespace Kennedy.Archive
 	{
 		PackManager manager;
 
-        public SnapshotReader(string packsLocation)
-		{
-			manager = new PackManager(packsLocation);
-		}
+        public SnapshotReader(string packLocation)
+            : this(new PackManager(packLocation))
+        {
+        }
 
-		public GeminiResponse ReadResponse(Snapshot snapshot)
-		{
+        public SnapshotReader(PackManager packManager)
+        {
+            manager = packManager;
+        }
+
+        public GeminiResponse ReadResponse(Snapshot snapshot)
+        {
 			var bytes = ReadBytes(snapshot);
 			return GeminiParser.ParseResponseBytes(snapshot.Url.GeminiUrl, bytes);
         }
