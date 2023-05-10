@@ -21,10 +21,10 @@ namespace Kennedy.Archive.Db
 		/// <summary>
 		/// The offset of this snapshot in the Pack file
 		/// </summary>
-		public long? Offset { get; set; }
+		public long Offset { get; set; }
 
 		//The uncompressed size of the response for this snapshot
-		public long? Size { get; set; }
+		public long Size { get; set; }
 
 		/// <summary>
 		/// Is this snapshit a duplicate of a previous snapshot?
