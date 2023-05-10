@@ -23,11 +23,16 @@ namespace Kennedy.Archive
 
         public GeminiResponse ReadResponse(Snapshot snapshot)
         {
+            if(snapshot.Url == null)
+            {
+                throw new ArgumentNullException(nameof(snapshot), "Snapshot cannot have a null Url property");
+            }
+
 			var bytes = ReadBytes(snapshot);
 			return GeminiParser.ParseResponseBytes(snapshot.Url.GeminiUrl, bytes);
         }
 
-        public byte[] ReadBytes(Snapshot snapshot)
+        public byte[]? ReadBytes(Snapshot snapshot)
         {
             var record = GetRecord(snapshot);
             return (record != null) ? ReadPackData(record) :
@@ -36,13 +41,13 @@ namespace Kennedy.Archive
 
         private PackRecord GetRecord(Snapshot snapshot)
 		{
-			if(snapshot.Offset == null)
-			{
-				throw new NullReferenceException("Snapshot doesn't have an Offset value");
-			}
+            if (snapshot.Url == null)
+            {
+                throw new ArgumentNullException(nameof(snapshot), "Snapshot cannot have a null Url property");
+            }
 
             var pack = manager.GetPack(snapshot.Url.PackName);
-            return pack.Read(snapshot.Offset.Value);
+            return pack.Read(snapshot.Offset);
         }
 
 		private byte[] ReadPackData(PackRecord record)
