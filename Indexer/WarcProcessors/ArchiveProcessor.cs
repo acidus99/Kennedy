@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using System.Text.Json;
 using Warc;
 
 using Gemini.Net;
@@ -16,22 +17,31 @@ using Kennedy.Archive.Db;
 
 public class ArchiveProcessor : IWarcProcessor
 {
+    string ArchiveDirectory;
     Archiver archiver;
     Dictionary<Authority, bool> changedAuthorities = new Dictionary<Authority, bool>();
 
     public ArchiveProcessor(string archiveDirectory)
 	{
         archiver = new Archiver(archiveDirectory + "archive.db", archiveDirectory + "Packs/");
+        ArchiveDirectory = archiveDirectory;
+        WriteStatsFile();
     }
 
     public void FinalizeProcessing()
 	{
-        foreach(var authority in changedAuthorities.Keys)
+        ExcludeUrlsFromArchive();
+        WriteStatsFile();
+    }
+
+    private void ExcludeUrlsFromArchive()
+    {
+        foreach (var authority in changedAuthorities.Keys)
         {
             var robots = GetRobots(authority);
 
             //no robots for domain that also contains archiver rules
-            if(robots == null)
+            if (robots == null)
             {
                 continue;
             }
@@ -59,6 +69,22 @@ public class ArchiveProcessor : IWarcProcessor
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Writes a statistics file to the archive output directory
+    /// </summary>
+    private void WriteStatsFile()
+    {
+        var stats = archiver.GetArchiveStats();
+
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+        };
+
+        var json = JsonSerializer.Serialize<ArchiveStats>(stats, options);
+        File.WriteAllText(ArchiveDirectory + "stats.json", json);
     }
 
     private RobotsTxtFile? GetRobots(Authority authority)
