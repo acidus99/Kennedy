@@ -9,7 +9,6 @@ using Kennedy.Data;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace Kennedy.Archive
 {
 	public class Archiver
@@ -149,6 +148,48 @@ namespace Kennedy.Archive
                 db.SaveChanges();
                 return true;
             }
+        }
+
+        public ArchiveStats GetArchiveStats()
+        {
+            var ret = new ArchiveStats();
+
+            using (var db = GetContext())
+            {
+
+                ret.Domains = db.Urls
+                    .Select(x => new { Domain = x.Domain, Port = x.Port })
+                    .Distinct()
+                    .LongCount();
+
+                ret.UrlsPublic = db.Urls
+                    .Where(x => x.IsPublic)
+                    .LongCount();
+
+                ret.UrlsExcluded = db.Urls
+                    .Where(x => !x.IsPublic)
+                    .LongCount();
+
+                ret.Captures = db.Snapshots.LongCount();
+
+                ret.CapturesUnique = db.Snapshots
+                    .Where(x => !x.IsDuplicate)
+                    .LongCount();
+
+                ret.Size = db.Snapshots
+                    .Where(x => !x.IsDuplicate)
+                    .Sum(x => x.Size);
+
+                ret.SizeWithoutDeDuplication = db.Snapshots
+                    .Sum(x => x.Size);
+
+                var captures = db.Snapshots.Select(x => x.Captured);
+
+                ret.OldestSnapshot = captures.Min();
+                ret.NewestSnapshot = captures.Max();
+            }
+
+            return ret;
         }
 
         public GeminiResponse? GetLatestResponse(long  urlID)
