@@ -1,20 +1,7 @@
-﻿using System;
-using System.Net.NetworkInformation;
-using System.Text.Encodings;
-
-using Gemini.Net;
-
-using Kennedy.Archive;
-using Kennedy.Data.RobotsTxt;
-using Kennedy.SearchIndex.Models;
-using Kennedy.AdminConsole.Storage;
-using Kennedy.SearchIndex.Web;
-using Microsoft.EntityFrameworkCore;
-
+﻿using Gemini.Net;
 using Kennedy.AdminConsole.Db;
+using Kennedy.AdminConsole.Storage;
 using Kennedy.Warc;
-using Warc;
-using System.Reflection.Metadata;
 
 namespace Kennedy.AdminConsole.WarcConverters
 {

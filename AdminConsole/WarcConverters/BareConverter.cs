@@ -1,21 +1,6 @@
-﻿using System;
-using System.Net.NetworkInformation;
-using System.Text.Encodings;
-
-using Gemini.Net;
-
-using Kennedy.Archive;
-using Kennedy.Data.RobotsTxt;
-using Kennedy.SearchIndex.Models;
-using Kennedy.SearchIndex.Web;
-using Microsoft.EntityFrameworkCore;
-
+﻿using Gemini.Net;
 using Kennedy.AdminConsole.Db;
 using Kennedy.Warc;
-using Microsoft.Data.Sqlite;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Reflection.Metadata;
-using Kennedy.AdminConsole.Storage;
 
 namespace Kennedy.AdminConsole.WarcConverters
 {
