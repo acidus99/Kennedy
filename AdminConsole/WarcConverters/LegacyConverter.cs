@@ -7,7 +7,7 @@ using Gemini.Net;
 using Kennedy.Archive;
 using Kennedy.Data.RobotsTxt;
 using Kennedy.SearchIndex.Models;
-using Kennedy.SearchIndex.Storage;
+using Kennedy.AdminConsole.Storage;
 using Kennedy.SearchIndex.Web;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,33 +16,39 @@ using Kennedy.Warc;
 using Microsoft.Data.Sqlite;
 using System.Text.RegularExpressions;
 
-namespace Kennedy.AdminConsole.Converters
+namespace Kennedy.AdminConsole.WarcConverters
 {
     /// <summary>
-    /// Converts the "Documents" table from Kennedy Crawls into WARC files
+    /// Converts the legacy TSV with response bodies stored in the directory-based storage system
+    /// to WARC records
     /// </summary>
 	public class LegacyConverter : AbstractConverter
 	{
-		string CrawlLocation;
+        /// <summary>
+        /// When this crawl was run
+        /// </summary>
         DateTime Captured;
-        
+
+        protected override string ConverterName => "Legacy log.tsv + directory-based storage system";
+
         public LegacyConverter(GeminiWarcCreator warcCreator, string crawlLocation)
-            :base(warcCreator)
+            :base(warcCreator, crawlLocation)
 		{
 			CrawlLocation = crawlLocation;
+
+            //The legacy log.tsv format did not store the capture time for individual requests/responses
+            //however we can get the time the crawl stated via the filename. That will be stored here
             string recoveredTime = GrabTime(crawlLocation);
             Captured = DateTime.ParseExact(recoveredTime, "yyyy-MM-dd (hhmmss)", null);
-
         }
 
         static string GrabTime(string crawlLocation)
         {
-            return Path.GetDirectoryName(crawlLocation).Split(Path.DirectorySeparatorChar).Reverse().First();
+            return Path.GetDirectoryName(crawlLocation)!.Split(Path.DirectorySeparatorChar).Reverse().First();
         }
 
-        public override void ToWarc()
+        protected override void ConvertCrawl()
         {
-
             int warcResponses = 0;
             int warcResponsesTruncated = 0;
             int count = 0;
@@ -71,7 +77,7 @@ namespace Kennedy.AdminConsole.Converters
 
                 WarcCreator.WriteLegacySession(url, Captured, statusCode, meta, mime, data, isTruncated);
 
-                if(isTruncated)
+                if (isTruncated)
                 {
                     warcResponsesTruncated++;
                 }
@@ -94,7 +100,7 @@ namespace Kennedy.AdminConsole.Converters
         {
             try
             {
-                var path = GetSavePath(url);
+                var path = GetPathForUrl(url);
                 return File.ReadAllBytes(path);
             }
             catch (Exception)
@@ -102,13 +108,7 @@ namespace Kennedy.AdminConsole.Converters
             return null;
         }
 
-        private string GetStorageFilename(GeminiUrl url)
-        {
-            var filename = url.Filename;
-            return (filename.Length > 0) ? filename : "index.gmi";
-        }
-
-        private string GetSavePath(GeminiUrl url)
+        private string GetPathForUrl(GeminiUrl url)
         {
             var dir = GetStorageDirectory(url);
             var file = GetStorageFilename(url);
@@ -119,7 +119,7 @@ namespace Kennedy.AdminConsole.Converters
         {
             string hostDir = (url.Port == 1965) ? url.Hostname : $"{url.Hostname} ({url.Port})";
 
-            string path = Path.GetDirectoryName(url.Path);
+            string? path = Path.GetDirectoryName(url.Path);
             if (string.IsNullOrEmpty(path))
             {
                 path = "/";
@@ -132,7 +132,12 @@ namespace Kennedy.AdminConsole.Converters
             return $"{CrawlLocation}page-store/{hostDir}{path}";
         }
 
-
+        private string GetStorageFilename(GeminiUrl url)
+        {
+            var filename = url.Filename;
+            return (filename.Length > 0) ? filename : "index.gmi";
+        }
+       
     }
 }
 

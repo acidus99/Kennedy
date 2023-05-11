@@ -5,7 +5,7 @@ using HashDepot;
 
 using Gemini.Net;
 
-using Kennedy.AdminConsole.Converters;
+using Kennedy.AdminConsole.WarcConverters;
 using Kennedy.Warc;
 
 using Kennedy.Archive;
@@ -22,7 +22,7 @@ namespace Kennedy.AdminConsole
     {
         static void Main(string[] args)
         {
-            string workingDir = "";
+            string workingDir = ResolveDir("~/HDD Inside/Kennedy-Work/");
 
             if(workingDir.Length == 0)
             {
@@ -38,10 +38,8 @@ namespace Kennedy.AdminConsole
 
             ImportFullDatabasesNoPageStore(warcOutputDir,  sourceDir + "crawldb - bare db/foo.txt");
 
-            ImportOriginalDatabases(warcOutputDir, sourceDir + "original-format/foo.txt");
-
+            ImportLegacyDatabases(warcOutputDir, sourceDir + "original-format/foo.txt");
         }
-
 
         /// <summary>
         /// Bulk imports Kennedy Search databases that have Documents, Domains, and are backed by a page-store
@@ -58,10 +56,10 @@ namespace Kennedy.AdminConsole
                     warcCreator.WriteWarcInfo(GetWarcFields());
 
                     AbstractConverter converter = new DomainConverter(warcCreator, crawlLocation);
-                    converter.ToWarc();
+                    converter.WriteToWarc();
 
                     converter = new DocumentConverter(warcCreator, crawlLocation);
-                    converter.ToWarc();
+                    converter.WriteToWarc();
                 }
             }
         }
@@ -78,7 +76,7 @@ namespace Kennedy.AdminConsole
             {
                 warcCreator.WriteWarcInfo(GetWarcFields());
                 AbstractConverter converter= new DocumentConverter(warcCreator, crawlLocation);
-                converter.ToWarc();
+                converter.WriteToWarc();
             }
         }
 
@@ -98,10 +96,10 @@ namespace Kennedy.AdminConsole
 
                     //convert the domains
                     AbstractConverter converter = new DomainConverter(warcCreator, crawlLocation);
-                    converter.ToWarc();
+                    converter.WriteToWarc();
                     
                     converter = new BareConverter(warcCreator, crawlLocation);
-                    converter.ToWarc();
+                    converter.WriteToWarc();
                 }
             }
         }
@@ -112,7 +110,7 @@ namespace Kennedy.AdminConsole
         /// </summary>
         /// <param name="warcOutputDir"></param>
         /// <param name="manifest"></param>
-        static void ImportOriginalDatabases(string warcOutputDir, string manifest)
+        static void ImportLegacyDatabases(string warcOutputDir, string manifest)
         {
             foreach (string crawlLocation in File.ReadLines(manifest))
             {
@@ -122,11 +120,10 @@ namespace Kennedy.AdminConsole
                     warcCreator.WriteWarcInfo(GetWarcFields());
 
                     AbstractConverter converter = new LegacyConverter(warcCreator, crawlLocation);
-                    converter.ToWarc();
+                    converter.WriteToWarc();
                 }
             }
         }
-
 
         static WarcFields GetWarcFields()
             => new WarcFields
@@ -138,8 +135,12 @@ namespace Kennedy.AdminConsole
 
         static string CreateWarcName(string crawlLocation)
         {
-            return Path.GetDirectoryName(crawlLocation).Split(Path.DirectorySeparatorChar).Reverse().First() + ".warc";
+            return Path.GetDirectoryName(crawlLocation)!.Split(Path.DirectorySeparatorChar).Reverse().First() + ".warc";
         }
+
+
+        private static string ResolveDir(string dir)
+            => dir.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + '/');
 
     }
 }
