@@ -28,14 +28,15 @@ public abstract class AbstractConverter
 
     public void WriteToWarc()
     {
-        Console.WriteLine($"Starting {ConverterName} on {CrawlLocation}");
+        Console.WriteLine($"Converter: {ConverterName}");
+        Console.WriteLine($"Crawl: {CrawlLocation}");
         stopwatch.Start();
         ConvertCrawl();
         stopwatch.Stop();
         Console.WriteLine($"Completed!");
-        Console.WriteLine($"Time:\t{stopwatch.Elapsed.TotalSeconds}");
-        Console.WriteLine($"Processed:\t{RecordsProcessed}");
-        Console.WriteLine($"Written:\t{RecordsWritten}");
+        Console.WriteLine($"\tTime:\t{stopwatch.Elapsed.TotalSeconds}");
+        Console.WriteLine($"\tProcessed:\t{RecordsProcessed}");
+        Console.WriteLine($"\tWritten:\t{RecordsWritten}");
     }
 
     protected abstract void ConvertCrawl();
