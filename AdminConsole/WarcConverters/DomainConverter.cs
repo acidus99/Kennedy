@@ -55,20 +55,20 @@ namespace Kennedy.AdminConsole.WarcConverters
                 if (domain.HasFaviconTxt && !String.IsNullOrEmpty(domain.FaviconTxt))
                 {
                     ConvertSpecialFile(estimatedCapture.Value, domain, "favicon.txt", domain.FaviconTxt);
-                    RecordsCreated++;
+                    RecordsWritten++;
                 }
 
                 if (domain.HasRobotsTxt && !String.IsNullOrEmpty(domain.RobotsTxt))
                 {
                     ConvertSpecialFile(estimatedCapture.Value, domain, "robots.txt", domain.RobotsTxt);
-                    RecordsCreated++;
+                    RecordsWritten++;
 
                 }
 
                 if (domain.HasSecurityTxt && !String.IsNullOrEmpty(domain.SecurityTxt))
                 {
                     ConvertSpecialFile(estimatedCapture.Value, domain, ".well-known/security.txt", domain.SecurityTxt);
-                    RecordsCreated++;
+                    RecordsWritten++;
                 }
             }
         }

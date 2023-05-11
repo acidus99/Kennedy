@@ -11,7 +11,7 @@ public abstract class AbstractConverter
 
     protected int RecordsProcessed = 0;
 
-    protected int RecordsCreated = 0;
+    protected int RecordsWritten = 0;
 
     protected string CrawlLocation;
 
@@ -33,9 +33,9 @@ public abstract class AbstractConverter
         ConvertCrawl();
         stopwatch.Stop();
         Console.WriteLine($"Completed!");
-        Console.WriteLine($"Total Seconds:\t{stopwatch.Elapsed.TotalSeconds}");
-        Console.WriteLine($"Items Processed:\t{RecordsProcessed}");
-        Console.WriteLine($"Written To WARC:\t{RecordsCreated}");
+        Console.WriteLine($"Time:\t{stopwatch.Elapsed.TotalSeconds}");
+        Console.WriteLine($"Processed:\t{RecordsProcessed}");
+        Console.WriteLine($"Written:\t{RecordsWritten}");
     }
 
     protected abstract void ConvertCrawl();
