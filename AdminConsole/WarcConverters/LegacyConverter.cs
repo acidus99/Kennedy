@@ -1,20 +1,5 @@
-﻿using System;
-using System.Net.NetworkInformation;
-using System.Text.Encodings;
-
-using Gemini.Net;
-
-using Kennedy.Archive;
-using Kennedy.Data.RobotsTxt;
-using Kennedy.SearchIndex.Models;
-using Kennedy.AdminConsole.Storage;
-using Kennedy.SearchIndex.Web;
-using Microsoft.EntityFrameworkCore;
-
-using Kennedy.AdminConsole.Db;
+﻿using Gemini.Net;
 using Kennedy.Warc;
-using Microsoft.Data.Sqlite;
-using System.Text.RegularExpressions;
 
 namespace Kennedy.AdminConsole.WarcConverters
 {
@@ -49,16 +34,9 @@ namespace Kennedy.AdminConsole.WarcConverters
 
         protected override void ConvertCrawl()
         {
-            int warcResponses = 0;
-            int warcResponsesTruncated = 0;
-            int count = 0;
-            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-            watch.Start();
-            int added = 0;
-
             foreach (var line in File.ReadLines(CrawlLocation + "log.tsv"))
             {
-                count++;
+                RecordsProcessed++;
                 var fields = line.Split('\t', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 if (fields.Length < 3 || fields[0] != "20")
                 {
@@ -76,24 +54,8 @@ namespace Kennedy.AdminConsole.WarcConverters
                 bool isTruncated = (data == null);
 
                 WarcCreator.WriteLegacySession(url, Captured, statusCode, meta, mime, data, isTruncated);
-
-                if (isTruncated)
-                {
-                    warcResponsesTruncated++;
-                }
-                else
-                {
-                    warcResponses++;
-                }
+                RecordsWritten++;
             }
-            watch.Stop();
-            Console.WriteLine($"Completed processing {CrawlLocation}");
-            Console.WriteLine($"Total Seconds:\t{watch.Elapsed.TotalSeconds}");
-            Console.WriteLine($"--");
-            Console.WriteLine($"Docs:\t{count}");
-            Console.WriteLine($"resps:\t{warcResponses}");
-            Console.WriteLine($"Tresps:\t{warcResponsesTruncated}");
-            Console.WriteLine($"Added:\t{added}");
         }
 
         private byte[]? GetContentData(GeminiUrl url)
@@ -136,8 +98,6 @@ namespace Kennedy.AdminConsole.WarcConverters
         {
             var filename = url.Filename;
             return (filename.Length > 0) ? filename : "index.gmi";
-        }
-       
+        }       
     }
 }
-
