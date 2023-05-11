@@ -55,6 +55,7 @@ namespace Kennedy.AdminConsole.WarcConverters
                 }
 
                 ///====== Normalize the data
+
                 //older crawls had a status of 0 if there was a connection error, so normalize that to our code 49
                 if (doc.Status == 0)
                 {
@@ -82,6 +83,9 @@ namespace Kennedy.AdminConsole.WarcConverters
                 {
                     //only successfully responses can have mimetypes
                     doc.MimeType = "";
+
+                    //some error messages had leading/trailing spaces. fix that
+                    doc.Meta = doc.Meta.Trim();
                 }
 
                 bool isTruncated = IsTruncated(doc); ;
@@ -95,7 +99,7 @@ namespace Kennedy.AdminConsole.WarcConverters
                 }
                 
                 WarcCreator.WriteLegacySession(doc.GeminiUrl, doc.FirstSeen, doc.Status, doc.Meta, doc.MimeType, bodyBytes, isTruncated);
-                RecordsCreated++;
+                RecordsWritten++;
             }
         }
     }

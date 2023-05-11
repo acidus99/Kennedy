@@ -87,6 +87,8 @@ namespace Kennedy.AdminConsole.WarcConverters
                 {
                     //only successfully responses can have mimetypes
                     doc.MimeType = "";
+                    //some error messages had leading/trailing spaces. fix that
+                    doc.Meta = doc.Meta.Trim();
                 }
 
                 //since this is a bare crawl database without a backing store, we have no respones bodies.
@@ -95,7 +97,7 @@ namespace Kennedy.AdminConsole.WarcConverters
                 bool isTruncated = !GeminiParser.IsSuccessStatus(doc.Status);
 
                 WarcCreator.WriteLegacySession(doc.GeminiUrl, doc.FirstSeen, doc.Status, doc.Meta, doc.MimeType, null, isTruncated);
-                RecordsCreated++;
+                RecordsWritten++;
             }
         }
     }
