@@ -29,42 +29,56 @@ public class ArchiveProcessor : IWarcProcessor
 
     public void FinalizeProcessing()
 	{
-        ExcludeUrlsFromArchive();
+        UpdateVisbility();
         WriteStatsFile();
     }
 
-    private void ExcludeUrlsFromArchive()
+    /// <summary>
+    /// Updates the visibility of all contents in the archive using directives
+    /// from the latest copy of robots.txt that we have
+    /// </summary>
+    private void UpdateVisbility()
     {
         foreach (var authority in changedAuthorities.Keys)
         {
-            var robots = GetRobots(authority);
+            UpdateVisibilityForDomain(authority);
+        }
+    }
 
-            //no robots for domain that also contains archiver rules
-            if (robots == null)
+    /// <summary>
+    /// Toggles whether URLs in a domain are visible in the archive or not
+    /// bassed on the latest version of Robots.txt
+    /// </summary>
+    /// <param name="authority"></param>
+    private void UpdateVisibilityForDomain(Authority authority)
+    {
+        var robots = GetRobots(authority);
+
+        //no robots for domain that also contains archiver rules
+        if (robots == null)
+        {
+            return;
+        }
+
+        using (var db = archiver.GetContext())
+        {
+            var urls = db.Urls.Where(x => x.Protocol == authority.Protocol &&
+                                x.Domain == authority.Domain &&
+                                x.Port == authority.Port);
+
+            foreach (var url in urls)
             {
-                continue;
-            }
+                bool allowed = robots.IsPathAllowed("archiver", url.GeminiUrl.Path);
 
-            using (var db = archiver.GetContext())
-            {
-                var urls = db.Urls.Where(x => x.Protocol == authority.Protocol &&
-                                    x.Domain == authority.Domain &&
-                                    x.Port == authority.Port);
-
-                foreach (var url in urls)
+                if (!allowed && url.IsPublic)
                 {
-                    bool allowed = robots.IsPathAllowed("archiver", url.GeminiUrl.Path);
-
-                    if (!allowed && url.IsPublic)
-                    {
-                        url.IsPublic = false;
-                        db.SaveChanges();
-                    }
-                    else if (allowed && !url.IsPublic)
-                    {
-                        url.IsPublic = true;
-                        db.SaveChanges();
-                    }
+                    url.IsPublic = false;
+                    db.SaveChanges();
+                }
+                else if (allowed && !url.IsPublic)
+                {
+                    url.IsPublic = true;
+                    db.SaveChanges();
                 }
             }
         }
