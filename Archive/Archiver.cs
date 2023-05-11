@@ -112,7 +112,7 @@ namespace Kennedy.Archive
 
                 var respBytes = GeminiParser.CreateResponseBytes(response);
 
-                var dataHash = GetDataHash(respBytes);
+                var dataHash = GeminiParser.GetResponseHash(respBytes);
 
                 var previousSnapshot = db.Snapshots
                     .Where(x => x.UrlId == urlEntry.Id &&
@@ -211,13 +211,5 @@ namespace Kennedy.Archive
             }
             return snapshotReader.ReadResponse(snapshot);
         }
-
-
-        private long GetDataHash(byte[] bytes)
-        {
-            //want signed long
-            return unchecked((long)XXHash.Hash64(bytes));
-        }
     }
 }
-
