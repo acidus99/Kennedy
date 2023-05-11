@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using Kennedy.Data;
 using Gemini.Net;
 
-namespace Kennedy.SearchIndex.Storage
+namespace Kennedy.AdminConsole.Storage
 {
     /// <summary>
     /// DocumentStore stores the contents of a URL, and retrieves it

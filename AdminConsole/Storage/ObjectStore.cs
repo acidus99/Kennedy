@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Gemini.Net;
 
-namespace Kennedy.SearchIndex.Storage
+namespace Kennedy.AdminConsole.Storage
 {
     /// <summary>
     /// disk-backed KV store, using a directory structure

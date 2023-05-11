@@ -8,12 +8,10 @@
     <None Remove="Microsoft.EntityFrameworkCore" />
     <None Remove="Microsoft.EntityFrameworkCore.Sqlite" />
     <None Remove="EFCore.BulkExtensions" />
-    <None Remove="Storage\" />
     <None Remove="Search\" />
     <None Remove="Web\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Storage\" />
     <Folder Include="Search\" />
     <Folder Include="Web\" />
   </ItemGroup>

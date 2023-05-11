@@ -4,7 +4,6 @@ using Gemini.Net;
 using Kennedy.Data;
 
 using Kennedy.SearchIndex.Search;
-using Kennedy.SearchIndex.Storage;
 using Kennedy.SearchIndex.Web;
 
 namespace Kennedy.SearchIndex

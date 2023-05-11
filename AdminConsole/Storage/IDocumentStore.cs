@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 using Gemini.Net;
 
-namespace Kennedy.SearchIndex.Storage
+namespace Kennedy.AdminConsole.Storage
 {
 	public interface IDocumentStore
 	{
