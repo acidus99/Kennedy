@@ -94,7 +94,7 @@ namespace Kennedy.AdminConsole.WarcConverters
                 //since this is a bare crawl database without a backing store, we have no respones bodies.
                 //anything that is successful is truncated, everything else is not
 
-                bool isTruncated = !GeminiParser.IsSuccessStatus(doc.Status);
+                bool isTruncated = GeminiParser.IsSuccessStatus(doc.Status);
 
                 WarcCreator.WriteLegacySession(doc.GeminiUrl, doc.FirstSeen, doc.Status, doc.Meta, doc.MimeType, null, isTruncated);
                 RecordsWritten++;
