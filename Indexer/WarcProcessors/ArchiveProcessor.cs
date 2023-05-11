@@ -102,22 +102,13 @@ public class ArchiveProcessor : IWarcProcessor
         }
 
         RobotsTxtFile robots = new RobotsTxtFile(geminiResponse.BodyText);
-        if(robots.IsMalformed)
-        {
-            return null;
-        }
 
-        //we only care about Robots.txt files that have archiver rules.
-        if (!robots.UserAgents.Contains("archiver"))
-        {
-            return null;
-        }
-
-        return robots;
+        //we want all valid robots, since a later robots might have disallow rules against
+        //all user agents, not just archiver, and we don't want to miss those
+        return !robots.IsMalformed ?
+            robots :
+            null;
     }
-
-
-
 
     public void ProcessRecord(WarcRecord record)
 	{
