@@ -25,7 +25,6 @@ public class ArchiveProcessor : IWarcProcessor
 	{
         archiver = new Archiver(archiveDirectory + "archive.db", archiveDirectory + "Packs/");
         ArchiveDirectory = archiveDirectory;
-        WriteStatsFile();
     }
 
     public void FinalizeProcessing()
