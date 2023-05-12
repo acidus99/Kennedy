@@ -18,12 +18,13 @@ namespace Kennedy.Indexer
         /// <param name="args"></param>
         static async Task Main(string[] args)
         {
-            var outputDirectory = "";
+            var outputDirectory = ResolveDir("~/HDD Inside/Kennedy-Work/output/");
 
-            foreach(var inputWarc in File.ReadAllLines("foo"))
+            foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/all.txt")))
             {
-                //SearchProcessor processor = new SearchProcessor(outputDirectory, "config/");
-                IWarcProcessor processor = new ArchiveProcessor(outputDirectory, "config/");
+
+                //IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
+                IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
 
                 WarcWrapper warcWrapper = new WarcWrapper(new WarcParser(inputWarc));
 
@@ -36,6 +37,7 @@ namespace Kennedy.Indexer
             }
         }
 
+        private static string ResolveDir(string dir)
+            => dir.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + '/');
     }
-
 }
