@@ -35,7 +35,6 @@ namespace Kennedy.Archive
         {
             using (var db = GetContext())
             {
-
                 //are the capture times the same? If so, don't save it, because we are adding something
                 //that has already been added.
                 if (db.Snapshots
