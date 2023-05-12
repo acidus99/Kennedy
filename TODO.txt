@@ -1,4 +1,16 @@
-﻿
+﻿=== WARC work:
+    - Need to grab (latest?) robots.txt (from archive? from the scan datbase) and prune items when importing WARC (especially when loading in older WARCs)
+    - "gemini://kennedy.gemi.dev/page-info?id=-*" are in archive, but shouldn't since robots excludes it
+    - "kennedy" search results are indexed as a result in Kennedy ?!?!? (Search for cats)
+
+    - oh snap, when importing multiple WARCs into the search index, if a later search index has an error like a timeout, we aren't clearing the FTS entries for it
+    - crash importing WARC: /Users/billy/HDD Inside/Kennedy-Work/WARCs/2023-04-20.warc	42700	316 ms
+
+
+GeminiRequestor
+=== Truncated body should still have some content
+
+
 - Charsets
     - Not using them when parsing/indexing content
     - Incorrectly outputing all content as UTF-8 in archive view
@@ -21,6 +33,11 @@
 	- Increase number of match views
 	- Maybe should a filetype icon?
 		probably makes sense to do this for the PAge Info page aas well.
+
+
+
+    - If a response is not a 20, (like a redirect) show that in the Url history view. Right now it just looks like empty repsonses (size 0 B)
+        gemini://kennedy.gemi.dev/archive/history?gemini%3a%2f%2fgemlog.blue%2fusers%2fsu
 
 
 Diff/stuff in archive is odd:
