@@ -90,6 +90,8 @@ namespace Kennedy.SearchIndex.Models
         public int BodySize { get; set; }
         public long? BodyHash { get; set; }
 
+        public long ResponseHash { get; set; }
+
         public int OutboundLinks { get; set; }
 
         #endregion

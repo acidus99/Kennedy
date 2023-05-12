@@ -394,6 +394,7 @@ namespace Kennedy.SearchIndex.Web
                 entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
                 entry.BodySize = parsedResponse.BodySize;
                 entry.BodyHash = parsedResponse.BodyHash;
+                entry.ResponseHash = parsedResponse.Hash;
 
                 entry.Charset = parsedResponse.Charset;
                 entry.MimeType = parsedResponse.MimeType;
