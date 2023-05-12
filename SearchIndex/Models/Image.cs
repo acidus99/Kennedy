@@ -26,5 +26,13 @@ namespace Kennedy.SearchIndex.Models
 
         public bool IsTransparent { get; set; }
 
+        public Image()
+        { }
+
+        public Image(GeminiUrl url)
+        {
+            UrlID = url.ID;
+        }
+
     }
 }
