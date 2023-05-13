@@ -23,8 +23,6 @@ namespace Kennedy.Server.Views
 
         public override void Render()
         {
-            var webDatabase = new WebDatabase(Settings.Global.DataRoot);
-
             Response.Success();
             /*
              * # 🔭 Kennedy: Search Gemini Space
@@ -37,21 +35,36 @@ namespace Kennedy.Server.Views
             Response.WriteLine();
             Response.WriteLine("The following are capsules are known to Kennedy and are reachable.");
 
-            var servers = webDatabase.GetAllCapsules();
 
-            Response.WriteLine($"## Known Capsules ({servers.Count()})");
-
-            int counter = 0;
-            foreach (var server in servers)
+            using (var db = new WebDatabaseContext(Settings.Global.DataRoot))
             {
-                counter++;
-                var label = $"{counter}. {FormatDomain(server.Domain, server.Emoji)}";
-                if(server.Port != 1965)
+
+                var servers = db.Documents
+                    .Include(d => d.Favicon)
+                    .GroupBy(d => new { d.Protocol, d.Domain, d.Port })
+                    .Select(g => new
+                    {
+                        g.Key.Protocol,
+                        g.Key.Domain,
+                        g.Key.Port,
+                        g.First().Favicon,
+                        Pages = g.Count()
+                    });
+
+                Response.WriteLine($"## Known Capsules ({servers.Count()})");
+
+                int counter = 0;
+                foreach (var server in servers)
                 {
-                    label += ":" + server.Port;
+                    counter++;
+                    var label = $"{counter}. {FormatDomain(server.Domain, server.Favicon?.Emoji ?? "")}";
+                    if (server.Port != 1965)
+                    {
+                        label += ":" + server.Port;
+                    }
+                    label += $" ({server.Pages} URLs)";
+                    Response.WriteLine($"=> {server.Protocol}://{server.Domain}:{server.Port}/ {label}");
                 }
-                label += $" ({server.Pages} URLs)";
-                Response.WriteLine($"=> {server.Protocol}://{server.Domain}:{server.Port}/ {label}");
             }
         }
     }
