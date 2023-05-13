@@ -9,9 +9,9 @@ namespace Kennedy.Data
     {
         public int LineCount { get; set; } = 0;
 
-        public string Language { get; set; } = "";
+        public string? DetectedLanguage { get; set; }
 
-        public string Title { get; set; } = "";
+        public string? Title { get; set; }
 
         public bool IsIndexable => (FilteredBody.Length > 0);
 

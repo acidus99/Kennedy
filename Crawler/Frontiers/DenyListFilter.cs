@@ -1,6 +1,7 @@
 ﻿using System;
 using Gemini.Net;
 using Kennedy.Crawler.Utils;
+using Kennedy.Data;
 
 namespace Kennedy.Crawler.Frontiers
 {
@@ -57,21 +58,21 @@ namespace Kennedy.Crawler.Frontiers
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        public bool IsUrlAllowed(GeminiUrl url)
+        public bool IsUrlAllowed(UrlFrontierEntry entry)
         {
-            var normalized = url.NormalizedUrl;
+            var normalized = entry.Url.NormalizedUrl;
 
             if (globalRules.Where(x => normalized.StartsWith(x)).Count() > 0)
             {
                 return false;
             }
 
-            if (!excludedUrls.ContainsKey(url.Authority))
+            if (!excludedUrls.ContainsKey(entry.Url.Authority))
             {
                 return true;
             }
 
-            foreach (string urlPrefix in excludedUrls[url.Authority])
+            foreach (string urlPrefix in excludedUrls[entry.Url.Authority])
             {
                 if (normalized.StartsWith(urlPrefix))
                 {

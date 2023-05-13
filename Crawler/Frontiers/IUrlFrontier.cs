@@ -1,5 +1,6 @@
 ﻿using System;
 using Gemini.Net;
+using Kennedy.Data;
 using Kennedy.Crawler.Logging;
 
 namespace Kennedy.Crawler.Frontiers
@@ -13,17 +14,20 @@ namespace Kennedy.Crawler.Frontiers
 
         int Total { get; }
 
+
+        void AddSeed(GeminiUrl url);
+
         /// <summary>
         /// Adds a URL to the frontier
         /// </summary>
         /// <param name="url"></param>
-        void AddUrl(GeminiUrl url);
+        void AddUrl(UrlFrontierEntry entry);
 
         /// <summary>
         /// Gets the next URL from the frontier
         /// </summary>
         /// <returns></returns>
-        GeminiUrl GetUrl(int crawlerID);
+        UrlFrontierEntry GetUrl(int crawlerID);
 
     }
 }

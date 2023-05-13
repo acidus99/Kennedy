@@ -18,10 +18,9 @@ namespace Kennedy.Archive.Db
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             options.UseSqlite($"Data Source='{DatabasePath}'")
-                //.LogTo(Console.WriteLine)
+                //.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
                 //.EnableSensitiveDataLogging(true)
                 ;
-                
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -34,4 +33,3 @@ namespace Kennedy.Archive.Db
         }
     }
 }
-

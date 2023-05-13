@@ -6,7 +6,7 @@ namespace Kennedy.Data
 {
     public class FoundLink : IEquatable<FoundLink>
     {
-        public GeminiUrl Url { get; set; }
+        public required GeminiUrl Url { get; set; }
         public bool IsExternal { get; set; }
         public string LinkText { get; set; }
 

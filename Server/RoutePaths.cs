@@ -13,6 +13,7 @@ namespace Kennedy.Server
         public const string ViewCachedRoute = "/archive/cached";
         public const string ViewUrlHistoryRoute = "/archive/history";
         public const string SearchArchiveRoute = "/archive/search";
+        public const string ArchiveStatsRoute = "/archive/stats";
 
         public const string SiteHealthRoute = "/reports/site-health";
 

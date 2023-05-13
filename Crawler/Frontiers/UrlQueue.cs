@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Gemini.Net;
 using Kennedy.Crawler.Utils;
+using Kennedy.Data;
 
 namespace Kennedy.Crawler.Frontiers;
 
@@ -13,28 +14,28 @@ internal class UrlQueue
 {
     object locker = new object();
 
-    PriorityQueue<GeminiUrl, int> queue = new PriorityQueue<GeminiUrl, int>();
+    PriorityQueue<UrlFrontierEntry, int> queue = new PriorityQueue<UrlFrontierEntry, int>();
 
     /// <summary>
     /// tracks # of items we have had to a specific authority
     /// </summary>
     Bag<string> AuthorityCounts = new Bag<string>();
 
-    public void AddUrl(GeminiUrl url)
+    public void AddUrl(UrlFrontierEntry entry)
     {
-        var priority = GetPriority(url);
+        var priority = GetPriority(entry);
         lock (locker)
         {
-            queue.Enqueue(url, priority);
+            queue.Enqueue(entry, priority);
         }
     }
 
-    private int GetPriority(GeminiUrl url)
+    private int GetPriority(UrlFrontierEntry entry)
     {
-        int count = AuthorityCounts.Add(url.Authority);
+        int count = AuthorityCounts.Add(entry.Url.Authority);
         count *= 10;
 
-        return 10 * CountDirectories(url.Path) + count;
+        return 10 * CountDirectories(entry.Url.Path) + count;
     }
 
     private int CountDirectories(string path)
@@ -51,9 +52,9 @@ internal class UrlQueue
         return ret - 1;
     }
 
-    public GeminiUrl GetUrl()
+    public UrlFrontierEntry GetUrl()
     {
-        GeminiUrl ret = null;
+        UrlFrontierEntry ret = null;
 
         lock (locker)
         {

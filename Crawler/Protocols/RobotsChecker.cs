@@ -93,7 +93,7 @@ namespace Kennedy.Crawler.Protocols
         /// <returns></returns>
         private string FetchRobots(string hostname, int port)
         {
-            var robotsUrl = new GeminiUrl($"gemini://{hostname}:{port}/robots.txt?kennedy-crawler");
+            var robotsUrl = RobotsTxtFile.CreateRobotsUrl("gemini", hostname, port);
 
             Gemini.Net.GeminiRequestor requestor = new Gemini.Net.GeminiRequestor();
 
@@ -101,12 +101,15 @@ namespace Kennedy.Crawler.Protocols
             string ret = "";
             if (ipAddress != null)
             {
+                var requestUrl = new GeminiUrl(robotsUrl +"?kennedy-crawler");
 
-                var resp = requestor.Request(robotsUrl, ipAddress);
+                var resp = requestor.Request(requestUrl, ipAddress);
 
-                if (Crawler != null && resp.IsSuccess)
+                if (Crawler != null)
                 {
-                    Crawler.ProcessRequestResponse(resp, requestor.LastException);
+                    // reset the URL to remove the special note we sent about our crawler
+                    resp.RequestUrl = new GeminiUrl(robotsUrl);
+                    Crawler.ProcessRobotsResponse(resp);
                 }
                 ret = (resp.IsSuccess && resp.HasBody) ?
                     resp.BodyText :
@@ -114,6 +117,5 @@ namespace Kennedy.Crawler.Protocols
             }
             return ret;
         }
-
     }
 }

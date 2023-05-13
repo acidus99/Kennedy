@@ -22,7 +22,7 @@ namespace Kennedy.AdminConsole.Db
 
         [MaxLength(1024)]
         [Required]
-        public string Url { get; set; }
+        public string Url { get; set; } = "";
 
         private GeminiUrl? gUrl = null;
 
@@ -41,7 +41,7 @@ namespace Kennedy.AdminConsole.Db
         }
 
         [Required]
-        public string Domain { get; set; }
+        public string Domain { get; set; } = "";
 
         public ConnectStatus ConnectStatus { get; set; } = ConnectStatus.Unknown;
 
@@ -51,15 +51,17 @@ namespace Kennedy.AdminConsole.Db
         [Required]
         public int Port { get; set; }
 
-        public int? Status { get; set; }
+        public int Status { get; set; } = GeminiParser.ConnectionErrorStatusCode;
 
         /// <summary>
         /// everything after the status code
         /// </summary>
-        public string Meta { get; set; }
+        public string Meta { get; set; } = "";
 
-        public string? MimeType { get; set; }
+        public string? MimeType { get; set; } = "";
 
+        public bool BodySkipped { get; set; }
+        
         public bool BodySaved { get; set; } = false;
 
     }

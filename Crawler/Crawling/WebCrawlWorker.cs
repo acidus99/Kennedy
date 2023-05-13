@@ -3,6 +3,7 @@ using System.Threading;
 
 using Gemini.Net;
 using Kennedy.Crawler.Protocols;
+using Kennedy.Data;
 
 namespace Kennedy.Crawler.Crawling;
 
@@ -33,27 +34,28 @@ internal class WebCrawlWorker
     // and printing a document.
     public void DoWork()
     {
-        GeminiUrl url = null;
+        UrlFrontierEntry entry = null;
 
         GeminiProtocolHandler requestor = new GeminiProtocolHandler();
 
         do
         {
-            url = Crawler.GetUrl(CrawlerID);
+            entry = Crawler.GetUrl(CrawlerID);
 
-            if (url != null)
+            if (entry != null)
             {
-                if (hostTracker.ShouldSendRequest(url))
+                if (hostTracker.ShouldSendRequest(entry.Url))
                 {
-                    var resp = requestor.Request(url);
-                    hostTracker.AddResponse(resp);
-                    Crawler.ProcessRequestResponse(resp, requestor.LastException);
-                    if (resp?.ConnectStatus != ConnectStatus.Skipped)
+                    var response = requestor.Request(entry);
+                    hostTracker.AddResponse(response);
+                    Crawler.ProcessRequestResponse(entry, response);
+
+                    //if we got a response, we need to wait before doing the next
+                    if (response != null)
                     {
                         Thread.Sleep(delayMs);
                     }
                 }
-                Crawler.MarkComplete(url);
             }
             else
             {

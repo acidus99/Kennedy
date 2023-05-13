@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using Gemini.Net;
 using Kennedy.Crawler.Utils;
+using Kennedy.Data;
 
 namespace Kennedy.Crawler.Frontiers
 {
@@ -27,13 +28,13 @@ namespace Kennedy.Crawler.Frontiers
         /// </summary>
         /// <param name="url"></param>
         /// <returns>URL has not been seen before during this crawl</returns>
-        public bool IsUrlAllowed(GeminiUrl url)
+        public bool IsUrlAllowed(UrlFrontierEntry entry)
         {
             lock (locker)
             {
-                if (!SeenUrls.ContainsKey(url.ID))
+                if (!SeenUrls.ContainsKey(entry.Url.ID))
                 {
-                    SeenUrls[url.ID] = true;
+                    SeenUrls[entry.Url.ID] = true;
                     return true;
                 }
             }

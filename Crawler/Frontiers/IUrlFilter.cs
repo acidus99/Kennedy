@@ -1,5 +1,6 @@
 ﻿using System;
 using Gemini.Net;
+using Kennedy.Data;
 
 namespace Kennedy.Crawler.Frontiers
 {
@@ -8,6 +9,6 @@ namespace Kennedy.Crawler.Frontiers
     /// </summary>
     public interface IUrlFilter
     {
-        public abstract bool IsUrlAllowed(GeminiUrl url);
+        public abstract bool IsUrlAllowed(UrlFrontierEntry entry);
     }
 }

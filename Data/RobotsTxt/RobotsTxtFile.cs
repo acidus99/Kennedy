@@ -166,6 +166,9 @@ namespace Kennedy.Data.RobotsTxt
             return ret;
         }
 
+        public static string CreateRobotsUrl(string protocol, string domain, int port)
+            => $"{protocol}://{domain}:{port}/robots.txt";
+
         private class DenyRule
         {
             public string Path { get; private set; }

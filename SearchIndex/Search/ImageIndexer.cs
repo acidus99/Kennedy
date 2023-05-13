@@ -24,31 +24,44 @@ namespace Kennedy.SearchIndex.Search
 
         public void IndexImages()
         {
+            RemoveOldIndex();
             GetContent();
             InsertText();
+        }
+
+        private void RemoveOldIndex()
+        {
+            connection.Open();
+            //first delete all FTS entries for this
+            SqliteCommand cmd = new SqliteCommand(@"DELETE From ImageSearch", connection);
+            cmd.ExecuteNonQuery();
+            connection.Close();
         }
 
         private void GetContent()
         {
             connection.Open();
-            using (var cmd = new SqliteCommand(@"select Images.DBDocID, LinkText, url from Images
+            using (var cmd = new SqliteCommand(@"select Images.UrlID, LinkText, url from Images
 Inner Join Documents
-on Documents.DBDocID = Images.DBDocID
+on Documents.UrlID = Images.UrlID
 INNER Join Links
-on Images.DBDocID = Links.DBTargetDocID
-where length(LinkText) > 0", connection))
+on Images.UrlID = Links.TargetUrlID
+where length(LinkText) >= 0", connection))
             {
                 var r = cmd.ExecuteReader();
                 while (r.Read())
                 {
-                    long dbDocID = r.GetInt64(r.GetOrdinal("DBDocID"));
+                    long urlID = r.GetInt64(r.GetOrdinal("UrlID"));
                     string url = r.GetString(r.GetOrdinal("Url"));
                     string linkText = r.GetString(r.GetOrdinal("LinkText"));
-                    if (!imageTextContent.ContainsKey(dbDocID))
+                    if (!imageTextContent.ContainsKey(urlID))
                     {
-                        imageTextContent[dbDocID] = GetPathIndexText(url);
+                        imageTextContent[urlID] = GetPathIndexText(url);
                     }
-                    imageTextContent[dbDocID] += CleanLinkText(linkText) + " ";
+                    if (linkText.Length > 0)
+                    {
+                        imageTextContent[urlID] += CleanLinkText(linkText) + " ";
+                    }
                 }
             }
             connection.Close();

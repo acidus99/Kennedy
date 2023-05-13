@@ -2,6 +2,7 @@
 using Gemini.Net;
 
 using Kennedy.Crawler.Utils;
+using Kennedy.Data;
 
 namespace Kennedy.Crawler.Frontiers
 {
@@ -16,9 +17,9 @@ namespace Kennedy.Crawler.Frontiers
             MaxHits = maxHits;
 		}
 
-        public bool IsUrlAllowed(GeminiUrl url)
+        public bool IsUrlAllowed(UrlFrontierEntry entry)
         {
-            int hits = DomainHits.Add(url.Authority);
+            int hits = DomainHits.Add(entry.Url.Authority);
             return (hits <= MaxHits);
         }
     }

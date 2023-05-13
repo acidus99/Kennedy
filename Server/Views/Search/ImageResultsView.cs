@@ -51,7 +51,7 @@ namespace Kennedy.Server.Views.Search
                     WriteResultEntry(Response, result, counter);
                 }
 
-                Response.WriteLine($"Showing {start} - {counter}  of {resultCount} total results");
+                Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(counter)}  of {FormatCount(resultCount)} total results");
 
                 if (Options.SearchPage > 1)
                 {
@@ -78,7 +78,7 @@ namespace Kennedy.Server.Views.Search
 
         private void WriteResultEntry(Response resp, ImageSearchResult result, int resultNumber)
         {
-            Response.WriteLine($"=> {result.Url} {resultNumber}. {result.ImageType} • {result.Width} x {result.Height} • {result.Url.Path}");
+            Response.WriteLine($"=> {result.Url} {FormatCount(resultNumber)}. {result.ImageType} • {FormatCount(result.Width)} x {FormatCount(result.Height)} • {result.Url.Path}");
             Response.WriteLine($"=> /page-info?id={result.UrlID} {FormatSize(result.BodySize)} • {FormatDomain(result.Url.Hostname, result.Favicon)} • More info...");
             Response.WriteLine(">" + FormatSnippet(result.Snippet));
             Response.WriteLine("");

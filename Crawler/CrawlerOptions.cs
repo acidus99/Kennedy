@@ -9,8 +9,7 @@
 
         public static string ConfigDir => "config/";
 
-        public static string DataStore => OutputBase + "crawl-data/";
+        public static string WarcDir => OutputBase + "warcs/";
 
-        public static string PublicRoot => OutputBase + "public_root/";
     }
 }

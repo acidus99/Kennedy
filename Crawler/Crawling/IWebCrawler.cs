@@ -1,14 +1,15 @@
 ﻿using System;
 using Gemini.Net;
+using Kennedy.Data;
 namespace Kennedy.Crawler.Crawling;
 
 public interface IWebCrawler
 {
     bool KeepWorkersAlive { get; }
 
-    GeminiUrl GetUrl(int crawlerID = 0);
+    UrlFrontierEntry GetUrl(int crawlerID = 0);
 
-    void MarkComplete(GeminiUrl url);
+    void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse response);
 
-    void ProcessRequestResponse(GeminiResponse resp, Exception? ex = null);
+    void ProcessRobotsResponse(GeminiResponse response);
 }

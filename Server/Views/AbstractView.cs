@@ -25,6 +25,11 @@ namespace Kennedy.Server.Views
         protected string SanitizedQuery
             => Request.Url.Query.Replace("\r", "").Replace("\n", "").Trim();
 
+        protected string FormatCount(int i)
+            => i.ToString("N0");
+
+        protected string FormatCount(long i)
+            => i.ToString("N0");
 
         protected string FormatDomain(string domain, string favicon)
             => (favicon.Length > 0) ? $"{favicon} {domain}" : $"{domain}";
@@ -36,10 +41,10 @@ namespace Kennedy.Server.Views
         {
             if (bodySize < 1024)
             {
-                return $"{bodySize} B";
+                return $"{bodySize.ToString("N0")} B";
             }
 
-            return $"{Math.Round(((double)bodySize) / ((double)1024))} KB";
+            return $"{Math.Round(((double)bodySize) / ((double)1024)).ToString("N0")} KB";
         }
 
         protected string FormatPageTitle(GeminiUrl url)

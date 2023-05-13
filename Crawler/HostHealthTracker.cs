@@ -59,6 +59,7 @@ namespace Kennedy.Crawler
 
 			public HostHealthContainer(int windowSize)
 			{
+				//TODO: I don't really need to store the entire response, just the status code
 				RecentResponses = new Queue<GeminiResponse>(); 
 				WindowSize = windowSize;
 				totalRequests = 0;
@@ -68,7 +69,7 @@ namespace Kennedy.Crawler
             public void AddResponse(GeminiResponse response)
             {
 				totalRequests++;
-				if(IsError(response))
+				if(response.IsConnectionError)
 				{
 					errorRequests++;
 				}
@@ -91,14 +92,11 @@ namespace Kennedy.Crawler
 				}
 
                 var errors = RecentResponses
-                    .Where(x => IsError(x))
+                    .Where(x => x.IsConnectionError)
 					.Count();
 
                 return errors != WindowSize;
             }
-
-			private bool IsError(GeminiResponse resp)
-				=> resp.ConnectStatus == ConnectStatus.Error;
         }
     }
 }

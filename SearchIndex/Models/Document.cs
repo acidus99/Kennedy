@@ -9,7 +9,8 @@ using Kennedy.Data;
 namespace Kennedy.SearchIndex.Models
 {
     [Table("Documents")]
-    [Index(nameof(Status))]
+    [Index(nameof(StatusCode))]
+    [Index(nameof(Domain))]
     public class Document
     {
         /// <summary>
@@ -18,20 +19,41 @@ namespace Kennedy.SearchIndex.Models
         /// some unchecked casting with overflow to handle it
         /// </summary>
         [Key]
-        [Column("DBDocID")]
         public long UrlID { get; set; }
 
+        /// <summary>
+        /// When was the record first seen
+        /// </summary>
         public DateTime FirstSeen { get; set; }
 
-        public DateTime? LastVisit { get; set; }
+        /// <summary>
+        /// When did we last visit this document
+        /// </summary>
+        public DateTime LastVisit { get; set; }
 
+        /// <summary>
+        /// When did we last successfully visit this document?
+        /// </summary>
         public DateTime? LastSuccessfulVisit { get; set; }
-
-        public int ErrorCount { get; set; } = 0;
 
         [MaxLength(1024)]
         [Required]
         public string Url { get; set; }
+
+        [Required]
+        public string Protocol { get; set; }
+
+        [Required]
+        public string Domain { get; set; }
+
+        [Required]
+        public int Port { get; set; }
+
+        [Required]
+        public string Path { get; set; }
+
+        [Required]
+        public string FileExtension { get; set; }
 
         [NotMapped]
         public GeminiUrl GeminiUrl
@@ -46,19 +68,14 @@ namespace Kennedy.SearchIndex.Models
             }
         }
 
-        private GeminiUrl? geminiUrl = null;
+        private GeminiUrl geminiUrl = null;
 
-        [Required]
-        public string Domain { get; set; }
-
-        [Required]
-        public int Port { get; set; }
-
-        public ConnectStatus ConnectStatus { get; set; } = ConnectStatus.Unknown;
+        public bool IsAvailable { get; set; }
 
         #region Things we get after fetching/parsing
 
-        public int? Status { get; set; }
+        [Required]
+        public int StatusCode { get; set; }
 
         /// <summary>
         /// everything after the status code
@@ -66,32 +83,39 @@ namespace Kennedy.SearchIndex.Models
         public string Meta { get; set; }
 
         /// <summary>
-        /// Did we deliberately skip downloading this body?
+        /// Do we not have the entire body?
         /// </summary>
-        public bool BodySkipped { get; set; } = false;
+        public bool IsBodyTruncated { get; set; } = false;
 
-        public bool BodySaved { get; set; } = false;
         public int BodySize { get; set; }
-        public uint? BodyHash { get; set; }
+        public long? BodyHash { get; set; }
+
+        public long ResponseHash { get; set; }
 
         public int OutboundLinks { get; set; }
-
-        /// <summary>
-        /// Latency of the request/resp, in ms
-        /// </summary>
-        public int ConnectTime { get; internal set; }
-
-        public int DownloadTime { get; internal set; }
 
         #endregion
 
         #region Computed Fields that make it easier to query
 
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
-        public string MimeType { get; set; }
+        public string? MimeType { get; set; }
 
-        public string Language { get; set; }
+        /// <summary>
+        /// Charset parsed out of the Meta field
+        /// </summary>
+        public string? Charset { get; set; }
+
+        /// <summary>
+        /// 2 letter ISO Language code parsed out of the Meta field
+        /// </summary>
+        public string? Language { get; set; }
+
+        /// <summary>
+        /// 2 letter ISO Language code we detected for this, if any
+        /// </summary>
+        public string? DetectedLanguage { get; set; }
 
         public int LineCount { get; set; }
 
@@ -101,7 +125,24 @@ namespace Kennedy.SearchIndex.Models
 
         public ContentType ContentType { get; set; }
 
+        public Image? Image { get; set; }
+
         #endregion
+
+        public Document()
+        {
+        }
+
+        public Document(GeminiUrl url)
+        {
+            UrlID = url.ID;
+            Protocol = url.Protocol;
+            Domain = url.Hostname;
+            Port = url.Port;
+            Path = url.Path;
+            Url = url.NormalizedUrl;
+            FileExtension = url.FileExtension;
+        }
 
     }
 }

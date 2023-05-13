@@ -13,7 +13,7 @@ namespace Kennedy.SearchIndex.Search
         /// Adds a document to the search index, keyed by its URL
         /// </summary>
         /// <param name="parsedResponse"></param>
-        void AddToIndex(ParsedResponse parsedResponse);
+        void UpdateIndex(ParsedResponse parsedResponse);
 
         /// <summary>
         /// Removes a document from the search index, based on its URL ID

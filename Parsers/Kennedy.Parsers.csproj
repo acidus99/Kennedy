@@ -7,13 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="GemText\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="GemText\" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
     <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="13.1.0" />
+    <PackageReference Include="Magick.NET.Core" Version="13.1.0" />
   </ItemGroup>
 </Project>

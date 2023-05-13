@@ -8,21 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
-    <ProjectReference Include="..\Archive\Kennedy.Archive.csproj" />
-    <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
-    <ProjectReference Include="..\..\WarcProtocol\src\Toimik.WarcProtocol\Toimik.WarcProtocol.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Importers\" />
-    <None Remove="Warc\" />
-    <None Remove="Converters\" />
     <None Remove="Db\" />
+    <None Remove="Storage\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Importers\" />
-    <Folder Include="Warc\" />
-    <Folder Include="Converters\" />
     <Folder Include="Db\" />
+    <Folder Include="Storage\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
+    <ProjectReference Include="..\Warc\Kennedy.Warc.csproj" />
+    <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
+    <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
+    <ProjectReference Include="..\Archive\Kennedy.Archive.csproj" />
+    <ProjectReference Include="..\..\Warc.Net\Warc.Net.csproj" />
   </ItemGroup>
 </Project>

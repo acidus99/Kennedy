@@ -25,26 +25,20 @@ namespace Kennedy.Server.Views
             Response.WriteLine("=> https://securitytxt.org About Security.txt");
             Response.WriteLine();
 
-            var knownHosts = db.Domains.Where(x => x.IsReachable && x.HasSecurityTxt).OrderBy(x => x.DomainName).Select(x => new
+            var servers = db.SecurityTxts.OrderBy(x => x.Domain);
+
+            Response.WriteLine($"## Capsules with security.txt ({servers.Count()})");
+
+            int count = 0;
+            foreach (var host in servers)
             {
-                Hostname = x.DomainName,
-                Port = x.Port,
-                Favicon = !string.IsNullOrEmpty(x.FaviconTxt) ? x.FaviconTxt : ""
-            }) ;
-
-            Response.WriteLine($"## Capsules with security.txt ({knownHosts.Count()})");
-
-            int counter = 0;
-
-            foreach (var host in knownHosts)
-            {
-                counter++;
-                var label = $"{counter}. {host.Favicon}{host.Hostname}";
+                count++;
+                var label = $"{count}. {host.Domain}";
                 if(host.Port != 1965)
                 {
                     label += ":" + host.Port;
                 }
-                Response.WriteLine($"=> gemini://{host.Hostname}:{host.Port}/.well-known/security.txt {label}");
+                Response.WriteLine($"=> gemini://{host.Domain}:{host.Port}/.well-known/security.txt {label}");
             }
         }
     }

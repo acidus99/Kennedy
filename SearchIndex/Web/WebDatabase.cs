@@ -1,19 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using EFCore.BulkExtensions;
 using Gemini.Net;
+
 using Kennedy.Data;
+using Kennedy.Data.RobotsTxt;
+
+using Microsoft.Data.Sqlite;
+
 
 using Kennedy.SearchIndex.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Kennedy.SearchIndex.Web
 {
 	public class WebDatabase : IWebDatabase
 	{
-        
-
         private string StorageDirectory;
-
 
 		public WebDatabase(string storageDir)
         {
@@ -28,97 +32,342 @@ namespace Kennedy.SearchIndex.Web
         public WebDatabaseContext GetContext()
             => new WebDatabaseContext(StorageDirectory);
 
-        public void StoreDomain(DomainInfo domainInfo)
-        {
-            using (var context = GetContext())
-            {
-                context.Domains.Add(
-                    new Domain
-                    {
-                        DomainName = domainInfo.Domain,
-                        Port = domainInfo.Port,
-
-                        IsReachable = domainInfo.IsReachable,
-
-                        HasFaviconTxt = domainInfo.HasFaviconTxt,
-                        HasRobotsTxt = domainInfo.HasRobotsTxt,
-                        HasSecurityTxt = domainInfo.HasSecurityTxt,
-
-                        FaviconTxt = domainInfo.FaviconTxt,
-                        RobotsTxt = domainInfo.RobotsTxt,
-                        SecurityTxt = domainInfo.SecurityTxt
-                    });
-                context.SaveChanges();
-            }
-        }
-
-        public void StoreResponse(ParsedResponse parsedResponse, bool bodyWasSaved)
+        /// <summary>
+        /// Stores a response in our web database. 
+        /// </summary>
+        /// <param name="parsedResponse"></param>
+        /// <returns>whether the document is new or not. "New" documents are URLs we have neer seen, or updated content for a known URL</returns>
+        public bool StoreResponse(ParsedResponse parsedResponse)
         {
             //store in in the doc index (inserting or updating as appropriate)
-            StoreMetaData(parsedResponse, bodyWasSaved);
+            bool entryUpdated = UpdateDocument(parsedResponse);
 
-            //if its an image, we store extra meta data
-            if (parsedResponse is ImageResponse)
+            //if the content is the same, no need to update the links since those are still accurate
+            if (entryUpdated)
             {
-                StoreImageMetaData(parsedResponse as ImageResponse);
+                //store the links
+                StoreLinks(parsedResponse);
             }
 
-            //store the links
-            StoreLinks(parsedResponse);
+            return entryUpdated;
         }
 
-        private void StoreMetaData(ParsedResponse parsedResponse, bool bodyWasSaved)
+        public List<ServerInfo> GetAllCapsules()
         {
+            List<ServerInfo> servers = new List<ServerInfo>();
 
-            Document entry = null;
-            bool isNew = false;
+            var connString = GetContext().Database.GetConnectionString();
 
-            using (var context = GetContext())
+            using (var connection = new SqliteConnection(connString))
             {
+                connection.Open();
+                var cmd = new SqliteCommand(@"select d.Protocol, d.Domain, d.port, f.Emoji, count(*) as pages from Documents as d left outer join Favicons as f on d.Protocol = f.Protocol and d.Port = f.Port and d.Domain = f.Domain where LastSuccessfulVisit  is not NULL group by d.Protocol, d.domain, d.port order by d.domain asc", connection);
 
-                entry = context.Documents
+                var reader = cmd.ExecuteReader();
+                while(reader.Read())
+                {
+                    servers.Add(new ServerInfo
+                    {
+                        Protocol = reader["Protocol"].ToString(),
+                        Domain = reader["Domain"].ToString(),
+                        Port = reader.GetInt32(reader.GetOrdinal("Port")),
+                        Emoji = reader["Emoji"].ToString() ?? "",
+                        Pages = reader.GetInt32(reader.GetOrdinal("Pages"))
+                    });
+                }
+                connection.Close();
+            }
+            return servers;
+        }
+
+        private bool UpdateDocument(ParsedResponse parsedResponse)
+        {
+            bool hasContentChanged = false;
+
+            using (var db = GetContext())
+            {
+                Document entry = null;
+
+                //grab any existing document for this URL
+                entry = db.Documents.Include(x=>x.Image)
                     .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
                     .FirstOrDefault();
+
+                //do we already know about this URL?
                 if (entry == null)
                 {
-                    isNew = true;
-                    entry = new Document
+                    hasContentChanged = true;
+                    entry = new Document(parsedResponse.RequestUrl)
                     {
-                        UrlID = parsedResponse.RequestUrl.ID,
-                        FirstSeen = System.DateTime.Now,
-
-                        ErrorCount = 0,
-
-                        Url = parsedResponse.RequestUrl.NormalizedUrl,
-                        Domain = parsedResponse.RequestUrl.Hostname,
-                        Port = parsedResponse.RequestUrl.Port
+                        FirstSeen = parsedResponse.ResponseReceived
                     };
+                    db.Documents.Add(entry);
                 }
-                entry = PopulateEntry(parsedResponse, bodyWasSaved, entry);
-
-                if (isNew)
+                else
                 {
-                    context.Documents.Add(entry);
+                    //is this a re-import of the same content? if so the timestamps will match
+                    if (entry.LastVisit == parsedResponse.ResponseReceived)
+                    {
+                        //nothing to do, and nothing has changed
+                        return false;
+                    }
+                    else if (parsedResponse.ResponseReceived < entry.LastVisit)
+                    {
+                        //updating with an older response,
+                        //so just update the historical discovery times. No content has changed
+
+                        bool updatedTimes = false;
+
+                        if (entry.FirstSeen > parsedResponse.ResponseReceived)
+                        {
+                            entry.FirstSeen = parsedResponse.ResponseReceived;
+                            updatedTimes = true;
+                        }
+
+                        if (!parsedResponse.IsFail &&
+                            entry.LastSuccessfulVisit < parsedResponse.ResponseReceived)
+                        {
+                            entry.LastSuccessfulVisit = parsedResponse.ResponseReceived;
+                            updatedTimes = true;
+                        }
+
+                        if(updatedTimes)
+                        {
+                            db.SaveChanges();
+                        }
+                        return false;
+                    }
+                    else
+                    {
+                        //newer content so we need to update the document's entry
+                        //how much needs to be updated depends on if the response is different
+                        hasContentChanged = (parsedResponse.Hash != entry.ResponseHash);
+                    }
+                }
+
+                //ready to prepare oure DTOs
+
+                //Always update the most recent visit time
+                entry.LastVisit = parsedResponse.ResponseReceived;
+
+                if (!parsedResponse.IsFail)
+                {
+                    entry.LastSuccessfulVisit = parsedResponse.ResponseReceived;
+                }
+
+                //everything else is only updated if the content has changed
+                if (hasContentChanged)
+                {
+                    entry.IsAvailable = parsedResponse.IsAvailable;
+                    entry.StatusCode = parsedResponse.StatusCode;
+                    entry.Meta = parsedResponse.Meta;
+
+                    entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
+                    entry.BodySize = parsedResponse.BodySize;
+                    entry.BodyHash = parsedResponse.BodyHash;
+                    entry.ResponseHash = parsedResponse.Hash;
+
+                    entry.Charset = parsedResponse.Charset;
+                    entry.MimeType = parsedResponse.MimeType;
+
+                    entry.OutboundLinks = parsedResponse.Links.Count;
+
+                    entry.ContentType = parsedResponse.ContentType;
+
+                    //extra meta data
+                    if (parsedResponse is GemTextResponse)
+                    {
+                        var gemtext = (GemTextResponse)parsedResponse;
+
+                        entry.DetectedLanguage = gemtext.DetectedLanguage;
+                        entry.Language = gemtext.Language;
+                        entry.LineCount = gemtext.LineCount;
+                        entry.Title = gemtext.Title;
+                    }
+                    else
+                    {
+                        entry.Language = parsedResponse.Language;
+                        entry.DetectedLanguage = null;
+                        entry.LineCount = 0;
+                        entry.Title = null;
+                    }
+
+                    if (parsedResponse is ImageResponse)
+                    {
+                        var image = (ImageResponse)parsedResponse;
+
+                        if (entry.Image == null)
+                        {
+                            entry.Image = new Image(parsedResponse.RequestUrl);
+                        }
+                        entry.Image.IsTransparent = image.IsTransparent;
+                        entry.Image.Height = image.Height;
+                        entry.Image.Width = image.Width;
+                        entry.Image.ImageType = image.ImageType;
+                    }
+                    //not an image, but existing entry had image meta data, so explicitly remove it
+                    else if (entry.Image != null)
+                    {
+                        db.Images.Remove(entry.Image);
+                        entry.Image = null;
+                    }
+                }
+                db.SaveChanges();
+            }
+
+            //only need to update special files if the content has changed
+            if (hasContentChanged)
+            {
+                UpdateSpecialFiles(parsedResponse);
+            }
+
+            //propogate our if the content has changed to control re-indexing FTS and other operations
+            return hasContentChanged;
+        }
+
+        /// <summary>
+        /// Handles updating the Favicon, Security, or Robots tables
+        /// </summary>
+        /// <param name="response"></param>
+        private void UpdateSpecialFiles(ParsedResponse response)
+        {
+            if (response.RequestUrl.Path == "/robots.txt")
+            {
+                UpdateRobots(response);
+            }
+            else if (response.RequestUrl.Path == "/favicon.txt")
+            {
+                UpdateFavicon(response);
+            }
+            else if (response.RequestUrl.Path == "/.well-known/security.txt")
+            {
+                UpdateSecurity(response);
+            }
+        }
+
+        private void UpdateRobots(ParsedResponse response)
+        {
+            bool isRemove = !(response.IsSuccess && IsValidRobotsTxtFile(response?.BodyText));
+
+            using (var context = GetContext())
+            {
+                //see if it already exists
+                var entry = context.RobotsTxts
+                    .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
+                                x.Domain == response.RequestUrl.Hostname &&
+                                x.Port == response.RequestUrl.Port))
+                    .FirstOrDefault();
+
+                if (isRemove)
+                {
+                    if (entry != null)
+                    {
+                        //remove it
+                        context.RobotsTxts.Remove(entry);
+                    }
+                }
+                else
+                {
+                    //if not, create a stub
+                    if (entry == null)
+                    {
+                        entry = new RobotsTxt(response.RequestUrl);
+                        context.RobotsTxts.Add(entry);
+                    }
+
+                    entry.Content = response.BodyText;
                 }
                 context.SaveChanges();
             }
         }
 
-        internal void StoreImageMetaData(ImageResponse imageResponse)
+        private void UpdateFavicon(ParsedResponse response)
         {
-            Image imageEntry = new Image
-            {
-                UrlID = imageResponse.RequestUrl.ID,
-                IsTransparent = imageResponse.IsTransparent,
-                Height = imageResponse.Height,
-                Width = imageResponse.Width,
-                ImageType = imageResponse.ImageType
-            };
+
+            bool isRemove = !(response.IsSuccess && IsValidFavicon(response.BodyText?.Trim()));
+
             using (var context = GetContext())
             {
-                context.Images.Add(imageEntry);
+                //see if it already exists
+                var entry = context.Favicons
+                    .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
+                                x.Domain == response.RequestUrl.Hostname &&
+                                x.Port == response.RequestUrl.Port))
+                    .FirstOrDefault();
+
+                if (isRemove)
+                {
+                    if(entry != null)
+                    {
+                        context.Favicons.Remove(entry);
+                    }
+                }
+                else
+                {
+
+                    //if not, create a stub
+                    if (entry == null)
+                    {
+                        entry = new Favicon(response.RequestUrl);
+                        context.Favicons.Add(entry);
+                    }
+
+                    entry.Emoji = response.BodyText.Trim();
+                }
                 context.SaveChanges();
             }
+        }
+
+        private void UpdateSecurity(ParsedResponse response)
+        {
+            bool isRemove = !(response.IsSuccess && IsValidSecurity(response.BodyText));
+
+            using (var context = GetContext())
+            {
+                //see if it already exists
+                var entry = context.SecurityTxts
+                    .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
+                                x.Domain == response.RequestUrl.Hostname &&
+                                x.Port == response.RequestUrl.Port))
+                    .FirstOrDefault();
+
+                if (isRemove)
+                {
+                    if(entry != null)
+                    {
+                        context.SecurityTxts.Remove(entry);
+                    }
+                }
+                else
+                {
+                    //if not, create a stub
+                    if (entry == null)
+                    {
+                        entry = new SecurityTxt(response.RequestUrl);
+                        context.SecurityTxts.Add(entry);
+                    }
+
+                    entry.Content = response.BodyText;
+                }
+                context.SaveChanges();
+            }
+        }
+
+        private bool IsValidFavicon(string contents)
+            => (contents != null && !contents.Contains(" ") && !contents.Contains("\n") && contents.Length < 20);
+
+        private bool IsValidSecurity(string contents)
+            => (contents != null && contents.ToLower().Contains("contact:"));
+
+
+        private bool IsValidRobotsTxtFile(string? contents)
+        {
+            if (contents != null)
+            {
+                RobotsTxtFile robotsTxt = new RobotsTxtFile(contents);
+                return !robotsTxt.IsMalformed;
+            }
+            return false;
         }
 
         private void StoreLinks(ParsedResponse response)
@@ -139,96 +388,6 @@ namespace Kennedy.SearchIndex.Web
                 }).ToList());
                 context.SaveChanges();
             }
-        }
-
-        private Document PopulateEntry(ParsedResponse parsedResponse, bool bodySaved, Document entry)
-        {
-            entry.LastVisit = DateTime.Now;
-
-            entry.ConnectStatus = parsedResponse.ConnectStatus;
-            entry.Status = parsedResponse.StatusCode;
-            entry.Meta = parsedResponse.Meta;
-
-            entry.MimeType = parsedResponse.MimeType;
-            entry.BodySkipped = parsedResponse.BodySkipped;
-            entry.BodySaved = bodySaved;
-            entry.BodySize = parsedResponse.BodySize;
-            entry.BodyHash = parsedResponse.BodyHash;
-            entry.OutboundLinks = parsedResponse.Links.Count;
-
-            entry.ConnectTime = parsedResponse.ConnectTime;
-            entry.DownloadTime = parsedResponse.DownloadTime;
-            entry.ContentType = parsedResponse.ContentType;
-
-            if (IsError(parsedResponse))
-            {
-                entry.ErrorCount++;
-            }
-            else
-            {
-                entry.ErrorCount = 0;
-                entry.LastSuccessfulVisit = entry.LastVisit;
-            }
-
-            //extra meta data
-            if (parsedResponse is GemTextResponse)
-            {
-                var gemtext = (GemTextResponse)parsedResponse;
-
-                entry.Language = gemtext.Language;
-                entry.LineCount = gemtext.LineCount;
-                entry.Title = gemtext.Title;
-            }
-            else
-            {
-                entry.Language = "";
-                entry.LineCount = 0;
-                entry.Title = "";
-            }
-
-            return entry;
-        }
-
-
-        /// <summary>
-        /// does this response represent an error?
-        /// </summary>
-        /// <param name="resp"></param>
-        /// <returns></returns>
-        private bool IsError(ParsedResponse resp)
-            => (resp.ConnectStatus != ConnectStatus.Success) ||
-                resp.IsTempFail || resp.IsPermFail;
-
-        public bool RemoveResponse(GeminiUrl url)
-        {
-            bool result = false;
-            using (var context = GetContext())
-            {
-
-                //first delete it from the search index database
-                var document = context.Documents.Where(x => x.UrlID == url.ID).FirstOrDefault();
-                if (document != null)
-                {
-                    context.Documents.Remove(document);
-                    result = true;
-                }
-
-                //older search databases didn't have foreign key constraints, so ensure related rows are cleaned up
-                var image = context.Images.Where(x => x.UrlID == url.ID).FirstOrDefault();
-                if (image != null)
-                {
-                    context.Images.Remove(image);
-                }
-
-                var links = context.Links.Where(x => x.SourceUrlID == url.ID);
-                if (links.Count() > 0)
-                {
-                    context.Links.RemoveRange(links);
-                }
-                context.SaveChanges();
-            }
-
-            return result;
         }
     }
 }

@@ -34,12 +34,16 @@ namespace Kennedy.Server.Controllers
             view.Render();
         }
 
-
         public static void Cached(GeminiRequest request, Response response, GeminiServer app)
         {
             var view = new CachedView(request, response, app);
             view.Render();
         }
 
+        public static void Stats(GeminiRequest request, Response response, GeminiServer app)
+        {
+            var view = new StatsView(request, response, app);
+            view.Render();
+        }
     }
 }

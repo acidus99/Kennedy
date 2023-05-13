@@ -5,10 +5,8 @@ using HashDepot;
 
 using Gemini.Net;
 
-using Kennedy.AdminConsole.Importers;
-using Kennedy.AdminConsole.Converters;
-using Kennedy.AdminConsole.Warc;
-
+using Kennedy.AdminConsole.WarcConverters;
+using Kennedy.Warc;
 
 using Kennedy.Archive;
 using Kennedy.Data;
@@ -16,200 +14,133 @@ using Kennedy.Data.RobotsTxt;
 using Kennedy.SearchIndex;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Web;
+using Warc;
 
 namespace Kennedy.AdminConsole
 {
     class Program
     {
-        static string ArchiveDBPath
-            => DataRootDirectory + "archive.db";
-
-        static string PacksPath
-            => DataRootDirectory + "Packs" + Path.DirectorySeparatorChar;
-
-        static string DataRootDirectory = "";
-        static string Operation = "";
-        static string argument = "";
-
         static void Main(string[] args)
         {
-            ConvertToWarc(args[0], args[1]);
+            string workingDir = ResolveDir("~/HDD Inside/Kennedy-Work/");
 
-            if (!ValidateArgs(args))
+            if(workingDir.Length == 0)
             {
-                return;
+                throw new ApplicationException("Set working directory!");
             }
 
-            switch (Operation)
-            {
-                case "add":
-                    Console.WriteLine("Adding to archive");
-                    AddCrawlToArchive(argument);
-                    break;
+            string warcOutputDir = workingDir + "WARCs/";
+            string sourceDir = workingDir + "pre-WARC/";
 
-                case "delete":
-                    DeleteFromCrawl(argument);
-                    break;
+            ImportFullDatabases(warcOutputDir, sourceDir + "crawldb - docs and domains/foo.txt");
 
-                case "robots":
-                    ExcludeFilesFromArchive();
-                    break;
+            ImportPartialDatabase(warcOutputDir, sourceDir + "crawldb - docs only/2022-01-09/");
 
-            }
+            ImportFullDatabasesNoPageStore(warcOutputDir,  sourceDir + "crawldb - bare db/foo.txt");
+
+            ImportLegacyDatabases(warcOutputDir, sourceDir + "original-format/foo.txt");
         }
 
-        static string EnsureTrailingSlash(string path)
-            => (path.EndsWith(Path.DirectorySeparatorChar)) ?
-                path :
-                path + Path.DirectorySeparatorChar;
-
-        static bool ValidateArgs(string[] args)
+        /// <summary>
+        /// Bulk imports Kennedy Search databases that have Documents, Domains, and are backed by a page-store
+        /// </summary>
+        /// <param name="warcOutputDir"></param>
+        /// <param name="manifest"></param>
+        static void ImportFullDatabases(string warcOutputDir, string manifest)
         {
-            if (args.Length < 2)
+            foreach (string crawlLocation in File.ReadLines(manifest))
             {
-                Console.WriteLine("not enough arguments");
-                Console.WriteLine("Usage: [operation] [path to archive root] [[additional args]]");
-                return false;
-            }
-
-            Operation = args[0].ToLower();
-            DataRootDirectory = EnsureTrailingSlash(args[1]);
-
-            if(!File.Exists(ArchiveDBPath))
-            {
-                Console.WriteLine($"Could not locate archive database at '{ArchiveDBPath}'");
-                return false;
-            }
-            if (!Directory.Exists(PacksPath))
-            {
-                Console.WriteLine($"Could not locate Packs directory at '{PacksPath}'");
-                return false;
-            }
-
-            switch(Operation)
-            {
-                case "add":
-                    {
-                        if(args.Length != 3)
-                        {
-                            Console.WriteLine($"Not enough arguments for operation {Operation}");
-                            Console.WriteLine($"Usage: {Operation} [path to archive root] path to crawler output to add");
-                            return false;
-                        }
-
-                        argument = EnsureTrailingSlash(args[2]);
-                        if (!Directory.Exists(argument))
-                        {
-                            Console.WriteLine($"Could need file valid crawler output at '{argument}'");
-                            return false;
-                        }
-                        return true;
-                    }
-
-                case "delete":
-                    {
-                        argument = args[2];
-                        return true;
-                    }
-
-                case "robots":
-                    {
-                        return true;
-                    }
-
-                default:
-                    Console.WriteLine($"Unknown operation '{Operation}'");
-                    return false;
-
-            }
-        }
-
-        static void AddCrawlToArchive(string crawlLocation)
-        {
-            var archiver = new Archiver(ArchiveDBPath, PacksPath);
-
-            DomainImporter importer = new DomainImporter(archiver, crawlLocation);
-            importer.Import();
-
-            ModernImporter modern = new ModernImporter(archiver, crawlLocation);
-            modern.Import();
-        }
-
-        static void DeleteFromCrawl(string pattern)
-        {
-
-            Archiver archiver = new Archiver(ArchiveDBPath, PacksPath);
-            SearchStorageWrapper wrapper = new SearchStorageWrapper(DataRootDirectory);
-
-            var docs = wrapper.WebDB.GetContext().Documents
-                .Where(x=>x.Url.Contains(pattern))
-                .ToList();
-
-            int i = 0;
-            foreach(var doc in docs)
-            {
-                i++;
-                Console.WriteLine($"{i} of {docs.Count}\tDeleting {doc.Url}");
-                wrapper.RemoveResponse(doc.GeminiUrl);
-                archiver.RemoveContent(doc.GeminiUrl);
-
-                int fff = 65;
-            }
-        }
-
-        static void ExcludeFilesFromArchive()
-        {
-
-            Archiver archiver = new Archiver(ArchiveDBPath, PacksPath);
-            WebDatabaseContext context = new WebDatabaseContext(DataRootDirectory);
-
-            int count = 0;
-            foreach(var domain in context.Domains
-                .Where(x=>x.HasRobotsTxt))
-            {
-                RobotsTxtFile robots = new RobotsTxtFile(domain.RobotsTxt);
-                if(robots.IsMalformed)
+                var warcFile = CreateWarcName(crawlLocation);
+                using (var warcCreator = new GeminiWarcCreator(warcOutputDir + warcFile))
                 {
-                    continue;
-                }
-                //we only care about Robots.txt files that have archiver rules.
-                if(!robots.UserAgents.Contains("archiver"))
-                {
-                    continue;
-                }
+                    warcCreator.WriteWarcInfo(GetWarcFields());
 
-                //grab all the URLs for this domain and port
-                foreach(var url in archiver.Context.Urls
-                    .Where(x=>x.Domain == domain.DomainName && x.Port == domain.Port &&x.IsPublic))
-                {
-                    if (!robots.IsPathAllowed("archiver", url.GeminiUrl.Path))
-                    {
-                        count++;
-                        Console.WriteLine($"{count}\tGoing to exclude {url.FullUrl}");
-                        url.IsPublic = false;
-                    }
+                    AbstractConverter converter = new DomainConverter(warcCreator, crawlLocation);
+                    converter.WriteToWarc();
+
+                    converter = new DocumentConverter(warcCreator, crawlLocation);
+                    converter.WriteToWarc();
                 }
             }
-
-            archiver.Context.SaveChanges();
-
-            int x = 4;
-        
         }
 
-        static void ConvertToWarc(string crawlLocation, string warcFile)
+        /// <summary>
+        /// Imports a Kennedy search database which has just a Documents table and is backed by a page-store
+        /// </summary>
+        /// <param name="warcOutputDir"></param>
+        /// <param name="manifest"></param>
+        static void ImportPartialDatabase(string warcOutputDir, string crawlLocation)
         {
-            using (var warcCreator = new GeminiWarcCreator(warcFile))
+            var warcFile = CreateWarcName(crawlLocation);
+            using (var warcCreator = new GeminiWarcCreator(warcOutputDir + warcFile))
             {
-
-                DomainConverter domains = new DomainConverter(warcCreator, crawlLocation);
-                domains.ToWarc();
-
-                DocumentConverter documents = new DocumentConverter(warcCreator, crawlLocation);
-                documents.ToWarc();
+                warcCreator.WriteWarcInfo(GetWarcFields());
+                AbstractConverter converter= new DocumentConverter(warcCreator, crawlLocation);
+                converter.WriteToWarc();
             }
         }
 
+        /// <summary>
+        /// Imports a Kennedy search database that doesn't have a backing page-store
+        /// </summary>
+        /// <param name="warcOutputDir"></param>
+        /// <param name="manifest"></param>
+        static void ImportFullDatabasesNoPageStore(string warcOutputDir, string manifest)
+        {
+            foreach (string crawlLocation in File.ReadLines(manifest))
+            {
+                var warcFile = CreateWarcName(crawlLocation);
+                using (var warcCreator = new GeminiWarcCreator(warcOutputDir + warcFile))
+                {
+                    warcCreator.WriteWarcInfo(GetWarcFields());
+
+                    //convert the domains
+                    AbstractConverter converter = new DomainConverter(warcCreator, crawlLocation);
+                    converter.WriteToWarc();
+                    
+                    converter = new BareConverter(warcCreator, crawlLocation);
+                    converter.WriteToWarc();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Bulk imports original format Kennedy Search databases (log.tsv) and the directory-based page-store
+        /// </summary>
+        /// <param name="warcOutputDir"></param>
+        /// <param name="manifest"></param>
+        static void ImportLegacyDatabases(string warcOutputDir, string manifest)
+        {
+            foreach (string crawlLocation in File.ReadLines(manifest))
+            {
+                var warcFile = CreateWarcName(crawlLocation);
+                using (var warcCreator = new GeminiWarcCreator(warcOutputDir + warcFile))
+                {
+                    warcCreator.WriteWarcInfo(GetWarcFields());
+
+                    AbstractConverter converter = new LegacyConverter(warcCreator, crawlLocation);
+                    converter.WriteToWarc();
+                }
+            }
+        }
+
+        static WarcFields GetWarcFields()
+            => new WarcFields
+                    {
+                        {"software", "Kennedy Legacy Crawl importer"},
+                        {"hostname", "kennedy.gemi.dev"},
+                        {"operator", "Acidus"}
+                    };
+
+        static string CreateWarcName(string crawlLocation)
+        {
+            return Path.GetDirectoryName(crawlLocation)!.Split(Path.DirectorySeparatorChar).Reverse().First() + ".warc";
+        }
+
+
+        private static string ResolveDir(string dir)
+            => dir.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + '/');
 
     }
 }

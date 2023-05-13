@@ -9,11 +9,17 @@ namespace Kennedy.SearchIndex.Web
     {
         protected string StorageDirectory;
 
+        //Main entities
         public DbSet<Document> Documents { get; set; }
-        public DbSet<DocumentLink> Links { get; set; }
-        public DbSet<Domain> Domains { get; set; }
         public DbSet<Image> Images { get; set; }
 
+        //aux entitites
+        public DbSet<Favicon> Favicons { get; set; }
+        public DbSet<RobotsTxt> RobotsTxts { get; set; }
+        public DbSet<SecurityTxt> SecurityTxts { get; set; }
+
+        public DbSet<DocumentLink> Links { get; set; }
+        
         public WebDatabaseContext(string storageDir)
         {
             StorageDirectory = storageDir;
@@ -24,7 +30,19 @@ namespace Kennedy.SearchIndex.Web
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlite($"Data Source='{StorageDirectory}doc-index.db'");            
+            options.UseSqlite($"Data Source='{StorageDirectory}doc-index.db'")
+            //.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
+            //.EnableSensitiveDataLogging(true)
+            ;
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Image>()
+                .HasOne(i => i.Document)
+                .WithOne(d => d.Image)
+                .HasForeignKey<Image>(i => i.UrlID);
+        }
+
     }
 }

@@ -6,6 +6,7 @@ using Gemini.Net;
 
 using Kennedy.Crawler.Dns;
 using Kennedy.Crawler.Utils;
+using Kennedy.Data;
 
 namespace Kennedy.Crawler.Frontiers;
 
@@ -19,7 +20,7 @@ public class BalancedUrlFrontier : IUrlFrontier
     /// <summary>
     /// our queue of URLs to crawl
     /// </summary>
-    UrlQueue [] queues;
+    UrlQueue[] queues;
 
     int totalWorkerThreads;
     ThreadSafeCounter totalUrls;
@@ -37,7 +38,7 @@ public class BalancedUrlFrontier : IUrlFrontier
         totalUrls = new ThreadSafeCounter();
 
         queues = new UrlQueue[totalWorkerThreads];
-        for(int i = 0; i< totalWorkerThreads; i++)
+        for (int i = 0; i < totalWorkerThreads; i++)
         {
             queues[i] = new UrlQueue();
         }
@@ -59,26 +60,33 @@ public class BalancedUrlFrontier : IUrlFrontier
         return Math.Abs(hash) % totalWorkerThreads;
     }
 
-    public void AddUrl(GeminiUrl url)
-    {
-        totalUrls.Increment();
-        int queueID = queueForUrl(url);
-        queues[queueID].AddUrl(url);
-    }
+    public void AddSeed(GeminiUrl url)
+        => AddUrl(new UrlFrontierEntry
+        {
+            Url = url,
+            DepthFromSeed = 0
+        });
 
     private int GetCount()
     {
         int totalCount = 0;
-        for(int i=0;i<totalWorkerThreads; i++)
+        for (int i = 0; i < totalWorkerThreads; i++)
         {
             totalCount += queues[i].Count;
         }
         return totalCount;
     }
 
-    public GeminiUrl GetUrl(int crawlerID)
+    public UrlFrontierEntry GetUrl(int crawlerID)
         => queues[crawlerID].GetUrl();
 
     public string GetStatus()
         => $"Queue Size:\t{Count}";
+
+    public void AddUrl(UrlFrontierEntry entry)
+    {
+        totalUrls.Increment();
+        int queueID = queueForUrl(entry.Url);
+        queues[queueID].AddUrl(entry);
+    }
 }

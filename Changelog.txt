@@ -1,1 +1,13 @@
-﻿
+﻿- Converted old crawl databases to WARC
+- Fixed: all DNS/network/TLS issues mapped to using status code 49 to report the error
+- Fixed: Mimetype set to null if not a 20 response
+- Feature: Add Identified-Payload-Type header
+- Fixed: Only added payload type header on 20 responses
+- Fixed: Wasn't using robots.txt rules unless "archiver" was present, missing global rules
+- Fixed: extra leading whitespace in meta field for some exceptions
+- Feature: Use latest version of robots.txt when importing into content into archive
+- Feature: Added stats page to Delorean
+- Feature: Better number formatting in stats/search view
+- Feature: Organize URL history view with sections for each year
+- Fixed: Some "NEW" emoji next to unique captures in URL history view, not just when different from previous capture
+- Fixed: Index images that don't have link text
