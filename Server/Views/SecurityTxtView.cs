@@ -19,16 +19,11 @@ namespace Kennedy.Server.Views
         {
             var db = new WebDatabaseContext(Settings.Global.DataRoot);
             Response.Success();
-            /*
-             * # 🔭 Kennedy: Search Gemini Space
-=> /search New Search
-=> /lucky I'm Feeling Lucky */
 
             Response.WriteLine($"# 🔭 Capsules with security.txt ");
             Response.WriteLine("The following are capsules using the \"security.txt\" standard, allowing people to easily contact capsule owners about security issues.");
             Response.WriteLine("=> https://securitytxt.org About Security.txt");
             Response.WriteLine();
-
 
             var servers = db.SecurityTxts.OrderBy(x => x.Domain);
 
