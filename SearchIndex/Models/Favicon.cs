@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +10,8 @@ using Gemini.Net;
 namespace Kennedy.SearchIndex.Models
 {
     [Table("Favicons")]
-    [PrimaryKey(nameof(Domain), nameof(Port), nameof(Protocol))]
+    [PrimaryKey(nameof(Protocol), nameof(Domain), nameof(Port))]
+    
     public class Favicon
     {
         [Required]
@@ -21,8 +24,10 @@ namespace Kennedy.SearchIndex.Models
         public int Port { get; set; }
 
         public string Emoji { get; set; }
-
+        
         public long SourceUrlID { get; set; }
+
+        public IEnumerable<Document> Documents { get; set; }
 
         public Favicon()
         { }

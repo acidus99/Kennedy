@@ -42,6 +42,11 @@ namespace Kennedy.SearchIndex.Web
                 .HasOne(i => i.Document)
                 .WithOne(d => d.Image)
                 .HasForeignKey<Image>(i => i.UrlID);
+
+            modelBuilder.Entity<Document>()
+                .HasOne(d => d.Favicon)
+                .WithMany(f => f.Documents)
+                .HasForeignKey(x => new { x.Protocol, x.Domain, x.Port });
         }
 
     }

@@ -10,7 +10,9 @@ namespace Kennedy.SearchIndex.Models
 {
     [Table("Documents")]
     [Index(nameof(StatusCode))]
+    [Index(nameof(Protocol))]
     [Index(nameof(Domain))]
+    [Index(nameof(Port))]
     public class Document
     {
         /// <summary>
@@ -126,6 +128,8 @@ namespace Kennedy.SearchIndex.Models
         public ContentType ContentType { get; set; }
 
         public Image? Image { get; set; }
+
+        public Favicon? Favicon {get; set;}
 
         #endregion
 
