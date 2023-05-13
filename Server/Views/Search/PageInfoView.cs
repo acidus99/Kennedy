@@ -55,7 +55,7 @@ namespace Kennedy.Server.Views.Search
 
             switch (entry.ContentType)
             {
-                case ContentType.Text:
+                case ContentType.Gemtext:
                     var title = (entry.Title.Length > 0) ? entry.Title : "(Could not extract a title)";
                     var language = FormatLanguage(entry.Language);
                     language = (language.Length > 0) ? language : "(Could not detect a language)";

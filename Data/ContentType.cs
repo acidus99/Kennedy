@@ -3,7 +3,7 @@
     public enum ContentType : int
     {
         Unknown = 0,
-        Text = 1,
+        Gemtext = 1,
         Image = 2,
         Binary = 3,
     }
