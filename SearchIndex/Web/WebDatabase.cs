@@ -80,7 +80,6 @@ namespace Kennedy.SearchIndex.Web
             return servers;
         }
 
-
         private bool UpdateDocument(ParsedResponse parsedResponse)
         {
             bool hasContentChanged = false;

@@ -10,3 +10,4 @@
 - Feature: Better number formatting in stats/search view
 - Feature: Organize URL history view with sections for each year
 - Fixed: Some "NEW" emoji next to unique captures in URL history view, not just when different from previous capture
+- Fixed: Index images that don't have link text

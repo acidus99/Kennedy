@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 using Gemini.Net;
 using Kennedy.Data.Parsers;
 
+using Kennedy.SearchIndex.Search;
+
+
 using Warc;
 
 using Kennedy.Indexer.WarcProcessors;
@@ -20,11 +23,10 @@ namespace Kennedy.Indexer
         {
             var outputDirectory = ResolveDir("~/HDD Inside/Kennedy-Work/output/");
 
-            foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/all.txt")))
+            foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/latest.txt")))
             {
-
-                //IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
-                IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
+                IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
+                //IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
 
                 WarcWrapper warcWrapper = new WarcWrapper(new WarcParser(inputWarc));
 

@@ -7,6 +7,14 @@
     - crash importing WARC: /Users/billy/HDD Inside/Kennedy-Work/WARCs/2023-04-20.warc	42700	316 ms
 
 
+    = Seeing things in image table that aren't in imageserarch table
+        = looks like they don't have targetIDs... orphaned content?
+
+
+    = Also seeing LastVisit > LastSuccessful where Status = 20
+
+
+
 GeminiRequestor
 === Truncated body should still have some content
 
