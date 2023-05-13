@@ -73,7 +73,6 @@ namespace Kennedy.Server.Views.Reports
             }
 
             Response.WriteLine("```");
-            Response.Flush();
 
             var docsWithProblems = docs.Where(x => x.Domain == Domain &&
                                             x.IsAvailable &&
