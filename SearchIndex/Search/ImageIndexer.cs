@@ -46,19 +46,22 @@ Inner Join Documents
 on Documents.UrlID = Images.UrlID
 INNER Join Links
 on Images.UrlID = Links.TargetUrlID
-where length(LinkText) > 0", connection))
+where length(LinkText) >= 0", connection))
             {
                 var r = cmd.ExecuteReader();
                 while (r.Read())
                 {
-                    long dbDocID = r.GetInt64(r.GetOrdinal("UrlID"));
+                    long urlID = r.GetInt64(r.GetOrdinal("UrlID"));
                     string url = r.GetString(r.GetOrdinal("Url"));
                     string linkText = r.GetString(r.GetOrdinal("LinkText"));
-                    if (!imageTextContent.ContainsKey(dbDocID))
+                    if (!imageTextContent.ContainsKey(urlID))
                     {
-                        imageTextContent[dbDocID] = GetPathIndexText(url);
+                        imageTextContent[urlID] = GetPathIndexText(url);
                     }
-                    imageTextContent[dbDocID] += CleanLinkText(linkText) + " ";
+                    if (linkText.Length > 0)
+                    {
+                        imageTextContent[urlID] += CleanLinkText(linkText) + " ";
+                    }
                 }
             }
             connection.Close();
