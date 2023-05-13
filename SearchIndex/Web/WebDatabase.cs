@@ -32,16 +32,15 @@ namespace Kennedy.SearchIndex.Web
         public WebDatabaseContext GetContext()
             => new WebDatabaseContext(StorageDirectory);
 
+        /// <summary>
+        /// Stores a response in our web database. 
+        /// </summary>
+        /// <param name="parsedResponse"></param>
+        /// <returns>whether the document is new or not. "New" documents are URLs we have neer seen, or updated content for a known URL</returns>
         public bool StoreResponse(ParsedResponse parsedResponse)
         {
             //store in in the doc index (inserting or updating as appropriate)
-            bool entryUpdated = UpdateDocuments(parsedResponse);
-
-            //if its an image, we store extra meta data
-            if (entryUpdated && parsedResponse is ImageResponse)
-            {
-                UpdateImageMetadata(parsedResponse as ImageResponse);
-            }
+            bool entryUpdated = UpdateDocument(parsedResponse);
 
             //if the content is the same, no need to update the links since those are still accurate
             if (entryUpdated)
@@ -55,7 +54,6 @@ namespace Kennedy.SearchIndex.Web
 
         public List<ServerInfo> GetAllCapsules()
         {
-
             List<ServerInfo> servers = new List<ServerInfo>();
 
             var connString = GetContext().Database.GetConnectionString();
@@ -83,89 +81,149 @@ namespace Kennedy.SearchIndex.Web
         }
 
 
-        private bool UpdateDocuments(ParsedResponse parsedResponse)
+        private bool UpdateDocument(ParsedResponse parsedResponse)
         {
-            bool isDiffResponse = false;
-            Document entry = null;
-            bool isNew = false;
+            bool hasContentChanged = false;
 
-            using (var context = GetContext())
+            using (var db = GetContext())
             {
-                //see if it already exists
-                entry = context.Documents
+                Document entry = null;
+
+                //grab any existing document for this URL
+                entry = db.Documents.Include(x=>x.Image)
                     .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
                     .FirstOrDefault();
 
-                //is this a dupe of the existing data or is it older?
-                if (entry?.LastVisit >= parsedResponse.ResponseReceived)
-                {
-
-                    if(entry.FirstSeen > parsedResponse.ResponseReceived)
-                    {
-                        entry.FirstSeen = parsedResponse.ResponseReceived;
-                        context.SaveChanges();
-                    }
-
-                    if(entry.LastSuccessfulVisit < parsedResponse.ResponseReceived
-                        && entry.IsAvailable)
-                    {
-                        entry.LastSuccessfulVisit = parsedResponse.ResponseReceived;
-                        context.SaveChanges();
-                    }
-
-                    return false;
-                }
-
-                //if not, create a stub
+                //do we already know about this URL?
                 if (entry == null)
                 {
-                    isNew = true;
+                    hasContentChanged = true;
                     entry = new Document(parsedResponse.RequestUrl)
                     {
                         FirstSeen = parsedResponse.ResponseReceived
                     };
+                    db.Documents.Add(entry);
                 }
-
-                isDiffResponse = IsResponseDifferent(parsedResponse, entry);
-
-                entry = PopulateEntry(parsedResponse, entry, isDiffResponse);
-
-                if (isNew)
+                else
                 {
-                    context.Documents.Add(entry);
+                    //is this a re-import of the same content? if so the timestamps will match
+                    if (entry.LastVisit == parsedResponse.ResponseReceived)
+                    {
+                        //nothing to do, and nothing has changed
+                        return false;
+                    }
+                    else if (parsedResponse.ResponseReceived < entry.LastVisit)
+                    {
+                        //updating with an older response,
+                        //so just update the historical discovery times. No content has changed
+
+                        bool updatedTimes = false;
+
+                        if (entry.FirstSeen > parsedResponse.ResponseReceived)
+                        {
+                            entry.FirstSeen = parsedResponse.ResponseReceived;
+                            updatedTimes = true;
+                        }
+
+                        if (!parsedResponse.IsFail &&
+                            entry.LastSuccessfulVisit < parsedResponse.ResponseReceived)
+                        {
+                            entry.LastSuccessfulVisit = parsedResponse.ResponseReceived;
+                            updatedTimes = true;
+                        }
+
+                        if(updatedTimes)
+                        {
+                            db.SaveChanges();
+                        }
+                        return false;
+                    }
+                    else
+                    {
+                        //newer content so we need to update the document's entry
+                        //how much needs to be updated depends on if the response is different
+                        hasContentChanged = (parsedResponse.Hash != entry.ResponseHash);
+                    }
                 }
-                context.SaveChanges();
+
+                //ready to prepare oure DTOs
+
+                //Always update the most recent visit time
+                entry.LastVisit = parsedResponse.ResponseReceived;
+
+                if (!parsedResponse.IsFail)
+                {
+                    entry.LastSuccessfulVisit = parsedResponse.ResponseReceived;
+                }
+
+                //everything else is only updated if the content has changed
+                if (hasContentChanged)
+                {
+                    entry.IsAvailable = parsedResponse.IsAvailable;
+                    entry.StatusCode = parsedResponse.StatusCode;
+                    entry.Meta = parsedResponse.Meta;
+
+                    entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
+                    entry.BodySize = parsedResponse.BodySize;
+                    entry.BodyHash = parsedResponse.BodyHash;
+                    entry.ResponseHash = parsedResponse.Hash;
+
+                    entry.Charset = parsedResponse.Charset;
+                    entry.MimeType = parsedResponse.MimeType;
+
+                    entry.OutboundLinks = parsedResponse.Links.Count;
+
+                    entry.ContentType = parsedResponse.ContentType;
+
+                    //extra meta data
+                    if (parsedResponse is GemTextResponse)
+                    {
+                        var gemtext = (GemTextResponse)parsedResponse;
+
+                        entry.DetectedLanguage = gemtext.DetectedLanguage;
+                        entry.Language = gemtext.Language;
+                        entry.LineCount = gemtext.LineCount;
+                        entry.Title = gemtext.Title;
+                    }
+                    else
+                    {
+                        entry.Language = parsedResponse.Language;
+                        entry.DetectedLanguage = null;
+                        entry.LineCount = 0;
+                        entry.Title = null;
+                    }
+
+                    if (parsedResponse is ImageResponse)
+                    {
+                        var image = (ImageResponse)parsedResponse;
+
+                        if (entry.Image == null)
+                        {
+                            entry.Image = new Image(parsedResponse.RequestUrl);
+                        }
+                        entry.Image.IsTransparent = image.IsTransparent;
+                        entry.Image.Height = image.Height;
+                        entry.Image.Width = image.Width;
+                        entry.Image.ImageType = image.ImageType;
+                    }
+                    //not an image, but existing entry had image meta data, so explicitly remove it
+                    else if (entry.Image != null)
+                    {
+                        db.Images.Remove(entry.Image);
+                        entry.Image = null;
+                    }
+                }
+                db.SaveChanges();
             }
 
-            //update the robots/security/favicon
-            UpdateSpecialFiles(parsedResponse);
-
-            return isDiffResponse;
-        }
-
-        private bool IsResponseDifferent(ParsedResponse response, Document existingEntry)
-        {
-            if(response.StatusCode != existingEntry.StatusCode)
+            //only need to update special files if the content has changed
+            if (hasContentChanged)
             {
-                return true;
+                UpdateSpecialFiles(parsedResponse);
             }
 
-            if (response.Meta != existingEntry.Meta)
-            {
-                return true;
-            }
-
-            //new has body, old doesn't
-            if(response.BodyHash.HasValue && !existingEntry.BodyHash.HasValue)
-            {
-                return true;
-            }
-            //old has body, new doesn't
-            if(!response.BodyHash.HasValue && existingEntry.BodyHash.HasValue)
-            {
-                return true;
-            }
-            return (response.BodyHash == existingEntry.BodyHash);
+            //propogate our if the content has changed to control re-indexing FTS and other operations
+            return hasContentChanged;
         }
 
         /// <summary>
@@ -194,7 +252,6 @@ namespace Kennedy.SearchIndex.Web
 
             using (var context = GetContext())
             {
-                bool isNew = false;
                 //see if it already exists
                 var entry = context.RobotsTxts
                     .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
@@ -215,16 +272,11 @@ namespace Kennedy.SearchIndex.Web
                     //if not, create a stub
                     if (entry == null)
                     {
-                        isNew = true;
                         entry = new RobotsTxt(response.RequestUrl);
+                        context.RobotsTxts.Add(entry);
                     }
 
                     entry.Content = response.BodyText;
-
-                    if (isNew)
-                    {
-                        context.RobotsTxts.Add(entry);
-                    }
                 }
                 context.SaveChanges();
             }
@@ -237,7 +289,6 @@ namespace Kennedy.SearchIndex.Web
 
             using (var context = GetContext())
             {
-                bool isNew = false;
                 //see if it already exists
                 var entry = context.Favicons
                     .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
@@ -258,16 +309,11 @@ namespace Kennedy.SearchIndex.Web
                     //if not, create a stub
                     if (entry == null)
                     {
-                        isNew = true;
                         entry = new Favicon(response.RequestUrl);
+                        context.Favicons.Add(entry);
                     }
 
                     entry.Emoji = response.BodyText.Trim();
-
-                    if (isNew)
-                    {
-                        context.Favicons.Add(entry);
-                    }
                 }
                 context.SaveChanges();
             }
@@ -279,7 +325,6 @@ namespace Kennedy.SearchIndex.Web
 
             using (var context = GetContext())
             {
-                bool isNew = false;
                 //see if it already exists
                 var entry = context.SecurityTxts
                     .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
@@ -299,18 +344,13 @@ namespace Kennedy.SearchIndex.Web
                     //if not, create a stub
                     if (entry == null)
                     {
-                        isNew = true;
                         entry = new SecurityTxt(response.RequestUrl);
+                        context.SecurityTxts.Add(entry);
                     }
 
                     entry.Content = response.BodyText;
-
-                    if (isNew)
-                    {
-                        context.SecurityTxts.Add(entry);
-                    }
-                    context.SaveChanges();
                 }
+                context.SaveChanges();
             }
         }
 
@@ -331,36 +371,6 @@ namespace Kennedy.SearchIndex.Web
             return false;
         }
 
-        private void UpdateImageMetadata(ImageResponse imageResponse)
-        {
-            using (var context = GetContext())
-            {
-                bool isNew = false;
-
-                var imageEntry = context.Images
-                    .Where(x => (x.UrlID == imageResponse.RequestUrl.ID))
-                    .FirstOrDefault();
-
-                if(imageEntry == null)
-                {
-                    isNew = true;
-                    imageEntry = new Image
-                    {
-                        UrlID = imageResponse.RequestUrl.ID,
-                    };
-                }
-                imageEntry.IsTransparent = imageResponse.IsTransparent;
-                imageEntry.Height = imageResponse.Height;
-                imageEntry.Width = imageResponse.Width;
-                imageEntry.ImageType = imageResponse.ImageType;
-                if (isNew)
-                {
-                    context.Images.Add(imageEntry);
-                }
-                context.SaveChanges();
-            }
-        }
-
         private void StoreLinks(ParsedResponse response)
         {
             using (var context = GetContext())
@@ -379,86 +389,6 @@ namespace Kennedy.SearchIndex.Web
                 }).ToList());
                 context.SaveChanges();
             }
-        }
-
-        private Document PopulateEntry(ParsedResponse parsedResponse, Document entry, bool isDiffResponse)
-        {
-            entry.LastVisit = parsedResponse.ResponseReceived;
-
-            if (isDiffResponse)
-            {
-                entry.IsAvailable = parsedResponse.IsAvailable;
-                entry.StatusCode = parsedResponse.StatusCode;
-                entry.Meta = parsedResponse.Meta;
-
-                entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
-                entry.BodySize = parsedResponse.BodySize;
-                entry.BodyHash = parsedResponse.BodyHash;
-                entry.ResponseHash = parsedResponse.Hash;
-
-                entry.Charset = parsedResponse.Charset;
-                entry.MimeType = parsedResponse.MimeType;
-
-                entry.OutboundLinks = parsedResponse.Links.Count;
-
-                entry.ContentType = parsedResponse.ContentType;
-
-                if (!parsedResponse.IsFail)
-                {
-                    entry.LastSuccessfulVisit = entry.LastVisit;
-                }
-
-                //extra meta data
-                if (parsedResponse is GemTextResponse)
-                {
-                    var gemtext = (GemTextResponse)parsedResponse;
-
-                    entry.DetectedLanguage = gemtext.DetectedLanguage;
-                    entry.Language = gemtext.Language;
-                    entry.LineCount = gemtext.LineCount;
-                    entry.Title = gemtext.Title;
-                }
-                else
-                {
-                    entry.Language = parsedResponse.Language;
-                    entry.DetectedLanguage = null;
-                    entry.LineCount = 0;
-                    entry.Title = null;
-                }
-            }
-            return entry;
-        }
-
-        public bool RemoveResponse(GeminiUrl url)
-        {
-            bool result = false;
-            using (var context = GetContext())
-            {
-
-                //first delete it from the search index database
-                var document = context.Documents.Where(x => x.UrlID == url.ID).FirstOrDefault();
-                if (document != null)
-                {
-                    context.Documents.Remove(document);
-                    result = true;
-                }
-
-                //older search databases didn't have foreign key constraints, so ensure related rows are cleaned up
-                var image = context.Images.Where(x => x.UrlID == url.ID).FirstOrDefault();
-                if (image != null)
-                {
-                    context.Images.Remove(image);
-                }
-
-                var links = context.Links.Where(x => x.SourceUrlID == url.ID);
-                if (links.Count() > 0)
-                {
-                    context.Links.RemoveRange(links);
-                }
-                context.SaveChanges();
-            }
-
-            return result;
         }
     }
 }

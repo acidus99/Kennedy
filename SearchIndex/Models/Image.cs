@@ -15,9 +15,9 @@ namespace Kennedy.SearchIndex.Models
         /// but Sqlite3 doesn't support UInt64s, so we use a Int64 here and doing
         /// some unchecked casting with overflow to handle it
         /// </summary>
-        [Key]
+        [Key, ForeignKey("Document")]
         public long UrlID { get; set; }
-        
+
         public int Width { get; set; }
 
         public int Height { get; set; }
@@ -25,6 +25,8 @@ namespace Kennedy.SearchIndex.Models
         public string ImageType { get; set; }
 
         public bool IsTransparent { get; set; }
+
+        public Document? Document { get; set; }
 
         public Image()
         { }
