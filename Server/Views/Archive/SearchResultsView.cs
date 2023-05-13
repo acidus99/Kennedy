@@ -17,6 +17,8 @@ namespace Kennedy.Server.Views.Archive
     /// </summary>
     internal class SearchResultsView :AbstractView
     {
+        const int MaxResults = 100;
+
         ArchiveDbContext archive = new ArchiveDbContext(Settings.Global.DataRoot + "archive.db");
 
         public SearchResultsView(GeminiRequest request, Response response, GeminiServer app)
@@ -34,16 +36,16 @@ namespace Kennedy.Server.Views.Archive
              urls = urls.OrderBy(x => x.FullUrl.IndexOf(query))
                 .ThenBy(x => x.FullUrl.Length)
                 .ThenBy(x=> x.FullUrl)
-                .Take(50);
+                .Take(MaxResults);
 
             Response.Success();
             Response.WriteLine($"# 🏎 DeLorean Time Machine");
             Response.WriteLine();
-            Response.Write($"Found {count} urls matching query '{query}'.");
+            Response.Write($"Found {FormatCount(count)} urls matching query '{query}'.");
 
-            if (count > 50)
+            if (count > MaxResults)
             {
-                Response.Write(" Here are the 50 most relevant.");
+                Response.Write($" Here are the {MaxResults} most relevant.");
             }
             Response.WriteLine();
 
