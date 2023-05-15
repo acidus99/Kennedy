@@ -17,36 +17,25 @@ namespace Kennedy.SearchIndex
 		ISearchDatabase SearchDB;
 		IWebDatabase WebDB;
 
-		bool anyContentChanged;
-
         public SearchStorageWrapper(string storageDirectory)
 		{
 			WebDB = new WebDatabase(storageDirectory);
 			//searchDB has to be after WebDB, because the WebDB DB initialization creates the tables for the entities
 			SearchDB = new SearchDatabase(storageDirectory);
-			anyContentChanged = false;
         }
 
 		public bool StoreResponse(ParsedResponse response)
 		{
 			bool contentUpdated = WebDB.StoreResponse(response);
-			if(contentUpdated)
-			{
-				anyContentChanged = true;
-                SearchDB.UpdateIndex(response);
-            }
-
+            SearchDB.UpdateIndex(response);
 			return contentUpdated;
 		}
 
 		public void FinalizeDatabases()
 		{
-			if (anyContentChanged)
-			{
-				SearchDB.IndexImages();
-				PopularityCalculator popularityCalculator = new PopularityCalculator(WebDB.GetContext());
-				popularityCalculator.Rank();
-			}
+			SearchDB.IndexImages();
+			PopularityCalculator popularityCalculator = new PopularityCalculator(WebDB.GetContext());
+			popularityCalculator.Rank();
 		}
 	}
 }
