@@ -9,6 +9,8 @@ using Kennedy.SearchIndex.Models;
 using RocketForce;
 using System.Diagnostics;
 using Kennedy.Gemipedia;
+using System.Collections;
+using System.Diagnostics.Metrics;
 
 namespace Kennedy.Server.Views.Search
 {
@@ -34,9 +36,8 @@ namespace Kennedy.Server.Views.Search
 
             Response.Success();
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Search");
-            Response.WriteLine("=> /search New Search");
             Response.WriteLine();
-            
+
             var resultCount = SearchEngine.GetTextResultsCount(query);
             if (resultCount > 0)
             {
@@ -49,21 +50,29 @@ namespace Kennedy.Server.Views.Search
                 int counter = baseCounter * resultsInPage;
                 int start = counter + 1;
 
+                bool shownHeader = false;
+
                 if(TopGemipediaHit != null)
                 {
-                    Response.WriteLine($"=> {Helper.ArticleUrl(TopGemipediaHit.Title)} 📖 Top Gemipedia Article: {TopGemipediaHit.Title}");
+                    Response.WriteLine($"=> {Helper.ArticleUrl(TopGemipediaHit.Title)} Gemipedia Article: {TopGemipediaHit.Title}");
                     if (TopGemipediaHit.Description.Length > 0)
                     {
                         Response.WriteLine($"> {TopGemipediaHit.Description}");
                     }
-                    Response.WriteLine();
+                    shownHeader = true;
                 }
 
                 if(ImageHits > 0)
                 {
-                    Response.WriteLine($"=> /image-search?{Request.Url.RawQuery} Found {ImageHits} images with 🖼 Kennedy Image Search!");
+                    Response.WriteLine($"=> /image-search?{Request.Url.RawQuery} {ImageHits} matches on 🖼 Image Search for {query}");
+                    shownHeader = true;
+                }
+
+                if(shownHeader)
+                {
                     Response.WriteLine();
                 }
+                Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(start + resultsInPage - 1)} of {FormatCount(resultCount)} results");
 
                 foreach (var result in SearchResults)
                 {
@@ -86,8 +95,8 @@ namespace Kennedy.Server.Views.Search
                 }
                 Response.WriteLine($"Query time: {queryTime} ms");
                 Response.WriteLine();
-                Response.WriteLine("=> /search New Search");
-                Response.WriteLine("=> /lucky I'm Feeling Lucky");
+                Response.WriteLine("=> /search 🔍 Another Search");
+                Response.WriteLine("=> /image-search 🖼 Image Search");
                 Response.WriteLine("=> / Home");
             }
             else
@@ -98,31 +107,11 @@ namespace Kennedy.Server.Views.Search
 
         private void WriteResultEntry(Response resp, FullTextSearchResult result, int resultNumber)
         {
-
-            Response.WriteLine($"=> {result.Url} {FormatCount(resultNumber)}. {FormatPageTitle(result.Url, result.Title)}");
-            Response.Write($"=> /page-info?id={result.UrlID} {FormatCount(result.LineCount)} Lines • ");
-
-            var language = FormatLanguage(result.Language);
-
-            if (language.Length > 0)
-            {
-                Response.Write($"{language} • ");
-            }
-            Response.Write($"{FormatSize(result.BodySize)} • {FormatDomain(result.Url.Hostname, result.Favicon)} • More info...");
-            //if(result.ExternalInboundLinks > 0)
-            //{
-            //    Response.Write($" • {result.ExternalInboundLinks} inbound links");
-            //}
-            //if (result.BodySaved)
-            //{
-            //    Response.Write(" • Cached Copy");
-            //    //Response.WriteLine($"=> /cached?id={result.DBDocID} Cached copy");
-            //}
-            Response.Write("\n");
+            var meta = $"{FormatCount(result.LineCount)} Lines • {FormatSize(result.BodySize)}";
+            Response.WriteLine($"=> {result.Url} {FormatCount(resultNumber)}. {FormatPageTitle(result.Url, result.Title, result.Favicon)} ({meta})");
             Response.WriteLine(">" + FormatSnippet(result.Snippet));
-
+            Response.WriteLine($"=> /page-info?id={result.UrlID} More Info / Archived Copy");
             Response.WriteLine("");
-
         }
 
         private void QueryGemipedia(string query)

@@ -50,8 +50,15 @@ namespace Kennedy.Server.Views
         protected string FormatPageTitle(GeminiUrl url)
             => $"{url.Hostname}{url.Path}";
 
-        protected string FormatPageTitle(GeminiUrl url, string title)
-            => (title.Trim().Length > 0) ? title : FormatPageTitle(url);
+        protected string FormatPageTitle(GeminiUrl url, string title, string favicon = "")
+        {
+            title = title.Trim();
+            var fav = (favicon.Length > 0) ? $"{favicon} " : "";
+            var slug = (title.Length > 0) ? title : FormatPageTitle(url);
+            return fav + slug;
+        }
+        
+    
 
         protected string FormatLanguage(string language)
         {
