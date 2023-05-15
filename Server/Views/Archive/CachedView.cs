@@ -98,6 +98,7 @@ namespace Kennedy.Server.Views.Archive
             Response.WriteLine("* This URL was excluded from crawling or archiving via robots.txt");
             Response.WriteLine("* You found a bug in Time Machine! Beware world ending paradoxes!");
             Response.WriteLine("Options:");
+            Response.WriteLine($"=> {AttemptedUrl} Try the URLs directly. It might be live.");
             Response.WriteLine($"=> {RoutePaths.ViewCached(AttemptedUrl.RootUrl, AttemptedTime)} Try looking at the cached version of capsule's home page");
             return;
         }
