@@ -269,7 +269,7 @@ namespace Kennedy.Server.Views.Search
         {
             string s = direction + " ";
             
-            if(pageTitle.Length >0)
+            if(pageTitle?.Length >0)
             {
                 s += $"page titled '{pageTitle}'";
             } else
