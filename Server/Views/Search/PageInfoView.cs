@@ -79,11 +79,13 @@ namespace Kennedy.Server.Views.Search
                     var searchEngine = new SearchDatabase(Settings.Global.DataRoot);
 
                     var terms = searchEngine.GetImageIndexText(urlID);
-
-                    Response.WriteLine($"* Dimensions: {imgmeta.Width} x {imgmeta.Height}");
-                    Response.WriteLine($"* Format: {imgmeta.ImageType}");
-                    Response.WriteLine($"* Indexable text:");
-                    Response.WriteLine($">{terms}");
+                    if (imgmeta != null)
+                    {
+                        Response.WriteLine($"* Dimensions: {imgmeta.Width} x {imgmeta.Height}");
+                        Response.WriteLine($"* Format: {imgmeta.ImageType}");
+                        Response.WriteLine($"* Indexable text:");
+                        Response.WriteLine($">{terms}");
+                    }
                     break;
             }
 
