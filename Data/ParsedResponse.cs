@@ -7,26 +7,32 @@ namespace Kennedy.Data
 	public class ParsedResponse : GeminiResponse
 	{
 		public ContentType ContentType { get; set; } = ContentType.Unknown;
-		public List<FoundLink> Links { get; set; } = new List<FoundLink>();
 
-		public ParsedResponse(GeminiResponse resp)
+		public List<FoundLink> Links { get; set; }
+
+		public ParsedResponse(GeminiResponse baseResponse)
+			: base(baseResponse.RequestUrl)
 		{
-            BodyBytes = resp.BodyBytes;
-			IsBodyTruncated = resp.IsBodyTruncated;
+			Links = new List<FoundLink>();
 
-			MimeType = resp.MimeType;
-			Charset = resp.Charset;
-			Meta = resp.Meta;
-			Language = resp.Language;
+            StatusCode = baseResponse.StatusCode;
+            Meta = baseResponse.Meta;
+			RemoteAddress = baseResponse.RemoteAddress;
+			RequestSent = baseResponse.RequestSent;
+			ResponseReceived = baseResponse.ResponseReceived;
 
-			ConnectTime = resp.ConnectTime;
-			DownloadTime = resp.DownloadTime;
+			//body properties
+            BodyBytes = baseResponse.BodyBytes;
+			IsBodyTruncated = baseResponse.IsBodyTruncated;
 
-			RequestUrl = resp.RequestUrl;
-			ResponseLine = resp.ResponseLine;
+			//parsed items if there is a body
+			MimeType = baseResponse.MimeType;
+			Charset = baseResponse.Charset;
+			Language = baseResponse.Language;
 
-			StatusCode = resp.StatusCode;
+			//timers
+			ConnectTime = baseResponse.ConnectTime;
+			DownloadTime = baseResponse.DownloadTime;
 		}
-
 	}
 }

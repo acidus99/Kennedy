@@ -10,9 +10,10 @@ namespace Kennedy.Data.Parsers
     public class ImageResponseParser : AbstractResponseParser
     {
         public override bool CanParse(GeminiResponse resp)
-         => resp.HasBody && resp.IsSuccess && resp.MimeType.StartsWith("image/");
+            // If we are successful, there mus be a MIME type, since the specification defines one if missing.
+            => resp.HasBody && resp.IsSuccess && resp.MimeType!.StartsWith("image/");
 
-        public override ParsedResponse Parse(GeminiResponse resp)
+        public override ParsedResponse? Parse(GeminiResponse resp)
         {
             using (var image = LoadImage(resp))
             {
@@ -20,7 +21,6 @@ namespace Kennedy.Data.Parsers
                 {
                     return new ImageResponse(resp)
                     {
-                        ContentType = ContentType.Image,
                         IsTransparent = !image.IsOpaque,
                         Height = image.Height,
                         Width = image.Width,
@@ -31,16 +31,19 @@ namespace Kennedy.Data.Parsers
             return null;
         }
 
-        public MagickImage LoadImage(GeminiResponse resp)
+        public MagickImage? LoadImage(GeminiResponse resp)
         {
             try
             {
-                return new MagickImage(resp.BodyBytes);
+                if (resp.BodyBytes != null)
+                {
+                    return new MagickImage(resp.BodyBytes);
+                }
             }
-            catch (Exception)
+            catch (MagickException)
             {
-                return null;
             }
+            return null;
         }
     }
 }

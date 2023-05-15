@@ -15,12 +15,11 @@ namespace Kennedy.Data.Parsers.GemText
     /// </summary>
     public static class TitleFinder
     {
-
         static readonly Regex headingRegex = new Regex(@"^(#+)\s*(.+)", RegexOptions.Compiled);
 
         public static string? ExtractTitle(GeminiResponse resp)
         {
-            if (resp.IsSuccess && resp.HasBody && resp.MimeType.StartsWith("text/gemini"))
+            if (resp.IsSuccess && resp.HasBody && resp.MimeType != null && resp.MimeType.StartsWith("text/gemini"))
             {
                 return ExtractTitle(resp.BodyText);
             }

@@ -24,14 +24,16 @@ namespace Kennedy.Data.RobotsTxt
 
         public bool HasUnknown { get; private set; }
 
-        public string Contents;
+        public string Contents { get; private set; }
 
         public RobotsTxtFile(string contents)
         {
-            if (String.IsNullOrWhiteSpace(contents))
-            {
-                return;
-            }
+            IsMalformed = false;
+            HasUnknown = false;
+            ruleCount = 0;
+            GlobalRules = new List<DenyRule>();
+            SpecificRules = new Dictionary<string, List<DenyRule>>();
+
             Contents = contents;
 
             string[] lines = contents
@@ -53,12 +55,6 @@ namespace Kennedy.Data.RobotsTxt
 
         private void parseLines(string[] lines)
         {
-            IsMalformed = false;
-            HasUnknown = false;
-            ruleCount = 0;
-            GlobalRules = new List<DenyRule>();
-            SpecificRules = new Dictionary<string, List<DenyRule>>();
-
             bool inUserAgent = false;
             var currentUserAgents = new List<string>();
 
@@ -217,6 +213,8 @@ namespace Kennedy.Data.RobotsTxt
                 {
                     // whole line is comment
                     Type = LineType.Comment;
+                    Field = "";
+                    Value = "";
                     return;
                 }
 
@@ -231,6 +229,8 @@ namespace Kennedy.Data.RobotsTxt
                 {
                     // If could not find the first ':' char or if there wasn't a field declaration before ':'
                     Type = LineType.Unknown;
+                    Field = "";
+                    Value = "";
                     return;
                 }
 

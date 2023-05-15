@@ -11,7 +11,8 @@ namespace Kennedy.Data.Parsers
         LanguageDetector languageDetector = new LanguageDetector();
 
         public override bool CanParse(GeminiResponse resp)
-            => resp.HasBody && resp.IsSuccess && resp.MimeType.StartsWith("text/gemini");
+            // If we are successful, there mus be a MIME type, since the specification defines one if missing.
+            => resp.HasBody && resp.IsSuccess && resp.MimeType!.StartsWith("text/gemini");
 
         public override ParsedResponse Parse(GeminiResponse resp)
         {
@@ -19,7 +20,6 @@ namespace Kennedy.Data.Parsers
 
             return new GemTextResponse(resp)
             {
-                ContentType = ContentType.Gemtext,
                 FilteredBody = filteredBody,
                 Links = LinkFinder.ExtractBodyLinks(resp.RequestUrl, resp.BodyText).ToList(),
                 Title = TitleFinder.ExtractTitle(resp),
