@@ -6,11 +6,9 @@ namespace Kennedy.Archive.Pack
 {
 	public class PackRecord
 	{
-		public string Type;
+		public required string Type { get; set; }
 
-		public long Length;
-
-		public byte[] Data;
+		public required byte[] Data { get; set; }
 
 		public string GetAsString()
 			=> Encoding.UTF8.GetString(Data);
