@@ -5,17 +5,16 @@ namespace Kennedy.SearchIndex.Models
 {
     public class ImageSearchResult
     {
-        public long UrlID { get; set; }
+        public required long UrlID { get; set; }
 
-        public GeminiUrl Url { get; set; }
-        public int BodySize { get; set; }
-        public string Snippet { get; set; }
+        public required GeminiUrl Url { get; set; }
+        public required int BodySize { get; set; }
+        public required string Snippet { get; set; }
 
-        public string ImageType { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
+        public required string ImageType { get; set; }
+        public required int Width { get; set; }
+        public required int Height { get; set; }
 
-        public string Favicon { get; set; }
-        public bool BodySaved { get; set; }
+        public string? Favicon { get; set; }
     }
 }

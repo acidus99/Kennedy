@@ -29,7 +29,8 @@ namespace Kennedy.Server.Views.Archive
             ParseArgs();
 
             if(AttemptedUrl == null)
-            {                Response.Success();
+            {
+                Response.Success();
                 Response.WriteLine($"# 🏎 DeLorean Time Machine");
                 Response.WriteLine();
                 Response.WriteLine("Invalid URL. Please enter a fully qualified, valid, Gemini URL.");

@@ -1,7 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Text;
+
 using Gemini.Net;
+using Kennedy.Archive.Db;
+using Kennedy.SearchIndex.Models;
 using RocketForce;
+
 namespace Kennedy.Server.Views
 {
     internal abstract class AbstractView
@@ -31,8 +36,8 @@ namespace Kennedy.Server.Views
         protected string FormatCount(long i)
             => i.ToString("N0");
 
-        protected string FormatDomain(string domain, string favicon)
-            => (favicon.Length > 0) ? $"{favicon} {domain}" : $"{domain}";
+        protected string FormatDomain(string domain, string? favicon)
+            => (favicon != null) ? $"{favicon} {domain}" : $"{domain}";
 
         protected string FormatSize(int bodySize)
             => FormatSize(Convert.ToInt64(bodySize));
@@ -47,54 +52,29 @@ namespace Kennedy.Server.Views
             return $"{Math.Round(((double)bodySize) / ((double)1024)).ToString("N0")} KB";
         }
 
-        protected string FormatPageTitle(GeminiUrl url)
-            => $"{url.Hostname}{url.Path}";
-
-        protected string FormatPageTitle(GeminiUrl url, string title, string favicon = "")
+        protected string FormatResultTitle(FullTextSearchResult result)
         {
-            title = title.Trim();
-            var fav = (favicon.Length > 0) ? $"{favicon} " : "";
-            var slug = (title.Length > 0) ? title : FormatPageTitle(url);
-            return fav + slug;
-        }
-        
-    
-
-        protected string FormatLanguage(string language)
-        {
-            switch (language)
+            var sb = new StringBuilder();
+            if(result.Favicon != null)
             {
-                case "dan":
-                    return "Danish";
-                case "deu":
-                    return "German";
-                case "eng":
-                    return "English";
-                case "fra":
-                    return "French";
-                case "ita":
-                    return "Italian";
-                case "jpn":
-                    return "Japanese";
-                case "kor":
-                    return "Korean";
-                case "nld":
-                    return "Dutch";
-                case "nor":
-                    return "Norwegian";
-                case "por":
-                    return "Portuguese";
-                case "rus":
-                    return "Russian";
-                case "spa":
-                    return "Spanish";
-                case "swe":
-                    return "Swedish";
-                case "zho":
-                    return "Chinese";
-                default:
-                    return "";
+                sb.Append(result.Favicon);
+                sb.Append(' ');
             }
+            var title = result.Title?.Trim() ?? "";
+            if(title.Length > 0)
+            {
+                sb.Append(title);
+            } else
+            {
+                sb.Append($"{result.Url.Hostname}{result.Url.Path}");
+            }
+            return sb.ToString();
+        }
+
+        protected string FormatLanguage(string twoLetterISOLanguageName)
+        {
+            var culture = new System.Globalization.CultureInfo(twoLetterISOLanguageName);
+            return culture.DisplayName;
         }
     }
 }

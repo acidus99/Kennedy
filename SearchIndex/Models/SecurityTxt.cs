@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Kennedy.SearchIndex.Models
 {
@@ -12,21 +13,24 @@ namespace Kennedy.SearchIndex.Models
     public class SecurityTxt
     {
         [Required]
-        public string Protocol { get; set; }
+        public required string Protocol { get; init; }
 
         [Required]
-        public string Domain { get; set; }
+        public required string Domain { get; init; }
 
         [Required]
-        public int Port { get; set; }
+        public required int Port { get; init; }
 
-        public string Content { get; set; }
+        [Required]
+        public string Content { get; set; } = "";
 
-        public long SourceUrlID { get; set; }
+        [Required]
+        public required long SourceUrlID { get; init; }
 
         public SecurityTxt()
         { }
 
+        [SetsRequiredMembersAttribute]
         public SecurityTxt(GeminiUrl url)
         {
             Protocol = url.Protocol;

@@ -24,18 +24,16 @@ namespace Kennedy.SearchIndex.Search
 
         public void UpdateIndex(ParsedResponse parsedResponse)
         {
+            var gemText = parsedResponse as GemTextResponse;
+
             //for now, only gemtext is indexed
-            if (parsedResponse is GemTextResponse)
+            if (gemText != null && gemText.IsIndexable)
             {
-                GemTextResponse gemText = parsedResponse as GemTextResponse;
-                if (gemText.IsIndexable)
-                {
-                    UpdateTextIndex(parsedResponse.RequestUrl.ID, gemText.Title, gemText.FilteredBody);
-                }
+                UpdateTextIndex(parsedResponse.RequestUrl.ID, gemText.Title, gemText.FilteredBody);
             }
         }
 
-        private void UpdateTextIndex(long dbDocID, string title, string filteredBody)
+        private void UpdateTextIndex(long dbDocID, string? title, string filteredBody)
         {
             using (var connection = new SqliteConnection(connectionString))
             {
@@ -82,7 +80,7 @@ namespace Kennedy.SearchIndex.Search
                 connection.Open();
                 var cmd = new SqliteCommand(@"SELECT Terms FROM ImageSearch WHERE ROWID = $rowid", connection);
                 cmd.Parameters.Add(new SqliteParameter("$rowid", urlID));
-                return (string)cmd.ExecuteScalar();
+                return (cmd.ExecuteScalar() as string) ?? "";
             }
         }
 
@@ -136,14 +134,14 @@ LIMIT $limit OFFSET $offset
                     {
                         ret.Add(new ImageSearchResult
                         {
-                            Url = new GeminiUrl(reader["Url"].ToString()),
+                            Url = new GeminiUrl(reader.GetString(reader.GetOrdinal("Url"))),
                             BodySize = reader.GetInt32(reader.GetOrdinal("BodySize")),
-                            Snippet = reader["snip"].ToString(),
+                            Snippet = reader.GetString(reader.GetOrdinal("snip")),
                             UrlID = reader.GetInt64(reader.GetOrdinal("UrlID")),
-                            Favicon = reader["Emoji"].ToString() ?? "",
+                            Favicon = reader["Emoji"] as string,
                             Width = reader.GetInt32(reader.GetOrdinal("Width")),
                             Height = reader.GetInt32(reader.GetOrdinal("Height")),
-                            ImageType = reader["ImageType"].ToString().ToUpper()
+                            ImageType = reader.GetString(reader.GetOrdinal("ImageType")).ToUpper()
                         });
                     }
                     return ret;
@@ -151,7 +149,6 @@ LIMIT $limit OFFSET $offset
             }
             catch (Exception)
             {
-
             }
             return ret;
         }
@@ -192,18 +189,19 @@ LIMIT $limit OFFSET $offset
                     cmd.Parameters.Add(new SqliteParameter("limit", limit));
                     cmd.Parameters.Add(new SqliteParameter("$offset", offset));
                     SqliteDataReader reader = cmd.ExecuteReader();
+
                     while (reader.Read())
                     {
                         ret.Add(new FullTextSearchResult
                         {
-                            Url = new GeminiUrl(reader["Url"].ToString()),
+                            Url = new GeminiUrl(reader.GetString(reader.GetOrdinal("Url"))),
                             BodySize = reader.GetInt32(reader.GetOrdinal("BodySize")),
-                            Title = reader["Title"].ToString(),
-                            Snippet = reader["snip"].ToString(),
+                            Title = reader["Title"] as string,
+                            Snippet = reader.GetString(reader.GetOrdinal("snip")),
                             UrlID = reader.GetInt64(reader.GetOrdinal("UrlID")),
-                            Language = reader["DetectedLanguage"].ToString(),
+                            Language = reader["DetectedLanguage"] as string,
                             LineCount = reader.GetInt32(reader.GetOrdinal("LineCount")),
-                            Favicon = reader["Emoji"].ToString() ?? "",
+                            Favicon = reader["Emoji"] as string,
                             ExternalInboundLinks = reader.GetInt32(reader.GetOrdinal("ExternalInboundLinks")),
 
                             FtsRank = reader.GetDouble(reader.GetOrdinal("rank")),
@@ -220,7 +218,6 @@ LIMIT $limit OFFSET $offset
             }
             return ret;
         }
-
         private string GetAlgorithmString()
         {
             return @"

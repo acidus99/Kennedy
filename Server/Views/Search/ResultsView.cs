@@ -107,10 +107,28 @@ namespace Kennedy.Server.Views.Search
 
         private void WriteResultEntry(Response resp, FullTextSearchResult result, int resultNumber)
         {
-            var meta = $"{FormatCount(result.LineCount)} Lines • {FormatSize(result.BodySize)}";
-            Response.WriteLine($"=> {result.Url} {FormatCount(resultNumber)}. {FormatPageTitle(result.Url, result.Title, result.Favicon)} ({meta})");
+            // Write link line with meta data.
+            Response.Write($"=> {result.Url} {FormatCount(resultNumber)}. {FormatResultTitle(result)} (");
+            if (result.LineCount != null)
+            {
+                Response.Write(result.LineCount.Value.ToString());
+                Response.Write(" Lines • ");
+            }
+            Response.Write($"{FormatSize(result.BodySize)})");
+            Response.WriteLine();
+
+            if(result.Language != null && result.Language != "en")
+            {
+                Response.WriteLine($"Language: {FormatLanguage(result.Language)}");
+            }
+
+            // Write quote line with snippet.
             Response.WriteLine(">" + FormatSnippet(result.Snippet));
+
+            // Write link line to archive/meta data.
             Response.WriteLine($"=> /page-info?id={result.UrlID} More Info / Archived Copy");
+
+            // Write blank line between entries.
             Response.WriteLine("");
         }
 

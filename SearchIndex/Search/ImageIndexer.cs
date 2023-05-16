@@ -9,11 +9,7 @@ namespace Kennedy.SearchIndex.Search
     {
         Dictionary<long, string> imageTextContent;
         PathTokenizer pathTokenizer;
-
-        SqliteCommand command;
         SqliteConnection connection;
-        SqliteParameter parameterDbDocID;
-        SqliteParameter parameterTerms;
 
         public ImageIndexer(string connectionString)
         {
@@ -72,21 +68,23 @@ where length(LinkText) >= 0", connection))
             connection.Open();
             using (var transaction = connection.BeginTransaction())
             {
-                command = connection.CreateCommand();
+                var command = connection.CreateCommand();
                 //Insert into DocsFTS(ROWID, Title, Body) Values (1, 'BBC News', 'News of the world! People are happy and are living longer. Cat ownership is up!');
                 command.CommandText = @"INSERT INTO ImageSearch(ROWID, Terms) VALUES ($docid, $terms)";
 
-                parameterDbDocID = command.CreateParameter();
+                SqliteParameter parameterDbDocID = command.CreateParameter();
                 parameterDbDocID.ParameterName = "$docid";
                 command.Parameters.Add(parameterDbDocID);
 
-                parameterTerms = command.CreateParameter();
+                SqliteParameter parameterTerms = command.CreateParameter();
                 parameterTerms.ParameterName = "$terms";
                 command.Parameters.Add(parameterTerms);
 
                 foreach (var dbDocID in imageTextContent.Keys)
                 {
-                    StoreInDB(dbDocID, imageTextContent[dbDocID]);
+                    parameterDbDocID!.Value = dbDocID;
+                    parameterTerms!.Value = imageTextContent[dbDocID];
+                    command!.ExecuteNonQuery();
                 }
                 transaction.Commit();
             }
@@ -100,13 +98,6 @@ where length(LinkText) >= 0", connection))
         {
             string[] tokens = pathTokenizer.GetTokens(url);
             return (tokens != null) ? string.Join(' ', tokens) + " " : "";
-        }
-
-        private void StoreInDB(long dbDocID, string terms)
-        {
-            parameterDbDocID.Value = dbDocID;
-            parameterTerms.Value = terms;
-            command.ExecuteNonQuery();
         }
     }
 }
