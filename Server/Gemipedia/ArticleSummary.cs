@@ -4,7 +4,6 @@ namespace Kennedy.Gemipedia
     public class ArticleSummary
     {
         public string Title { get; set; }
-        public long PageId { get; set; }
         public string Description { get; set; }
         public string ThumbnailUrl { get; set; }
 
