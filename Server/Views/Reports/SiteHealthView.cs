@@ -95,7 +95,11 @@ namespace Kennedy.Server.Views.Reports
                 {
                     if (link.SourceUrl != null)
                     {
-                        Response.WriteLine($"=> {link.SourceUrl.Url} Link \"{link.LinkText}\" on {link.SourceUrl.Url}");
+                        var linkLabel = !string.IsNullOrEmpty(link.LinkText) ?
+                            $"Link \"{link.LinkText}\"" :
+                            "Bare link";
+
+                        Response.WriteLine($"=> {link.SourceUrl.Url} {linkLabel} on {link.SourceUrl.Url}");
                     }
                 }
 
