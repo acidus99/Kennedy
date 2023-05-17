@@ -132,7 +132,7 @@ namespace Kennedy.Server.Views.Archive
         {
             var args = HttpUtility.ParseQueryString(Request.Url.RawQuery);
 
-            var url = GeminiUrl.MakeUrl(args["url"])!;
+            var url = GeminiUrl.MakeUrl(args["url"] ?? "")!;
             var time = new DateTime(Convert.ToInt64(args["t"]));
             var isRaw = ((args["raw"]?.ToLower() ?? "") == "true");
 
