@@ -9,7 +9,10 @@ using Newtonsoft.Json.Linq;
 
 namespace Kennedy.Gemipedia
 {
-	internal static class ResponseParser
+    /// <summary>
+    /// Wikipedia API parser
+    /// </summary>
+	internal static class ApiResponseParser
 	{
         public static List<ArticleSummary> ParseSearchResponse(string json)
         {
