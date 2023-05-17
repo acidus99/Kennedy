@@ -54,7 +54,8 @@ namespace Kennedy.AdminConsole.WarcConverters
                 //if the response is too large, we need to salage the original mime type back into the meta
                 if (GeminiParser.IsSuccessStatus(doc.Status) && doc.Meta.StartsWith("Requestor aborting due to reaching max download"))
                 {
-                    doc.Meta = doc.MimeType;
+                    // Is success means there is a mimetype.
+                    doc.Meta = doc.MimeType!;
                 }
                 //if its another type of error while downloading, the status should be our generic errors
                 else if (GeminiParser.IsSuccessStatus(doc.Status) & doc.ConnectStatus == ConnectStatus.Error && !doc.Meta.StartsWith("Requestor aborting due to reaching max download"))
@@ -66,7 +67,8 @@ namespace Kennedy.AdminConsole.WarcConverters
                 //clean up the Mime to just be content-type
                 if (GeminiParser.IsSuccessStatus(doc.Status))
                 {
-                    doc.MimeType = GetJustMimetype(doc.MimeType);
+                    // Is success means there is a mimetype.
+                    doc.MimeType = GetJustMimetype(doc.MimeType!);
                 }
                 else
                 {
