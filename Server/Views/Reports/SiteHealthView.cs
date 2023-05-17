@@ -93,7 +93,10 @@ namespace Kennedy.Server.Views.Reports
 
                 foreach (var link in links)
                 {
-                    Response.WriteLine($"=> {link.SourceUrl.Url} Link \"{link.LinkText}\" on {link.SourceUrl.Url}");
+                    if (link.SourceUrl != null)
+                    {
+                        Response.WriteLine($"=> {link.SourceUrl.Url} Link \"{link.LinkText}\" on {link.SourceUrl.Url}");
+                    }
                 }
 
                 Response.WriteLine();
