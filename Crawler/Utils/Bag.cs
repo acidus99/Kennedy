@@ -9,7 +9,7 @@ namespace Kennedy.Crawler.Utils
     /// to the bag. Very handy to throw in a bunch of items and get out a list of unique objects
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class Bag<T>
+    public class Bag<T> where T : notnull
     {
         object locker = new object();
 

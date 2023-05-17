@@ -11,17 +11,22 @@ namespace Kennedy.Crawler.Dns
         public static readonly DnsCache Global = new DnsCache();
 
         object locker;
-        Dictionary<string, IPAddress> cache;
+        Dictionary<string, IPAddress?> cache;
         DnsWrapper client;
 
         public DnsCache()
         {
             locker = new object();
-            cache = new Dictionary<string, IPAddress>();
+            cache = new Dictionary<string, IPAddress?>();
             client = new DnsWrapper();
         }
 
-        public IPAddress GetLookup(string hostname)
+        /// <summary>
+        /// Does a DNS lookup on a hostname. 
+        /// </summary>
+        /// <param name="hostname"></param>
+        /// <returns>null if hosntame doesn't resolve</returns>
+        public IPAddress? GetLookup(string hostname)
         {
             lock(locker)
             {

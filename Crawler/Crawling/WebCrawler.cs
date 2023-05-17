@@ -58,7 +58,9 @@ public class WebCrawler : IWebCrawler
         UrlLimit = urlLimit;
 
         ConfigureDirectories();
-        
+        LanguageDetector.ConfigFileDirectory = CrawlerOptions.ConfigDir;
+        errorLog = new ErrorLog(CrawlerOptions.ErrorLog);
+
         TotalUrlsRequested = new ThreadSafeCounter();
         TotalUrlsProcessed = new ThreadSafeCounter();
 
@@ -71,28 +73,19 @@ public class WebCrawler : IWebCrawler
 
         ResultsWarc = new ResultsWriter(CrawlerOptions.WarcDir);
 
-    }
-
-    private void ConfigureDirectories()
-    {
-        Directory.CreateDirectory(CrawlerOptions.WarcDir);
-        Directory.CreateDirectory(CrawlerOptions.Logs);
-        LanguageDetector.ConfigFileDirectory = CrawlerOptions.ConfigDir;
-        errorLog = new ErrorLog(CrawlerOptions.ErrorLog);
-    }
-
-    private void ConfigureTimers()
-    {
         CrawlerStopwatch = new Stopwatch();
-        CrawlerStopwatch.Start();
-
         DiskStatusTimer = new System.Timers.Timer(StatusIntervalDisk)
         {
             Enabled = true,
             AutoReset = true,
         };
         DiskStatusTimer.Elapsed += LogStatusToDisk;
-        DiskStatusTimer.Start();
+    }
+
+    private void ConfigureDirectories()
+    {
+        Directory.CreateDirectory(CrawlerOptions.WarcDir);
+        Directory.CreateDirectory(CrawlerOptions.Logs);
     }
 
     public void AddSeed(string url)
@@ -101,7 +94,8 @@ public class WebCrawler : IWebCrawler
     public void DoCrawl()
     {
         RobotsChecker.Global.Crawler = this;
-        ConfigureTimers();
+        CrawlerStopwatch.Start();
+        DiskStatusTimer.Start();
 
         SpawnCrawlThreads();
         SpawnResultsWriter();
@@ -202,7 +196,7 @@ public class WebCrawler : IWebCrawler
         }, response);
     }
 
-    public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse response)
+    public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response)
     { 
         //null means it was ignored by robots
         if (response != null)
@@ -225,7 +219,7 @@ public class WebCrawler : IWebCrawler
         TotalUrlsProcessed.Increment();
     }
 
-    public UrlFrontierEntry GetUrl(int crawlerID = 0)
+    public UrlFrontierEntry? GetUrl(int crawlerID = 0)
     {
         if (HitUrlLimit || UserQuit)
         {

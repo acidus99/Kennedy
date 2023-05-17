@@ -7,9 +7,9 @@ public interface IWebCrawler
 {
     bool KeepWorkersAlive { get; }
 
-    UrlFrontierEntry GetUrl(int crawlerID = 0);
+    UrlFrontierEntry? GetUrl(int crawlerID = 0);
 
-    void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse response);
+    void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response);
 
     void ProcessRobotsResponse(GeminiResponse response);
 }

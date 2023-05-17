@@ -59,7 +59,7 @@ namespace Kennedy.Crawler.Protocols
         /// <param name="key"></param>
         /// <param name="hostname"></param>
         /// <param name="port"></param>
-        private RobotsTxtFile LoadRobotsIntoCache(string key, string hostname, int port)
+        private RobotsTxtFile? LoadRobotsIntoCache(string key, string hostname, int port)
         {
             try
             {

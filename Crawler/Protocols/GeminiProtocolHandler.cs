@@ -10,7 +10,7 @@ namespace Kennedy.Crawler.Protocols
     {
         GeminiRequestor requestor = new GeminiRequestor();
 
-        public GeminiResponse Request(UrlFrontierEntry entry)
+        public GeminiResponse? Request(UrlFrontierEntry entry)
         {
             //use the DnsCache
             var ipAddress = DnsCache.Global.GetLookup(entry.Url.Hostname);

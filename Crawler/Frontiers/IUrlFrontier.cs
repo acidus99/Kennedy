@@ -27,7 +27,7 @@ namespace Kennedy.Crawler.Frontiers
         /// Gets the next URL from the frontier
         /// </summary>
         /// <returns></returns>
-        UrlFrontierEntry GetUrl(int crawlerID);
+        UrlFrontierEntry? GetUrl(int crawlerID);
 
     }
 }
