@@ -15,8 +15,6 @@ namespace Kennedy.Server.Views
         protected Response Response;
         protected GeminiServer App;
 
-        protected TextWriter Out { get; private set; }
-
         public AbstractView(GeminiRequest request, Response response, GeminiServer app)
         {
             Request = request;
