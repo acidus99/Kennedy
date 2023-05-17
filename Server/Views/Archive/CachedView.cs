@@ -20,7 +20,8 @@ namespace Kennedy.Server.Views.Archive
         public CachedView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
-        Snapshot Snapshot;
+        //force it null, it will be tested for null during the required call-chain
+        Snapshot Snapshot = null!;
 
         GeminiUrl? AttemptedUrl;
         DateTime AttemptedTime = DateTime.Now;
@@ -33,7 +34,7 @@ namespace Kennedy.Server.Views.Archive
         {
             ParseArgs();
 
-            if (Snapshot == null)
+            if (Snapshot == null || Snapshot.Url == null)
             {
                 RenderNoSnapshot();
             }
@@ -58,7 +59,7 @@ namespace Kennedy.Server.Views.Archive
             GeminiResponse response = reader.ReadResponse(Snapshot);
 
             Response.Success();
-            Response.Write($"> This an archived version of {Snapshot.Url.FullUrl} captured on {Snapshot.Captured.ToString("yyyy-MM-dd")}. ");
+            Response.Write($"> This an archived version of {Snapshot.Url!.FullUrl} captured on {Snapshot.Captured.ToString("yyyy-MM-dd")}. ");
             if (Snapshot.IsGemtext)
             {
                 Response.Write("Gemini links have been rewritten to link to archived content");

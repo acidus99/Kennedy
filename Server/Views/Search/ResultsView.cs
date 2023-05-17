@@ -19,20 +19,25 @@ namespace Kennedy.Server.Views.Search
         const int resultsInPage = 15;
 
         public ResultsView(GeminiRequest request, Response response, GeminiServer app)
-            : base(request, response, app) { }
+            : base(request, response, app)
+        {
+            SearchEngine = new SearchDatabase(Settings.Global.DataRoot);
 
-        ArticleSummary TopGemipediaHit = null;
-        List<FullTextSearchResult> SearchResults = null;
+        }
+
         SearchDatabase SearchEngine;
+
+        ArticleSummary? TopGemipediaHit;
+        List<FullTextSearchResult>? SearchResults;
         int ImageHits = 0;
 
-        SearchOptions Options;
+        SearchOptions Options = null!;
 
         public override void Render()
         {
             var query = PrepareQuery(SanitizedQuery);
             Options = new SearchOptions(Request.Url, "/search");
-            SearchEngine = new SearchDatabase(Settings.Global.DataRoot);
+            
 
             Response.Success();
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Search");
@@ -72,12 +77,15 @@ namespace Kennedy.Server.Views.Search
                 {
                     Response.WriteLine();
                 }
-                Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(start + resultsInPage - 1)} of {FormatCount(resultCount)} results");
 
-                foreach (var result in SearchResults)
+                if (SearchResults != null)
                 {
-                    counter++;
-                    WriteResultEntry(Response, result, counter);
+                    Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(start + SearchResults.Count - 1)} of {FormatCount(resultCount)} results");
+                    foreach (var result in SearchResults)
+                    {
+                        counter++;
+                        WriteResultEntry(Response, result, counter);
+                    }
                 }
 
                 Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(counter)}  of {FormatCount(resultCount)} total results");

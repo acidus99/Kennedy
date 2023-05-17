@@ -15,11 +15,11 @@ namespace Kennedy.Gemipedia
         {
             var response = ParseJson(json);
             List<ArticleSummary> ret = new List<ArticleSummary>();
-            foreach (JObject result in (response["pages"] as JArray))
+            foreach (JObject result in ((JArray) response["pages"]))
             {
                 ret.Add(new ArticleSummary
                 {
-                    Title = Cleanse(result["title"]),
+                    Title = Cleanse(result["title"] as JToken),
                     Excerpt = StripHtml(Cleanse(result["excerpt"])),
                     Description = Cleanse(result["description"]),
                     ThumbnailUrl = GetThumbnailUrl(result["thumbnail"] as JObject)
@@ -46,7 +46,7 @@ namespace Kennedy.Gemipedia
         private static string EnsureHttps(string url)
             => url.StartsWith("https:") ? url : "https:" + url;
 
-        private static string Cleanse(JToken token)
+        private static string Cleanse(JToken? token)
             => token?.ToString() ?? "";
 
         private static JObject ParseJson(string json)

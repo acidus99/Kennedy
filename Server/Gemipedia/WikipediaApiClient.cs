@@ -19,7 +19,7 @@ namespace Kennedy.Gemipedia
             client.Headers.Add(HttpRequestHeader.UserAgent, "GeminiProxy/0.1 (gemini://gemi.dev/; acidus@gemi.dev) gemini-proxy/0.1");
         }
 
-        public ArticleSummary TopResultSearch(string query)
+        public ArticleSummary? TopResultSearch(string query)
         {
             return Search(query).FirstOrDefault();
         }
