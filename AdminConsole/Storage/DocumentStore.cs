@@ -26,31 +26,6 @@ namespace Kennedy.AdminConsole.Storage
             return store.GetObject(key);
         }
 
-        public bool RemoveDocument(long urlID)
-        {
-            var key = GeyKey(urlID);
-            return store.RemoveObject(key);
-        }
-
-        /// <summary>
-        /// returns if we successfully stored this response
-        /// </summary>
-        /// <param name="resp"></param>
-        /// <returns></returns>
-        public bool StoreDocument(ParsedResponse resp)
-        {
-            if (resp.IsSuccess & resp.HasBody)
-            {
-                var key = GeyKey(resp.RequestUrl.ID);
-                if(!store.StoreObject(key, resp.BodyBytes))
-                {
-                    throw new ApplicationException("Failed to store resp!");
-                }
-                return true;
-            }
-            return false;
-        }
-
         private string GeyKey(long urlID)
         {
             //hack, we used to use ulong here. continue that here so we can read old page-store directories
