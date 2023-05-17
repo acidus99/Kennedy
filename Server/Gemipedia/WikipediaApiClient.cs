@@ -30,7 +30,7 @@ namespace Kennedy.Gemipedia
 
             var apiResponse = FetchString(url);
 
-            return ResponseParser.ParseSearchResponse(apiResponse).FirstOrDefault();
+            return ApiResponseParser.ParseSearchResponse(apiResponse).FirstOrDefault();
         }
 
         //Downloads a string, if its not already cached
