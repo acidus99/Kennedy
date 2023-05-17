@@ -70,7 +70,14 @@ namespace Kennedy.Server
                 .AddJsonFile(settingsFile)
                 .Build();
             // Get values from the config given their key and their target type.
-            Settings.Global = config.GetSection("Settings").Get<Settings>();
+
+            var settings = config.GetSection("Settings").Get<Settings>();
+
+            if(settings == null)
+            {
+                throw new ApplicationException("Could not create global settings object. Received null");
+            }
+            Settings.Global = settings;
         }
     }
 }

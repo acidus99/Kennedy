@@ -28,15 +28,14 @@ namespace Kennedy.Archive
                 throw new ArgumentNullException(nameof(snapshot), "Snapshot cannot have a null Url property");
             }
 
-			var bytes = ReadBytes(snapshot);
+			byte[] bytes = ReadBytes(snapshot);
 			return GeminiParser.ParseResponseBytes(snapshot.Url.GeminiUrl, bytes);
         }
 
-        public byte[]? ReadBytes(Snapshot snapshot)
+        public byte[] ReadBytes(Snapshot snapshot)
         {
             var record = GetRecord(snapshot);
-            return (record != null) ? ReadPackData(record) :
-                null;
+            return ReadPackData(record);
         }
 
         private PackRecord GetRecord(Snapshot snapshot)

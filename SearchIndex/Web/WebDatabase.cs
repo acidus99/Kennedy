@@ -68,8 +68,8 @@ namespace Kennedy.SearchIndex.Web
                 {
                     servers.Add(new ServerInfo
                     {
-                        Protocol = reader["Protocol"].ToString(),
-                        Domain = reader["Domain"].ToString(),
+                        Protocol = reader.GetString(reader.GetOrdinal("Protocol")),
+                        Domain = reader.GetString(reader.GetOrdinal("Domain")),
                         Port = reader.GetInt32(reader.GetOrdinal("Port")),
                         Emoji = reader["Emoji"].ToString() ?? "",
                         Pages = reader.GetInt32(reader.GetOrdinal("Pages"))
@@ -82,14 +82,14 @@ namespace Kennedy.SearchIndex.Web
 
         private bool UpdateDocument(ParsedResponse parsedResponse)
         {
+            parsedResponse.ResponseReceived ??= DateTime.Now;
+            parsedResponse.RequestSent ??= DateTime.Now;
+
             bool hasContentChanged = false;
 
             using (var db = GetContext())
             {
-                Document entry = null;
-
-                //grab any existing document for this URL
-                entry = db.Documents.Include(x=>x.Image)
+                Document? entry = db.Documents.Include(x => x.Image)
                     .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
                     .FirstOrDefault();
 
@@ -99,7 +99,7 @@ namespace Kennedy.SearchIndex.Web
                     hasContentChanged = true;
                     entry = new Document(parsedResponse.RequestUrl)
                     {
-                        FirstSeen = parsedResponse.ResponseReceived
+                        FirstSeen = parsedResponse.ResponseReceived.Value
                     };
                     db.Documents.Add(entry);
                 }
@@ -120,11 +120,11 @@ namespace Kennedy.SearchIndex.Web
 
                         if (entry.FirstSeen > parsedResponse.ResponseReceived)
                         {
-                            entry.FirstSeen = parsedResponse.ResponseReceived;
+                            entry.FirstSeen = parsedResponse.ResponseReceived.Value;
                             updatedTimes = true;
                         }
 
-                        if (!parsedResponse.IsFail &&
+                        if (parsedResponse.IsFail &&
                             entry.LastSuccessfulVisit < parsedResponse.ResponseReceived)
                         {
                             entry.LastSuccessfulVisit = parsedResponse.ResponseReceived;
@@ -148,7 +148,7 @@ namespace Kennedy.SearchIndex.Web
                 //ready to prepare oure DTOs
 
                 //Always update the most recent visit time
-                entry.LastVisit = parsedResponse.ResponseReceived;
+                entry.LastVisit = parsedResponse.ResponseReceived.Value;
 
                 if (!parsedResponse.IsFail)
                 {
@@ -198,12 +198,22 @@ namespace Kennedy.SearchIndex.Web
 
                         if (entry.Image == null)
                         {
-                            entry.Image = new Image(parsedResponse.RequestUrl);
+                            entry.Image = new Image()
+                            {
+                                UrlID = parsedResponse.RequestUrl.ID,
+                                IsTransparent = image.IsTransparent,
+                                Height = image.Height,
+                                Width = image.Width,
+                                ImageType = image.ImageType
+                            };
                         }
-                        entry.Image.IsTransparent = image.IsTransparent;
-                        entry.Image.Height = image.Height;
-                        entry.Image.Width = image.Width;
-                        entry.Image.ImageType = image.ImageType;
+                        else
+                        {
+                            entry.Image.IsTransparent = image.IsTransparent;
+                            entry.Image.Height = image.Height;
+                            entry.Image.Width = image.Width;
+                            entry.Image.ImageType = image.ImageType;
+                        }
                     }
                     //not an image, but existing entry had image meta data, so explicitly remove it
                     else if (entry.Image != null)
@@ -253,7 +263,7 @@ namespace Kennedy.SearchIndex.Web
             {
                 //see if it already exists
                 var entry = context.RobotsTxts
-                    .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
+                    .Where(x => (x.Protocol == response!.RequestUrl.Protocol &&
                                 x.Domain == response.RequestUrl.Hostname &&
                                 x.Port == response.RequestUrl.Port))
                     .FirstOrDefault();
@@ -271,11 +281,16 @@ namespace Kennedy.SearchIndex.Web
                     //if not, create a stub
                     if (entry == null)
                     {
-                        entry = new RobotsTxt(response.RequestUrl);
+                        entry = new RobotsTxt(response!.RequestUrl)
+                        {
+                            Content = response.BodyText
+                        };
                         context.RobotsTxts.Add(entry);
                     }
-
-                    entry.Content = response.BodyText;
+                    else
+                    {
+                        entry.Content = response!.BodyText;
+                    }
                 }
                 context.SaveChanges();
             }
@@ -284,7 +299,7 @@ namespace Kennedy.SearchIndex.Web
         private void UpdateFavicon(ParsedResponse response)
         {
 
-            bool isRemove = !(response.IsSuccess && IsValidFavicon(response.BodyText?.Trim()));
+            bool isRemove = !(response.IsSuccess && IsValidFavicon(response.BodyText.Trim()));
 
             using (var context = GetContext())
             {
@@ -343,11 +358,16 @@ namespace Kennedy.SearchIndex.Web
                     //if not, create a stub
                     if (entry == null)
                     {
-                        entry = new SecurityTxt(response.RequestUrl);
+                        entry = new SecurityTxt(response.RequestUrl)
+                        {
+                            Content = response.BodyText
+                        };
                         context.SecurityTxts.Add(entry);
                     }
-
-                    entry.Content = response.BodyText;
+                    else
+                    {
+                        entry.Content = response.BodyText;
+                    }
                 }
                 context.SaveChanges();
             }

@@ -52,9 +52,9 @@ internal class UrlQueue
         return ret - 1;
     }
 
-    public UrlFrontierEntry GetUrl()
+    public UrlFrontierEntry? GetUrl()
     {
-        UrlFrontierEntry ret = null;
+        UrlFrontierEntry? ret = null;
 
         lock (locker)
         {

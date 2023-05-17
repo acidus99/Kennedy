@@ -14,14 +14,14 @@ namespace Kennedy.AdminConsole.Db
         public int Id { get; set; }
 
         [Column("Domain")]
-        public string Domain { get; set; }
-        public int Port { get; set; }
+        public required string Domain { get; set; }
+        public required int Port { get; set; }
 
-        public bool IsReachable { get; set; }
+        public required bool IsReachable { get; set; }
 
-        public bool HasRobotsTxt { get; set; }
-        public bool HasFaviconTxt { get; set; }
-        public bool HasSecurityTxt { get; set; }
+        public required bool HasRobotsTxt { get; set; }
+        public required bool HasFaviconTxt { get; set; }
+        public required bool HasSecurityTxt { get; set; }
 
         public string? FaviconTxt { get; set; }
         public string? SecurityTxt { get; set; }

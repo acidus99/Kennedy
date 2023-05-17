@@ -9,7 +9,7 @@ namespace Kennedy.Data.Parsers
 	{
 		public abstract bool CanParse(GeminiResponse resp);
 
-		public abstract ParsedResponse Parse(GeminiResponse resp);
+		public abstract ParsedResponse? Parse(GeminiResponse resp);
 	}
 }
 

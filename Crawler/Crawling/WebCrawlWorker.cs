@@ -34,7 +34,7 @@ internal class WebCrawlWorker
     // and printing a document.
     public void DoWork()
     {
-        UrlFrontierEntry entry = null;
+        UrlFrontierEntry? entry = null;
 
         GeminiProtocolHandler requestor = new GeminiProtocolHandler();
 

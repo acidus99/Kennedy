@@ -57,57 +57,6 @@ namespace Kennedy.AdminConsole.Storage
             return true;
         }
 
-        /// <summary>
-        /// Deletes the object stored with the key from the object store
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public bool RemoveObject(string key)
-        {
-            if (!IsKeyIsValid(key))
-            {
-                throw new ArgumentException("Key contains invalid characters", "key");
-            }
-
-            var dir = getPrefixDirectoryForKey(key);
-            try
-            {
-                if(File.Exists(dir + key))
-                {
-                    File.Delete(dir + key);
-                    return true;
-                }
-            }
-            catch (Exception)
-            {
-            }
-            return false;
-        }
-
-        public bool StoreObject(string key, byte [] bytes, bool overWrite = true)
-        {
-            if(!IsKeyIsValid(key))
-            {
-                throw new ArgumentException("Key contains invalid characters", "key");
-            }
-
-            var dir = getPrefixDirectoryForKey(key);
-            try
-            {
-                Directory.CreateDirectory(dir);
-                if (overWrite || !File.Exists(dir + key))
-                {
-                    File.WriteAllBytes(dir + key, bytes);
-                    return true;
-                }
-            } catch (Exception)
-            {
-
-            }
-            return false;
-        }
-
         public byte [] GetObject(string key)
         {
             if (!IsKeyIsValid(key))

@@ -9,7 +9,7 @@ namespace Kennedy.Data.Parsers
         public override bool CanParse(GeminiResponse resp)
             => resp.IsRedirect;
 
-        public override ParsedResponse Parse(GeminiResponse resp)
+        public override ParsedResponse? Parse(GeminiResponse resp)
         {
             var link = FoundLink.Create(resp.RequestUrl, resp.Meta);
             if (link != null)

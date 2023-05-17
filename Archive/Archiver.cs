@@ -120,7 +120,7 @@ namespace Kennedy.Archive
                 //OK, create a new snapshot
                 var snapshot = new Snapshot
                 {
-                    Captured = response.ResponseReceived,
+                    Captured = response.ResponseReceived!.Value,
                     IsDuplicate = false,
                     HasBodyContent = response.HasBody,
                     StatusCode = response.StatusCode,

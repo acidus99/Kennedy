@@ -57,7 +57,7 @@ namespace Kennedy.Server.Views
                 foreach (var server in servers)
                 {
                     counter++;
-                    var label = $"{counter}. {FormatDomain(server.Domain, server.Favicon?.Emoji ?? "")}";
+                    var label = $"{counter}. {FormatDomain(server.Domain, server.Favicon?.Emoji)}";
                     if (server.Port != 1965)
                     {
                         label += ":" + server.Port;

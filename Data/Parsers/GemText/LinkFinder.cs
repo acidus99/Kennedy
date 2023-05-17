@@ -36,7 +36,7 @@ namespace Kennedy.Data.Parsers.GemText
             return foundLinks;
         }
 
-        private static FoundLink Create(GeminiUrl pageUrl, Match match)
+        private static FoundLink? Create(GeminiUrl pageUrl, Match match)
             => FoundLink.Create(pageUrl, match.Groups[1].Value, getLinkText(match));
 
         /// <summary>

@@ -16,11 +16,11 @@ namespace Kennedy.Crawler.Protocols
     {
         public static RobotsChecker Global = new RobotsChecker();
 
-        Dictionary<string, RobotsTxtFile> Cache;
+        Dictionary<string, RobotsTxtFile?> Cache;
 
         public RobotsChecker()
         {
-            Cache = new Dictionary<string, RobotsTxtFile>();
+            Cache = new Dictionary<string, RobotsTxtFile?>();
         }
 
         public IWebCrawler? Crawler { get; set; } = null;
@@ -34,7 +34,7 @@ namespace Kennedy.Crawler.Protocols
 
             var key = GetCacheKey(url);
 
-            RobotsTxtFile robots = null;
+            RobotsTxtFile? robots = null;
 
             if (!Cache.TryGetValue(key, out robots))
             {
@@ -50,14 +50,8 @@ namespace Kennedy.Crawler.Protocols
             return true;
         }
 
-        public RobotsTxtFile GetFromCache(string domain, int port)
-            => Cache.GetValueOrDefault(GetCacheKey(domain, port));
-
         private string GetCacheKey(GeminiUrl url)
             => url.Authority;
-
-        private string GetCacheKey(string domain, int port)
-            => $"{domain}:{port}";
 
         /// <summary>
         /// Downloads the Robots.txt file for a host, parses it, and adds it to the cache
@@ -65,7 +59,7 @@ namespace Kennedy.Crawler.Protocols
         /// <param name="key"></param>
         /// <param name="hostname"></param>
         /// <param name="port"></param>
-        private RobotsTxtFile LoadRobotsIntoCache(string key, string hostname, int port)
+        private RobotsTxtFile? LoadRobotsIntoCache(string key, string hostname, int port)
         {
             try
             {

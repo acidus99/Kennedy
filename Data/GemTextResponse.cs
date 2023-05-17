@@ -19,7 +19,9 @@ namespace Kennedy.Data
 
         public GemTextResponse(GeminiResponse resp)
         : base(resp)
-        { }
+        {
+            ContentType = ContentType.Gemtext;
+        }
 
     }
 }

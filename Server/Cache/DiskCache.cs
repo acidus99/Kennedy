@@ -38,7 +38,7 @@ namespace Kennedy.Cache
 			}
 		}
 
-		public string GetAsString(string identifier)
+		public string? GetAsString(string identifier)
         {
 
 			//get the key
@@ -58,7 +58,7 @@ namespace Kennedy.Cache
 			return null;
         }
 
-		public byte [] GetAsBytes(string identifier)
+		public byte[]? GetAsBytes(string identifier)
 		{
 
 			//get the key

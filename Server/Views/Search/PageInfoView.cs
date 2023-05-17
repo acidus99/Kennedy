@@ -2,6 +2,7 @@
 using System.Linq;
 using System.IO;
 using System.Web;
+using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
 using Kennedy.SearchIndex.Web;
@@ -17,79 +18,72 @@ namespace Kennedy.Server.Views.Search
         public PageInfoView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
-        WebDatabaseContext db;
-        Document entry;
+        WebDatabaseContext db = new WebDatabaseContext(Settings.Global.DataRoot);
+        Document entry = null!;
 
         public override void Render()
         {
-            db = new WebDatabaseContext(Settings.Global.DataRoot);
-            entry = null;
             long urlID = 0;
+
+            Document? possibleEntry = null;
 
             var query = SanitizedQuery;
             if (query.StartsWith("id=") && query.Length > 3)
             {
                 urlID = Convert.ToInt64(query.Substring(3));
-                entry = db.Documents.Where(x => x.UrlID == urlID).FirstOrDefault();
+                possibleEntry = db.Documents.Where(x => x.UrlID == urlID).Include(x=>x.Image!).FirstOrDefault()!;
             }
-            if (entry == null)
+
+            if (possibleEntry == null)
             {
                 Response.Redirect("/");
                 return;
             }
-
-            var url = new GeminiUrl(entry.Url);
+            entry = possibleEntry;
 
             Response.Success();
 
-            Response.WriteLine($"# Page Info: {url.Path}");
+            Response.WriteLine($"# Page Info: {entry.GeminiUrl.Path}");
             Response.WriteLine($"=> {entry.Url} Visit Current Url");
-            Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(url)} View archived copies with 🏎 DeLorean Time Machine");
+            Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(entry.GeminiUrl)} View archived copies with 🏎 DeLorean Time Machine");
 
             Response.WriteLine();
             Response.WriteLine($"## Metadata");
             Response.WriteLine($"* Type: {entry.ContentType.ToString()}");
             Response.WriteLine($"* Size: {FormatSize(entry.BodySize)}");
             Response.WriteLine($"* Indexed on: {entry.LastSuccessfulVisit?.ToString("yyyy-MM-dd")}");
-            Response.WriteLine($"=> {url.RootUrl} Capsule: {url.Hostname}");
+            Response.WriteLine($"=> {entry.GeminiUrl.RootUrl} Capsule: {entry.GeminiUrl.Hostname}");
 
             switch (entry.ContentType)
             {
                 case ContentType.Gemtext:
-                    var title = (entry.Title.Length > 0) ? entry.Title : "(Could not extract a title)";
-                    var language = FormatLanguage(entry.Language);
-                    language = (language.Length > 0) ? language : "(Could not detect a language)";
+                    var title = entry.Title ?? "(Could not determine)";
+                    var language = (entry.Language != null) ? FormatLanguage(entry.Language) : "(Could not determine)";
                     Response.WriteLine($"* Title: {title}");
                     Response.WriteLine($"* Language: {language}");
-                    Response.WriteLine($"* Lines: {entry.LineCount}");
+
+                    if (entry.LineCount != null)
+                    {
+                        Response.WriteLine($"* Lines: {entry.LineCount}");
+                    }
                     break;
 
                 case ContentType.Image:
 
-                    var imgmeta = (from img in db.Images
-                                   where img.UrlID == urlID
-                                   select new
-                                   {
-                                       img.Height,
-                                       img.Width,
-                                       img.ImageType,
-                                       img.IsTransparent,
-                                   }).FirstOrDefault();
-
                     var searchEngine = new SearchDatabase(Settings.Global.DataRoot);
 
                     var terms = searchEngine.GetImageIndexText(urlID);
-                    if (imgmeta != null)
+                    if (entry.Image != null)
                     {
-                        Response.WriteLine($"* Dimensions: {imgmeta.Width} x {imgmeta.Height}");
-                        Response.WriteLine($"* Format: {imgmeta.ImageType}");
+                        Response.WriteLine($"* Dimensions: {entry.Image.Width} x {entry.Image.Height}");
+                        Response.WriteLine($"* Format: {entry.Image.ImageType}");
                         Response.WriteLine($"* Indexable text:");
                         Response.WriteLine($">{terms}");
                     }
                     break;
             }
 
-            if (entry.MimeType.StartsWith("text/gemini"))
+            if (entry.MimeType != null && entry.MimeType.StartsWith("text/gemini"))
             {
                 RenderGemtextLinks();
             }

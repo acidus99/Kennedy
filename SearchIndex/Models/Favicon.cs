@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Kennedy.SearchIndex.Models
 {
@@ -15,29 +16,31 @@ namespace Kennedy.SearchIndex.Models
     public class Favicon
     {
         [Required]
-        public string Protocol { get; set; }
+        public required string Protocol { get; init; }
 
         [Required]
-        public string Domain { get; set; }
+        public required string Domain { get; init; }
 
         [Required]
-        public int Port { get; set; }
+        public required int Port { get; init; }
 
-        public string Emoji { get; set; }
+        public string Emoji { get; set; } = "";
         
-        public long SourceUrlID { get; set; }
+        public required long SourceUrlID { get; init; }
 
-        public IEnumerable<Document> Documents { get; set; }
+        public IEnumerable<Document>? Documents{ get; set; }
 
         public Favicon()
         { }
 
+        [SetsRequiredMembersAttribute]
         public Favicon(GeminiUrl url)
         {
             Protocol = url.Protocol;
             Domain = url.Hostname;
             Port = url.Port;
             SourceUrlID = url.ID;
+            Emoji = "";
         }
 
     }

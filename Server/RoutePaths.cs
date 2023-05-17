@@ -24,8 +24,14 @@ namespace Kennedy.Server
             => ViewCached(new GeminiUrl(url), snapshotTime);
 
         public static string ViewCached(Snapshot snapshot, bool useRaw = false)
-            => ViewCached(snapshot.Url.GeminiUrl, snapshot.Captured, useRaw);
-
+        {
+            if(snapshot.Url == null)
+            {
+                throw new ArgumentNullException(nameof(snapshot), "Snapshot URL cannot be null.");
+            }
+            return ViewCached(snapshot.Url.GeminiUrl, snapshot.Captured, useRaw);
+        }
+        
         public static string ViewCached(GeminiUrl url, DateTime snapshotTime, bool useRaw = false)
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={snapshotTime.Ticks}&raw={useRaw}";
 

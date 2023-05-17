@@ -17,11 +17,11 @@ namespace Kennedy.SearchIndex.Models
         /// some unchecked casting with overflow to handle it
         /// </summary>
         public long SourceUrlID { get; set; }
-        public Document SourceUrl { get; set; }
+        public Document? SourceUrl { get; set; }
 
         public long TargetUrlID { get; set; }
 
         public bool IsExternal { get; set; }
-        public string LinkText { get; set; }
+        public string? LinkText { get; set; }
     }
 }

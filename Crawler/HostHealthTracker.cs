@@ -20,7 +20,7 @@ namespace Kennedy.Crawler
 			WindowSize = windowSize;
 		}
 
-		public void AddResponse(GeminiResponse response)
+		public void AddResponse(GeminiResponse? response)
 		{
 			if(response == null)
 			{

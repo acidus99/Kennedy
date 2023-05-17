@@ -16,25 +16,23 @@ namespace Kennedy.SearchIndex.Models
         /// some unchecked casting with overflow to handle it
         /// </summary>
         [Key, ForeignKey("Document")]
-        public long UrlID { get; set; }
+        public required long UrlID { get; set; }
 
-        public int Width { get; set; }
+        [Required]
+        public required int Width { get; set; }
 
-        public int Height { get; set; }
+        [Required]
+        public required int Height { get; set; }
 
-        public string ImageType { get; set; }
+        [Required]
+        public required string ImageType { get; set; }
 
-        public bool IsTransparent { get; set; }
+        [Required]
+        public required bool IsTransparent { get; set; }
 
         public Document? Document { get; set; }
 
         public Image()
         { }
-
-        public Image(GeminiUrl url)
-        {
-            UrlID = url.ID;
-        }
-
     }
 }

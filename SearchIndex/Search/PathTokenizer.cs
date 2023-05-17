@@ -46,7 +46,7 @@ namespace Kennedy.SearchIndex.Search
         }
 
         private IEnumerable<string> GetSegments(GeminiUrl url)
-            => url._url.Segments.Reverse();
+            => url.Url.Segments.Reverse();
 
         /// <summary>
         /// Takes a token, breaks out any CamelCase or pascalCase subtokens, and adds them all to the list of tokens

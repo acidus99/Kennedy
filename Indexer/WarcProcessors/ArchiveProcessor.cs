@@ -15,7 +15,7 @@ using Kennedy.Data.RobotsTxt;
 using Kennedy.Archive.Db;
 
 
-public class ArchiveProcessor : IWarcProcessor
+public class ArchiveProcessor : AbstractGeminiWarcProcessor
 {
     string ArchiveDirectory;
     Archiver archiver;
@@ -27,10 +27,30 @@ public class ArchiveProcessor : IWarcProcessor
         ArchiveDirectory = archiveDirectory;
     }
 
-    public void FinalizeProcessing()
+    public override void FinalizeProcessing()
 	{
         UpdateVisbility();
         WriteStatsFile();
+    }
+
+    protected override void ProcessGeminiResponse(GeminiResponse geminiResponse)
+    {
+        //only if we successfully archived it should we track that
+        //the domain should be checked against Robots.txt
+        if (archiver.ArchiveResponse(geminiResponse))
+        {
+            var authority = new Authority
+            {
+                Domain = geminiResponse.RequestUrl.Hostname,
+                Port = geminiResponse.RequestUrl.Port,
+                Protocol = geminiResponse.RequestUrl.Protocol
+            };
+
+            if (!changedAuthorities.ContainsKey(authority))
+            {
+                changedAuthorities.Add(authority, true);
+            }
+        }
     }
 
     /// <summary>
@@ -122,66 +142,6 @@ public class ArchiveProcessor : IWarcProcessor
         return !robots.IsMalformed ?
             robots :
             null;
-    }
-
-    public void ProcessRecord(WarcRecord record)
-	{
-        if(record.Type == "response")
-        {
-            ProcessResponseRecord((ResponseRecord) record);
-        }
-	}
-
-    private void ProcessResponseRecord(ResponseRecord responseRecord)
-    {
-        var response = ParseResponseRecord(responseRecord);
-        if (response != null)
-        {
-            //only if we successfully archived it should we track that
-            //the domain should be checked against Robots.txt
-            if(archiver.ArchiveResponse(response))
-            {
-                var authority = new Authority
-                {
-                    Domain = response.RequestUrl.Hostname,
-                    Port = response.RequestUrl.Port,
-                    Protocol = response.RequestUrl.Protocol
-                };
-
-                if (!changedAuthorities.ContainsKey(authority))
-                {
-                    changedAuthorities.Add(authority, true);
-                }
-            }
-        }
-    }
-
-    private GeminiResponse? ParseResponseRecord(ResponseRecord record)
-    {
-        GeminiUrl url = new GeminiUrl(StripRobots(record.TargetUri));
-
-        try
-        {
-            var response = GeminiParser.ParseResponseBytes(url, record.ContentBlock);
-            response.RequestSent = record.Date;
-            response.ResponseReceived = record.Date;
-            response.IsBodyTruncated = (record.Truncated?.Length > 0);
-            return response;
-        } catch(Exception ex)
-        {
-            return null;
-        }
-    }
-
-    private Uri StripRobots(Uri url)
-    {
-        if(url.PathAndQuery == "/robots.txt?kennedy-crawler")
-        {
-            UriBuilder uriBuilder = new UriBuilder(url);
-            uriBuilder.Query = "";
-            return uriBuilder.Uri;
-        }
-        return url;
     }
 
     private struct Authority

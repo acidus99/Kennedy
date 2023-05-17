@@ -12,7 +12,7 @@ namespace Kennedy.Crawler.Dns
             client = new LookupClient(NameServer.GooglePublicDns);
         }
 
-        public IPAddress DoLookup(string hostname)
+        public IPAddress? DoLookup(string hostname)
         {
             try
             {

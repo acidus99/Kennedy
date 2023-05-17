@@ -40,22 +40,22 @@ namespace Kennedy.SearchIndex.Models
 
         [MaxLength(1024)]
         [Required]
-        public string Url { get; set; }
+        public string Url { get; set; } = "";
 
         [Required]
-        public string Protocol { get; set; }
+        public string Protocol { get; set; } = "";
 
         [Required]
-        public string Domain { get; set; }
+        public string Domain { get; set; } = "";
 
         [Required]
-        public int Port { get; set; }
+        public int Port { get; set; } = 0;
 
         [Required]
-        public string Path { get; set; }
+        public string Path { get; set; } = "";
 
         [Required]
-        public string FileExtension { get; set; }
+        public string FileExtension { get; set; } = "";
 
         [NotMapped]
         public GeminiUrl GeminiUrl
@@ -70,7 +70,7 @@ namespace Kennedy.SearchIndex.Models
             }
         }
 
-        private GeminiUrl geminiUrl = null;
+        private GeminiUrl? geminiUrl = null;
 
         public bool IsAvailable { get; set; }
 
@@ -82,19 +82,19 @@ namespace Kennedy.SearchIndex.Models
         /// <summary>
         /// everything after the status code
         /// </summary>
-        public string Meta { get; set; }
+        public string Meta { get; set; } = "";
 
         /// <summary>
         /// Do we not have the entire body?
         /// </summary>
         public bool IsBodyTruncated { get; set; } = false;
 
-        public int BodySize { get; set; }
+        public int BodySize { get; set; } = 0;
         public long? BodyHash { get; set; }
 
         public long ResponseHash { get; set; }
 
-        public int OutboundLinks { get; set; }
+        public int OutboundLinks { get; set; } = 0;
 
         #endregion
 
@@ -119,7 +119,7 @@ namespace Kennedy.SearchIndex.Models
         /// </summary>
         public string? DetectedLanguage { get; set; }
 
-        public int LineCount { get; set; }
+        public int? LineCount { get; set; }
 
         public double PopularityRank { get; set; }
 

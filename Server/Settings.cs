@@ -3,13 +3,13 @@ namespace Kennedy.Server
 {
     public class Settings
     {
-        public static Settings Global = null;
+        public static Settings Global = null!;
 
-        public string Host { get; set; }
-        public int Port { get; set; }
-        public string CertificateFile { get; set; }
-        public string KeyFile { get; set; }
-        public string PublicRoot { get; set; }
-        public string DataRoot { get; set; }
+        public required string Host { get; set; }
+        public required int Port { get; set; }
+        public required string CertificateFile { get; set; }
+        public required string KeyFile { get; set; }
+        public required string PublicRoot { get; set; }
+        public required string DataRoot { get; set; }
     }
 }

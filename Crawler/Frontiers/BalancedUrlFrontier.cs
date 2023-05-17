@@ -77,7 +77,7 @@ public class BalancedUrlFrontier : IUrlFrontier
         return totalCount;
     }
 
-    public UrlFrontierEntry GetUrl(int crawlerID)
+    public UrlFrontierEntry? GetUrl(int crawlerID)
         => queues[crawlerID].GetUrl();
 
     public string GetStatus()

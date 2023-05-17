@@ -18,15 +18,12 @@ namespace Kennedy.Server.Views.Search
         public ImageResultsView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
-        List<ImageSearchResult> SearchResults = null;
-        ISearchDatabase ImageEngine;
-        SearchOptions Options;
+        ISearchDatabase ImageEngine = new SearchDatabase(Settings.Global.DataRoot);
 
         public override void Render()
         {
-            var query = PrepareQuery(SanitizedQuery);
-            Options = new SearchOptions(Request.Url, "/image-search");
-            ImageEngine = new SearchDatabase(Settings.Global.DataRoot);
+            string query = PrepareQuery(SanitizedQuery);
+            var options = new SearchOptions(Request.Url, "/image-search");
 
             Response.Success();
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Image Search");
@@ -38,14 +35,15 @@ namespace Kennedy.Server.Views.Search
             {
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
-                DoQuery(query);
+                var results = DoQuery(query,options);
                 stopwatch.Stop();
+
                 var queryTime = (int)stopwatch.ElapsedMilliseconds;
-                int baseCounter = Options.SearchPage - 1;
+                int baseCounter = options.SearchPage - 1;
                 int counter = baseCounter * resultsInPage;
                 int start = counter + 1;
 
-                foreach (var result in SearchResults)
+                foreach (var result in results)
                 {
                     counter++;
                     WriteResultEntry(Response, result, counter);
@@ -53,16 +51,16 @@ namespace Kennedy.Server.Views.Search
 
                 Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(counter)}  of {FormatCount(resultCount)} total results");
 
-                if (Options.SearchPage > 1)
+                if (options.SearchPage > 1)
                 {
                     //show previous link
-                    Response.WriteLine(PageLink("⬅️ Previous Page", Options.SearchPage - 1));
+                    Response.WriteLine(PageLink("⬅️ Previous Page", options.SearchPage - 1));
                 }
 
                 if ((baseCounter * resultsInPage) + resultsInPage < resultCount)
                 {
                     //show next page
-                    Response.WriteLine(PageLink("➡️ Next Page", Options.SearchPage + 1));
+                    Response.WriteLine(PageLink("➡️ Next Page", options.SearchPage + 1));
                 }
                 Response.WriteLine($"Query time: {queryTime} ms");
                 Response.WriteLine();
@@ -84,10 +82,10 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine("");
         }
 
-        private void DoQuery(string query)
+        private IEnumerable<ImageSearchResult> DoQuery(string query, SearchOptions options)
         {
-            int baseCounter = Options.SearchPage - 1;
-            SearchResults = ImageEngine.DoImageSearch(query, baseCounter * resultsInPage, resultsInPage);
+            int baseCounter = options.SearchPage - 1;
+            return ImageEngine.DoImageSearch(query, baseCounter * resultsInPage, resultsInPage);
         }
       
         private string PageLink(string linkText, int page)

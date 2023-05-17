@@ -31,30 +31,36 @@ namespace Kennedy.Warc
             });
         }
 
-        public void WriteSession(GeminiResponse geminiResp)
+        public void WriteSession(GeminiResponse response)
         {
-            var requestRecord = CreateRequestRecord(geminiResp.RequestUrl);
-            requestRecord.Date = geminiResp.RequestSent;
+            var requestRecord = CreateRequestRecord(response.RequestUrl);
+            if (response.RequestSent.HasValue)
+            {
+                requestRecord.Date = response.RequestSent.Value;
+            }
 
             Write(requestRecord);
 
             var responseRecord = new ResponseRecord
             {
-                ContentBlock = GeminiParser.CreateResponseBytes(geminiResp),
+                ContentBlock = GeminiParser.CreateResponseBytes(response),
                 ContentType = ResponseContentType,
-                Date = geminiResp.RequestSent,
                 WarcInfoId = WarcInfoID,
-                TargetUri = geminiResp.RequestUrl._url
+                TargetUri = response.RequestUrl.Url
             };
+            if (response.ResponseReceived.HasValue)
+            {
+                responseRecord.Date = response.ResponseReceived.Value;
+            }
 
             responseRecord.ConcurrentTo.Add(requestRecord.Id);
 
-            if (geminiResp.MimeType != null)
+            if (response.MimeType != null)
             {
-                responseRecord.IdentifiedPayloadType = geminiResp.MimeType;
+                responseRecord.IdentifiedPayloadType = response.MimeType;
             }
 
-            if(geminiResp.IsBodyTruncated)
+            if(response.IsBodyTruncated)
             {
                 responseRecord.Truncated = "length";
             }
@@ -76,7 +82,7 @@ namespace Kennedy.Warc
                 ContentType = ResponseContentType,
                 Date = sent,
                 WarcInfoId = WarcInfoID,
-                TargetUri = url._url
+                TargetUri = url.Url
             };
 
             responseRecord.ConcurrentTo.Add(requestRecord.Id);
@@ -101,7 +107,7 @@ namespace Kennedy.Warc
                 ContentBlock = GeminiParser.CreateRequestBytes(url),
                 ContentType = RequestContentType,
                 WarcInfoId = WarcInfoID,
-                TargetUri = url._url
+                TargetUri = url.Url
             };      
     }
 }

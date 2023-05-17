@@ -5,18 +5,19 @@ namespace Kennedy.Data
 {
 	public class ImageResponse : ParsedResponse
 	{
-        public int Width { get; set; }
+        public required int Width { get; init; }
 
-        public int Height { get; set; }
+        public required int Height { get; init; }
 
-        public string ImageType { get; set; }
+        public required string ImageType { get; init; }
 
-        public bool IsTransparent { get; set; }
+        public required bool IsTransparent { get; init; }
 
         public ImageResponse(GeminiResponse resp)
             : base(resp)
-        { }
-
+        {
+            ContentType = ContentType.Image;
+        }
     }
 }
 

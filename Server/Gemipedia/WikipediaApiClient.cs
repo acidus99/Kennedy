@@ -19,20 +19,18 @@ namespace Kennedy.Gemipedia
             client.Headers.Add(HttpRequestHeader.UserAgent, "GeminiProxy/0.1 (gemini://gemi.dev/; acidus@gemi.dev) gemini-proxy/0.1");
         }
 
-        public ArticleSummary TopResultSearch(string query)
-        {
-            return Search(query).FirstOrDefault();
-        }
-
         /// <summary>
-        /// Performance a search using the "rest.php/v1/search/page" endpoint
+        /// Searchs Wikipedia for a query and returns the top article, if any
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public List<ArticleSummary> Search(string query)
+        public ArticleSummary? TopResultSearch(string query)
         {
             var url = $"https://en.wikipedia.org/w/rest.php/v1/search/page?q={WebUtility.UrlEncode(query)}&limit=3";
-            return ResponseParser.ParseSearchResponse(FetchString(url));
+
+            var apiResponse = FetchString(url);
+
+            return ApiResponseParser.ParseSearchResponse(apiResponse).FirstOrDefault();
         }
 
         //Downloads a string, if its not already cached
