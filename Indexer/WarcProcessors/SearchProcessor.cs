@@ -8,8 +8,7 @@ using Kennedy.Data;
 using Kennedy.Data.Parsers;
 using Kennedy.SearchIndex;
 
-
-public class SearchProcessor : IWarcProcessor
+public class SearchProcessor : AbstractGeminiWarcProcessor
 {
     SearchStorageWrapper wrapperDB;
     ResponseParser responseParser;
@@ -22,46 +21,15 @@ public class SearchProcessor : IWarcProcessor
         responseParser = new ResponseParser();
     }
 
-    public void FinalizeProcessing()
+    public override void FinalizeProcessing()
 	{
         wrapperDB.FinalizeDatabases();
     }
 
-	public void ProcessRecord(WarcRecord record)
-	{
-        if(record.Type == "response")
-        {
-            ProcessResponseRecord((ResponseRecord) record);
-        }
-	}
-
-    private void ProcessResponseRecord(ResponseRecord responseRecord)
+    protected override void ProcessGeminiResponse(GeminiResponse geminiResponse)
     {
-        var response = ParseResponseRecord(responseRecord);
-        if (response != null)
-        {
-            wrapperDB.StoreResponse(response);
-        }
-    }
-
-    public ParsedResponse? ParseResponseRecord(ResponseRecord record)
-    {
-        GeminiUrl url = new GeminiUrl(record.TargetUri);
-
-        try
-        {
-            var parsedResponse = responseParser.Parse(url, record.ContentBlock!);
-            parsedResponse.RequestSent = record.Date;
-            parsedResponse.ResponseReceived = record.Date;
-            if (!string.IsNullOrEmpty(record.Truncated))
-            {
-                parsedResponse.IsBodyTruncated = true;
-            }
-
-            return parsedResponse;
-        } catch(Exception ex)
-        {
-            return null;
-        }
+        // Fully parsed the response to get type-specific metadata.
+        ParsedResponse parsedResponse = responseParser.Parse(geminiResponse);
+        wrapperDB.StoreResponse(parsedResponse);
     }
 }
