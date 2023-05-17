@@ -59,7 +59,7 @@ namespace Kennedy.Server.Views.Search
 
                 if(TopGemipediaHit != null)
                 {
-                    Response.WriteLine($"=> {Helper.ArticleUrl(TopGemipediaHit.Title)} Gemipedia Article: {TopGemipediaHit.Title}");
+                    Response.WriteLine($"=> {Helper.ArticleUrl(TopGemipediaHit)} Gemipedia Article: {TopGemipediaHit.Title}");
                     if (TopGemipediaHit.Description.Length > 0)
                     {
                         Response.WriteLine($"> {TopGemipediaHit.Description}");
