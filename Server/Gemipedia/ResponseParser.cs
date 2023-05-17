@@ -15,7 +15,14 @@ namespace Kennedy.Gemipedia
         {
             var response = ParseJson(json);
             List<ArticleSummary> ret = new List<ArticleSummary>();
-            foreach (JObject result in ((JArray) response["pages"]))
+
+            var resultsArray = response["pages"];
+            if(resultsArray == null || resultsArray is not JArray)
+            {
+                return ret;
+            }
+
+            foreach (JObject result in ((JArray) resultsArray))
             {
                 ret.Add(new ArticleSummary
                 {
@@ -28,7 +35,7 @@ namespace Kennedy.Gemipedia
             return ret;
         }
 
-        private static string GetThumbnailUrl(JObject thumb)
+        private static string GetThumbnailUrl(JObject? thumb)
         {
             //result["thumbnail"]?["url"]? doesn't seem to work
             if (thumb != null)
