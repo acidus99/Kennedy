@@ -44,35 +44,31 @@ namespace Kennedy.Server.Views.Reports
 
             var totalDocs = docs.Count();
 
-            
+            //Dictionary<string, long> data = new Dictionary<string, long>();
 
+            //var statusCode = docs.Where(x => x.MimeType != null)
+            //    .GroupBy(x => x.MimeType).Select(x => new { Key = x.Key, Count = x.Count() });
+            //statusCode.ToList().ForEach(x => data[x.Key.ToString()] = x.Count);
 
-            Dictionary<string, long> data = new Dictionary<string, long>();
+            //AsciiBarChart chart = new AsciiBarChart(data);
 
+            //Response.WriteLine("```");
+            //var lines = chart.DrawHorizontal(60, false);
+            //foreach(var line in lines)
+            //{
+            //    Response.WriteLine(line);
+            //}
 
-            var statusCode = docs.Where(x => x.MimeType != null)
-                .GroupBy(x => x.MimeType).Select(x => new { Key = x.Key, Count = x.Count() });
-            statusCode.ToList().ForEach(x => data[x.Key.ToString()] = x.Count);
+            //Response.WriteLine("```");
 
-            AsciiBarChart chart = new AsciiBarChart(data);
+            //Response.WriteLine("```");
+            //lines = chart.DrawVertical(30);
+            //foreach (var line in lines)
+            //{
+            //    Response.WriteLine(line);
+            //}
 
-            Response.WriteLine("```");
-            var lines = chart.DrawHorizontal(60, false);
-            foreach(var line in lines)
-            {
-                Response.WriteLine(line);
-            }
-
-            Response.WriteLine("```");
-
-            Response.WriteLine("```");
-            lines = chart.DrawVertical(30);
-            foreach (var line in lines)
-            {
-                Response.WriteLine(line);
-            }
-
-            Response.WriteLine("```");
+            //Response.WriteLine("```");
 
             var docsWithProblems = docs.Where(x => x.Domain == Domain &&
                                             x.IsAvailable &&
