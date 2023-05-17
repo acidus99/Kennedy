@@ -20,6 +20,11 @@ namespace Kennedy.Server.Views.Archive
 
         public string Rewrite(Snapshot snapshot, string bodyText)
         {
+            if(snapshot.Url == null)
+            {
+                throw new ArgumentNullException(nameof(snapshot), "Snapshot URL cannot be null");
+            }
+
             var sb = new StringBuilder();
             bool inPreformatted = false;
 
@@ -55,7 +60,7 @@ namespace Kennedy.Server.Views.Archive
             //attempt to make a gemini URL out of the original URL
             //if this fails, the original URL was a fully qualitied URL to another
             //scheme, so we have nothing to rewrite
-            var geminiUrl = GeminiUrl.MakeUrl(snapshot.Url.GeminiUrl, match.Groups[1].Value);
+            var geminiUrl = GeminiUrl.MakeUrl(snapshot.Url!.GeminiUrl, match.Groups[1].Value);
             if (geminiUrl == null)
             {
                 return line;
