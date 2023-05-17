@@ -19,7 +19,7 @@ namespace Kennedy.Indexer
         /// Consumes a WARC and generates a search index
         /// </summary>
         /// <param name="args"></param>
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             var outputDirectory = ResolveDir("~/kennedy-capsule/crawl-data/");
 
