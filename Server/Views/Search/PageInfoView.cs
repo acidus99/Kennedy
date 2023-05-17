@@ -18,12 +18,11 @@ namespace Kennedy.Server.Views.Search
         public PageInfoView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
-        WebDatabaseContext db;
-        Document entry;
+        WebDatabaseContext db = new WebDatabaseContext(Settings.Global.DataRoot);
+        Document entry = null!;
 
         public override void Render()
         {
-            db = new WebDatabaseContext(Settings.Global.DataRoot);
             long urlID = 0;
 
             Document? possibleEntry = null;
