@@ -8,18 +8,18 @@ using Warc;
 
 namespace Kennedy.Warc
 {
-	public class GeminiWarcCreator : WarcWriter
-	{
+    public class GeminiWarcCreator : WarcWriter
+    {
         public const string RequestContentType = "application/gemini; msgtype=request";
         public const string ResponseContentType = "application/gemini; msgtype=response";
 
         public Uri WarcInfoID { get; private set; }
 
-		public GeminiWarcCreator(string outputFile)
-            :base(outputFile)
-		{
+        public GeminiWarcCreator(string outputFile)
+            : base(outputFile)
+        {
             WarcInfoID = WarcRecord.CreateId();
-		}
+        }
 
         public void WriteWarcInfo(WarcFields fields)
         {
@@ -38,6 +38,7 @@ namespace Kennedy.Warc
             {
                 requestRecord.Date = response.RequestSent.Value;
             }
+            requestRecord.IpAddress = response.RemoteAddress?.ToString();
 
             Write(requestRecord);
 
@@ -52,6 +53,7 @@ namespace Kennedy.Warc
             {
                 responseRecord.Date = response.ResponseReceived.Value;
             }
+            responseRecord.IpAddress = response.RemoteAddress?.ToString();
 
             responseRecord.ConcurrentTo.Add(requestRecord.Id);
 
@@ -60,7 +62,7 @@ namespace Kennedy.Warc
                 responseRecord.IdentifiedPayloadType = response.MimeType;
             }
 
-            if(response.IsBodyTruncated)
+            if (response.IsBodyTruncated)
             {
                 responseRecord.Truncated = "length";
             }
@@ -88,12 +90,12 @@ namespace Kennedy.Warc
             responseRecord.ConcurrentTo.Add(requestRecord.Id);
 
             //do we have a mime?
-            if(!string.IsNullOrEmpty(mime))
+            if (!string.IsNullOrEmpty(mime))
             {
                 responseRecord.IdentifiedPayloadType = mime;
             }
             //was it truncated?
-            if(isTruncated)
+            if (isTruncated)
             {
                 responseRecord.Truncated = "length";
             }
@@ -108,6 +110,6 @@ namespace Kennedy.Warc
                 ContentType = RequestContentType,
                 WarcInfoId = WarcInfoID,
                 TargetUri = url.Url
-            };      
+            };
     }
 }
