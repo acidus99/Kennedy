@@ -10,44 +10,26 @@ namespace Kennedy.Data.Parsers.GemText
     {
         static readonly Regex headingRegex = new Regex(@"^(#+)\s*(.+)", RegexOptions.Compiled);
 
-        public static IEnumerable<string> RemovePreformatted(string bodyText)
+        public static string[] GetLines(string bodyText)
+            => bodyText.Split('\n');
+
+        public static IEnumerable<string> RemovePreformattedLines(IEnumerable<string> lines)
         {
             var ret = new List<string>();
             bool inPre = false;
             //not sure how to make this linq since I'm flip/flopping state
-            foreach(var line in bodyText.Split("\n"))
-            { 
-                if(line.StartsWith("```"))
+            foreach(var line in lines)
+            {
+                if (line.StartsWith("```"))
                 {
                     inPre = !inPre;
-                } else if(!inPre)
+                }
+                else if (!inPre)
                 {
                     ret.Add(line);
                 }
             }
             return ret;
-        }
-
-        /// <summary>
-        /// gets rid of preformatted text, and the hyperlink part of any link lines
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        public static string FilterBody(string text)
-        {
-            var sb = new StringBuilder();
-            foreach (string line in LineParser.RemovePreformatted(text))
-            {
-                if (line.StartsWith("=>"))
-                {
-                    sb.AppendLine(LinkFinder.GetLinkText(line));
-                }
-                else
-                {
-                    sb.AppendLine(line);
-                }
-            }
-            return sb.ToString();
         }
 
         public static bool IsHeading(string line)

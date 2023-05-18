@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Gemini.Net;
 using Kennedy.Data;
 
@@ -16,20 +17,36 @@ namespace Kennedy.Data.Parsers
 
         public override ParsedResponse Parse(GeminiResponse resp)
         {
-            var filteredBody = LineParser.FilterBody(resp.BodyText);
+            string[] lines = LineParser.GetLines(resp.BodyText);
+            IEnumerable<string> noPreformatted = LineParser.RemovePreformattedLines(lines);
+            var indexableText = GetIndexableContent(noPreformatted);
 
             return new GemTextResponse(resp)
             {
-                FilteredBody = filteredBody,
-                Links = LinkFinder.ExtractBodyLinks(resp.RequestUrl, resp.BodyText).ToList(),
-                Title = TitleFinder.ExtractTitle(resp),
-                LineCount = CountLines(resp.BodyText),
-                DetectedLanguage = languageDetector.DetectLanguage(filteredBody),
+                FilteredBody = indexableText,
+                Links = LinkFinder.GetLinks(resp.RequestUrl, noPreformatted).ToList(),
+                Title = TitleFinder.FindTitle(lines),
+                LineCount = lines.Length,
+                DetectedLanguage = languageDetector.DetectLanguage(indexableText),
             };
         }
 
-        private int CountLines(string bodyText)
-            => bodyText.Split("\n").Length;
+        private string GetIndexableContent(IEnumerable<string> noPreformatted)
+        {
+            var sb = new StringBuilder();
+            foreach (string line in noPreformatted)
+            {
+                if (line.StartsWith("=>"))
+                {
+                    sb.AppendLine(LinkFinder.GetLinkText(line));
+                }
+                else
+                {
+                    sb.AppendLine(line);
+                }
+            }
+            return sb.ToString();
+        }
     }
 }
 

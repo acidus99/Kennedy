@@ -17,48 +17,45 @@ namespace Kennedy.Data.Parsers.GemText
     {
         static readonly Regex headingRegex = new Regex(@"^(#+)\s*(.+)", RegexOptions.Compiled);
 
-        public static string? ExtractTitle(GeminiResponse resp)
-        {
-            if (resp.IsSuccess && resp.HasBody && resp.MimeType != null && resp.MimeType.StartsWith("text/gemini"))
-            {
-                return ExtractTitle(resp.BodyText);
-            }
-            return null;
-        }
-
-        public static string? ExtractTitle(string gemText)
-        {
-            var title = TryHeaders(gemText);
-            if(title?.Length > 0)
+        public static string? FindTitle(IEnumerable<string> bodyLines)
+        { 
+            string? title = TryHeaders(bodyLines);
+            if(title != null)
             {
                 return title;
             }
-            return TryPreformatted(gemText);
+            return TryPreformatted(bodyLines);
         }
 
-        private static string? TryHeaders(string gemText)
+        /// <summary>
+        /// extracts a title from the first non-empty H1, if present
+        /// </summary>
+        /// <param name="bodyLines"></param>
+        /// <returns></returns>
+        private static string? TryHeaders(IEnumerable<string> bodyLines)
         {
-            var t = gemText.Split("\n")
-                   .Where(x => x.StartsWith("#") && x.Length > 2)
-                   .FirstOrDefault();
-            if (t != null)
-            {
-                var match = headingRegex.Match(t);
-                if (match.Success)
-                {
-                    t = match.Groups[2].Value.Trim();
-                }
-            }
-            return t;
+            return (from line in bodyLines
+                     let match = headingRegex.Match(line)
+                     where match.Success
+                     let headerText = match.Groups[2].Value.Trim()
+                     where headerText.Length > 0
+                     select headerText).FirstOrDefault();
         }
 
-        private static string TryPreformatted(string gemText)
+        /// <summary>
+        /// extracts a title from any caption on the first preformatted block
+        /// </summary>
+        /// <param name="bodyLines"></param>
+        /// <returns></returns>
+        private static string? TryPreformatted(IEnumerable<string> bodyLines)
         {
-            var t = gemText.Split("\n")
+            var preLine = bodyLines
                    .Where(x => x.StartsWith("```"))
-                   .FirstOrDefault() ?? "";
+                   .FirstOrDefault();
 
-            return (t.Length > 3) ? t.Substring(3).Trim() : "";
+            return (preLine?.Length > 3) ?
+                preLine.Substring(3).Trim() :
+                null;
         }
     }
 }
