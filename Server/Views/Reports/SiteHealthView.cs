@@ -84,22 +84,25 @@ namespace Kennedy.Server.Views.Reports
             {
                 var geminiUrl = new GeminiUrl(doc.Url);
 
-                Response.WriteLine($"### {counter} Code {doc.StatusCode} on {geminiUrl.Path} ");
-                Response.WriteLine($"=> {doc.Url}");
-                Response.WriteLine("Incoming Links:");
-
                 var links = db.Links.Include(x => x.SourceUrl)
-                    .Where(x => x.TargetUrlID == doc.UrlID);
+                    .Where(x => x.TargetUrlID == doc.UrlID)
+                    .OrderBy(x => x.SourceUrl!.Url);
 
+                Response.WriteLine($"### Issue {counter}: Statue Code {doc.StatusCode} on {geminiUrl.Path} ");
+                Response.WriteLine($"=> {doc.Url}");
+                Response.WriteLine($"Incoming Links");
+
+                int linkCounter = 0;
                 foreach (var link in links)
                 {
                     if (link.SourceUrl != null)
                     {
+                        linkCounter++;
                         var linkLabel = !string.IsNullOrEmpty(link.LinkText) ?
                             $"Link \"{link.LinkText}\"" :
                             "Bare link";
 
-                        Response.WriteLine($"=> {link.SourceUrl.Url} {linkLabel} on {link.SourceUrl.Url}");
+                        Response.WriteLine($"=> {link.SourceUrl.Url} {linkCounter}. {linkLabel} on {link.SourceUrl.Url}");
                     }
                 }
 
