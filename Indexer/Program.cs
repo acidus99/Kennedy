@@ -21,9 +21,9 @@ namespace Kennedy.Indexer
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            var outputDirectory = ResolveDir("~/kennedy-capsule/crawl-data/");
+            var outputDirectory = ResolveDir("~/tmp/");
 
-            foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/latest.txt")))
+            foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/tmp/latest.txt")))
             {
                 IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
                 //IWarcProcessor processor = new ArchiveProcessor(outputDirectory);

@@ -13,7 +13,7 @@ namespace Kennedy.Data.Parsers.GemText
         public static string[] GetLines(string bodyText)
             => bodyText.Split('\n');
 
-        public static IEnumerable<string> RemovePreformattedLines(IEnumerable<string> lines)
+        public static List<string> RemovePreformattedLines(IEnumerable<string> lines)
         {
             var ret = new List<string>();
             bool inPre = false;

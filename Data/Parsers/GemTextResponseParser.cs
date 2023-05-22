@@ -18,7 +18,7 @@ namespace Kennedy.Data.Parsers
         public override ParsedResponse Parse(GeminiResponse resp)
         {
             string[] lines = LineParser.GetLines(resp.BodyText);
-            IEnumerable<string> noPreformatted = LineParser.RemovePreformattedLines(lines);
+            List<string> noPreformatted = LineParser.RemovePreformattedLines(lines);
             var indexableText = GetIndexableContent(noPreformatted);
 
             return new GemTextResponse(resp)
@@ -28,6 +28,8 @@ namespace Kennedy.Data.Parsers
                 Title = TitleFinder.FindTitle(lines),
                 LineCount = lines.Length,
                 DetectedLanguage = languageDetector.DetectLanguage(indexableText),
+                HashTags = HashtagsFinder.GetHashtags(noPreformatted),
+                Mentions = MentionsFinder.GetMentions(noPreformatted)
             };
         }
 
