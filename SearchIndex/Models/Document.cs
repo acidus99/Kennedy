@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -132,6 +133,9 @@ namespace Kennedy.SearchIndex.Models
         public Favicon? Favicon {get; set;}
 
         #endregion
+
+
+        public List<HashTag> Tags { get; set; } = new List<HashTag>();
 
         public Document()
         {
