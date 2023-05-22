@@ -17,6 +17,10 @@ namespace Kennedy.Data
 
         public string FilteredBody { get; set; } = "";
 
+        public IEnumerable<String> Mentions = new List<string>();
+
+        public IEnumerable<String> HashTags = new List<string>();
+
         public GemTextResponse(GeminiResponse resp)
         : base(resp)
         {

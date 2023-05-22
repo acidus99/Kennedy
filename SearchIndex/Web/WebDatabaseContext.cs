@@ -19,7 +19,11 @@ namespace Kennedy.SearchIndex.Web
         public DbSet<SecurityTxt> SecurityTxts { get; set; }
 
         public DbSet<DocumentLink> Links { get; set; }
-        
+
+        public DbSet<HashTag> Tags { get; set; }
+
+        public DbSet<Mention> Mentions { get; set; }
+
         public WebDatabaseContext(string storageDir)
         {
             StorageDirectory = storageDir;
@@ -31,8 +35,8 @@ namespace Kennedy.SearchIndex.Web
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             options.UseSqlite($"Data Source='{StorageDirectory}doc-index.db'")
-            //.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
-            //.EnableSensitiveDataLogging(true)
+            .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
+            .EnableSensitiveDataLogging(true)
             ;
         }
 
@@ -51,7 +55,10 @@ namespace Kennedy.SearchIndex.Web
             modelBuilder.Entity<Document>()
                 .HasMany(e => e.Tags)
                 .WithMany(e => e.Documents);
-        }
 
+            modelBuilder.Entity<Document>()
+                .HasMany(e => e.Mentions)
+                .WithMany(e => e.Documents);
+        }
     }
 }

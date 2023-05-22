@@ -155,9 +155,15 @@ namespace Kennedy.SearchIndex.Web
                         entry.Language = gemtext.Language;
                         entry.LineCount = gemtext.LineCount;
                         entry.Title = gemtext.Title;
+
+                        //CreateMentions(db, entry, gemtext.Mentions);
+                        //CreateTags(db, entry, gemtext.HashTags);
                     }
                     else
                     {
+                        //db.Mentions.RemoveRange(entry.Mentions);
+                        //db.Tags.RemoveRange(entry.Tags);
+
                         entry.Language = parsedResponse.Language;
                         entry.DetectedLanguage = null;
                         entry.LineCount = 0;
@@ -205,6 +211,40 @@ namespace Kennedy.SearchIndex.Web
 
             //propogate our if the content has changed to control re-indexing FTS and other operations
             return hasContentChanged;
+        }
+
+        private void CreateMentions(WebDatabaseContext db, Document document, IEnumerable<string> mentions)
+        {
+            foreach (string mention in mentions)
+            {
+                var entry = db.Mentions
+                    .Where(x => x.Name == mention)
+                    .FirstOrDefault();
+
+                if (entry == null)
+                {
+                    entry = new Mention { Name = mention };
+                    db.Mentions.Add(entry);
+                }
+                document.Mentions.Add(entry);
+            }
+        }
+
+        private void CreateTags(WebDatabaseContext db, Document document, IEnumerable<string> tags)
+        {
+            foreach (string tag in tags)
+            {
+                var entry = db.Tags
+                    .Where(x => x.Name == tag)
+                    .FirstOrDefault();
+
+                if (entry == null)
+                {
+                    entry = new HashTag { Name = tag };
+                    db.Tags.Add(entry);
+                }
+                document.Tags.Add(entry);
+            }
         }
 
         /// <summary>
