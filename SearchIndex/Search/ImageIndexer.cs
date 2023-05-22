@@ -22,7 +22,7 @@ namespace Kennedy.SearchIndex.Search
         {
             RemoveOldIndex();
             GetContent();
-            InsertText();
+            IndexText();
         }
 
         private void RemoveOldIndex()
@@ -56,14 +56,14 @@ where length(LinkText) >= 0", connection))
                     }
                     if (linkText.Length > 0)
                     {
-                        imageTextContent[urlID] += CleanLinkText(linkText) + " ";
+                        imageTextContent[urlID] = CleanLinkText(linkText) + " " + imageTextContent[urlID];
                     }
                 }
             }
             connection.Close();
         }
 
-        private void InsertText()
+        private void IndexText()
         {
             connection.Open();
             using (var transaction = connection.BeginTransaction())
