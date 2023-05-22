@@ -12,3 +12,4 @@
 - Fixed: Show "NEW" emoji next to unique captures in URL history view, not just when different from previous capture
 - Fixed: Index images that don't have link text
 - Fixed: Show search results even if Wikipedia call fails
+- Feature: Streamlined search engine results pages for text and image searches

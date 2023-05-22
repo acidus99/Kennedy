@@ -27,7 +27,6 @@ namespace Kennedy.Server.Views.Search
 
             Response.Success();
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Image Search");
-            Response.WriteLine("=> /image-search 🖼 New Image Search ");
             Response.WriteLine();
             
             var resultCount = ImageEngine.GetImageResultsCount(query);
@@ -42,6 +41,8 @@ namespace Kennedy.Server.Views.Search
                 int baseCounter = options.SearchPage - 1;
                 int counter = baseCounter * resultsInPage;
                 int start = counter + 1;
+
+                Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(start + results.Count - 1)} of {FormatCount(resultCount)} results");
 
                 foreach (var result in results)
                 {
@@ -64,8 +65,8 @@ namespace Kennedy.Server.Views.Search
                 }
                 Response.WriteLine($"Query time: {queryTime} ms");
                 Response.WriteLine();
-                Response.WriteLine("=> /search New Search");
-                Response.WriteLine("=> /lucky I'm Feeling Lucky");
+                Response.WriteLine("=> /image-search 🖼 Another Search");
+                Response.WriteLine("=> /search 🔍 Text Search");
                 Response.WriteLine("=> / Home");
             }
             else
@@ -76,13 +77,13 @@ namespace Kennedy.Server.Views.Search
 
         private void WriteResultEntry(Response resp, ImageSearchResult result, int resultNumber)
         {
-            Response.WriteLine($"=> {result.Url} {FormatCount(resultNumber)}. {result.ImageType} • {FormatCount(result.Width)} x {FormatCount(result.Height)} • {result.Url.Path}");
-            Response.WriteLine($"=> /page-info?id={result.UrlID} {FormatSize(result.BodySize)} • {FormatDomain(result.Url.Hostname, result.Favicon)} • More info...");
+            Response.WriteLine($"=> {result.Url} {FormatCount(resultNumber)}. {result.Url.Filename} ({result.Width} x {result.Height} • {result.ImageType} • {FormatSize(result.BodySize)})");
             Response.WriteLine(">" + FormatSnippet(result.Snippet));
+            Response.WriteLine($"=> /page-info?id={result.UrlID} More Info / Archived Copy");
             Response.WriteLine("");
         }
 
-        private IEnumerable<ImageSearchResult> DoQuery(string query, SearchOptions options)
+        private List<ImageSearchResult> DoQuery(string query, SearchOptions options)
         {
             int baseCounter = options.SearchPage - 1;
             return ImageEngine.DoImageSearch(query, baseCounter * resultsInPage, resultsInPage);
