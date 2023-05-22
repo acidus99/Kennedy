@@ -29,8 +29,11 @@ namespace Kennedy.Gemipedia
             var url = $"https://en.wikipedia.org/w/rest.php/v1/search/page?q={WebUtility.UrlEncode(query)}&limit=3";
 
             var apiResponse = FetchString(url);
-
-            return ApiResponseParser.ParseSearchResponse(apiResponse).FirstOrDefault();
+            if (apiResponse.Length > 0)
+            {
+                return ApiResponseParser.ParseSearchResponse(apiResponse).FirstOrDefault();
+            }
+            return null;
         }
 
         //Downloads a string, if its not already cached
@@ -43,10 +46,16 @@ namespace Kennedy.Gemipedia
                 return contents;
             }
             //fetch it
-            contents = client.DownloadString(url);
-            //cache it
-            Cache.Set(url, contents);
-            return contents;
+            try
+            {
+                contents = client.DownloadString(url);
+                //cache it
+                Cache.Set(url, contents);
+                return contents;
+            } catch(WebException)
+            {
+            }
+            return "";
         }
     }
 }
