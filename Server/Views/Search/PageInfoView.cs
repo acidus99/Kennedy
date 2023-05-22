@@ -31,7 +31,11 @@ namespace Kennedy.Server.Views.Search
             if (query.StartsWith("id=") && query.Length > 3)
             {
                 urlID = Convert.ToInt64(query.Substring(3));
-                possibleEntry = db.Documents.Where(x => x.UrlID == urlID).Include(x=>x.Image!).FirstOrDefault()!;
+                possibleEntry = db.Documents
+                    .Where(x => x.UrlID == urlID)
+                    .Include(x=>x.Image!)
+                    .Include(x=>x.Favicon)
+                    .FirstOrDefault()!;
             }
 
             if (possibleEntry == null)
@@ -52,7 +56,9 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine($"* Type: {entry.ContentType.ToString()}");
             Response.WriteLine($"* Size: {FormatSize(entry.BodySize)}");
             Response.WriteLine($"* Indexed on: {entry.LastSuccessfulVisit?.ToString("yyyy-MM-dd")}");
-            Response.WriteLine($"=> {entry.GeminiUrl.RootUrl} Capsule: {entry.GeminiUrl.Hostname}");
+
+            var emoji = entry.Favicon?.Emoji + " " ?? "";
+            Response.WriteLine($"=> {entry.GeminiUrl.RootUrl} Capsule: {emoji}{entry.GeminiUrl.Hostname}");
 
             switch (entry.ContentType)
             {
