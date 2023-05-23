@@ -43,6 +43,21 @@ namespace Kennedy.Server
             server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
             server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
             server.OnRequest("/page-info", SearchController.PageInfo);
+
+            //deprecate old hashtags/mentions
+            server.AddRedirect(new Redirect
+            {
+                IsTemporary = false,
+                UrlPrefix = "/mentions/",
+                TargetUrl = "/mentions-and-hashtags.gmi"
+            });
+            server.AddRedirect(new Redirect
+            {
+                IsTemporary = false,
+                UrlPrefix = "/hashtags/",
+                TargetUrl = "/mentions-and-hashtags.gmi"
+            });
+
             server.Run();
         }
 
