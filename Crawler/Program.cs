@@ -11,7 +11,7 @@ namespace Kennedy.Crawler
         {
             HandleArgs(args);
 
-            var crawler = new WebCrawler(1, 500000);
+            var crawler = new WebCrawler(40, 600000);
 
             crawler.AddSeed("gemini://mozz.us/");
             crawler.AddSeed("gemini://kennedy.gemi.dev/observatory/known-hosts");
