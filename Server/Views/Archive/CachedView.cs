@@ -67,6 +67,7 @@ namespace Kennedy.Server.Views.Archive
             {
                 Response.Write("Gemini links have been rewritten to link to archived content");
             }
+            Response.WriteLine();
             Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(snapshot.Url.GeminiUrl)} More Information in 🏎 Delorean Time Machine");
             Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot, true)} View Raw");
             Response.WriteLine("-=-=-=-=-=-=-");
