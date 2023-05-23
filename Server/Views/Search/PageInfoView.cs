@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Text;
 using System.Web;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +12,7 @@ using Kennedy.SearchIndex.Search;
 using Kennedy.SearchIndex.Models;
 using Kennedy.Data;
 using RocketForce;
+using Kennedy.Archive.Db;
 
 namespace Kennedy.Server.Views.Search
 {
@@ -50,241 +53,183 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine($"# Page Info: {entry.GeminiUrl.Path}");
             Response.WriteLine($"=> {entry.Url} Visit Current Url");
             Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(entry.GeminiUrl)} View archived copies with 🏎 DeLorean Time Machine");
-
-            Response.WriteLine();
-            Response.WriteLine($"## Metadata");
-            Response.WriteLine($"* Type: {entry.ContentType.ToString()}");
-            Response.WriteLine($"* Size: {FormatSize(entry.BodySize)}");
-            Response.WriteLine($"* Indexed on: {entry.LastSuccessfulVisit?.ToString("yyyy-MM-dd")}");
-
             var emoji = entry.Favicon?.Emoji + " " ?? "";
             Response.WriteLine($"=> {entry.GeminiUrl.RootUrl} Capsule: {emoji}{entry.GeminiUrl.Hostname}");
 
+            Response.WriteLine();
+            Response.WriteLine($"## Metadata");
+            Response.WriteLine($"* Mimetype: {entry.MimeType}");
+            if (entry.Charset != null)
+            {
+                Response.WriteLine($"* Charset: {entry.Charset}");
+            }
+
+            Response.WriteLine($"* Size: {FormatSize(entry.BodySize)}");
+            Response.WriteLine($"* First Seen: {entry.FirstSeen.ToString("yyyy-MM-dd")}");
+            Response.WriteLine($"* Indexed on: {entry.LastSuccessfulVisit?.ToString("yyyy-MM-dd")}");
+
+            RenderFileMetaData();
+
+            RenderLinks();
+
+        }
+
+        private void RenderFileMetaData()
+        {
             switch (entry.ContentType)
             {
                 case ContentType.Gemtext:
-                    var title = entry.Title ?? "(Could not determine)";
-                    var language = (entry.Language != null) ? FormatLanguage(entry.Language) : "(Could not determine)";
-                    Response.WriteLine($"* Title: {title}");
-                    Response.WriteLine($"* Language: {language}");
-
-                    if (entry.LineCount != null)
-                    {
-                        Response.WriteLine($"* Lines: {entry.LineCount}");
-                    }
+                    RenderGemtextMetaData();
                     break;
 
                 case ContentType.Image:
-
-                    var searchEngine = new SearchDatabase(Settings.Global.DataRoot);
-
-                    var terms = searchEngine.GetImageIndexText(urlID);
-                    if (entry.Image != null)
-                    {
-                        Response.WriteLine($"* Dimensions: {entry.Image.Width} x {entry.Image.Height}");
-                        Response.WriteLine($"* Format: {entry.Image.ImageType}");
-                        Response.WriteLine($"* Indexable text:");
-                        Response.WriteLine($">{terms}");
-                    }
+                    RenderImageMetaData();
                     break;
             }
+        }
 
-            if (entry.MimeType != null && entry.MimeType.StartsWith("text/gemini"))
+        private void RenderGemtextMetaData()
+        {
+            Response.WriteLine("### Gemtext Metadata");
+            var title = entry.Title ?? "(Could not determine)";
+            var language = (entry.Language != null) ? FormatLanguage(entry.Language) : "(Could not determine)";
+            Response.WriteLine($"* Title: {title}");
+            Response.WriteLine($"* Language: {language}");
+            if (entry.LineCount != null)
             {
-                RenderGemtextLinks();
-            }
-            else
-            {
-                RenderOtherLinks();
+                Response.WriteLine($"* Lines: {entry.LineCount}");
             }
         }
 
-        private void RenderGemtextLinks()
+        private void RenderImageMetaData()
         {
-
-            var inboundLinks = (from links in db.Links
-                                where links.TargetUrlID == entry.UrlID && !links.IsExternal
-                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
-                                orderby docs.Url
-                                select new
-                                {
-                                    docs.Url,
-                                    docs.Title,
-                                    links.LinkText
-                                }).ToList();
-
-            Response.WriteLine();
-            Response.WriteLine($"## {inboundLinks.Count} Internal links to this content");
-            int counter = 0;
-            if (inboundLinks.Count > 0)
+            if(entry.Image == null)
             {
-                foreach (var link in inboundLinks)
-                {
-                    counter++;
-                    Response.WriteLine($"=> {link.Url} {counter}. {FormatLink("From", link.Url, link.Title, link.LinkText)}");
-                }
+                return;
             }
-            else
-            {
-                Response.WriteLine("No internal links");
-            }
-
-            inboundLinks = (from links in db.Links
-                                where links.TargetUrlID == entry.UrlID && links.IsExternal
-                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
-                                orderby docs.Url
-                                select new
-                                {
-                                    docs.Url,
-                                    docs.Title,
-                                    links.LinkText
-                                }).ToList();
-
-            Response.WriteLine();
-            Response.WriteLine($"## {inboundLinks.Count} Incoming links from other capsules");
-            counter = 0;
-            if (inboundLinks.Count > 0)
-            {
-                foreach (var link in inboundLinks)
-                {
-                    counter++;
-                    Response.WriteLine($"=> {link.Url} {counter}. {FormatLink("From", link.Url, link.Title, link.LinkText)}");
-                }
-            }
-            else
-            {
-                Response.WriteLine("No incoming links");
-            }
-
-            var outboundLinks = (from links in db.Links
-                                 where links.SourceUrlID == entry.UrlID
-                                 join docs in db.Documents on links.TargetUrlID equals docs.UrlID
-                                 select new
-                                 {
-                                     docs.Url,
-                                     docs.Title,
-                                     links.LinkText
-                                 }).ToList();
-
-            Response.WriteLine();
-            Response.WriteLine($"## {outboundLinks.Count} Outgoing links");
-            if (outboundLinks.Count > 0)
-            {
-                counter = 0;
-                foreach (var link in outboundLinks)
-                {
-                    counter++;
-                    Response.WriteLine($"=> {link.Url} {counter}. {FormatLink("To", link.Url, link.Title, link.LinkText)}");
-                }
-            }
-            else
-            {
-                Response.WriteLine("No outgoing links");
-            }
-        }
-
-        private void RenderOtherLinks()
-        {
-            var inboundLinks = (from links in db.Links
-                                where links.TargetUrlID == entry.UrlID && !links.IsExternal
-                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
-                                orderby docs.Url
-                                select new
-                                {
-                                    docs.Url,
-                                    docs.Title,
-                                    links.LinkText
-                                }).ToList();
-
-            Response.WriteLine();
-            Response.WriteLine($"## {inboundLinks.Count} Internal links to this content");
-            int counter = 0;
-            if (inboundLinks.Count > 0)
-            {
-                foreach (var link in inboundLinks)
-                {
-                    counter++;
-                    Response.WriteLine($"=> {link.Url} {counter}. {FormatLink("From", link.Url, link.Title, link.LinkText)}");
-                }
-            }
-            else
-            {
-                Response.WriteLine("No internal links");
-            }
-
-            inboundLinks = (from links in db.Links
-                                where links.TargetUrlID == entry.UrlID && links.IsExternal
-                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
-                                orderby docs.Url
-                                select new
-                                {
-                                    docs.Url,
-                                    docs.Title,
-                                    links.LinkText
-                                }).ToList();
-
-            Response.WriteLine();
-            Response.WriteLine($"## {inboundLinks.Count} Incoming links from other capsules");
-            counter = 0;
-            if (inboundLinks.Count > 0)
-            {
-                foreach (var link in inboundLinks)
-                {
-                    counter++;
-                    Response.WriteLine($"=> {link.Url} {counter}. {FormatLink("From", link.Url, link.Title, link.LinkText)}");
-                }
-            }
-            else
-            {
-                Response.WriteLine("No incoming links");
-            }
-
-            var outboundLinks = (from links in db.Links
-                                 where links.SourceUrlID == entry.UrlID
-                                 join docs in db.Documents on links.TargetUrlID equals docs.UrlID
-                                 select new
-                                 {
-                                     docs.Url,
-                                     docs.Title,
-                                     links.LinkText
-                                 }).ToList();
-
-            Response.WriteLine();
-            Response.WriteLine($"## {outboundLinks.Count} Outgoing links");
-            if (outboundLinks.Count > 0)
-            {
-                counter = 0;
-                foreach (var link in outboundLinks)
-                {
-                    counter++;
-                    Response.WriteLine($"=> {link.Url} {counter}. {FormatLink("To", link.Url, link.Title, link.LinkText)}");
-                }
-            }
-            else
-            {
-                Response.WriteLine("No outgoing links");
-            }
-        }
-
-
-        private string FormatLink(string direction, string url, string pageTitle, string linkText)
-        {
-            string s = direction + " ";
             
-            if(pageTitle?.Length >0)
-            {
-                s += $"page titled '{pageTitle}'";
-            } else
-            {
-                var u = new GeminiUrl(url);
-                s += u.Hostname + u.Path;
-            }
-            if(linkText.Length > 0)
-            {
-                s += $" with link '{linkText}'";
-            }
-            return s;
+            Response.WriteLine("### Image Metadata");
+            Response.WriteLine($"* Dimensions: {entry.Image.Width} x {entry.Image.Height}");
+            Response.WriteLine($"* Format: {entry.Image.ImageType.ToUpper()}");
+            Response.WriteLine($"* Indexable text:");
+
+            var searchEngine = new SearchDatabase(Settings.Global.DataRoot);
+            var terms = searchEngine.GetImageIndexText(entry.UrlID);
+
+            Response.WriteLine($">{terms}");
         }
 
+        private void RenderLinks()
+        {
+            bool renderedAnyLinks = false;
+            Response.WriteLine($"## Links");
+
+            var tmplinks = (from links in db.Links
+                                where links.TargetUrlID == entry.UrlID && !links.IsExternal
+                                join docs in db.Documents on links.SourceUrlID equals docs.UrlID
+                                orderby docs.Url
+                                select new
+                                LinkItem
+                                {
+                                    Url = docs.Url,
+                                    Title = docs.Title,
+                                    LinkText = links.LinkText
+                                }).ToList();
+            if (tmplinks.Count > 0)
+            {
+                renderedAnyLinks = true;
+                Response.WriteLine($"### Internal Inbound Links");
+                Response.WriteLine($"{tmplinks.Count} inbound links, from other pages on {entry.GeminiUrl.Hostname}.");
+                RenderLinks(tmplinks, "From");
+                Response.WriteLine();
+            }
+
+            tmplinks = (from links in db.Links
+                        where links.TargetUrlID == entry.UrlID && links.IsExternal
+                        join docs in db.Documents on links.SourceUrlID equals docs.UrlID
+                        orderby docs.Url
+                        select new
+                        LinkItem
+                        {
+                            Url = docs.Url,
+                            Title = docs.Title,
+                            LinkText = links.LinkText
+                        }).ToList();
+
+            if (tmplinks.Count > 0)
+            {
+                renderedAnyLinks = true;
+                Response.WriteLine($"### External Inbound Links");
+                Response.WriteLine($"{tmplinks.Count} inbound links from other capsules.");
+                RenderLinks(tmplinks, "From");
+                Response.WriteLine();
+            }
+
+            if(entry.OutboundLinks > 0)
+            {
+                tmplinks = (from links in db.Links
+                            where links.SourceUrlID == entry.UrlID
+                            join docs in db.Documents on links.TargetUrlID equals docs.UrlID
+                            select new LinkItem
+                            {
+                                Url = docs.Url,
+                                Title = docs.Title,
+                                LinkText = links.LinkText
+                            }).ToList();
+
+                Response.WriteLine($"### Outbound Links");
+                Response.WriteLine($"{tmplinks.Count} outbound links from this page.");
+                RenderLinks(tmplinks, "To");
+                Response.WriteLine();
+            }
+        }
+
+        private void RenderLinks(IEnumerable<LinkItem> links, string direction)
+        {
+            int counter = 0;
+            if (links.Count() > 0)
+            {
+                foreach (var link in links)
+                {
+                    counter++;
+                    Response.WriteLine($"=> {link.Url} {counter}. {FormatLink(direction, link.Url, link.Title, link.LinkText)}");
+                }
+            }
+        }
+
+        private string FormatLink(string direction, string url, string? pageTitle, string? linkText)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(direction);
+            sb.Append(' ');
+            if (pageTitle?.Length > 0)
+            {
+                sb.Append($"page titled '{pageTitle}'");
+            }
+            else
+            {
+                var targetUrl = new GeminiUrl(url);
+                //only include hostname if it's a different capsule
+                if (targetUrl.Hostname != entry.Domain)
+                {
+                    sb.Append(targetUrl.Hostname);
+                }
+                sb.Append(targetUrl.Path);
+            }
+            if(linkText?.Length > 0)
+            {
+                sb.Append($" with link '{linkText}'");
+            }
+            return sb.ToString();
+        }
+
+        private class LinkItem
+        {
+            public required string Url { get; set; }
+
+            public string? Title { get; set; }
+
+            public string? LinkText { get; set; }
+        }
     }
 }
