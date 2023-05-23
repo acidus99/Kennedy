@@ -134,10 +134,6 @@ namespace Kennedy.SearchIndex.Models
 
         #endregion
 
-        //public List<Mention> Mentions { get; set; } = new List<Mention>();
-
-        //public List<HashTag> Tags { get; set; } = new List<HashTag>();
-
         public Document()
         {
         }

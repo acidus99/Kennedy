@@ -20,10 +20,6 @@ namespace Kennedy.SearchIndex.Web
 
         public DbSet<DocumentLink> Links { get; set; }
 
-        //public DbSet<HashTag> Tags { get; set; }
-
-        //public DbSet<Mention> Mentions { get; set; }
-
         public WebDatabaseContext(string storageDir)
         {
             StorageDirectory = storageDir;
@@ -52,14 +48,6 @@ namespace Kennedy.SearchIndex.Web
             //    .WithMany(f => f.Documents)
             //    .HasForeignKey(x => new { x.Protocol, x.Domain, x.Port })
             //    .IsRequired(false);
-
-            //modelBuilder.Entity<Document>()
-            //    .HasMany(e => e.Tags)
-            //    .WithMany(e => e.Documents);
-
-            //modelBuilder.Entity<Document>()
-            //    .HasMany(e => e.Mentions)
-            //    .WithMany(e => e.Documents);
         }
     }
 }
