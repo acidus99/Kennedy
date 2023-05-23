@@ -30,15 +30,30 @@ namespace Kennedy.Server.Views.Search
 
             Document? possibleEntry = null;
 
-            var query = SanitizedQuery;
+            var query = Request.Url.RawQuery;
             if (query.StartsWith("id=") && query.Length > 3)
             {
-                urlID = Convert.ToInt64(query.Substring(3));
-                possibleEntry = db.Documents
-                    .Where(x => x.UrlID == urlID)
-                    .Include(x=>x.Image!)
-                    .Include(x=>x.Favicon)
-                    .FirstOrDefault()!;
+                try
+                {
+                    urlID = Convert.ToInt64(query.Substring(3));
+                    possibleEntry = GetEntry(urlID);
+                }
+                catch (Exception)
+                {
+                }
+
+            }
+            else if (query.StartsWith("url=") && query.Length > 4)
+            {
+                try
+                {
+                    query = query.Substring(4);
+                    query = HttpUtility.UrlDecode(query);
+                    var url = new GeminiUrl(query);
+                    possibleEntry = GetEntry(url.ID);
+                }
+                catch (Exception)
+                { }
             }
 
             if (possibleEntry == null)
@@ -72,6 +87,15 @@ namespace Kennedy.Server.Views.Search
 
             RenderLinks();
 
+        }
+
+        private Document? GetEntry(long urlID)
+        {
+            return db.Documents
+                .Where(x => x.UrlID == urlID)
+                .Include(x => x.Image!)
+                .Include(x => x.Favicon)
+                .FirstOrDefault()!;
         }
 
         private void RenderFileMetaData()
