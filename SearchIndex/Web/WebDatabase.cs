@@ -213,39 +213,39 @@ namespace Kennedy.SearchIndex.Web
             return hasContentChanged;
         }
 
-        private void CreateMentions(WebDatabaseContext db, Document document, IEnumerable<string> mentions)
-        {
-            foreach (string mention in mentions)
-            {
-                var entry = db.Mentions
-                    .Where(x => x.Name == mention)
-                    .FirstOrDefault();
+        //private void CreateMentions(WebDatabaseContext db, Document document, IEnumerable<string> mentions)
+        //{
+        //    foreach (string mention in mentions)
+        //    {
+        //        var entry = db.Mentions
+        //            .Where(x => x.Name == mention)
+        //            .FirstOrDefault();
 
-                if (entry == null)
-                {
-                    entry = new Mention { Name = mention };
-                    db.Mentions.Add(entry);
-                }
-                document.Mentions.Add(entry);
-            }
-        }
+        //        if (entry == null)
+        //        {
+        //            entry = new Mention { Name = mention };
+        //            db.Mentions.Add(entry);
+        //        }
+        //        document.Mentions.Add(entry);
+        //    }
+        //}
 
-        private void CreateTags(WebDatabaseContext db, Document document, IEnumerable<string> tags)
-        {
-            foreach (string tag in tags)
-            {
-                var entry = db.Tags
-                    .Where(x => x.Name == tag)
-                    .FirstOrDefault();
+        //private void CreateTags(WebDatabaseContext db, Document document, IEnumerable<string> tags)
+        //{
+        //    foreach (string tag in tags)
+        //    {
+        //        var entry = db.Tags
+        //            .Where(x => x.Name == tag)
+        //            .FirstOrDefault();
 
-                if (entry == null)
-                {
-                    entry = new HashTag { Name = tag };
-                    db.Tags.Add(entry);
-                }
-                document.Tags.Add(entry);
-            }
-        }
+        //        if (entry == null)
+        //        {
+        //            entry = new HashTag { Name = tag };
+        //            db.Tags.Add(entry);
+        //        }
+        //        document.Tags.Add(entry);
+        //    }
+        //}
 
         /// <summary>
         /// Handles updating the Favicon, Security, or Robots tables

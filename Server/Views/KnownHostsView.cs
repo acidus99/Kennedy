@@ -40,14 +40,14 @@ namespace Kennedy.Server.Views
             {
 
                 var servers = db.Documents
-                    .Include(d => d.Favicon)
+                    //.Include(d => d.Favicon)
                     .GroupBy(d => new { d.Protocol, d.Domain, d.Port })
                     .Select(g => new
                     {
                         g.Key.Protocol,
                         g.Key.Domain,
                         g.Key.Port,
-                        g.First().Favicon,
+                        //g.First().Favicon,
                         Pages = g.Count()
                     });
 
@@ -57,7 +57,7 @@ namespace Kennedy.Server.Views
                 foreach (var server in servers)
                 {
                     counter++;
-                    var label = $"{counter}. {FormatDomain(server.Domain, server.Favicon?.Emoji)}";
+                    var label = $"{counter}. {FormatDomain(server.Domain, null)}";
                     if (server.Port != 1965)
                     {
                         label += ":" + server.Port;

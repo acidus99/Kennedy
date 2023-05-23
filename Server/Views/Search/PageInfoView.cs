@@ -68,7 +68,8 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine($"# Page Info: {entry.GeminiUrl.Path}");
             Response.WriteLine($"=> {entry.Url} Visit Current Url");
             Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(entry.GeminiUrl)} View archived copies with 🏎 DeLorean Time Machine");
-            var emoji = entry.Favicon?.Emoji + " " ?? "";
+            //var emoji = entry.Favicon?.Emoji + " " ?? "";
+            var emoji = "";
             Response.WriteLine($"=> {entry.GeminiUrl.RootUrl} Capsule: {emoji}{entry.GeminiUrl.Hostname}");
 
             Response.WriteLine();
@@ -94,7 +95,7 @@ namespace Kennedy.Server.Views.Search
             return db.Documents
                 .Where(x => x.UrlID == urlID)
                 .Include(x => x.Image!)
-                .Include(x => x.Favicon)
+                //.Include(x => x.Favicon)
                 .FirstOrDefault()!;
         }
 

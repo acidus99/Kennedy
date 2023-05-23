@@ -130,13 +130,13 @@ namespace Kennedy.SearchIndex.Models
 
         public Image? Image { get; set; }
 
-        public Favicon? Favicon {get; set;}
+        //public Favicon? Favicon {get; set;}
 
         #endregion
 
-        public List<Mention> Mentions { get; set; } = new List<Mention>();
+        //public List<Mention> Mentions { get; set; } = new List<Mention>();
 
-        public List<HashTag> Tags { get; set; } = new List<HashTag>();
+        //public List<HashTag> Tags { get; set; } = new List<HashTag>();
 
         public Document()
         {
