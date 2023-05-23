@@ -50,7 +50,8 @@ namespace Kennedy.SearchIndex.Web
             modelBuilder.Entity<Document>()
                 .HasOne(d => d.Favicon)
                 .WithMany(f => f.Documents)
-                .HasForeignKey(x => new { x.Protocol, x.Domain, x.Port });
+                .HasForeignKey(x => new { x.Protocol, x.Domain, x.Port })
+                .IsRequired(false);
 
             modelBuilder.Entity<Document>()
                 .HasMany(e => e.Tags)
