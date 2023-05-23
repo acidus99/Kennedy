@@ -14,7 +14,7 @@ namespace Kennedy.SearchIndex.Web
         public DbSet<Image> Images { get; set; }
 
         //aux entitites
-        public DbSet<Favicon> Favicons { get; set; }
+        //public DbSet<Favicon> Favicons { get; set; }
         public DbSet<RobotsTxt> RobotsTxts { get; set; }
         public DbSet<SecurityTxt> SecurityTxts { get; set; }
 
@@ -31,8 +31,8 @@ namespace Kennedy.SearchIndex.Web
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             options.UseSqlite($"Data Source='{StorageDirectory}doc-index.db'")
-            //.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
-            //.EnableSensitiveDataLogging(true)
+            .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
+            .EnableSensitiveDataLogging(true)
             ;
         }
 
