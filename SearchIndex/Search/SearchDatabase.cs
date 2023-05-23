@@ -49,7 +49,14 @@ namespace Kennedy.SearchIndex.Search
 
                     cmd = new SqliteCommand(@"INSERT INTO FTS(ROWID, Title, Body) VALUES ($docid, $title, $body)", connection, transaction); ;
                     cmd.Parameters.Add(new SqliteParameter("$docid", dbDocID));
-                    cmd.Parameters.Add(new SqliteParameter("$title", title));
+
+                    if (title == null)
+                    {
+                        cmd.Parameters.Add(new SqliteParameter("$title", DBNull.Value));
+                    } else
+                    {
+                        cmd.Parameters.Add(new SqliteParameter("$title", title));
+                    }
                     cmd.Parameters.Add(new SqliteParameter("$body", filteredBody));
                     cmd.ExecuteNonQuery();
 
