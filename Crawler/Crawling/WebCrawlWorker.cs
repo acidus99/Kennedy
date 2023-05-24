@@ -44,17 +44,18 @@ internal class WebCrawlWorker
 
             if (entry != null)
             {
+                GeminiResponse? response = null;
                 if (hostTracker.ShouldSendRequest(entry.Url))
                 {
-                    var response = requestor.Request(entry);
+                    response = requestor.Request(entry);
                     hostTracker.AddResponse(response);
-                    Crawler.ProcessRequestResponse(entry, response);
+                }
 
-                    //if we got a response, we need to wait before doing the next
-                    if (response != null)
-                    {
-                        Thread.Sleep(delayMs);
-                    }
+                Crawler.ProcessRequestResponse(entry, response);
+                //if we got a response, we need to wait before doing the next
+                if (response != null)
+                {
+                    Thread.Sleep(delayMs);
                 }
             }
             else
