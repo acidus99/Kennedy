@@ -1,9 +1,10 @@
 ﻿using System;
 
-using ImageMagick;
+using SixLabors.ImageSharp;
 
 using Gemini.Net;
 using Kennedy.Data;
+using System.IO;
 
 namespace Kennedy.Data.Parsers
 {
@@ -15,33 +16,34 @@ namespace Kennedy.Data.Parsers
 
         public override ParsedResponse? Parse(GeminiResponse resp)
         {
-            using (var image = LoadImage(resp))
+
+            if(resp.BodyBytes != null)
             {
-                if (image != null)
+
+                if(resp.IsBodyTruncated)
                 {
+                    int xxx = 4;
+                }
+
+                try
+                {
+                    var imageInfo = Image.Identify(resp.BodyBytes);
+                    var alphaInfo = imageInfo.PixelType.AlphaRepresentation;
+
+                    bool isTranparent = (alphaInfo != null && alphaInfo != PixelAlphaRepresentation.None);
+
                     return new ImageResponse(resp)
                     {
-                        IsTransparent = !image.IsOpaque,
-                        Height = image.Height,
-                        Width = image.Width,
-                        ImageType = image.Format.ToString()
+                        Height = imageInfo.Height,
+                        Width = imageInfo.Width,
+                        ImageType = imageInfo.Metadata.DecodedImageFormat!.Name,
+                        IsTransparent = isTranparent
                     };
-                }
-            }
-            return null;
-        }
 
-        public MagickImage? LoadImage(GeminiResponse resp)
-        {
-            try
-            {
-                if (resp.BodyBytes != null)
+                } catch(Exception)
                 {
-                    return new MagickImage(resp.BodyBytes);
+
                 }
-            }
-            catch (MagickException)
-            {
             }
             return null;
         }
