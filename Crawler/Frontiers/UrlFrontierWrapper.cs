@@ -70,7 +70,8 @@ namespace Kennedy.Crawler.Frontiers
                     {
                         Url = link.Url,
                         IsRobotsLimited = isRobotsLimits,
-                        DepthFromSeed = parentDepth + 1
+                        DepthFromSeed = parentDepth + 1,
+                        IsProactive = !isRobotsLimits
                     });
                 }
             }

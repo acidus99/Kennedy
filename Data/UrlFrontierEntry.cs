@@ -10,6 +10,9 @@ namespace Kennedy.Data
 		public bool IsRobotsLimited { get; set; } = false;
 
 		public int DepthFromSeed { get; set; } = 0;
+
+		public bool IsProactive { get; set; } = false;
+
 	}
 }
 
