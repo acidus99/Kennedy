@@ -146,7 +146,6 @@ namespace Kennedy.Server.Views.Search
 
         private void RenderLinks()
         {
-            bool renderedAnyLinks = false;
             Response.WriteLine($"## Links");
 
             var tmplinks = (from links in db.Links
@@ -162,7 +161,6 @@ namespace Kennedy.Server.Views.Search
                                 }).ToList();
             if (tmplinks.Count > 0)
             {
-                renderedAnyLinks = true;
                 Response.WriteLine($"### Internal Inbound Links");
                 Response.WriteLine($"{tmplinks.Count} inbound links, from other pages on {entry.GeminiUrl.Hostname}.");
                 RenderLinks(tmplinks, "From");
@@ -183,7 +181,6 @@ namespace Kennedy.Server.Views.Search
 
             if (tmplinks.Count > 0)
             {
-                renderedAnyLinks = true;
                 Response.WriteLine($"### External Inbound Links");
                 Response.WriteLine($"{tmplinks.Count} inbound links from other capsules.");
                 RenderLinks(tmplinks, "From");
