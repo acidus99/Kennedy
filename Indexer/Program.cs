@@ -21,22 +21,32 @@ namespace Kennedy.Indexer
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            var outputDirectory = ResolveDir("~/tmp/");
+            var outputDirectory = ResolveDir("~/kennedy-capsule/crawl-data/");
 
-            foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/tmp/latest.txt")))
+            //IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
+            IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
+            string inputWarc = ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/2023-05-24.warc");
+
+            ProcessWarc(inputWarc, processor);
+
+            //foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/latest.txt")))
+            //{
+            //    IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
+            //    //IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
+            //    ProcessWarc(inputWarc, processor);
+            //}
+        }
+
+        static void ProcessWarc(string inputWarc, IWarcProcessor processor)
+        {
+            WarcWrapper warcWrapper = new WarcWrapper(new WarcParser(inputWarc));
+
+            WarcRecord? record = null;
+            while ((record = warcWrapper.GetNext()) != null)
             {
-                IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
-                //IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
-
-                WarcWrapper warcWrapper = new WarcWrapper(new WarcParser(inputWarc));
-
-                WarcRecord? record = null;
-                while ((record = warcWrapper.GetNext()) != null)
-                {
-                    processor.ProcessRecord(record);
-                }
-                processor.FinalizeProcessing();
+                processor.ProcessRecord(record);
             }
+            processor.FinalizeProcessing();
         }
 
         private static string ResolveDir(string dir)
