@@ -31,8 +31,8 @@ namespace Kennedy.SearchIndex.Web
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             options.UseSqlite($"Data Source='{StorageDirectory}doc-index.db'")
-            .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
-            .EnableSensitiveDataLogging(true)
+            //.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
+            //.EnableSensitiveDataLogging(true)
             ;
         }
 
