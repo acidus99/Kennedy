@@ -1,4 +1,18 @@
-﻿=== WARC work:
+﻿gemini://gemini.omarpolo.com/cgi/gempkg/math/labplot/	@@@REQUEST
+
+when its excluded by ROBOTS????
+
+
+Crawling metrics:
+    - New URLs per URL processed? Running average? Shows how much its growing
+
+
+Ranking ideas:
+    - Use crawl depth as a component of ranking. "Deeper" pages ranking lower?
+
+
+
+=== WARC work:
     - Need to grab (latest?) robots.txt (from archive? from the scan datbase) and prune items when importing WARC (especially when loading in older WARCs)
     - "gemini://kennedy.gemi.dev/page-info?id=-*" are in archive, but shouldn't since robots excludes it
     - "kennedy" search results are indexed as a result in Kennedy ?!?!? (Search for cats)
