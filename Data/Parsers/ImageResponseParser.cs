@@ -16,15 +16,8 @@ namespace Kennedy.Data.Parsers
 
         public override ParsedResponse? Parse(GeminiResponse resp)
         {
-
             if(resp.BodyBytes != null)
             {
-
-                if(resp.IsBodyTruncated)
-                {
-                    int xxx = 4;
-                }
-
                 try
                 {
                     var imageInfo = Image.Identify(resp.BodyBytes);
