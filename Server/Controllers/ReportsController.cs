@@ -17,5 +17,17 @@ namespace Kennedy.Server.Controllers
             var view = new SiteHealthView(request, response, app);
             view.Render();
         }
+
+        public static void DomainBacklinks(GeminiRequest request, Response response, GeminiServer app)
+        {
+            if (!request.Url.HasQuery)
+            {
+                response.Input("Enter Domain");
+                return;
+            }
+            var view = new DomainBacklinksView(request, response, app);
+            view.Render();
+        }
+
     }
 }

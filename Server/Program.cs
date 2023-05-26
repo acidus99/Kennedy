@@ -39,6 +39,7 @@ namespace Kennedy.Server
             server.OnRequest("/delorean", ArchiveController.Redirect);
 
             server.OnRequest(RoutePaths.SiteHealthRoute, ReportsController.SiteHealth);
+            server.OnRequest(RoutePaths.DomainBacklinksRoute, ReportsController.DomainBacklinks);
 
             server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
             server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);

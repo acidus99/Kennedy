@@ -16,6 +16,7 @@ namespace Kennedy.Server
         public const string ArchiveStatsRoute = "/archive/stats";
 
         public const string SiteHealthRoute = "/reports/site-health";
+        public const string DomainBacklinksRoute = "/reports/domain-backlinks";
 
         public static string ViewCached(GeminiUrl url)
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={DateTime.Now}";
