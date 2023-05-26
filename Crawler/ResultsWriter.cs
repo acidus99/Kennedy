@@ -48,6 +48,12 @@ namespace Kennedy.Crawler
 			}
 		}
 
+		public void Close()
+		{
+			Flush();
+			warcCreator.Dispose();
+		}
+
 		private void WriteResponseToWarc(GeminiResponse response)
 		{
 			warcCreator.WriteSession(response);

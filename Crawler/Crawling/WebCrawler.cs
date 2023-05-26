@@ -149,7 +149,7 @@ public class WebCrawler : IWebCrawler
     private void FinalizeCrawl()
     {
         CrawlerStopwatch.Stop();
-        ResultsWarc.Flush();
+        ResultsWarc.Close();
     }
 
     private void SpawnCrawlThreads()
@@ -188,12 +188,8 @@ public class WebCrawler : IWebCrawler
     public void ProcessRobotsResponse(GeminiResponse response)
     {
         TotalUrlsRequested.Increment();
-        ProcessRequestResponse(new UrlFrontierEntry
-        {
-            Url = response.RequestUrl,
-            DepthFromSeed = 0,
-            IsRobotsLimited = false
-        }, response);
+        ResultsWarc.AddToQueue(response);
+        TotalUrlsProcessed.Increment();
     }
 
     public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response)
@@ -216,6 +212,7 @@ public class WebCrawler : IWebCrawler
             //add proactive URLs
             FrontierWrapper.AddUrls(entry.DepthFromSeed, ProactiveLinksFinder.FindLinks(response), false);
         }
+        HackLogger.Log(entry.Url, "PROCESSED");
         TotalUrlsProcessed.Increment();
     }
 
@@ -229,6 +226,7 @@ public class WebCrawler : IWebCrawler
         var url = UrlFrontier.GetUrl(crawlerID);
         if (url != null)
         {
+            HackLogger.Log(url.Url, "REQUEST");
             TotalUrlsRequested.Increment();
         }
         return url;
