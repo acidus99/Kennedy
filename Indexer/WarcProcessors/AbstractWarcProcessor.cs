@@ -22,18 +22,26 @@ namespace Kennedy.Indexer.WarcProcessors
 
         private GeminiResponse? GetGeminiResponse(ResponseRecord responseRecord)
         {
-
             if (responseRecord.TargetUri == null || responseRecord.ContentBlock == null)
             {
                 return null;
             }
-            var url = new GeminiUrl(StripRobots(responseRecord.TargetUri));
+            try
+            {
 
-            var response = GeminiParser.ParseResponseBytes(url, responseRecord.ContentBlock);
-            response.RequestSent = responseRecord.Date;
-            response.ResponseReceived = responseRecord.Date;
-            response.IsBodyTruncated = (responseRecord.Truncated?.Length > 0);
-            return response;
+                var url = new GeminiUrl(StripRobots(responseRecord.TargetUri));
+
+                var response = GeminiParser.ParseResponseBytes(url, responseRecord.ContentBlock);
+                response.RequestSent = responseRecord.Date;
+                response.ResponseReceived = responseRecord.Date;
+                response.IsBodyTruncated = (responseRecord.Truncated?.Length > 0);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Malformed Gemini response record. Skipping");
+                return null;
+            }
         }
 
         private Uri StripRobots(Uri url)
