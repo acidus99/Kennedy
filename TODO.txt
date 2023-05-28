@@ -6,6 +6,9 @@ when its excluded by ROBOTS????
 Crawling metrics:
     - New URLs per URL processed? Running average? Shows how much its growing
 
+    - should I track in the crawler if a document can be indexed? Then use something like host health tracker to determine how many responses
+in the last 100 have been indexable, and then discard URLs if its not indexable?
+
 
 Ranking ideas:
     - Use crawl depth as a component of ranking. "Deeper" pages ranking lower?

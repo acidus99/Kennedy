@@ -91,9 +91,9 @@ namespace Kennedy.SearchIndex.Models
         public bool IsBodyTruncated { get; set; } = false;
 
         public int BodySize { get; set; } = 0;
-        public long? BodyHash { get; set; }
+        public string? BodyHash { get; set; }
 
-        public long ResponseHash { get; set; }
+        public string? ResponseHash { get; set; }
 
         public int OutboundLinks { get; set; } = 0;
 

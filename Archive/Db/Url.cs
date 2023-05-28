@@ -1,8 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Security.Cryptography;
-
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
@@ -25,8 +23,6 @@ namespace Kennedy.Archive.Db
 		public string Protocol { get; set; } = "";
 
 		public int Port { get; set; } = 1965;
-
-		public string PackName { get; set; } = "";
 
 		public bool IsPublic { get; set; }
 
@@ -62,7 +58,6 @@ namespace Kennedy.Archive.Db
 			Protocol = url.Protocol;
 
 			Snapshots = new List<Snapshot>();
-			PackName = Convert.ToHexString(MD5.HashData(BitConverter.GetBytes(url.ID))).ToLower();
 		}
 	}
 }

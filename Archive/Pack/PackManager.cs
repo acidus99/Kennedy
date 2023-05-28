@@ -12,7 +12,7 @@
         public PackManager(string path)
         {
             ArchiveRoot = path;
-            if(!ArchiveRoot.EndsWith(Path.DirectorySeparatorChar))
+            if (!ArchiveRoot.EndsWith(Path.DirectorySeparatorChar))
             {
                 ArchiveRoot += Path.DirectorySeparatorChar;
             }
@@ -50,7 +50,7 @@
 
         public PackFile GetPack(string packName)
         {
-            if(packName.Length < 4)
+            if (packName.Length < 4)
             {
                 throw new ArgumentException($"PackID is too short! Expected > 4, got {packName.Length}");
             }
@@ -65,8 +65,23 @@
             //Ensure the file path exists
             Directory.CreateDirectory(path);
 
-            return new PackFile(path + packName);
+            return new PackFile(path + GetPackFileName(packName));
         }
+
+        private string GetPackFileName(string packName)
+        {
+            if (packName.Length < 4)
+            {
+                throw new ArgumentException($"PackID is too short! Expected > 4, got {packName.Length}");
+            }
+
+            if (!IsKeyIsValid(packName))
+            {
+                throw new ArgumentException("Packname contains invalid characters", "packName");
+            }
+            return $"{packName[0]}{packName[1]}{packName[2]}{packName[3]}";
+        }
+
 
         public bool DeletePack(string packName)
         {

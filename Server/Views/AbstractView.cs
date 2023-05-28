@@ -47,7 +47,7 @@ namespace Kennedy.Server.Views
                 return $"{bodySize.ToString("N0")} B";
             }
 
-            return $"{Math.Round(((double)bodySize) / ((double)1024)).ToString("N0")} KB";
+            return $"{Math.Round(((double)bodySize) / ((double)1024)).ToString("N0")} KiB";
         }
 
         protected string FormatResultTitle(FullTextSearchResult result)

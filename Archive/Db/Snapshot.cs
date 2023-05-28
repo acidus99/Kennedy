@@ -29,11 +29,14 @@ namespace Kennedy.Archive.Db
 		/// <summary>
 		/// Is this snapshit a duplicate of a previous snapshot?
 		/// </summary>
-		public bool IsDuplicate { get; set; }
+		public bool IsDuplicate { get; set; } = false;
+
+		public bool IsGlobalDuplicate { get; set; } = false;
 
 		public int StatusCode { get; set; }
 
-		public long DataHash { get; set; }
+		//Sha-256 hex string
+		public required string DataHash { get; set; }
 
 		public string? Mimetype { get; set; }
 

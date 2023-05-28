@@ -45,7 +45,7 @@ namespace Kennedy.Archive
                 throw new ArgumentNullException(nameof(snapshot), "Snapshot cannot have a null Url property");
             }
 
-            var pack = manager.GetPack(snapshot.Url.PackName);
+            var pack = manager.GetPack(snapshot.DataHash);
             return pack.Read(snapshot.Offset);
         }
 
