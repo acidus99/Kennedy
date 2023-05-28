@@ -49,6 +49,9 @@ namespace Kennedy.Warc
                 WarcInfoId = WarcInfoID,
                 TargetUri = response.RequestUrl.Url
             };
+
+            responseRecord.BlockDigest = GeminiParser.GetStrongHash(responseRecord.ContentBlock);
+
             if (response.ResponseReceived.HasValue)
             {
                 responseRecord.Date = response.ResponseReceived.Value;
@@ -104,12 +107,17 @@ namespace Kennedy.Warc
         }
 
         public RequestRecord CreateRequestRecord(GeminiUrl url)
-            => new RequestRecord
+        {
+            var record = new RequestRecord
             {
                 ContentBlock = GeminiParser.CreateRequestBytes(url),
                 ContentType = RequestContentType,
                 WarcInfoId = WarcInfoID,
                 TargetUri = url.Url
             };
+
+            record.BlockDigest = GeminiParser.GetStrongHash(record.ContentBlock);
+            return record;
+        }
     }
 }
