@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Security.Authentication;
 using System.Text;
 
 using Gemini.Net;
+using Kennedy.Data;
 
 using Warc;
 
@@ -31,7 +33,7 @@ namespace Kennedy.Warc
             });
         }
 
-        public void WriteSession(GeminiResponse response)
+        public void WriteSession(GeminiResponse response, TlsConnectionInfo? connectionInfo)
         {
             var requestRecord = CreateRequestRecord(response.RequestUrl);
             if (response.RequestSent.HasValue)
@@ -39,6 +41,7 @@ namespace Kennedy.Warc
                 requestRecord.Date = response.RequestSent.Value;
             }
             requestRecord.IpAddress = response.RemoteAddress?.ToString();
+            AppendTlsInfo(requestRecord, connectionInfo);
 
             Write(requestRecord);
 
@@ -57,6 +60,7 @@ namespace Kennedy.Warc
                 responseRecord.Date = response.ResponseReceived.Value;
             }
             responseRecord.IpAddress = response.RemoteAddress?.ToString();
+            AppendTlsInfo(requestRecord, connectionInfo);
 
             responseRecord.ConcurrentTo.Add(requestRecord.Id);
 
@@ -106,7 +110,7 @@ namespace Kennedy.Warc
             Write(responseRecord);
         }
 
-        public RequestRecord CreateRequestRecord(GeminiUrl url)
+        private RequestRecord CreateRequestRecord(GeminiUrl url)
         {
             var record = new RequestRecord
             {
@@ -119,5 +123,56 @@ namespace Kennedy.Warc
             record.BlockDigest = GeminiParser.GetStrongHash(record.ContentBlock);
             return record;
         }
+
+        private void AppendTlsInfo(WarcRecord record, TlsConnectionInfo? connectionInfo)
+        {
+            if (connectionInfo != null)
+            {
+                if (connectionInfo.Protocol.HasValue)
+                {
+                    record.AddCustomHeader("WARC-Protocol", GetProtocolHeader(connectionInfo));
+                }
+
+                if (connectionInfo.CipherSuite.HasValue)
+                {
+                    record.AddCustomHeader("WARC-TLS-Cipher-Suite", GetCipherSuite(connectionInfo));
+                }
+            }
+        }
+
+        private string? GetCipherSuite(TlsConnectionInfo connection)
+        {
+            if (connection.CipherSuite != null)
+            {
+                return connection.CipherSuite.ToString();
+            }
+            return null;
+        }
+
+        private string? GetProtocolHeader(TlsConnectionInfo connection)
+        {
+            if(connection.Protocol == null)
+            {
+                return null;
+            }
+
+            // Disabling warning because we are only using these to parse
+#pragma warning disable SYSLIB0039 // Type or member is obsolete
+            switch (connection.Protocol)
+            {
+                case SslProtocols.Tls13:
+                    return "tls/1.3";
+                case SslProtocols.Tls12:
+                    return "tls/1.2";
+                case SslProtocols.Tls11:
+                    return "tls/1.1";
+                case SslProtocols.Tls:
+                    return "tls/1.0";
+                default:
+                    return null;
+            }
+#pragma warning restore SYSLIB0039 // Type or member is obsolete
+        }
+
     }
 }

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+
 using Gemini.Net;
 using Kennedy.Data;
 namespace Kennedy.Crawler.Crawling;
@@ -9,7 +12,7 @@ public interface IWebCrawler
 
     UrlFrontierEntry? GetUrl(int crawlerID = 0);
 
-    void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response);
+    void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response, TlsConnectionInfo? connectionInfo);
 
     void ProcessRobotsResponse(GeminiResponse response);
 }

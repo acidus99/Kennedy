@@ -10,5 +10,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
     <ProjectReference Include="..\..\Warc.Net\Warc.Net.csproj" />
+    <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
   </ItemGroup>
 </Project>

@@ -188,11 +188,11 @@ public class WebCrawler : IWebCrawler
     public void ProcessRobotsResponse(GeminiResponse response)
     {
         TotalUrlsRequested.Increment();
-        ResultsWarc.AddToQueue(response);
+        ResultsWarc.AddToQueue(response, null);
         TotalUrlsProcessed.Increment();
     }
 
-    public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response)
+    public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response, TlsConnectionInfo? connectionInfo)
     { 
         //null means it was ignored by robots
         if (response != null)
@@ -202,7 +202,7 @@ public class WebCrawler : IWebCrawler
                 errorLog.LogError(response.Meta, response.RequestUrl.NormalizedUrl);
             }
 
-            ResultsWarc.AddToQueue(response);
+            ResultsWarc.AddToQueue(response, connectionInfo);
 
             //if we haven't seen this content before, parse it for links and add them to the frontier
             if (!seenContentTracker.CheckAndRecord(response))

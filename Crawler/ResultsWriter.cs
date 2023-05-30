@@ -7,6 +7,7 @@ using Warc;
 
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
+using Kennedy.Data;
 
 namespace Kennedy.Crawler
 {
@@ -15,7 +16,7 @@ namespace Kennedy.Crawler
 	/// </summary>
 	public class ResultsWriter
 	{
-		ConcurrentQueue<GeminiResponse> responses;
+		ConcurrentQueue<Tuple<GeminiResponse, TlsConnectionInfo?>> responses;
 		GeminiWarcCreator warcCreator;
 
 		public int Saved { get; private set; }
@@ -23,7 +24,7 @@ namespace Kennedy.Crawler
 		public ResultsWriter(string warcDirectory)
 		{
 			Saved = 0;
-			responses = new ConcurrentQueue<GeminiResponse>();
+			responses = new ConcurrentQueue<Tuple<GeminiResponse, TlsConnectionInfo?>>();
 			warcCreator = new GeminiWarcCreator(warcDirectory + "gemini.crawl.warc");
 			warcCreator.WriteWarcInfo(new WarcFields
 			{
@@ -34,14 +35,14 @@ namespace Kennedy.Crawler
 			});
         }
 
-		public void AddToQueue(GeminiResponse response)
+		public void AddToQueue(GeminiResponse response, TlsConnectionInfo? connectionInfo)
 		{
-			responses.Enqueue(response);
+			responses.Enqueue(new Tuple<GeminiResponse, TlsConnectionInfo?>(response, connectionInfo));
 		}
 
 		public void Flush()
 		{
-			GeminiResponse? response;
+			Tuple<GeminiResponse, TlsConnectionInfo?>? response;
 			while(responses.TryDequeue(out response))
 			{
 				WriteResponseToWarc(response);
@@ -54,9 +55,9 @@ namespace Kennedy.Crawler
 			warcCreator.Dispose();
 		}
 
-		private void WriteResponseToWarc(GeminiResponse response)
+		private void WriteResponseToWarc(Tuple<GeminiResponse, TlsConnectionInfo?> response)
 		{
-			warcCreator.WriteSession(response);
+			warcCreator.WriteSession(response.Item1, response.Item2);
             Saved++;
         }
 	}
