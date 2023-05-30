@@ -48,24 +48,34 @@
                 packName[2] + packName[3] + Path.DirectorySeparatorChar;
         }
 
-        public PackFile GetPack(string packName)
+        public PackFile GetPack(string dataHash)
         {
-            if (packName.Length < 4)
+
+            var index = dataHash.IndexOf(':');
+
+            if (index < 0 || index == dataHash.Length)
             {
-                throw new ArgumentException($"PackID is too short! Expected > 4, got {packName.Length}");
+                throw new ArgumentException("Hash is not of the form '[hash name]:[hexadecimal string]'");
             }
 
-            if (!IsKeyIsValid(packName))
+            dataHash = dataHash.Substring(index + 1);
+
+            if (dataHash.Length < 4)
+            {
+                throw new ArgumentException($"PackID is too short! Expected > 4, got {dataHash.Length}");
+            }
+
+            if (!IsKeyIsValid(dataHash))
             {
                 throw new ArgumentException("Packname contains invalid characters", "packName");
             }
 
-            var path = getPathForPackName(packName);
+            var path = getPathForPackName(dataHash);
 
             //Ensure the file path exists
             Directory.CreateDirectory(path);
 
-            return new PackFile(path + GetPackFileName(packName));
+            return new PackFile(path + GetPackFileName(dataHash));
         }
 
         private string GetPackFileName(string packName)
