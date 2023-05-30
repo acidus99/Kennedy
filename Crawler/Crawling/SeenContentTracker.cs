@@ -7,14 +7,14 @@ namespace Kennedy.Crawler.Crawling;
 
 public class SeenContentTracker
 {
-    Dictionary<long, bool> seenHashes;
+    Dictionary<string, bool> seenHashes;
     object locker;
 
     ThreadSafeCounter duplicateCounter;
 
     public SeenContentTracker()
     {
-        seenHashes = new Dictionary<long, bool>();
+        seenHashes = new Dictionary<string, bool>();
         locker = new object();
         duplicateCounter = new ThreadSafeCounter();
     }
@@ -26,14 +26,14 @@ public class SeenContentTracker
     /// <returns>if we have seen this resp body before</returns>
     public bool CheckAndRecord(GeminiResponse resp)
     {
-        long? hash = resp.BodyHash;
+        string? hash = resp.BodyHash;
         if (hash != null)
         {
             lock (locker)
             {
-                if (!seenHashes.ContainsKey(hash.Value))
+                if (!seenHashes.ContainsKey(hash))
                 {
-                    seenHashes[hash.Value] = true;
+                    seenHashes[hash] = true;
                     return false;
                 }
                 else

@@ -89,7 +89,6 @@ namespace Kennedy.Archive
             using (var db = GetContext())
             {
                 var urlEntry = db.Urls.Where(x => x.Id == response.RequestUrl.ID).FirstOrDefault();
-                bool newUrl = false;
                 if (urlEntry == null)
                 {
                     urlEntry = new Url(response.RequestUrl)
@@ -97,27 +96,14 @@ namespace Kennedy.Archive
                         IsPublic = isPublic
                     };
                     db.Urls.Add(urlEntry);
-                    newUrl = true;
                     //need to save for foreign key constraint
                     db.SaveChanges();
                 }
 
-                var packFile = packManager.GetPack(urlEntry.PackName);
-
-                if (newUrl)
-                {
-                    packFile.Append(PackRecordFactory.MakeInfoRecord(urlEntry.FullUrl));
-                }
-
                 var respBytes = GeminiParser.CreateResponseBytes(response);
 
-                var dataHash = GeminiParser.GetResponseHash(respBytes);
+                var dataHash = GeminiParser.GetStrongHash(respBytes);
 
-                var previousSnapshot = db.Snapshots
-                    .Where(x => x.UrlId == urlEntry.Id &&
-                            x.DataHash == dataHash).FirstOrDefault();
-
-                //OK, create a new snapshot
                 var snapshot = new Snapshot
                 {
                     Captured = response.ResponseReceived!.Value,
@@ -132,16 +118,29 @@ namespace Kennedy.Archive
                     IsBodyTruncated = response.IsBodyTruncated
                 };
 
+                //does this response already exist (for this URL or another)?
+                var previousSnapshot = db.Snapshots
+                    .Where(x=> x.DataHash == dataHash).FirstOrDefault();
+
                 if (previousSnapshot == null)
                 {
-                    //this snapshot is unique, so record it
+                    //this datahash is unique, so write it to storage
+                    var packFile = packManager.GetPack(dataHash);
                     snapshot.Offset = packFile.Append(PackRecordFactory.MakeOptimalRecord(respBytes));
                 }
                 else
                 {
-                    //is same as existing
+                    //use the same offset as previous on
                     snapshot.Offset = previousSnapshot.Offset;
-                    snapshot.IsDuplicate = true;
+
+                    //is this a duplicate for this URL
+                    if (previousSnapshot.UrlId == snapshot.UrlId)
+                    {
+                        snapshot.IsDuplicate = true;
+                    } else
+                    {
+                        snapshot.IsGlobalDuplicate = true;
+                    }
                 }
                 db.Snapshots.Add(snapshot);
                 db.SaveChanges();
@@ -155,7 +154,6 @@ namespace Kennedy.Archive
 
             using (var db = GetContext())
             {
-
                 ret.Domains = db.Urls
                     .Select(x => new { Domain = x.Domain, Port = x.Port })
                     .Distinct()
@@ -172,11 +170,11 @@ namespace Kennedy.Archive
                 ret.Captures = db.Snapshots.LongCount();
 
                 ret.CapturesUnique = db.Snapshots
-                    .Where(x => !x.IsDuplicate)
+                    .Where(x => !x.IsDuplicate && !x.IsGlobalDuplicate)
                     .LongCount();
 
                 ret.Size = db.Snapshots
-                    .Where(x => !x.IsDuplicate)
+                    .Where(x => !x.IsDuplicate && !x.IsGlobalDuplicate)
                     .Sum(x => x.Size);
 
                 ret.SizeWithoutDeDuplication = db.Snapshots

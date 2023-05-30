@@ -21,20 +21,20 @@ namespace Kennedy.Indexer
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            var outputDirectory = ResolveDir("~/kennedy-capsule/crawl-data/");
+            var outputDirectory = ResolveDir("~/tmp/");
 
             //IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
-            IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
-            string inputWarc = ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/2023-05-24.warc");
+            //IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
+            //string inputWarc = ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/2023-05-24.warc");
 
-            ProcessWarc(inputWarc, processor);
+            //ProcessWarc(inputWarc, processor);
 
-            //foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/latest.txt")))
-            //{
-            //    IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
-            //    //IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
-            //    ProcessWarc(inputWarc, processor);
-            //}
+            foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/all.txt")))
+            {
+                //IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
+                IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
+                ProcessWarc(inputWarc, processor);
+            }
         }
 
         static void ProcessWarc(string inputWarc, IWarcProcessor processor)

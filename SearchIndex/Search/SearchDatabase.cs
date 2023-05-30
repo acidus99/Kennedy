@@ -120,14 +120,12 @@ namespace Kennedy.SearchIndex.Search
                     connection.Open();
                     var cmd = new SqliteCommand(
 @"
-Select img.UrlID, url, BodySize, Emoji, Width, Height, ImageType, IsTransparent, snippet(ImageSearch, 0, '[',']','…',20) as snip, ( rank + (rank*0.3*PopularityRank)) as tot
+Select img.UrlID, url, BodySize, Width, Height, ImageType, IsTransparent, snippet(ImageSearch, 0, '[',']','…',20) as snip, ( rank + (rank*0.3*PopularityRank)) as tot
 From ImageSearch as fts
  Inner Join Images as img
 On img.UrlID = fts.ROWID
  Inner join Documents as doc
 On doc.UrlID = img.UrlID
-left join Favicons as f
-on doc.Protocol = f.Protocol and doc.Port = f.Port and doc.Domain = f.Domain 
 WHERE Terms match $query
 order by tot
 LIMIT $limit OFFSET $offset
@@ -145,7 +143,7 @@ LIMIT $limit OFFSET $offset
                             BodySize = reader.GetInt32(reader.GetOrdinal("BodySize")),
                             Snippet = reader.GetString(reader.GetOrdinal("snip")),
                             UrlID = reader.GetInt64(reader.GetOrdinal("UrlID")),
-                            Favicon = reader["Emoji"] as string,
+                            Favicon = "",
                             Width = reader.GetInt32(reader.GetOrdinal("Width")),
                             Height = reader.GetInt32(reader.GetOrdinal("Height")),
                             ImageType = reader.GetString(reader.GetOrdinal("ImageType")).ToUpper()
@@ -208,7 +206,7 @@ LIMIT $limit OFFSET $offset
                             UrlID = reader.GetInt64(reader.GetOrdinal("UrlID")),
                             Language = reader["DetectedLanguage"] as string,
                             LineCount = reader.GetInt32(reader.GetOrdinal("LineCount")),
-                            Favicon = reader["Emoji"] as string,
+                            Favicon = "",
                             ExternalInboundLinks = reader.GetInt32(reader.GetOrdinal("ExternalInboundLinks")),
 
                             FtsRank = reader.GetDouble(reader.GetOrdinal("rank")),
@@ -228,11 +226,10 @@ LIMIT $limit OFFSET $offset
         private string GetAlgorithmString()
         {
             return @"
-Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType,  Emoji,  ExternalInboundLinks, PopularityRank, rank, ( rank + (rank*0.3*PopularityRank)) as tot, snippet(FTS, 1, '[',']','…',20) as snip
+Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, ExternalInboundLinks, PopularityRank, rank, ( rank + (rank*0.3*PopularityRank)) as tot, snippet(FTS, 1, '[',']','…',20) as snip
 From FTS as fts
 Inner Join Documents as doc
 On doc.UrlID = fts.ROWID
-left join Favicons as f on doc.Protocol = f.Protocol and doc.Port = f.Port and doc.Domain = f.Domain 
 WHERE Body match $query
 order by tot
 LIMIT $limit OFFSET $offset";
