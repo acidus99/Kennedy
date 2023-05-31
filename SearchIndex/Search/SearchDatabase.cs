@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 using Microsoft.Data.Sqlite;
@@ -6,16 +7,20 @@ using Microsoft.Data.Sqlite;
 using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.SearchIndex.Models;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Microsoft.EntityFrameworkCore;
+using static System.Net.WebRequestMethods;
 
 namespace Kennedy.SearchIndex.Search
 {
 	public class SearchDatabase : ISearchDatabase
 	{
         string connectionString;
+        string storageDirectory;
+
 
         public SearchDatabase(string storageDirectory)
         {
+            this.storageDirectory = storageDirectory;
             connectionString = $"Data Source='{storageDirectory}doc-index.db'";
             EnsureFullTextSearch();
         }
@@ -109,18 +114,10 @@ namespace Kennedy.SearchIndex.Search
             return 0;
         }
 
-        public List<ImageSearchResult> DoImageSearch(string query, int offset, int limit)
+        private string GetImageSearchQuery()
         {
-
-            var ret = new List<ImageSearchResult>();
-            try
-            {
-                using (var connection = new SqliteConnection(connectionString))
-                {
-                    connection.Open();
-                    var cmd = new SqliteCommand(
-@"
-Select img.UrlID, url, BodySize, Width, Height, ImageType, IsTransparent, snippet(ImageSearch, 0, '[',']','…',20) as snip, ( rank + (rank*0.3*PopularityRank)) as tot
+            return @"
+Select img.UrlID, url, BodySize, Width, Height, ImageType, snippet(ImageSearch, 0, '[',']','…',20) as Snippet, ( rank + (rank*0.3*PopularityRank)) as tot
 From ImageSearch as fts
  Inner Join Images as img
 On img.UrlID = fts.ROWID
@@ -129,33 +126,22 @@ On doc.UrlID = img.UrlID
 WHERE Terms match $query
 order by tot
 LIMIT $limit OFFSET $offset
-", connection);
+";
+        }
 
-                    cmd.Parameters.Add(new SqliteParameter("$query", query));
-                    cmd.Parameters.Add(new SqliteParameter("limit", limit));
-                    cmd.Parameters.Add(new SqliteParameter("$offset", offset));
-                    SqliteDataReader reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        ret.Add(new ImageSearchResult
-                        {
-                            Url = new GeminiUrl(reader.GetString(reader.GetOrdinal("Url"))),
-                            BodySize = reader.GetInt32(reader.GetOrdinal("BodySize")),
-                            Snippet = reader.GetString(reader.GetOrdinal("snip")),
-                            UrlID = reader.GetInt64(reader.GetOrdinal("UrlID")),
-                            Favicon = "",
-                            Width = reader.GetInt32(reader.GetOrdinal("Width")),
-                            Height = reader.GetInt32(reader.GetOrdinal("Height")),
-                            ImageType = reader.GetString(reader.GetOrdinal("ImageType")).ToUpper()
-                        });
-                    }
-                    return ret;
-                }
-            }
-            catch (Exception)
+        public List<ImageSearchResult> DoImageSearch(string query, int offset, int limit)
+        {
+            using (var db = new Kennedy.SearchIndex.Web.WebDatabaseContext(storageDirectory))
             {
+                var sql = GetImageSearchQuery();
+
+                var results = db.ImageResults.FromSqlRaw(sql,
+                    new SqliteParameter("$query", query),
+                    new SqliteParameter("limit", limit),
+                    new SqliteParameter("offset", offset));
+
+                return results.ToList();
             }
-            return ret;
         }
 
         #endregion
@@ -182,57 +168,30 @@ LIMIT $limit OFFSET $offset
 
         public List<FullTextSearchResult> DoTextSearch(string query, int offset, int limit)
         {
-            List<FullTextSearchResult> ret = new List<FullTextSearchResult>();
-            try
+            using (var db = new Kennedy.SearchIndex.Web.WebDatabaseContext(storageDirectory))
             {
-                using (var connection = new SqliteConnection(connectionString))
-                {
-                    connection.Open();
-                    SqliteCommand cmd = new SqliteCommand(GetAlgorithmString(), connection);
+                var sql = GetTextSearchQuery();
 
-                    cmd.Parameters.Add(new SqliteParameter("$query", query));
-                    cmd.Parameters.Add(new SqliteParameter("limit", limit));
-                    cmd.Parameters.Add(new SqliteParameter("$offset", offset));
-                    SqliteDataReader reader = cmd.ExecuteReader();
+                var results = db.FtsResults.FromSqlRaw(sql,
+                    new SqliteParameter("$query", query),
+                    new SqliteParameter("limit", limit),
+                    new SqliteParameter("offset", offset));
 
-                    while (reader.Read())
-                    {
-                        ret.Add(new FullTextSearchResult
-                        {
-                            Url = new GeminiUrl(reader.GetString(reader.GetOrdinal("Url"))),
-                            BodySize = reader.GetInt32(reader.GetOrdinal("BodySize")),
-                            Title = reader["Title"] as string,
-                            Snippet = reader.GetString(reader.GetOrdinal("snip")),
-                            UrlID = reader.GetInt64(reader.GetOrdinal("UrlID")),
-                            Language = reader["DetectedLanguage"] as string,
-                            LineCount = reader.GetInt32(reader.GetOrdinal("LineCount")),
-                            Favicon = "",
-                            ExternalInboundLinks = reader.GetInt32(reader.GetOrdinal("ExternalInboundLinks")),
-
-                            FtsRank = reader.GetDouble(reader.GetOrdinal("rank")),
-                            PopRank = reader.GetDouble(reader.GetOrdinal("PopularityRank")),
-                            TotalRank = reader.GetDouble(reader.GetOrdinal("tot")),
-                        });
-                    }
-                    return ret;
-                }
+                return results.ToList();
             }
-            catch (Exception)
-            {
-
-            }
-            return ret;
         }
-        private string GetAlgorithmString()
+
+        private string GetTextSearchQuery()
         {
-            return @"
-Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, ExternalInboundLinks, PopularityRank, rank, ( rank + (rank*0.3*PopularityRank)) as tot, snippet(FTS, 1, '[',']','…',20) as snip
+            return
+@"Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, ( rank + (rank*0.3*PopularityRank)) as TotalRank, snippet(FTS, 1, '[',']','…',20) as Snippet
 From FTS as fts
 Inner Join Documents as doc
 On doc.UrlID = fts.ROWID
 WHERE Body match $query
-order by tot
+order by TotalRank
 LIMIT $limit OFFSET $offset";
+
         }
 
         #endregion 

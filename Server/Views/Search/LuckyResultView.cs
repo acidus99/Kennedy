@@ -19,7 +19,7 @@ namespace Kennedy.Server.Views.Search
             var results = engine.DoTextSearch(query, 0, 1);
             if (results.Count > 0)
             {
-                Response.Redirect(results[0].Url.NormalizedUrl);
+                Response.Redirect(results[0].Url);
                 return;
             }
             Response.Success();
