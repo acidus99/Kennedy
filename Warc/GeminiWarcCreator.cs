@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 using Gemini.Net;
@@ -17,10 +18,16 @@ namespace Kennedy.Warc
 
         public Uri WarcInfoID { get; private set; }
 
+        /// <summary>
+        /// Tracks what authorities we have written metadata records about their certificates
+        /// </summary>
+        private Dictionary<string, bool> WrittenCertificates;
+
         public GeminiWarcCreator(string outputFile)
             : base(outputFile)
         {
             WarcInfoID = WarcRecord.CreateId();
+            WrittenCertificates = new Dictionary<string, bool>();
         }
 
         public void WriteWarcInfo(WarcFields fields)
@@ -36,10 +43,8 @@ namespace Kennedy.Warc
         public void WriteSession(GeminiResponse response, TlsConnectionInfo? connectionInfo)
         {
             var requestRecord = CreateRequestRecord(response.RequestUrl);
-            if (response.RequestSent.HasValue)
-            {
-                requestRecord.Date = response.RequestSent.Value;
-            }
+            requestRecord.SetDate(response.RequestSent);
+
             requestRecord.IpAddress = response.RemoteAddress?.ToString();
             AppendTlsInfo(requestRecord, connectionInfo);
 
@@ -53,15 +58,11 @@ namespace Kennedy.Warc
                 TargetUri = response.RequestUrl.Url
             };
 
-            responseRecord.BlockDigest = GeminiParser.GetStrongHash(responseRecord.ContentBlock);
+            SetBlockDigest(responseRecord);
+            responseRecord.SetDate(response.ResponseReceived);
 
-            if (response.ResponseReceived.HasValue)
-            {
-                responseRecord.Date = response.ResponseReceived.Value;
-            }
             responseRecord.IpAddress = response.RemoteAddress?.ToString();
-            AppendTlsInfo(requestRecord, connectionInfo);
-
+            AppendTlsInfo(responseRecord, connectionInfo);
             responseRecord.ConcurrentTo.Add(requestRecord.Id);
 
             if (response.MimeType != null)
@@ -75,6 +76,22 @@ namespace Kennedy.Warc
             }
 
             Write(responseRecord);
+
+            if(connectionInfo != null && connectionInfo.RemoteCertificate != null && ShouldCreateCertificateRecord(response.RequestUrl))
+            {
+                var metadataRecord = new MetadataRecord
+                {
+                    WarcInfoId = WarcInfoID,
+                    ReferersTo = responseRecord.Id,
+                    ContentText = connectionInfo.RemoteCertificate.ExportCertificatePem(),
+                    ContentType = "application/x-pem-file",
+                    TargetUri = response.RequestUrl.Url
+                };
+                metadataRecord.SetDate(response.ResponseReceived);
+                SetBlockDigest(metadataRecord);
+
+                Write(metadataRecord);
+            }
         }
 
         public void WriteLegacySession(GeminiUrl url, DateTime sent, int statusCode, string meta, string mime, byte[]? bytes, bool isTruncated = false)
@@ -110,6 +127,16 @@ namespace Kennedy.Warc
             Write(responseRecord);
         }
 
+        private bool ShouldCreateCertificateRecord(GeminiUrl url)
+        {
+            if(!WrittenCertificates.ContainsKey(url.Authority))
+            {
+                WrittenCertificates.Add(url.Authority, true);
+                return true;
+            }
+            return false;
+        }
+
         private RequestRecord CreateRequestRecord(GeminiUrl url)
         {
             var record = new RequestRecord
@@ -120,8 +147,16 @@ namespace Kennedy.Warc
                 TargetUri = url.Url
             };
 
-            record.BlockDigest = GeminiParser.GetStrongHash(record.ContentBlock);
+            SetBlockDigest(record);
             return record;
+        }
+
+        private void SetBlockDigest(WarcRecord record)
+        {
+            if(record.ContentBlock != null)
+            {
+                record.BlockDigest = GeminiParser.GetStrongHash(record.ContentBlock);
+            }
         }
 
         private void AppendTlsInfo(WarcRecord record, TlsConnectionInfo? connectionInfo)
