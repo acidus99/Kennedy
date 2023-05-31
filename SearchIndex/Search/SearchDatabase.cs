@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-
-using System.Data.SqlTypes;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.SearchIndex.Models;
-using Microsoft.EntityFrameworkCore;
-using static System.Net.WebRequestMethods;
+using Kennedy.SearchIndex.Web;
 
 namespace Kennedy.SearchIndex.Search
 {
@@ -18,13 +16,15 @@ namespace Kennedy.SearchIndex.Search
         string connectionString;
         string storageDirectory;
 
-
         public SearchDatabase(string storageDirectory)
         {
             this.storageDirectory = storageDirectory;
             connectionString = $"Data Source='{storageDirectory}doc-index.db'";
             EnsureFullTextSearch();
         }
+
+        private WebDatabaseContext GetContext()
+            => new WebDatabaseContext(storageDirectory);
 
         #region Add to Index
 
@@ -135,7 +135,7 @@ LIMIT {limit} OFFSET {offset}";
 
         public List<ImageSearchResult> DoImageSearch(string query, int offset, int limit)
         {
-            using (var db = new Kennedy.SearchIndex.Web.WebDatabaseContext(storageDirectory))
+            using (var db = GetContext())
             {
                 var sql = GetImageSearchQuery(query, offset, limit);
                 var results = db.ImageResults.FromSql(sql);
@@ -167,7 +167,7 @@ LIMIT {limit} OFFSET {offset}";
 
         public List<FullTextSearchResult> DoTextSearch(string query, int offset, int limit)
         {
-            using (var db = new Kennedy.SearchIndex.Web.WebDatabaseContext(storageDirectory))
+            using (var db = GetContext())
             {
                 var sql = GetTextSearchQuery(query, offset, limit);
                 var results = db.FtsResults.FromSql(sql);
