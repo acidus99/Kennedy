@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 
+using System.Data.SqlTypes;
 using Microsoft.Data.Sqlite;
 
 using Gemini.Net;
@@ -114,32 +115,30 @@ namespace Kennedy.SearchIndex.Search
             return 0;
         }
 
-        private string GetImageSearchQuery()
+        private FormattableString GetImageSearchQuery(string query, int offset, int limit)
         {
-            return @"
+            var queryParam = new SqliteParameter("query", query);
+            var offsetParam = new SqliteParameter("offset", offset);
+            var limitParam = new SqliteParameter("limit", limit);
+
+            return $@"
 Select img.UrlID, url, BodySize, Width, Height, ImageType, snippet(ImageSearch, 0, '[',']','…',20) as Snippet, ( rank + (rank*0.3*PopularityRank)) as tot
 From ImageSearch as fts
  Inner Join Images as img
 On img.UrlID = fts.ROWID
  Inner join Documents as doc
 On doc.UrlID = img.UrlID
-WHERE Terms match $query
+WHERE Terms match {queryParam}
 order by tot
-LIMIT $limit OFFSET $offset
-";
+LIMIT {limit} OFFSET {offset}";
         }
 
         public List<ImageSearchResult> DoImageSearch(string query, int offset, int limit)
         {
             using (var db = new Kennedy.SearchIndex.Web.WebDatabaseContext(storageDirectory))
             {
-                var sql = GetImageSearchQuery();
-
-                var results = db.ImageResults.FromSqlRaw(sql,
-                    new SqliteParameter("$query", query),
-                    new SqliteParameter("limit", limit),
-                    new SqliteParameter("offset", offset));
-
+                var sql = GetImageSearchQuery(query, offset, limit);
+                var results = db.ImageResults.FromSql(sql);
                 return results.ToList();
             }
         }
@@ -170,28 +169,26 @@ LIMIT $limit OFFSET $offset
         {
             using (var db = new Kennedy.SearchIndex.Web.WebDatabaseContext(storageDirectory))
             {
-                var sql = GetTextSearchQuery();
-
-                var results = db.FtsResults.FromSqlRaw(sql,
-                    new SqliteParameter("$query", query),
-                    new SqliteParameter("limit", limit),
-                    new SqliteParameter("offset", offset));
-
+                var sql = GetTextSearchQuery(query, offset, limit);
+                var results = db.FtsResults.FromSql(sql);
                 return results.ToList();
             }
         }
 
-        private string GetTextSearchQuery()
+        private FormattableString GetTextSearchQuery(string query, int offset, int limit)
         {
+            var queryParam = new SqliteParameter("query", query);
+            var offsetParam = new SqliteParameter("offset", offset);
+            var limitParam = new SqliteParameter("limit", limit);
+
             return
-@"Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, ( rank + (rank*0.3*PopularityRank)) as TotalRank, snippet(FTS, 1, '[',']','…',20) as Snippet
+$@"Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, ( rank + (rank*0.3*PopularityRank)) as TotalRank, snippet(FTS, 1, '[',']','…',20) as Snippet
 From FTS as fts
 Inner Join Documents as doc
 On doc.UrlID = fts.ROWID
-WHERE Body match $query
+WHERE Body MATCH {query}
 order by TotalRank
-LIMIT $limit OFFSET $offset";
-
+LIMIT {limit} OFFSET {offset}";
         }
 
         #endregion 
