@@ -42,36 +42,13 @@ namespace Kennedy.SearchIndex.Search
             }
         }
 
-        private void UpdateTextIndex(long dbDocID, string? title, string filteredBody)
+        private void UpdateTextIndex(long urlID, string? title, string filteredBody)
         {
-            using (var connection = new SqliteConnection(connectionString))
+            using (var db = GetContext())
             {
-                connection.Open();
-
-                using (var transaction = connection.BeginTransaction())
-                {
-                    //first delete all FTS entries for this
-                    SqliteCommand cmd = new SqliteCommand(@"DELETE From FTS as fts WHERE fts.ROWID = $docid", connection, transaction);
-                    cmd.Parameters.Add(new SqliteParameter("$docid", dbDocID));
-
-                    cmd.ExecuteNonQuery();
-
-                    cmd = new SqliteCommand(@"INSERT INTO FTS(ROWID, Title, Body) VALUES ($docid, $title, $body)", connection, transaction); ;
-                    cmd.Parameters.Add(new SqliteParameter("$docid", dbDocID));
-
-                    if (title == null)
-                    {
-                        cmd.Parameters.Add(new SqliteParameter("$title", DBNull.Value));
-                    } else
-                    {
-                        cmd.Parameters.Add(new SqliteParameter("$title", title));
-                    }
-                    cmd.Parameters.Add(new SqliteParameter("$body", filteredBody));
-                    cmd.ExecuteNonQuery();
-
-                    transaction.Commit();
-                }
-                connection.Close();
+                //first delete all FTS entries for this
+                db.Database.ExecuteSql($"DELETE From FTS as fts WHERE fts.ROWID = {urlID}");
+                db.Database.ExecuteSql($"INSERT INTO FTS(ROWID, Title, Body) VALUES ({urlID}, {title}, {filteredBody})");
             }
         }
 
@@ -187,25 +164,17 @@ LIMIT {limit} OFFSET {offset}";
         /// </summary>
         private void EnsureFullTextSearch()
         {
-            using (var connection = new SqliteConnection(connectionString))
+            using(var db = GetContext())
             {
-                connection.Open();
-                var cmd = new SqliteCommand("SELECT Count(*) FROM sqlite_master WHERE type='table' AND name='FTS';", connection);
-                var count = Convert.ToInt32(cmd.ExecuteScalar());
-
-                if (count == 0)
+                var count = db.Database.SqlQuery<int>($"SELECT Count(*) FROM sqlite_master WHERE type = 'table' AND name = 'FTS'").First();
+                if(count == 0)
                 {
-                    cmd.CommandText = "CREATE VIRTUAL TABLE FTS using fts5(Title, Body, tokenize = 'porter');";
-                    cmd.ExecuteNonQuery();
+                    db.Database.ExecuteSql($"CREATE VIRTUAL TABLE FTS using fts5(Title, Body, tokenize = 'porter');");
                 }
-
-                cmd.CommandText = "SELECT Count(*) FROM sqlite_master WHERE type='table' AND name='ImageSearch';";
-                count = Convert.ToInt32(cmd.ExecuteScalar());
-
+                count = db.Database.SqlQuery<int>($"SELECT Count(*) FROM sqlite_master WHERE type = 'table' AND name = 'ImageSearch'").First();
                 if (count == 0)
                 {
-                    cmd.CommandText = "CREATE VIRTUAL TABLE ImageSearch using fts5(Terms, tokenize = 'porter');";
-                    cmd.ExecuteNonQuery();
+                    db.Database.ExecuteSql($"CREATE VIRTUAL TABLE ImageSearch using fts5(Terms, tokenize = 'porter');");
                 }
             }
         }
