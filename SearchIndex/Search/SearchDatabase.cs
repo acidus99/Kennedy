@@ -8,6 +8,9 @@ using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Web;
+using static System.Net.WebRequestMethods;
+using System.Text.RegularExpressions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Kennedy.SearchIndex.Search
 {
@@ -86,33 +89,20 @@ namespace Kennedy.SearchIndex.Search
 
         #region Image Search
 
-        public string GetImageIndexText(long urlID)
+        public string? GetImageIndexText(long urlID)
         {
-            using (var connection = new SqliteConnection(connectionString))
+            using (var db = GetContext())
             {
-                connection.Open();
-                var cmd = new SqliteCommand(@"SELECT Terms FROM ImageSearch WHERE ROWID = $rowid", connection);
-                cmd.Parameters.Add(new SqliteParameter("$rowid", urlID));
-                return (cmd.ExecuteScalar() as string) ?? "";
+                return db.Database.SqlQuery<string>($"Select Terms as Value From ImageSearch WHERE ROWID = {urlID}").FirstOrDefault();
             }
         }
 
         public int GetImageResultsCount(string query)
         {
-            try
+            using (var db = GetContext())
             {
-                using (var connection = new SqliteConnection(connectionString))
-                {
-                    connection.Open();
-                    SqliteCommand cmd = new SqliteCommand(@"Select count(*) From ImageSearch WHERE Terms match $query", connection);
-                    cmd.Parameters.Add(new SqliteParameter("$query", query));
-                    return Convert.ToInt32(cmd.ExecuteScalar());
-                }
+                return db.Database.SqlQuery<int>($"Select count(*) as Value From ImageSearch WHERE Terms match {query}").First();
             }
-            catch (Exception)
-            {
-            }
-            return 0;
         }
 
         private FormattableString GetImageSearchQuery(string query, int offset, int limit)
@@ -149,20 +139,10 @@ LIMIT {limit} OFFSET {offset}";
 
         public int GetTextResultsCount(string query)
         {
-            try
+            using(var db = GetContext())
             {
-                using (var connection = new SqliteConnection(connectionString))
-                {
-                    connection.Open();
-                    SqliteCommand cmd = new SqliteCommand(@"Select count(*) From FTS WHERE Body match $query", connection);
-                    cmd.Parameters.Add(new SqliteParameter("$query", query));
-                    return Convert.ToInt32(cmd.ExecuteScalar());
-                }
+                return db.Database.SqlQuery<int>($"Select count(*) as Value From FTS WHERE Body match {query}").First();
             }
-            catch (Exception)
-            {
-            }
-            return 0;
         }
 
         public List<FullTextSearchResult> DoTextSearch(string query, int offset, int limit)
@@ -195,17 +175,10 @@ LIMIT {limit} OFFSET {offset}";
 
         public void RemoveFromIndex(long urlID)
         {
-            using (var connection = new SqliteConnection(connectionString))
+            using(var db = GetContext())
             {
-                connection.Open();
-                //first delete all FTS entries for this
-                SqliteCommand cmd = new SqliteCommand(@"DELETE From FTS WHERE ROWID = $urlid", connection);
-                cmd.Parameters.Add(new SqliteParameter("$urlid", urlID));
-                cmd.ExecuteNonQuery();
-
-                cmd = new SqliteCommand(@"DELETE From ImageSearch WHERE ROWID = $urlid", connection); 
-                cmd.Parameters.Add(new SqliteParameter("$urlid", urlID));
-                cmd.ExecuteNonQuery();
+                db.Database.ExecuteSql($"DELETE From FTS WHERE ROWID = {urlID}");
+                db.Database.ExecuteSql($"DELETE From ImageSearch WHERE ROWID = {urlID}");
             }
         }
 
