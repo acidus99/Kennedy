@@ -32,7 +32,7 @@ namespace Kennedy.SearchIndex.Search
         /// </summary>
         /// <param name="dbDocId"></param>
         /// <returns></returns>
-        string GetImageIndexText(long urlID);
+        string? GetImageIndexText(long urlID);
 
         /// <summary>
         /// Execute a text search

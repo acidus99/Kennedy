@@ -136,12 +136,15 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine("### Image Metadata");
             Response.WriteLine($"* Dimensions: {entry.Image.Width} x {entry.Image.Height}");
             Response.WriteLine($"* Format: {entry.Image.ImageType.ToUpper()}");
-            Response.WriteLine($"* Indexable text:");
 
             var searchEngine = new SearchDatabase(Settings.Global.DataRoot);
             var terms = searchEngine.GetImageIndexText(entry.UrlID);
 
-            Response.WriteLine($">{terms}");
+            if (terms != null)
+            {
+                Response.WriteLine($"* Indexable text:");
+                Response.WriteLine($">{terms}");
+            }
         }
 
         private void RenderLinks()
