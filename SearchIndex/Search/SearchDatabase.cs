@@ -166,12 +166,12 @@ LIMIT {limit} OFFSET {offset}";
         {
             using(var db = GetContext())
             {
-                var count = db.Database.SqlQuery<int>($"SELECT Count(*) FROM sqlite_master WHERE type = 'table' AND name = 'FTS'").First();
+                var count = db.Database.SqlQuery<int>($"SELECT Count(*) as Value FROM sqlite_master WHERE type = 'table' AND name = 'FTS'").First();
                 if(count == 0)
                 {
                     db.Database.ExecuteSql($"CREATE VIRTUAL TABLE FTS using fts5(Title, Body, tokenize = 'porter');");
                 }
-                count = db.Database.SqlQuery<int>($"SELECT Count(*) FROM sqlite_master WHERE type = 'table' AND name = 'ImageSearch'").First();
+                count = db.Database.SqlQuery<int>($"SELECT Count(*) as VALUE FROM sqlite_master WHERE type = 'table' AND name = 'ImageSearch'").First();
                 if (count == 0)
                 {
                     db.Database.ExecuteSql($"CREATE VIRTUAL TABLE ImageSearch using fts5(Terms, tokenize = 'porter');");
