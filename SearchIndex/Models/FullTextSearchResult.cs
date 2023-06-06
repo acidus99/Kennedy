@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Gemini.Net;
 
@@ -9,26 +10,30 @@ namespace Kennedy.SearchIndex.Models
     {
         public required long UrlID { get; set; }
 
-        public required GeminiUrl Url { get; set; }
+        public required string Url { get; set; }
+
+        private GeminiUrl? _geminiUrl;
+
+        public GeminiUrl GeminiUrl
+        {
+            get
+            {
+                if(_geminiUrl == null)
+                {
+                    _geminiUrl = new GeminiUrl(Url);
+                }
+                return _geminiUrl;
+            }
+        }
+
+        [NotMapped]
+        public string? Favicon { get; set; }
+
         public required int BodySize { get; set; }
         public required string? Title { get; set; }
         public required string Snippet { get; set; }
 
-        public required string? Language { get; set; }
+        public required string? DetectedLanguage { get; set; }
         public required int? LineCount { get; set; }
-
-        public string? Favicon { get; set; }
-
-        public int ExternalInboundLinks { get; set; }
-
-        #region meta data for debugging
-
-        //score of our FTS
-        public required double FtsRank { get; set; }
-        //score of our popularity ranker
-        public required double PopRank { get; set; }
-        public required double TotalRank { get; set; }
-        #endregion
-
     }
 }

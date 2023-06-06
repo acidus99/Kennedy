@@ -20,6 +20,10 @@ namespace Kennedy.SearchIndex.Web
 
         public DbSet<DocumentLink> Links { get; set; }
 
+        public DbSet<FullTextSearchResult> FtsResults { get; set; }
+
+        public DbSet<ImageSearchResult> ImageResults { get; set; }
+
         public WebDatabaseContext(string storageDir)
         {
             StorageDirectory = storageDir;

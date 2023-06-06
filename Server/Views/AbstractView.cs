@@ -64,7 +64,7 @@ namespace Kennedy.Server.Views
                 sb.Append(title);
             } else
             {
-                sb.Append($"{result.Url.Hostname}{result.Url.Path}");
+                sb.Append($"{result.GeminiUrl.Hostname}{result.GeminiUrl.Path}");
             }
             return sb.ToString();
         }

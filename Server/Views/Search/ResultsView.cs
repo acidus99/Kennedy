@@ -125,9 +125,9 @@ namespace Kennedy.Server.Views.Search
             Response.Write($"{FormatSize(result.BodySize)})");
             Response.WriteLine();
 
-            if(result.Language != null && result.Language != "en")
+            if(result.DetectedLanguage != null && result.DetectedLanguage != "en")
             {
-                Response.WriteLine($"Language: {FormatLanguage(result.Language)}");
+                Response.WriteLine($"Language: {FormatLanguage(result.DetectedLanguage)}");
             }
 
             // Write quote line with snippet.
