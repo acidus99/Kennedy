@@ -32,6 +32,11 @@ namespace Kennedy.Server.Controllers
 
         public static void PageInfo(GeminiRequest request, Response response, GeminiServer app)
         {
+            if (!request.Url.HasQuery)
+            {
+                response.Input("Entry URL");
+                return;
+            }
             var view = new PageInfoView(request, response, app);
             view.Render();
         }
