@@ -48,58 +48,78 @@ namespace Kennedy.Server.Views.Reports
                 return;
             }
             
-            Response.WriteLine($"# {Domain} - 🩺 Site Health Report");
+            Response.WriteLine($"# {Domain} - 🩺 Capsule Health Report");
+            Response.WriteLine($"* Total URLs: {totalDocs}");
 
+            //find connectivity problems
+            var networkErrors = docs.Where(x => !x.IsAvailable)
+                                        .OrderBy(x => x.Meta)
+                                        .ThenBy(x=>x.Url);
 
-            var docsWithProblems = docs.Where(x => x.Domain == Domain &&
+            if (networkErrors.Count() > 0)
+            {
+                RenderNetworkErrors(networkErrors);
+            }
+
+            var pageErrors = docs.Where(x => x.Domain == Domain &&
                                             x.IsAvailable &&
                                             x.StatusCode >= 40 &&
-                                            x.StatusCode < 60).ToArray();
+                                            x.StatusCode < 60)
+                                   .OrderBy(x => x.StatusCode);
 
-            Response.WriteLine($"* Total URLs: {totalDocs}");
-            Response.WriteLine($"* URLs with problems: {docsWithProblems.Count()}");
-
-            Response.WriteLine("## Issues");
-            int counter = 1;
-            foreach (var doc in docsWithProblems)
+            if(pageErrors.Count() > 0)
             {
-                var geminiUrl = new GeminiUrl(doc.Url);
-
-                var links = db.Links.Include(x => x.SourceUrl)
-                    .Where(x => x.TargetUrlID == doc.UrlID)
-                    .OrderBy(x => x.SourceUrl!.Url);
-
-                Response.WriteLine($"### Issue {counter}: Statue Code {doc.StatusCode} on {geminiUrl.Path} ");
-                Response.WriteLine($"=> {doc.Url}");
-                Response.WriteLine($"Incoming Links");
-
-                int linkCounter = 0;
-                foreach (var link in links)
-                {
-                    if (link.SourceUrl != null)
-                    {
-                        linkCounter++;
-                        var linkLabel = !string.IsNullOrEmpty(link.LinkText) ?
-                            $"Link \"{link.LinkText}\"" :
-                            "Bare link";
-
-                        Response.WriteLine($"=> {link.SourceUrl.Url} {linkCounter}. {linkLabel} on {link.SourceUrl.Url}");
-                    }
-                }
-
-                Response.WriteLine();
-                counter++;
-            }
+                RenderPageErrors(pageErrors);
+            }            
         }
 
         private void RenderUnknownDomain()
         {
-            Response.WriteLine($"# 🩺 Site Health Report");
+            Response.WriteLine($"# 🩺 Capsule Health Report");
             Response.WriteLine("Sorry, Kennedy has no information about this domain:");
             Response.WriteLine($"```");
             Response.WriteLine($"{Domain}");
             Response.WriteLine($"```");
             Response.WriteLine($"=> {RoutePaths.SiteHealthRoute} Try another Domain");
+        }
+
+        private void RenderNetworkErrors(IEnumerable<Document> docsWithProblems)
+        {
+            string meta = "";
+            Response.WriteLine($"## Connectivity Issues");
+            Response.WriteLine($"* URLs with problems: {docsWithProblems.Count()}");
+
+            foreach (var doc in docsWithProblems)
+            {
+                if(doc.Meta != meta)
+                {
+                    meta = doc.Meta;
+                    Response.WriteLine();
+                    Response.WriteLine($"### {doc.Meta}");
+                }
+                Response.WriteLine($"=> {doc.GeminiUrl}");
+            }
+            Response.WriteLine();
+        }
+
+        private void RenderPageErrors(IEnumerable<Document> pageErrors)
+        {
+            Response.WriteLine("## URL Issues");
+            Response.WriteLine($"* URLs with problems: {pageErrors.Count()}");
+            Response.WriteLine("Click URL to see more info, including incoming links.");
+
+            int statusCode = 0;
+
+            foreach (var doc in pageErrors)
+            {
+                if(doc.StatusCode != statusCode)
+                {
+                    statusCode = doc.StatusCode;
+                    Response.WriteLine();
+                    Response.WriteLine($"### Statue Code {doc.StatusCode}");
+                }
+                Response.WriteLine($"=> {RoutePaths.ViewPageInfo(doc.GeminiUrl)} {doc.GeminiUrl}");
+            }
         }
     }
 }
