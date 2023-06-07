@@ -7,8 +7,11 @@ using System.Runtime.Intrinsics.X86;
 
 namespace Kennedy.Server
 {
-	public static class RoutePaths
+	public static class RoutePaths 
 	{
+
+        public const string PageInfoRoute = "/page-info";
+
 
         public const string ViewCachedRoute = "/archive/cached";
         public const string ViewUrlHistoryRoute = "/archive/history";
@@ -35,6 +38,9 @@ namespace Kennedy.Server
         
         public static string ViewCached(GeminiUrl url, DateTime snapshotTime, bool useRaw = false)
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={snapshotTime.Ticks}&raw={useRaw}";
+
+        public static string ViewPageInfo(GeminiUrl url)
+            => $"{ViewPageInfo}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";
 
         public static string ViewUrlHistory(GeminiUrl url)
             => $"{ViewUrlHistoryRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";

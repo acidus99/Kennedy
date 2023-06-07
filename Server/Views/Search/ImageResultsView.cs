@@ -79,7 +79,7 @@ namespace Kennedy.Server.Views.Search
         {
             Response.WriteLine($"=> {result.Url} {FormatCount(resultNumber)}. {result.GeminiUrl.Filename} ({result.Width} x {result.Height} • {result.ImageType} • {FormatSize(result.BodySize)})");
             Response.WriteLine(">" + FormatSnippet(result.Snippet));
-            Response.WriteLine($"=> /page-info?id={result.UrlID} More Info / Archived Copy");
+            Response.WriteLine($"=> {RoutePaths.ViewPageInfo(result.GeminiUrl)} More Info / Archived Copy");
             Response.WriteLine("");
         }
 
