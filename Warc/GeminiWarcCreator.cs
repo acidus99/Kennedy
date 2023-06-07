@@ -55,7 +55,8 @@ namespace Kennedy.Warc
                 ContentBlock = GeminiParser.CreateResponseBytes(response),
                 ContentType = ResponseContentType,
                 WarcInfoId = WarcInfoID,
-                TargetUri = response.RequestUrl.Url
+                TargetUri = response.RequestUrl.Url,
+                PayloadDigest = GetPayloadDigest(response)
             };
 
             SetBlockDigest(responseRecord);
@@ -183,6 +184,11 @@ namespace Kennedy.Warc
             }
             return null;
         }
+
+        private string? GetPayloadDigest(GeminiResponse response)
+            => response.BodyBytes != null ?
+                GeminiParser.GetStrongHash(response.BodyBytes) :
+                null;
 
         private string? GetProtocolHeader(TlsConnectionInfo connection)
         {
