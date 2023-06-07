@@ -30,19 +30,26 @@ namespace Kennedy.Server.Views.Reports
 
             if (Domain == "")
             {
-                Response.WriteLine("Unknown Domain");
+                RenderUnknownDomain();
                 return;
             }
 
             var db = new WebDatabaseContext(Settings.Global.DataRoot);
-            
 
-            Response.WriteLine($"# {Domain} - 🩺 Site Health Report");
 
             var docs = db.Documents
                 .Where(x => x.Domain == Domain);
 
             var totalDocs = docs.Count();
+
+            if(totalDocs == 0)
+            {
+                RenderUnknownDomain();
+                return;
+            }
+            
+            Response.WriteLine($"# {Domain} - 🩺 Site Health Report");
+
 
             var docsWithProblems = docs.Where(x => x.Domain == Domain &&
                                             x.IsAvailable &&
@@ -83,6 +90,16 @@ namespace Kennedy.Server.Views.Reports
                 Response.WriteLine();
                 counter++;
             }
+        }
+
+        private void RenderUnknownDomain()
+        {
+            Response.WriteLine($"# 🩺 Site Health Report");
+            Response.WriteLine("Sorry, Kennedy has no information about this domain:");
+            Response.WriteLine($"```");
+            Response.WriteLine($"{Domain}");
+            Response.WriteLine($"```");
+            Response.WriteLine($"=> {RoutePaths.SiteHealthRoute} Try another Domain");
         }
     }
 }
