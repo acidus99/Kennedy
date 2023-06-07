@@ -48,7 +48,7 @@ namespace Kennedy.Server.Views.Search
 
             Response.Success();
 
-            Response.WriteLine($"# Page Info: {entry.GeminiUrl.Path}");
+            Response.WriteLine($"# ℹ️ Page Info: {entry.GeminiUrl.Path}");
             Response.WriteLine($"=> {entry.Url} Visit Current Url");
             Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(entry.GeminiUrl)} View archived copies with 🏎 DeLorean Time Machine");
             //var emoji = entry.Favicon?.Emoji + " " ?? "";
@@ -223,7 +223,7 @@ namespace Kennedy.Server.Views.Search
 
         private void RenderUnknownUrl(GeminiUrl url)
         {
-            Response.WriteLine($"# Page Info");
+            Response.WriteLine($"# ℹ️ Page Info");
             Response.WriteLine("Sorry, Kennedy has no information about this URL:");
             Response.WriteLine($"```");
             Response.WriteLine($"{url}");
