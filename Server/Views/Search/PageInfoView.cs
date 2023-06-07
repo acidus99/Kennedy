@@ -26,39 +26,22 @@ namespace Kennedy.Server.Views.Search
 
         public override void Render()
         {
-            long urlID = 0;
-
-            Document? possibleEntry = null;
-
-            var query = Request.Url.RawQuery;
-            if (query.StartsWith("id=") && query.Length > 3)
+            var url = GeminiUrl.MakeUrl(SanitizedQuery);
+            if(url == null)
             {
-                try
-                {
-                    urlID = Convert.ToInt64(query.Substring(3));
-                    possibleEntry = GetEntry(urlID);
-                }
-                catch (Exception)
-                {
-                }
+                Response.Redirect(RoutePaths.PageInfoRoute);
+                return;
+            }
 
-            }
-            else if (query.StartsWith("url=") && query.Length > 4)
-            {
-                try
-                {
-                    query = query.Substring(4);
-                    query = HttpUtility.UrlDecode(query);
-                    var url = new GeminiUrl(query);
-                    possibleEntry = GetEntry(url.ID);
-                }
-                catch (Exception)
-                { }
-            }
+            Document? possibleEntry =  db.Documents
+                .Where(x => x.UrlID == url.ID)
+                .Include(x => x.Image!)
+                //.Include(x => x.Favicon)
+                .FirstOrDefault()!;
 
             if (possibleEntry == null)
             {
-                Response.Redirect("/");
+                RenderUnknownUrl(url);
                 return;
             }
             entry = possibleEntry;
@@ -87,16 +70,6 @@ namespace Kennedy.Server.Views.Search
             RenderFileMetaData();
 
             RenderLinks();
-
-        }
-
-        private Document? GetEntry(long urlID)
-        {
-            return db.Documents
-                .Where(x => x.UrlID == urlID)
-                .Include(x => x.Image!)
-                //.Include(x => x.Favicon)
-                .FirstOrDefault()!;
         }
 
         private void RenderFileMetaData()
@@ -246,6 +219,16 @@ namespace Kennedy.Server.Views.Search
                 sb.Append($" with link '{linkText}'");
             }
             return sb.ToString();
+        }
+
+        private void RenderUnknownUrl(GeminiUrl url)
+        {
+            Response.WriteLine($"# Page Info");
+            Response.WriteLine("Sorry, Kennedy has no information about this URL:");
+            Response.WriteLine($"```");
+            Response.WriteLine($"{url}");
+            Response.WriteLine($"```");
+            Response.WriteLine($"=> {RoutePaths.PageInfoRoute} Try another URL");
         }
 
         private class LinkItem
