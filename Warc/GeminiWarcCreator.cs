@@ -56,20 +56,16 @@ namespace Kennedy.Warc
                 ContentType = ResponseContentType,
                 WarcInfoId = WarcInfoID,
                 TargetUri = response.RequestUrl.Url,
-                PayloadDigest = GetPayloadDigest(response)
+                PayloadDigest = GetPayloadDigest(response),
+                IpAddress = response.RemoteAddress?.ToString(),
+                IdentifiedPayloadType = response.MimeType
             };
 
-            SetBlockDigest(responseRecord);
             responseRecord.SetDate(response.ResponseReceived);
-
-            responseRecord.IpAddress = response.RemoteAddress?.ToString();
+            SetBlockDigest(responseRecord);
             AppendTlsInfo(responseRecord, connectionInfo);
-            responseRecord.ConcurrentTo.Add(requestRecord.Id);
 
-            if (response.MimeType != null)
-            {
-                responseRecord.IdentifiedPayloadType = response.MimeType;
-            }
+            responseRecord.ConcurrentTo.Add(requestRecord.Id);
 
             if (response.IsBodyTruncated)
             {
