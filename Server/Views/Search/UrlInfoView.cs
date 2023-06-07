@@ -16,9 +16,9 @@ using Kennedy.Archive.Db;
 
 namespace Kennedy.Server.Views.Search
 {
-    internal class PageInfoView :AbstractView
+    internal class UrlInfoView :AbstractView
     {
-        public PageInfoView(GeminiRequest request, Response response, GeminiServer app)
+        public UrlInfoView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         WebDatabaseContext db = new WebDatabaseContext(Settings.Global.DataRoot);
@@ -29,7 +29,7 @@ namespace Kennedy.Server.Views.Search
             var url = GeminiUrl.MakeUrl(SanitizedQuery);
             if(url == null)
             {
-                Response.Redirect(RoutePaths.PageInfoRoute);
+                Response.Redirect(RoutePaths.UrlInfoRoute);
                 return;
             }
 
@@ -228,7 +228,7 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine($"```");
             Response.WriteLine($"{url}");
             Response.WriteLine($"```");
-            Response.WriteLine($"=> {RoutePaths.PageInfoRoute} Try another URL");
+            Response.WriteLine($"=> {RoutePaths.UrlInfoRoute} Try another URL");
         }
 
         private class LinkItem

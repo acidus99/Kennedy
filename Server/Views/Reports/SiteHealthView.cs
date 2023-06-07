@@ -118,7 +118,7 @@ namespace Kennedy.Server.Views.Reports
                     Response.WriteLine();
                     Response.WriteLine($"### Statue Code {doc.StatusCode}");
                 }
-                Response.WriteLine($"=> {RoutePaths.ViewPageInfo(doc.GeminiUrl)} {doc.GeminiUrl}");
+                Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(doc.GeminiUrl)} {doc.GeminiUrl}");
             }
         }
     }

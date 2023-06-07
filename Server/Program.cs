@@ -43,7 +43,7 @@ namespace Kennedy.Server
 
             server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
             server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
-            server.OnRequest("/page-info", SearchController.PageInfo);
+            server.OnRequest("/page-info", SearchController.UrlInfo);
 
             //deprecate old hashtags/mentions
             server.AddRedirect(new Redirect

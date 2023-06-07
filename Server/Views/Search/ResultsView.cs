@@ -134,7 +134,7 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine(">" + FormatSnippet(result.Snippet));
 
             // Write link line to archive/meta data.
-            Response.WriteLine($"=> {RoutePaths.ViewPageInfo(result.GeminiUrl)} ℹ️ More Info / Archived Copy");
+            Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(result.GeminiUrl)} ℹ️ More Info / Archived Copy");
 
             // Write blank line between entries.
             Response.WriteLine("");

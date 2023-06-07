@@ -30,14 +30,14 @@ namespace Kennedy.Server.Controllers
             view.Render();
         }
 
-        public static void PageInfo(GeminiRequest request, Response response, GeminiServer app)
+        public static void UrlInfo(GeminiRequest request, Response response, GeminiServer app)
         {
             if (!request.Url.HasQuery)
             {
                 response.Input("Entry URL");
                 return;
             }
-            var view = new PageInfoView(request, response, app);
+            var view = new UrlInfoView(request, response, app);
             view.Render();
         }
 

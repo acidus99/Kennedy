@@ -10,7 +10,7 @@ namespace Kennedy.Server
 	public static class RoutePaths 
 	{
 
-        public const string PageInfoRoute = "/page-info";
+        public const string UrlInfoRoute = "/page-info";
 
 
         public const string ViewCachedRoute = "/archive/cached";
@@ -39,8 +39,8 @@ namespace Kennedy.Server
         public static string ViewCached(GeminiUrl url, DateTime snapshotTime, bool useRaw = false)
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={snapshotTime.Ticks}&raw={useRaw}";
 
-        public static string ViewPageInfo(GeminiUrl url)
-            => $"{PageInfoRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";
+        public static string ViewUrlInfo(GeminiUrl url)
+            => $"{UrlInfoRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";
 
         public static string ViewUrlHistory(GeminiUrl url)
             => $"{ViewUrlHistoryRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";
