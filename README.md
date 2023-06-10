@@ -7,11 +7,12 @@ Kennedy is a search engine for [Gemini space](https://en.wikipedia.org/wiki/Gemi
 Visit `gemini://kennedy.gemi.dev` with a [Gemini client](https://github.com/kr1sp1n/awesome-gemini) or [via an HTTP-to-Gemini proxy](https://portal.mozz.us/gemini/kennedy.gemi.dev)
 
 ## Features
-* Full Text search, with Porter Steming
+* Full Text search, with Porter Stemming
+* Suggested queries. Kennedy recommends other queries if you don't get many results
+* Complex search queries. For example: "cats AND dogs", "(cats OR dogs) NOT birds".
+* Image Search! Kennedy indexes link text and path info to enable searching for images.
 * Content language classification using ngrams instead of MIME types `lang=` parameters
-* PageRank-dervied algorithm to better determine results revelance 
-* I'm Feeling Lucky! Automatically takes you to the first result for your search.
-* 😻 Favicons: A capsule's Favicon is displayed for each search result to make skimming easier.
+* PageRank-dervied algorithm to better determine results relevance 
 * Clean Snippets: Search results include a snippet of content which matches your query. Your keywords are [surrounded] with brackets, and gemtext formatting is removed to make it cleaner to read.
 * Lines count: To help you sort quick articles from longer form content, search results tell you how many lines are in the content. If you want to be nerdy, I also include byte sizes.
 
