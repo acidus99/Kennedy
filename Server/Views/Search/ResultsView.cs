@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Net;
+
+using Kennedy.Gemipedia;
 
 using Kennedy.SearchIndex.Search;
 using Kennedy.SearchIndex.Models;
 using RocketForce;
-using System.Diagnostics;
-using Kennedy.Gemipedia;
-using System.Collections;
-using System.Diagnostics.Metrics;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+
 
 namespace Kennedy.Server.Views.Search
 {
@@ -23,7 +22,6 @@ namespace Kennedy.Server.Views.Search
             : base(request, response, app)
         {
             SearchEngine = new SearchDatabase(Settings.Global.DataRoot);
-
         }
 
         SearchDatabase SearchEngine;
@@ -60,7 +58,12 @@ namespace Kennedy.Server.Views.Search
 
         private void RenderNoResults(UserQuery query)
         {
-            Response.WriteLine("## Oh Snap! No Results for your query.");
+            Response.WriteLine("Sorry, no results for your search.");
+
+            var suggestedQuery = QuerySuggestor.MakeOrQuery(query);
+
+            Response.WriteLine($"=> {RoutePaths.Search(suggestedQuery.RawQuery)} Try searching \"{suggestedQuery}\" instead?");
+            Response.WriteLine($"=> {RoutePaths.Search()} New Search");
         }
 
         private void RenderResults(UserQuery query)
