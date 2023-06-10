@@ -2,6 +2,7 @@
 using System.IO;
 
 using Gemini.Net;
+using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Search;
 using RocketForce;
 
@@ -14,7 +15,9 @@ namespace Kennedy.Server.Views.Search
 
         public override void Render()
         {
-            string query = SanitizedQuery;
+            var queryParser = new QueryParser();
+            UserQuery query = queryParser.Parse(SanitizedQuery);
+
             var engine = new SearchDatabase(Settings.Global.DataRoot);
             var results = engine.DoTextSearch(query, 0, 1);
             if (results.Count > 0)

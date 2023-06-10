@@ -35,9 +35,10 @@ namespace Kennedy.Server.Views.Search
 
         public override void Render()
         {
-            var query = PrepareQuery(SanitizedQuery);
+            var queryParser = new QueryParser();
+            UserQuery query = queryParser.Parse(SanitizedQuery);
+
             Options = new SearchOptions(Request.Url, "/search");
-            
 
             Response.Success();
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Search");
@@ -140,29 +141,29 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine("");
         }
 
-        private void QueryGemipedia(string query)
+        private void QueryGemipedia(string? query)
         {
-            if (Options.SearchPage == 1)
+            if (query != null && Options.SearchPage == 1)
             {
                 var client = new WikipediaApiClient();
                 TopGemipediaHit = client.TopResultSearch(query);
             }
         }
 
-        private void QueryFullText(string query)
+        private void QueryFullText(UserQuery query)
         {
             int baseCounter = Options.SearchPage - 1;
             SearchResults = SearchEngine.DoTextSearch(query, baseCounter * resultsInPage, resultsInPage);
         }
 
-        private void QueryImageSearch(string query)
+        private void QueryImageSearch(UserQuery query)
         {
             ImageHits = SearchEngine.GetImageResultsCount(query);
         }
 
-        private void DoFullQuery(string query)
+        private void DoFullQuery(UserQuery query)
         {
-            Parallel.Invoke(() => QueryGemipedia(query),
+            Parallel.Invoke(() => QueryGemipedia(query.TermsQuery),
                             () => QueryFullText(query),
                             () => QueryImageSearch(query));
         }

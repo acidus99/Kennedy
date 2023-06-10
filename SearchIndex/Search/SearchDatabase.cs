@@ -74,17 +74,17 @@ namespace Kennedy.SearchIndex.Search
             }
         }
 
-        public int GetImageResultsCount(string query)
+        public int GetImageResultsCount(UserQuery query)
         {
             using (var db = GetContext())
             {
-                return db.Database.SqlQuery<int>($"Select count(*) as Value From ImageSearch WHERE Terms match {query}").First();
+                return db.Database.SqlQuery<int>($"Select count(*) as Value From ImageSearch WHERE Terms match {query.FTSQuery}").First();
             }
         }
 
-        private FormattableString GetImageSearchQuery(string query, int offset, int limit)
+        private FormattableString GetImageSearchQuery(UserQuery query, int offset, int limit)
         {
-            var queryParam = new SqliteParameter("query", query);
+            var queryParam = new SqliteParameter("query", query.FTSQuery);
             var offsetParam = new SqliteParameter("offset", offset);
             var limitParam = new SqliteParameter("limit", limit);
 
@@ -97,10 +97,10 @@ On img.UrlID = fts.ROWID
 On doc.UrlID = img.UrlID
 WHERE Terms match {queryParam}
 order by tot
-LIMIT {limit} OFFSET {offset}";
+LIMIT {limitParam} OFFSET {offsetParam}";
         }
 
-        public List<ImageSearchResult> DoImageSearch(string query, int offset, int limit)
+        public List<ImageSearchResult> DoImageSearch(UserQuery query, int offset, int limit)
         {
             using (var db = GetContext())
             {
@@ -114,15 +114,15 @@ LIMIT {limit} OFFSET {offset}";
 
         #region Text search
 
-        public int GetTextResultsCount(string query)
+        public int GetTextResultsCount(UserQuery query)
         {
             using(var db = GetContext())
             {
-                return db.Database.SqlQuery<int>($"Select count(*) as Value From FTS WHERE Body match {query}").First();
+                return db.Database.SqlQuery<int>($"Select count(*) as Value From FTS WHERE Body match {query.FTSQuery}").First();
             }
         }
 
-        public List<FullTextSearchResult> DoTextSearch(string query, int offset, int limit)
+        public List<FullTextSearchResult> DoTextSearch(UserQuery query, int offset, int limit)
         {
             using (var db = GetContext())
             {
@@ -132,9 +132,9 @@ LIMIT {limit} OFFSET {offset}";
             }
         }
 
-        private FormattableString GetTextSearchQuery(string query, int offset, int limit)
+        private FormattableString GetTextSearchQuery(UserQuery query, int offset, int limit)
         {
-            var queryParam = new SqliteParameter("query", query);
+            var queryParam = new SqliteParameter("query", query.FTSQuery);
             var offsetParam = new SqliteParameter("offset", offset);
             var limitParam = new SqliteParameter("limit", limit);
 
@@ -143,9 +143,9 @@ $@"Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType
 From FTS as fts
 Inner Join Documents as doc
 On doc.UrlID = fts.ROWID
-WHERE Body MATCH {query}
+WHERE Body MATCH {queryParam}
 order by TotalRank
-LIMIT {limit} OFFSET {offset}";
+LIMIT {limitParam} OFFSET {offsetParam}";
         }
 
         #endregion 

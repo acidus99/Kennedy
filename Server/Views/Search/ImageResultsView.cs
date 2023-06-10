@@ -22,7 +22,9 @@ namespace Kennedy.Server.Views.Search
 
         public override void Render()
         {
-            string query = PrepareQuery(SanitizedQuery);
+            var queryParser = new QueryParser();
+            UserQuery query = queryParser.Parse(SanitizedQuery);
+
             var options = new SearchOptions(Request.Url, "/image-search");
 
             Response.Success();
@@ -34,7 +36,7 @@ namespace Kennedy.Server.Views.Search
             {
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
-                var results = DoQuery(query,options);
+                var results = DoQuery(query, options);
                 stopwatch.Stop();
 
                 var queryTime = (int)stopwatch.ElapsedMilliseconds;
@@ -83,7 +85,7 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine("");
         }
 
-        private List<ImageSearchResult> DoQuery(string query, SearchOptions options)
+        private List<ImageSearchResult> DoQuery(UserQuery query, SearchOptions options)
         {
             int baseCounter = options.SearchPage - 1;
             return ImageEngine.DoImageSearch(query, baseCounter * resultsInPage, resultsInPage);

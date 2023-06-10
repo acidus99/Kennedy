@@ -41,14 +41,14 @@ namespace Kennedy.SearchIndex.Search
         /// <param name="offset"></param>
         /// <param name="limit"></param>
         /// <returns></returns>
-        List<FullTextSearchResult> DoTextSearch(string query, int offset, int limit);
+        List<FullTextSearchResult> DoTextSearch(UserQuery query, int offset, int limit);
 
         /// <summary>
         /// Returns the number of results for a text query
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        int GetTextResultsCount(string query);
+        int GetTextResultsCount(UserQuery query);
 
         /// <summary>
         /// Executes an image search
@@ -57,14 +57,14 @@ namespace Kennedy.SearchIndex.Search
         /// <param name="offset"></param>
         /// <param name="limit"></param>
         /// <returns></returns>
-        List<ImageSearchResult> DoImageSearch(string query, int offset, int limit);
+        List<ImageSearchResult> DoImageSearch(UserQuery query, int offset, int limit);
 
         /// <summary>
         /// Returns the number of results for an image query
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        int GetImageResultsCount(string query);
+        int GetImageResultsCount(UserQuery query);
     }
 }
 
