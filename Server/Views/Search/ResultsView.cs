@@ -11,6 +11,7 @@ using System.Diagnostics;
 using Kennedy.Gemipedia;
 using System.Collections;
 using System.Diagnostics.Metrics;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Kennedy.Server.Views.Search
 {
@@ -31,6 +32,8 @@ namespace Kennedy.Server.Views.Search
         List<FullTextSearchResult>? SearchResults;
         int ImageHits = 0;
 
+        int ResultCount = 0;
+
         SearchOptions Options = null!;
 
         public override void Render()
@@ -44,74 +47,84 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Search");
             Response.WriteLine();
 
-            var resultCount = SearchEngine.GetTextResultsCount(query);
-            if (resultCount > 0)
+            ResultCount = SearchEngine.GetTextResultsCount(query);
+            if (ResultCount > 0)
             {
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.Start();
-                DoFullQuery(query);
-                stopwatch.Stop();
-                var queryTime = (int)stopwatch.ElapsedMilliseconds;
-                int baseCounter = Options.SearchPage - 1;
-                int counter = baseCounter * resultsInPage;
-                int start = counter + 1;
-
-                bool shownHeader = false;
-
-                if(TopGemipediaHit != null)
-                {
-                    Response.WriteLine($"=> {Helper.ArticleUrl(TopGemipediaHit)} Gemipedia Article: {TopGemipediaHit.Title}");
-                    if (TopGemipediaHit.Description.Length > 0)
-                    {
-                        Response.WriteLine($"> {TopGemipediaHit.Description}");
-                    }
-                    shownHeader = true;
-                }
-
-                if(ImageHits > 0)
-                {
-                    Response.WriteLine($"=> /image-search?{Request.Url.RawQuery} {ImageHits} matches on 🖼 Image Search for {query}");
-                    shownHeader = true;
-                }
-
-                if(shownHeader)
-                {
-                    Response.WriteLine();
-                }
-
-                if (SearchResults != null)
-                {
-                    Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(start + SearchResults.Count - 1)} of {FormatCount(resultCount)} results");
-                    foreach (var result in SearchResults)
-                    {
-                        counter++;
-                        WriteResultEntry(result, counter);
-                    }
-                }
-
-                Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(counter)}  of {FormatCount(resultCount)} total results");
-
-                if (Options.SearchPage > 1)
-                {
-                    //show previous link
-                    Response.WriteLine(PageLink("⬅️ Previous Page", Options.SearchPage - 1));
-                }
-
-                if ((baseCounter * resultsInPage) + resultsInPage < resultCount)
-                {
-                    //show next page
-                    Response.WriteLine(PageLink("➡️ Next Page", Options.SearchPage + 1));
-                }
-                Response.WriteLine($"Query time: {queryTime} ms");
-                Response.WriteLine();
-                Response.WriteLine("=> /search 🔍 Another Search");
-                Response.WriteLine("=> /image-search 🖼 Image Search");
-                Response.WriteLine("=> / Home");
+                RenderResults(query);
             }
             else
             {
-                Response.WriteLine("## Oh Snap! No Results for your query.");
+                RenderNoResults(query);
             }
+        }
+
+        private void RenderNoResults(UserQuery query)
+        {
+            Response.WriteLine("## Oh Snap! No Results for your query.");
+        }
+
+        private void RenderResults(UserQuery query)
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            DoFullQuery(query);
+            stopwatch.Stop();
+            var queryTime = (int)stopwatch.ElapsedMilliseconds;
+            int baseCounter = Options.SearchPage - 1;
+            int counter = baseCounter * resultsInPage;
+            int start = counter + 1;
+
+            bool shownHeader = false;
+
+            if (TopGemipediaHit != null)
+            {
+                Response.WriteLine($"=> {Helper.ArticleUrl(TopGemipediaHit)} Gemipedia Article: {TopGemipediaHit.Title}");
+                if (TopGemipediaHit.Description.Length > 0)
+                {
+                    Response.WriteLine($"> {TopGemipediaHit.Description}");
+                }
+                shownHeader = true;
+            }
+
+            if (ImageHits > 0)
+            {
+                Response.WriteLine($"=> /image-search?{Request.Url.RawQuery} {ImageHits} matches on 🖼 Image Search for {query}");
+                shownHeader = true;
+            }
+
+            if (shownHeader)
+            {
+                Response.WriteLine();
+            }
+
+            if (SearchResults != null)
+            {
+                Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(start + SearchResults.Count - 1)} of {FormatCount(ResultCount)} results");
+                foreach (var result in SearchResults)
+                {
+                    counter++;
+                    WriteResultEntry(result, counter);
+                }
+            }
+
+            Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(counter)}  of {FormatCount(ResultCount)} total results");
+
+            if (Options.SearchPage > 1)
+            {
+                //show previous link
+                Response.WriteLine(PageLink("⬅️ Previous Page", Options.SearchPage - 1));
+            }
+
+            if ((baseCounter * resultsInPage) + resultsInPage < ResultCount)
+            {
+                //show next page
+                Response.WriteLine(PageLink("➡️ Next Page", Options.SearchPage + 1));
+            }
+            Response.WriteLine($"Query time: {queryTime} ms");
+            Response.WriteLine();
+            Response.WriteLine("=> /search 🔍 Another Search");
+            Response.WriteLine("=> /image-search 🖼 Image Search");
+            Response.WriteLine("=> / Home");
         }
 
         private void WriteResultEntry(FullTextSearchResult result, int resultNumber)
