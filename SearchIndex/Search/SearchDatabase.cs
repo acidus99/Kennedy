@@ -8,9 +8,7 @@ using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Web;
-using static System.Net.WebRequestMethods;
 using System.Text.RegularExpressions;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Kennedy.SearchIndex.Search
 {
