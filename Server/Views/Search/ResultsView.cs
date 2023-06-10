@@ -177,10 +177,5 @@ namespace Kennedy.Server.Views.Search
             //collapse whitespace runs
             return Regex.Replace(snippet, @"\s+", " ");
         }
-
-        private string PrepareQuery(string query)
-        {
-            return query.Replace(".", " ");
-        }
     }
 }
