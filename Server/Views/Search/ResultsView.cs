@@ -85,7 +85,7 @@ namespace Kennedy.Server.Views.Search
                     foreach (var result in SearchResults)
                     {
                         counter++;
-                        WriteResultEntry(Response, result, counter);
+                        WriteResultEntry(result, counter);
                     }
                 }
 
@@ -114,7 +114,7 @@ namespace Kennedy.Server.Views.Search
             }
         }
 
-        private void WriteResultEntry(Response resp, FullTextSearchResult result, int resultNumber)
+        private void WriteResultEntry(FullTextSearchResult result, int resultNumber)
         {
             // Write link line with meta data.
             Response.Write($"=> {result.Url} {FormatCount(resultNumber)}. {FormatResultTitle(result)} (");
