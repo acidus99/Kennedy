@@ -10,6 +10,8 @@ namespace Kennedy.Data
 
 		public List<FoundLink> Links { get; set; }
 
+		public virtual bool IsIndexable => false;
+
 		public ParsedResponse(GeminiResponse baseResponse)
 			: base(baseResponse.RequestUrl)
 		{

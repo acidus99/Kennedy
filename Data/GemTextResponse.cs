@@ -13,7 +13,7 @@ namespace Kennedy.Data
 
         public string? Title { get; set; }
 
-        public bool IsIndexable => (FilteredBody.Length > 0);
+        public override bool IsIndexable => (FilteredBody.Length > 0);
 
         public string FilteredBody { get; set; } = "";
 

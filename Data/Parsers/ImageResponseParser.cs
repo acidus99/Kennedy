@@ -12,7 +12,7 @@ namespace Kennedy.Data.Parsers
     {
         public override bool CanParse(GeminiResponse resp)
             // If we are successful, there mus be a MIME type, since the specification defines one if missing.
-            => resp.HasBody && resp.IsSuccess && resp.MimeType!.StartsWith("image/");
+            => resp.IsSuccess && resp.HasBody && resp.MimeType!.StartsWith("image/");
 
         public override ParsedResponse? Parse(GeminiResponse resp)
         {
