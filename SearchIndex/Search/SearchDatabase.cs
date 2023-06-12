@@ -31,12 +31,25 @@ namespace Kennedy.SearchIndex.Search
 
         public void UpdateIndex(ParsedResponse parsedResponse)
         {
-            var gemText = parsedResponse as GemTextResponse;
-
-            //for now, only gemtext is indexed
-            if (gemText != null && gemText.IsIndexable)
+            if(parsedResponse.IsIndexable)
             {
-                UpdateTextIndex(parsedResponse.RequestUrl.ID, gemText.Title, gemText.FilteredBody);
+
+                switch(parsedResponse.ContentType)
+                {
+                    case ContentType.Gemtext:
+                        {
+                            var doc = (GemTextResponse) parsedResponse;
+                            UpdateTextIndex(parsedResponse.RequestUrl.ID, doc.Title, doc.FilteredBody);
+                            break;
+                        }
+
+                    case ContentType.PlainText:
+                        {
+                            var doc = (PlainTextResponse)parsedResponse;
+                            UpdateTextIndex(parsedResponse.RequestUrl.ID, null, doc.BodyText);
+                            break;
+                        }
+                }
             }
         }
 

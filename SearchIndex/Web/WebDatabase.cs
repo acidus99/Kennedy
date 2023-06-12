@@ -135,6 +135,7 @@ namespace Kennedy.SearchIndex.Web
                     entry.Meta = parsedResponse.Meta;
 
                     entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
+                    entry.IsBodyIndexed = parsedResponse.IsIndexable;
                     entry.BodySize = parsedResponse.BodySize;
                     entry.BodyHash = parsedResponse.BodyHash;
                     entry.ResponseHash = parsedResponse.Hash;
