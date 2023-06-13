@@ -5,8 +5,8 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using Gemini.Net;
 using Kennedy.Gemipedia;
-
 using Kennedy.SearchIndex.Search;
 using Kennedy.SearchIndex.Models;
 using RocketForce;
@@ -132,8 +132,11 @@ namespace Kennedy.Server.Views.Search
 
         private void WriteResultEntry(FullTextSearchResult result, int resultNumber)
         {
+            var resultTitle = result.Title ?? FormatUrl(result.GeminiUrl);
+
             // Write link line with meta data.
-            Response.Write($"=> {result.Url} {FormatCount(resultNumber)}. {FormatResultTitle(result)} (");
+            Response.Write($"=> {result.Url} {FormatCount(resultNumber)}. {resultTitle} ({result.Mimetype} • ");
+
             if (result.LineCount != null)
             {
                 Response.Write(result.LineCount.Value.ToString());
@@ -141,8 +144,11 @@ namespace Kennedy.Server.Views.Search
             }
             Response.Write($"{FormatSize(result.BodySize)})");
             Response.WriteLine();
-
-            if(result.DetectedLanguage != null && result.DetectedLanguage != "en")
+            if (result.Title != null)
+            {
+                Response.WriteLine($"* {FormatUrl(result.GeminiUrl)}");
+            }
+            if (result.DetectedLanguage != null && result.DetectedLanguage != "en")
             {
                 Response.WriteLine($"Language: {FormatLanguage(result.DetectedLanguage)}");
             }

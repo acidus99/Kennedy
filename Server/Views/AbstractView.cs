@@ -50,23 +50,16 @@ namespace Kennedy.Server.Views
             return $"{Math.Round(((double)bodySize) / ((double)1024)).ToString("N0")} KiB";
         }
 
-        protected string FormatResultTitle(FullTextSearchResult result)
+        protected string FormatUrl(GeminiUrl url)
         {
-            var sb = new StringBuilder();
-            if(result.Favicon != null)
+            var parts = (url.Hostname + url.Path).Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            var ret = string.Join(" › ", parts);
+            if (ret.Length > 60)
             {
-                sb.Append(result.Favicon);
-                sb.Append(' ');
+                ret = ret.Substring(0, 60) + '…';
             }
-            var title = result.Title?.Trim() ?? "";
-            if(title.Length > 0)
-            {
-                sb.Append(title);
-            } else
-            {
-                sb.Append($"{result.GeminiUrl.Hostname}{result.GeminiUrl.Path}");
-            }
-            return sb.ToString();
+            return ret;
         }
 
         protected string FormatLanguage(string twoLetterISOLanguageName)
