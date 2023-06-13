@@ -5,17 +5,17 @@ using Gemini.Net;
 
 namespace Kennedy.Data
 {
-    public class GemTextResponse : ParsedResponse
+    public class GemTextResponse : ParsedResponse, ITextResponse
     {
-        public int LineCount { get; set; } = 0;
+        public required string? DetectedLanguage { get; set; }
 
-        public string? DetectedLanguage { get; set; }
+        public bool HasIndexableText => (IndexableText?.Length > 0);
+
+        public string? IndexableText { get; set; }
+
+        public required int LineCount { get; set; }
 
         public string? Title { get; set; }
-
-        public override bool IsIndexable => (FilteredBody.Length > 0);
-
-        public string FilteredBody { get; set; } = "";
 
         public IEnumerable<String> Mentions = new List<string>();
 

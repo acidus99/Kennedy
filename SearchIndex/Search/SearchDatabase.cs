@@ -31,24 +31,13 @@ namespace Kennedy.SearchIndex.Search
 
         public void UpdateIndex(ParsedResponse parsedResponse)
         {
-            if(parsedResponse.IsIndexable)
+            if (parsedResponse is ITextResponse)
             {
+                var textDoc = (ITextResponse)parsedResponse;
 
-                switch(parsedResponse.ContentType)
+                if (textDoc.HasIndexableText)
                 {
-                    case ContentType.Gemtext:
-                        {
-                            var doc = (GemTextResponse) parsedResponse;
-                            UpdateTextIndex(parsedResponse.RequestUrl.ID, doc.Title, doc.FilteredBody);
-                            break;
-                        }
-
-                    case ContentType.PlainText:
-                        {
-                            var doc = (PlainTextResponse)parsedResponse;
-                            UpdateTextIndex(parsedResponse.RequestUrl.ID, null, doc.BodyText);
-                            break;
-                        }
+                    UpdateTextIndex(parsedResponse.RequestUrl.ID, textDoc.Title, textDoc.IndexableText!);
                 }
             }
         }

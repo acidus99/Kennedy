@@ -23,11 +23,12 @@ namespace Kennedy.Data.Parsers
 
             return new GemTextResponse(resp)
             {
-                FilteredBody = indexableText,
+                DetectedLanguage = languageDetector.DetectLanguage(indexableText),
+                IndexableText = indexableText,
+                LineCount = lines.Length,
                 Links = LinkFinder.GetLinks(resp.RequestUrl, noPreformatted).ToList(),
                 Title = TitleFinder.FindTitle(lines),
-                LineCount = lines.Length,
-                DetectedLanguage = languageDetector.DetectLanguage(indexableText),
+
                 HashTags = HashtagsFinder.GetHashtags(noPreformatted),
                 Mentions = MentionsFinder.GetMentions(noPreformatted)
             };

@@ -5,13 +5,29 @@ using Gemini.Net;
 
 namespace Kennedy.Data
 {
-    public class PlainTextResponse : ParsedResponse
+    public class PlainTextResponse : ParsedResponse, ITextResponse
     {
-        public int LineCount { get; set; } = 0;
+        public required string? DetectedLanguage { get; set; }
 
-        public string? DetectedLanguage { get; set; }
+        public bool HasIndexableText => (BodyText.Length > 0);
 
-        public override bool IsIndexable => (BodyText.Length > 0);
+        public string? IndexableText => BodyText;
+
+        private int? _lineCount;
+
+        public int LineCount
+        {
+            get
+            {
+                if (!_lineCount.HasValue)
+                {
+                    _lineCount = BodyText.Split('\n').Length;
+                }
+                return _lineCount.Value;
+            }
+        }
+
+        public string? Title => null;
 
         public PlainTextResponse(GeminiResponse resp)
         : base(resp)

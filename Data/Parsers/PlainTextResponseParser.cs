@@ -17,11 +17,8 @@ namespace Kennedy.Data.Parsers
 
         public override ParsedResponse Parse(GeminiResponse resp)
         {
-            var lineCount = resp.BodyText.Split('\n').Length;
-
             return new PlainTextResponse(resp)
             {
-                LineCount = lineCount,
                 DetectedLanguage = languageDetector.DetectLanguage(resp.BodyText),
             };
         }
