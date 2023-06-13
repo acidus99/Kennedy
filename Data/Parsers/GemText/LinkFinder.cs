@@ -62,10 +62,10 @@ namespace Kennedy.Data.Parsers.GemText
 
                 var url = parts[1];
                 //sanity check, if its a fully qualified URL, ensure its a gemini URL. otherwise, we really don't care
-                //if (url.Contains("://") && !url.StartsWith("gemini://"))
-                //{
-                //    continue;
-                //}
+                if (url.Contains("://") && !url.StartsWith("gemini://"))
+                {
+                    continue;
+                }
 
                 var newUrl = GeminiUrl.MakeUrl(requestUrl, url);
                 //ignore anything that doesn't resolve properly, or isn't to a gemini:// URL
