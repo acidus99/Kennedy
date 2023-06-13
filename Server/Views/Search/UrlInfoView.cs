@@ -54,22 +54,33 @@ namespace Kennedy.Server.Views.Search
             //var emoji = entry.Favicon?.Emoji + " " ?? "";
             var emoji = "";
             Response.WriteLine($"=> {entry.GeminiUrl.RootUrl} Capsule: {emoji}{entry.GeminiUrl.Hostname}");
-
             Response.WriteLine();
+
+            RenderMetadata();
+            RenderFileMetaData();
+            RenderLinks();
+        }
+
+        private void RenderMetadata()
+        {
             Response.WriteLine($"## Metadata");
+            //if meta and parsed mimetype are the same, no reason so show raw meta
+            if (entry.Meta != entry.MimeType)
+            {
+                Response.WriteLine($"* Meta Line: {entry.Meta}");
+            }
             Response.WriteLine($"* Mimetype: {entry.MimeType}");
             if (entry.Charset != null)
             {
                 Response.WriteLine($"* Charset: {entry.Charset}");
             }
-
+            if (entry.Language != null)
+            {
+                Response.WriteLine($"* Language: {FormatLanguage(entry.Language)}");
+            }
             Response.WriteLine($"* Size: {FormatSize(entry.BodySize)}");
             Response.WriteLine($"* First Seen: {entry.FirstSeen.ToString("yyyy-MM-dd")}");
             Response.WriteLine($"* Indexed on: {entry.LastSuccessfulVisit?.ToString("yyyy-MM-dd")}");
-
-            RenderFileMetaData();
-
-            RenderLinks();
         }
 
         private void RenderFileMetaData()
@@ -77,7 +88,8 @@ namespace Kennedy.Server.Views.Search
             switch (entry.ContentType)
             {
                 case ContentType.Gemtext:
-                    RenderGemtextMetaData();
+                case ContentType.PlainText:
+                    RenderTextMetaData();
                     break;
 
                 case ContentType.Image:
@@ -86,13 +98,13 @@ namespace Kennedy.Server.Views.Search
             }
         }
 
-        private void RenderGemtextMetaData()
+        private void RenderTextMetaData()
         {
-            Response.WriteLine("### Gemtext Metadata");
+            Response.WriteLine("### Text Metadata");
             var title = entry.Title ?? "(Could not determine)";
-            var language = (entry.Language != null) ? FormatLanguage(entry.Language) : "(Could not determine)";
+            var language = (entry.DetectedLanguage != null) ? FormatLanguage(entry.DetectedLanguage) : "(Could not determine)";
             Response.WriteLine($"* Title: {title}");
-            Response.WriteLine($"* Language: {language}");
+            Response.WriteLine($"* Detected language: {language}");
             if (entry.LineCount != null)
             {
                 Response.WriteLine($"* Lines: {entry.LineCount}");
