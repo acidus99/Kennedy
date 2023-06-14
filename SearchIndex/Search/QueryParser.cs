@@ -11,20 +11,33 @@ public class QueryParser
 
 	readonly static Regex whitespaceRuns = new Regex(@"\s+");
 
-	readonly static Regex siteScope = new Regex(@"\bsite\:\s*([a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	readonly static Regex siteScopeRegex = new Regex(@"\bsite\:\s*([a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    readonly static Regex fileTypeScopeRegex = new Regex(@"\bfiletype\:\s*([a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     public UserQuery Parse(string inputQuery)
 	{
-		inputQuery = Normalize(inputQuery);
+		string rawQuery = Normalize(inputQuery);
+		string termsQuery = rawQuery;
 
-		string termsQuery = CreateTermQuery(inputQuery);
+		string? siteScope = GetSearchOption(termsQuery, siteScopeRegex);
+		if(siteScope != null)
+		{
+			termsQuery = RemoveSearchOption(termsQuery, siteScopeRegex);
+		}
+
+		string? fileTypeScope = GetSearchOption(termsQuery, fileTypeScopeRegex);
+		if(fileTypeScope != null)
+		{
+			termsQuery = RemoveSearchOption(termsQuery, fileTypeScopeRegex);
+		}
 
 		return new UserQuery
 		{
-			RawQuery = inputQuery,
-			TermsQuery = termsQuery,
+			FileTypeScope = fileTypeScope,
 			FTSQuery = FtsSyntaxConverter.Convert(termsQuery),
-			SiteScope = ParseSiteScopeRules(termsQuery, inputQuery)
+			RawQuery = inputQuery,
+			SiteScope = siteScope,
+			TermsQuery = termsQuery,
 		};
 	}
 
@@ -34,21 +47,9 @@ public class QueryParser
 		return whitespaceRuns.Replace(s, " ");
 	}
 
-	private string CreateTermQuery(string inputQuery)
+	private string? GetSearchOption(string query, Regex rule)
 	{
-		return Normalize(siteScope.Replace(inputQuery, ""));
-	}
-
-	private string? ParseSiteScopeRules(string termsQuery, string inputQuery)
-	{
-		//optimization, there are only site scoping rules if we trimmed them out earlier
-		//no need to run the regex twice if they are the same
-		if(termsQuery == inputQuery)
-		{
-			return null;
-		}
-
-		var match = siteScope.Match(inputQuery);
+		var match = rule.Match(query);
 		if(!match.Success)
 		{
 			return null;
@@ -56,6 +57,7 @@ public class QueryParser
 		return match.Groups[1].Value;
 	}
 
-		
+	private string RemoveSearchOption(string query, Regex regex)
+		=> Normalize(regex.Replace(query, ""));
 }
 

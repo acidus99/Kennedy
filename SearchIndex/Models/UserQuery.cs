@@ -4,6 +4,8 @@ using System;
 
 public class UserQuery
 {
+    public string? FileTypeScope { get; set; }
+
     public string? FTSQuery { get; set; }
 
     public bool HasFtsQuery
@@ -11,6 +13,9 @@ public class UserQuery
 
     public bool HasSiteScope
         => !string.IsNullOrEmpty(SiteScope);
+
+    public bool HasFileTypeScope
+        => !string.IsNullOrEmpty(FileTypeScope);
 
     public required string RawQuery { get; set; }
 

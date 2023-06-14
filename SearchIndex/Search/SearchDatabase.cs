@@ -62,8 +62,7 @@ namespace Kennedy.SearchIndex.Search
             fileIndexer.IndexFiles();
 
             ImageIndexer imageIndexer = new ImageIndexer(connectionString);
-            imageIndexer.IndexImages();
-            
+            imageIndexer.IndexImages();            
         }
 
         #endregion
@@ -100,11 +99,17 @@ namespace Kennedy.SearchIndex.Search
                     sqlQuery.AddParameter("domain", userQuery.SiteScope);
                 }
 
+                if (userQuery.HasFileTypeScope)
+                {
+                    sqlQuery.Append("AND FileExtension = {} ");
+                    sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
+                }
+
                 return db.Database.SqlQuery<int>(sqlQuery.GetFormattableString()).First();
             }
         }
 
-        private FormattableString GetImageSearchQuery(UserQuery query, int offset, int limit)
+        private FormattableString GetImageSearchQuery(UserQuery userQuery, int offset, int limit)
         {
             var sqlQuery = new DynamicQuery<SqliteParameter>();
 
@@ -117,11 +122,17 @@ On img.UrlID = fts.ROWID
 On doc.UrlID = img.UrlID
 WHERE Terms match {} ");
 
-            sqlQuery.AddParameter("query", query.FTSQuery);
-            if(query.HasSiteScope)
+            sqlQuery.AddParameter("query", userQuery.FTSQuery);
+            if(userQuery.HasSiteScope)
             {
                 sqlQuery.Append("AND domain = {} ");
-                sqlQuery.AddParameter("domain", query.SiteScope);
+                sqlQuery.AddParameter("domain", userQuery.SiteScope);
+            }
+
+            if (userQuery.HasFileTypeScope)
+            {
+                sqlQuery.Append("AND FileExtension = {} ");
+                sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
             }
 
             sqlQuery.Append("ORDER BY tot LIMIT {} OFFSET {}");
@@ -167,6 +178,12 @@ WHERE Terms match {} ");
                     sqlQuery.AddParameter("domain", userQuery.SiteScope);
                 }
 
+                if(userQuery.HasFileTypeScope)
+                {
+                    sqlQuery.Append("AND FileExtension = {} ");
+                    sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
+                }
+
                 return db.Database.SqlQuery<int>(sqlQuery.GetFormattableString()).First();
             }
         }
@@ -198,6 +215,12 @@ Where Body MATCH {} ");
             {
                 sqlQuery.Append("AND domain = {} ");
                 sqlQuery.AddParameter("domain", userQuery.SiteScope);
+            }
+
+            if (userQuery.HasFileTypeScope)
+            {
+                sqlQuery.Append("AND FileExtension = {} ");
+                sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
             }
 
             sqlQuery.Append("order by TotalRank LIMIT {} OFFSET {} ");
