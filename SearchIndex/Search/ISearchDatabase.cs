@@ -25,7 +25,7 @@ namespace Kennedy.SearchIndex.Search
         /// Indexes images by using the link text of all inbound links. This has to be run
         /// at the end of a crawl so that all inbound link text is indexed
         /// </summary>
-        void IndexImages();
+        void IndexFiles();
 
         /// <summary>
         /// Gets the text that was used to index an image

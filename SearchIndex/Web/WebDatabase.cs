@@ -134,6 +134,8 @@ namespace Kennedy.SearchIndex.Web
                     entry.StatusCode = parsedResponse.StatusCode;
                     entry.Meta = parsedResponse.Meta;
 
+                    entry.IsBodyIndexed = (parsedResponse is ITextResponse && ((ITextResponse)parsedResponse).HasIndexableText);
+
                     entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
                     entry.BodySize = parsedResponse.BodySize;
                     entry.BodyHash = parsedResponse.BodyHash;
@@ -146,22 +148,27 @@ namespace Kennedy.SearchIndex.Web
 
                     entry.ContentType = parsedResponse.ContentType;
 
+                    entry.Language = parsedResponse.Language;
+                    entry.DetectedLanguage = null;
+                    entry.LineCount = 0;
+                    entry.Title = null;
+
+
                     //extra meta data
                     if (parsedResponse is GemTextResponse)
                     {
                         var gemtext = (GemTextResponse)parsedResponse;
 
                         entry.DetectedLanguage = gemtext.DetectedLanguage;
-                        entry.Language = gemtext.Language;
                         entry.LineCount = gemtext.LineCount;
                         entry.Title = gemtext.Title;
                     }
-                    else
+                    else if (parsedResponse is PlainTextResponse)
                     {
-                        entry.Language = parsedResponse.Language;
-                        entry.DetectedLanguage = null;
-                        entry.LineCount = 0;
-                        entry.Title = null;
+                        var txtDoc = (PlainTextResponse)parsedResponse;
+
+                        entry.DetectedLanguage = txtDoc.DetectedLanguage;
+                        entry.LineCount = txtDoc.LineCount;
                     }
 
                     if (parsedResponse is ImageResponse)

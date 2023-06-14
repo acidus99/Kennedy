@@ -7,11 +7,14 @@ namespace Kennedy.Data.Parsers
 {
 	public class LanguageDetector
 	{
-
 		public static string ConfigFileDirectory { get; set; } = "";
 
 		//minimum size we require the content to be to find out the language
-		const int MinSizeForLanguage = 150;
+		const int MinSize = 150;
+
+		const int MaxSize = 4096;
+
+
 
 		RankedLanguageIdentifier langClassifier;
 
@@ -21,23 +24,28 @@ namespace Kennedy.Data.Parsers
 			langClassifier = factory.Load(ConfigFileDirectory + "Core14.profile.xml");
 		}
 
-		public string? DetectLanguage(string filteredBody)
+		public string? DetectLanguage(string s)
 		{
-			if (filteredBody.Length > MinSizeForLanguage)
+			if (s.Length < MinSize)
 			{
-				var mostCertainLanguage = langClassifier.Identify(filteredBody).FirstOrDefault();
-				if(mostCertainLanguage != null)
-				{
-					CultureInfo info = new CultureInfo(mostCertainLanguage.Item1.Iso639_2T);
-					var lang = info.TwoLetterISOLanguageName;
-					return lang;
-				}
 				return null;
+			}
+
+			//scanning huge amounts of text (10s, 100s or 1000s of KB) is slow and doesn't provide more accuracy. So clip it.
+			if(s.Length > MaxSize)
+			{
+				s = s.Substring(0, MaxSize);
+			}
+
+			var mostCertainLanguage = langClassifier.Identify(s).FirstOrDefault();
+			if(mostCertainLanguage != null)
+			{
+				CultureInfo info = new CultureInfo(mostCertainLanguage.Item1.Iso639_2T);
+				var lang = info.TwoLetterISOLanguageName;
+				return lang;
 			}
 			return null;
 		}
-
-
 	}
 }
 

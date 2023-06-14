@@ -90,6 +90,8 @@ namespace Kennedy.SearchIndex.Models
         /// </summary>
         public bool IsBodyTruncated { get; set; } = false;
 
+        public bool IsBodyIndexed { get; set; } = false;
+
         public int BodySize { get; set; } = 0;
         public string? BodyHash { get; set; }
 
@@ -146,7 +148,7 @@ namespace Kennedy.SearchIndex.Models
             Port = url.Port;
             Path = url.Path;
             Url = url.NormalizedUrl;
-            FileExtension = url.FileExtension;
+            FileExtension = url.FileExtension.ToLower();
         }
 
     }

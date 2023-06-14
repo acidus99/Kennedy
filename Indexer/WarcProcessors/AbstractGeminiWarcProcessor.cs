@@ -8,6 +8,8 @@ namespace Kennedy.Indexer.WarcProcessors
 {
 	public abstract class AbstractGeminiWarcProcessor : IWarcProcessor
     {
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+
         public void ProcessRecord(WarcRecord record)
 		{
             if (record.Type == "response")
@@ -15,7 +17,13 @@ namespace Kennedy.Indexer.WarcProcessors
                 var geminiResponse = GetGeminiResponse((record as ResponseRecord)!);
                 if(geminiResponse != null)
                 {
+                    stopwatch.Restart();
                     ProcessGeminiResponse(geminiResponse);
+                    stopwatch.Stop();
+                    if (stopwatch.ElapsedMilliseconds > 1000)
+                    {
+                        int xxx = 5;
+                    }
                 }
             }
         }
@@ -26,9 +34,9 @@ namespace Kennedy.Indexer.WarcProcessors
             {
                 return null;
             }
+
             try
             {
-
                 var url = new GeminiUrl(StripRobots(responseRecord.TargetUri));
 
                 var response = GeminiParser.ParseResponseBytes(url, responseRecord.ContentBlock);

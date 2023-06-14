@@ -13,7 +13,7 @@ namespace Kennedy.Data.Parsers
 
         public override bool CanParse(GeminiResponse resp)
             // If we are successful, there mus be a MIME type, since the specification defines one if missing.
-            => resp.HasBody && resp.IsSuccess && resp.MimeType!.StartsWith("text/gemini");
+            => resp.IsSuccess  && resp.HasBodyText && resp.MimeType!.StartsWith("text/gemini");
 
         public override ParsedResponse Parse(GeminiResponse resp)
         {
@@ -23,11 +23,12 @@ namespace Kennedy.Data.Parsers
 
             return new GemTextResponse(resp)
             {
-                FilteredBody = indexableText,
+                DetectedLanguage = languageDetector.DetectLanguage(indexableText),
+                IndexableText = indexableText,
+                LineCount = lines.Length,
                 Links = LinkFinder.GetLinks(resp.RequestUrl, noPreformatted).ToList(),
                 Title = TitleFinder.FindTitle(lines),
-                LineCount = lines.Length,
-                DetectedLanguage = languageDetector.DetectLanguage(indexableText),
+
                 HashTags = HashtagsFinder.GetHashtags(noPreformatted),
                 Mentions = MentionsFinder.GetMentions(noPreformatted)
             };

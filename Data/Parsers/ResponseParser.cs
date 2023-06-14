@@ -14,7 +14,8 @@ namespace Kennedy.Data.Parsers
             {
                 new RedirectResponseParser(),
                 new GemTextResponseParser(),
-                new ImageResponseParser()
+                new ImageResponseParser(),
+                new PlainTextResponseParser(),
             };
         }
 

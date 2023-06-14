@@ -9,6 +9,7 @@ namespace Kennedy.SearchIndex.Models
 {
     [Table("Links")]
     [PrimaryKey(nameof(SourceUrlID), nameof(TargetUrlID))]
+    [Index(nameof(TargetUrlID))]
     public class DocumentLink
     {
         /// <summary>

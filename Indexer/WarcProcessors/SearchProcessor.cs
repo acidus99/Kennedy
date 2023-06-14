@@ -28,8 +28,25 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
 
     protected override void ProcessGeminiResponse(GeminiResponse geminiResponse)
     {
+        if(IsProactiveRequest(geminiResponse.RequestUrl))
+        {
+            return;
+        }
+
         // Fully parsed the response to get type-specific metadata.
         ParsedResponse parsedResponse = responseParser.Parse(geminiResponse);
         wrapperDB.StoreResponse(parsedResponse);
     }
+
+    private bool IsProactiveRequest(GeminiUrl url)
+    {
+        if(url.Path == "/robots.txt" ||
+            url.Path == "/favicon.txt" ||
+            url.Path == "/.well-known/security.txt")
+        {
+            return true;
+        }
+        return false;
+    }
+
 }

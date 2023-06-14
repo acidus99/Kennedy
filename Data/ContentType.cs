@@ -6,5 +6,6 @@
         Gemtext = 1,
         Image = 2,
         Binary = 3,
+        PlainText = 4,
     }
 }

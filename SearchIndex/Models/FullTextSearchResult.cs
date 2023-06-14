@@ -29,6 +29,8 @@ namespace Kennedy.SearchIndex.Models
         [NotMapped]
         public string? Favicon { get; set; }
 
+        public required string Mimetype { get; set; }
+
         public required int BodySize { get; set; }
         public required string? Title { get; set; }
         public required string Snippet { get; set; }

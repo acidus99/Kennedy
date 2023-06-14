@@ -33,7 +33,7 @@ namespace Kennedy.SearchIndex
 
 		public void FinalizeDatabases()
 		{
-			SearchDB.IndexImages();
+			SearchDB.IndexFiles();
 			PopularityCalculator popularityCalculator = new PopularityCalculator(WebDB.GetContext());
 			popularityCalculator.Rank();
 		}
