@@ -148,7 +148,7 @@ namespace Kennedy.SearchIndex.Models
             Port = url.Port;
             Path = url.Path;
             Url = url.NormalizedUrl;
-            FileExtension = url.FileExtension;
+            FileExtension = url.FileExtension.ToLower();
         }
 
     }
