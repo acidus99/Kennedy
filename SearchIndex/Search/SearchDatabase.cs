@@ -90,18 +90,23 @@ namespace Kennedy.SearchIndex.Search
                 {
                     sqlQuery.Append("Inner Join Documents On Documents.UrlID = ImageSearch.ROWID ");
                 }
-                sqlQuery.Append("WHERE Terms MATCH {} ");
-                sqlQuery.AddParameter("query", userQuery.FTSQuery);
+                sqlQuery.Append("WHERE ");
+
+                if (userQuery.HasFtsQuery)
+                {
+                    sqlQuery.AppendWhereCondition("Terms MATCH {} ");
+                    sqlQuery.AddParameter("query", userQuery.FTSQuery);
+                }
 
                 if (userQuery.HasSiteScope)
                 {
-                    sqlQuery.Append("AND domain = {} ");
+                    sqlQuery.AppendWhereCondition("domain = {} ");
                     sqlQuery.AddParameter("domain", userQuery.SiteScope);
                 }
 
                 if (userQuery.HasFileTypeScope)
                 {
-                    sqlQuery.Append("AND FileExtension = {} ");
+                    sqlQuery.AppendWhereCondition("FileExtension = {} ");
                     sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
                 }
 
@@ -120,18 +125,23 @@ From ImageSearch as fts
 On img.UrlID = fts.ROWID
  Inner join Documents as doc
 On doc.UrlID = img.UrlID
-WHERE Terms match {} ");
+WHERE ");
 
-            sqlQuery.AddParameter("query", userQuery.FTSQuery);
-            if(userQuery.HasSiteScope)
+            if (userQuery.HasFtsQuery)
             {
-                sqlQuery.Append("AND domain = {} ");
+                sqlQuery.AppendWhereCondition("Terms MATCH {} ");
+                sqlQuery.AddParameter("query", userQuery.FTSQuery);
+            }
+
+            if (userQuery.HasSiteScope)
+            {
+                sqlQuery.AppendWhereCondition("domain = {} ");
                 sqlQuery.AddParameter("domain", userQuery.SiteScope);
             }
 
             if (userQuery.HasFileTypeScope)
             {
-                sqlQuery.Append("AND FileExtension = {} ");
+                sqlQuery.AppendWhereCondition("FileExtension = {} ");
                 sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
             }
 
@@ -169,22 +179,30 @@ WHERE Terms match {} ");
                 {
                     sqlQuery.Append("Inner Join Documents On Documents.UrlID = fts.ROWID ");
                 }
-                sqlQuery.Append("WHERE Body MATCH {} ");
-                sqlQuery.AddParameter("query", userQuery.FTSQuery);
 
-                if(userQuery.HasSiteScope)
+                sqlQuery.Append("WHERE ");
+
+                if(userQuery.HasFtsQuery)
                 {
-                    sqlQuery.Append("AND domain = {} ");
+                    sqlQuery.AppendWhereCondition("Body MATCH {} ");
+                    sqlQuery.AddParameter("query", userQuery.FTSQuery);
+                }
+
+                if (userQuery.HasSiteScope)
+                {
+                    sqlQuery.AppendWhereCondition("domain = {} ");
                     sqlQuery.AddParameter("domain", userQuery.SiteScope);
                 }
 
                 if(userQuery.HasFileTypeScope)
                 {
-                    sqlQuery.Append("AND FileExtension = {} ");
+                    sqlQuery.AppendWhereCondition("FileExtension = {} ");
                     sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
                 }
 
-                return db.Database.SqlQuery<int>(sqlQuery.GetFormattableString()).First();
+                var sql = sqlQuery.GetFormattableString();
+
+                return db.Database.SqlQuery<int>(sql).First();
             }
         }
 
@@ -207,19 +225,22 @@ Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, (
 From FTS as fts
 Inner Join Documents as doc
 On doc.UrlID = fts.ROWID
-Where Body MATCH {} ");
+WHERE ");
+            if (userQuery.HasFtsQuery)
+            {
+                sqlQuery.AppendWhereCondition("Body MATCH {} ");
+                sqlQuery.AddParameter("query", userQuery.FTSQuery);
+            }
 
-            sqlQuery.AddParameter("query", userQuery.FTSQuery);
-            
             if (userQuery.HasSiteScope)
             {
-                sqlQuery.Append("AND domain = {} ");
+                sqlQuery.AppendWhereCondition("domain = {} ");
                 sqlQuery.AddParameter("domain", userQuery.SiteScope);
             }
 
             if (userQuery.HasFileTypeScope)
             {
-                sqlQuery.Append("AND FileExtension = {} ");
+                sqlQuery.AppendWhereCondition("FileExtension = {} ");
                 sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
             }
 
