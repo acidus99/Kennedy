@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Web;
 
 using Gemini.Net;
 using Kennedy.Archive.Db;
@@ -64,7 +65,7 @@ namespace Kennedy.Server.Views
 
         protected string FormatFilename(GeminiUrl url)
             => (url.Filename.Length > 0) ?
-                url.Filename :
+                HttpUtility.UrlDecode(url.Filename):
                 "/";
 
         protected string FormatLanguage(string twoLetterISOLanguageName)
