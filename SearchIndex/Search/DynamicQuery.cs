@@ -20,6 +20,8 @@ namespace Kennedy.SearchIndex.Search
 
 		int paramNumber = 0;
 
+		bool HasWhereCondition = false;
+
 		public void Append(string q)
 		{
 			if(paramNumber != parametersList.Count)
@@ -34,6 +36,23 @@ namespace Kennedy.SearchIndex.Search
 			}
 			query.Append(q);
 		}
+
+		/// <summary>
+		/// Appens a where condition. Automaticallu handles adding "AND" if needed
+		/// </summary>
+		/// <param name="q"></param>
+        public void AppendWhereCondition(string q)
+        {
+			if(!HasWhereCondition)
+			{
+				HasWhereCondition = true;
+				Append(q);
+			} else
+			{
+				q = "AND " + q;
+				Append(q);
+			}
+        }
 
         public void AddParameters(params T [] parameters)
         {
