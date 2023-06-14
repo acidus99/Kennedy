@@ -14,9 +14,12 @@ namespace Kennedy.SearchIndex.Search
 
         public string[] GetTokens(string url)
         {
-            tokens.Clear();
+            return GetTokens(new GeminiUrl(url));
+        }
 
-            GeminiUrl gurl = new GeminiUrl(url);
+        public string[] GetTokens(GeminiUrl gurl)
+        {
+            tokens.Clear();
 
             foreach (string rawSegment in GetSegments(gurl))
             {
@@ -76,7 +79,8 @@ namespace Kennedy.SearchIndex.Search
         {
             foreach(char c in token)
             {
-                if(!char.IsUpper(c))
+                //we include digits here a string like "AUTO5" would be broken in to "A U T O 5"
+                if(!char.IsUpper(c) || !char.IsDigit(c))
                 {
                     return false;
                 }
