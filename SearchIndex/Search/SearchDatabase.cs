@@ -186,7 +186,7 @@ WHERE Terms match {} ");
             var sqlQuery = new DynamicQuery<SqliteParameter>();
 
             sqlQuery.Append(@"
-Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, ( rank + (rank*0.3*PopularityRank)) as TotalRank, snippet(FTS, 1, '[',']','…',20) as Snippet
+Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, (rank + (rank*0.3*PopularityRank)) * IIF(ContentType = 1, 1.03, 1) as TotalRank, snippet(FTS, 1, '[',']','…',20) as Snippet
 From FTS as fts
 Inner Join Documents as doc
 On doc.UrlID = fts.ROWID
