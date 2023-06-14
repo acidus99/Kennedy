@@ -150,9 +150,8 @@ namespace Kennedy.SearchIndex.Web
 
                     entry.Language = parsedResponse.Language;
                     entry.DetectedLanguage = null;
-                    entry.LineCount = 0;
+                    entry.LineCount = null;
                     entry.Title = null;
-
 
                     //extra meta data
                     if (parsedResponse is GemTextResponse)
