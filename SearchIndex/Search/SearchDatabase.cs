@@ -86,7 +86,7 @@ namespace Kennedy.SearchIndex.Search
 
                 //if we have other things besides term queries, we need to do a join
 
-                if (userQuery.HasSiteScope)
+                if (userQuery.HasSiteScope || userQuery.HasFileTypeScope)
                 {
                     sqlQuery.Append("Inner Join Documents On Documents.UrlID = ImageSearch.ROWID ");
                 }
@@ -175,7 +175,7 @@ WHERE ");
 
                 //if we have other things besides term queries, we need to do a join
 
-                if(userQuery.HasSiteScope)
+                if(userQuery.HasSiteScope || userQuery.HasFileTypeScope)
                 {
                     sqlQuery.Append("Inner Join Documents On Documents.UrlID = fts.ROWID ");
                 }
