@@ -154,20 +154,13 @@ namespace Kennedy.SearchIndex.Web
                     entry.Title = null;
 
                     //extra meta data
-                    if (parsedResponse is GemTextResponse)
+                    if (parsedResponse is ITextResponse)
                     {
-                        var gemtext = (GemTextResponse)parsedResponse;
+                        var textResponse = (ITextResponse)parsedResponse;
 
-                        entry.DetectedLanguage = gemtext.DetectedLanguage;
-                        entry.LineCount = gemtext.LineCount;
-                        entry.Title = gemtext.Title;
-                    }
-                    else if (parsedResponse is PlainTextResponse)
-                    {
-                        var txtDoc = (PlainTextResponse)parsedResponse;
-
-                        entry.DetectedLanguage = txtDoc.DetectedLanguage;
-                        entry.LineCount = txtDoc.LineCount;
+                        entry.DetectedLanguage = textResponse.DetectedLanguage;
+                        entry.LineCount = textResponse.LineCount;
+                        entry.Title = textResponse.Title;
                     }
 
                     if (parsedResponse is ImageResponse)
