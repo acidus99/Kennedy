@@ -10,10 +10,11 @@ using Kennedy.Data;
 namespace Kennedy.SearchIndex.Models
 {
     [Table("Documents")]
-    [Index(nameof(StatusCode))]
-    [Index(nameof(Protocol))]
     [Index(nameof(Domain))]
+    [Index(nameof(FileExtension))]
     [Index(nameof(Port))]
+    [Index(nameof(Protocol))]
+    [Index(nameof(StatusCode))]
     public class Document
     {
         /// <summary>
