@@ -24,6 +24,8 @@ namespace Kennedy.SearchIndex.Web
 
         public DbSet<ImageSearchResult> ImageResults { get; set; }
 
+        internal DbSet<IndexableFile> IndexableFiles { get; set; }
+
         public WebDatabaseContext(string storageDir)
         {
             StorageDirectory = storageDir;
