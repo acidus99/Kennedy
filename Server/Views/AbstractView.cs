@@ -55,12 +55,17 @@ namespace Kennedy.Server.Views
             var parts = (url.Hostname + url.Path).Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             var ret = string.Join(" › ", parts);
-            if (ret.Length > 60)
+            if (ret.Length > 80)
             {
-                ret = ret.Substring(0, 60) + '…';
+                ret = ret.Substring(0, 80) + '…';
             }
             return ret;
         }
+
+        protected string FormatFilename(GeminiUrl url)
+            => (url.Filename.Length > 0) ?
+                url.Filename :
+                "/";
 
         protected string FormatLanguage(string twoLetterISOLanguageName)
         {

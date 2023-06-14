@@ -132,7 +132,7 @@ namespace Kennedy.Server.Views.Search
 
         private void WriteResultEntry(FullTextSearchResult result, int resultNumber)
         {
-            var resultTitle = result.Title ?? FormatUrl(result.GeminiUrl);
+            var resultTitle = result.Title ?? FormatFilename(result.GeminiUrl);
 
             // Write link line with meta data.
             Response.Write($"=> {result.Url} {FormatCount(resultNumber)}. {resultTitle} ({result.Mimetype} • ");
@@ -144,10 +144,8 @@ namespace Kennedy.Server.Views.Search
             }
             Response.Write($"{FormatSize(result.BodySize)})");
             Response.WriteLine();
-            if (result.Title != null)
-            {
-                Response.WriteLine($"* {FormatUrl(result.GeminiUrl)}");
-            }
+            Response.WriteLine($"* {FormatUrl(result.GeminiUrl)}");
+            
             if (result.DetectedLanguage != null && result.DetectedLanguage != "en")
             {
                 Response.WriteLine($"Language: {FormatLanguage(result.DetectedLanguage)}");
