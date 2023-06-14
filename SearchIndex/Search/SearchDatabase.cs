@@ -37,12 +37,12 @@ namespace Kennedy.SearchIndex.Search
 
                 if (textDoc.HasIndexableText)
                 {
-                    UpdateTextIndex(parsedResponse.RequestUrl.ID, textDoc.Title, textDoc.IndexableText!);
+                    UpdateTextIndex(parsedResponse.RequestUrl.ID, textDoc.IndexableText!, textDoc.Title);
                 }
             }
         }
 
-        private void UpdateTextIndex(long urlID, string? title, string filteredBody)
+        public void UpdateTextIndex(long urlID, string filteredBody, string? title = null)
         {
             using (var db = GetContext())
             {
@@ -56,10 +56,14 @@ namespace Kennedy.SearchIndex.Search
 
         #region Index Images
 
-        public void IndexImages()
+        public void IndexFiles()
         {
+            FileIndexer fileIndexer = new FileIndexer(storageDirectory, this);
+            fileIndexer.IndexFiles();
+
             ImageIndexer imageIndexer = new ImageIndexer(connectionString);
             imageIndexer.IndexImages();
+            
         }
 
         #endregion
