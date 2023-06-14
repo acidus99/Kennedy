@@ -27,8 +27,8 @@ namespace Kennedy.SearchIndex.Search
         {
             using(var db = GetContext())
             {
-                var indexableFiles = db.IndexableFiles.FromSql(@$"select UrlID, url, LinkText  From Documents 
-join Links
+                var indexableFiles = db.IndexableFiles.FromSql(@$"select UrlID, url, LinkText From Documents 
+left join Links
 on Links.TargetUrlID = Documents.UrlID
 where IsBodyIndexed = false and StatusCode = 20 and ContentType != {ContentType.Image}
 order by UrlID");
