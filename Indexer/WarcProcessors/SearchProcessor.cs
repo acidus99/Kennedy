@@ -15,6 +15,11 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
 
     public SearchProcessor(string storageDirectory, string configDirectory)
 	{
+        if (!storageDirectory.EndsWith(Path.DirectorySeparatorChar))
+        {
+            storageDirectory += Path.DirectorySeparatorChar;
+        }
+
         LanguageDetector.ConfigFileDirectory = configDirectory;
 
         wrapperDB = new SearchStorageWrapper(storageDirectory);

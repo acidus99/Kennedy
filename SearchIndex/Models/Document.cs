@@ -131,6 +131,8 @@ namespace Kennedy.SearchIndex.Models
 
         public ContentType ContentType { get; set; }
 
+        public string? DetectedMimeType { get; set; }
+
         public Image? Image { get; set; }
 
         //public Favicon? Favicon {get; set;}
