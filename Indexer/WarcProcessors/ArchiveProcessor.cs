@@ -23,6 +23,11 @@ public class ArchiveProcessor : AbstractGeminiWarcProcessor
 
     public ArchiveProcessor(string archiveDirectory)
 	{
+        if (!archiveDirectory.EndsWith(Path.DirectorySeparatorChar))
+        {
+            archiveDirectory += Path.DirectorySeparatorChar;
+        }
+
         archiver = new Archiver(archiveDirectory + "archive.db", archiveDirectory + "Packs/");
         ArchiveDirectory = archiveDirectory;
     }
