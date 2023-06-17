@@ -15,6 +15,7 @@ namespace Kennedy.Crawler
 
             crawler.AddSeed("gemini://mozz.us/");
             crawler.AddSeed("gemini://kennedy.gemi.dev/observatory/known-hosts");
+            crawler.AddSeed("gemini://spam.works/");
             crawler.DoCrawl();
 
             return;
