@@ -12,7 +12,7 @@ namespace Kennedy.Indexer.WarcProcessors
 
         public void ProcessRecord(WarcRecord record)
 		{
-            if (record.Type == "response")
+            if (record.Type == RecordType.Response)
             {
                 var geminiResponse = GetGeminiResponse((record as ResponseRecord)!);
                 if(geminiResponse != null)
