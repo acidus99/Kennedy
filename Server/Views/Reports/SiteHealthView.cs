@@ -34,8 +34,20 @@ namespace Kennedy.Server.Views.Reports
                 return;
             }
 
-            var db = new WebDatabaseContext(Settings.Global.DataRoot);
+            //support someone pasting in a full URL
+            if(Domain.Contains("://"))
+            {
+                try
+                {
+                    Uri url = new Uri(Domain);
+                    Domain = url.Host;
+                }
+                catch (Exception)
+                {
+                }
+            }
 
+            var db = new WebDatabaseContext(Settings.Global.DataRoot);
 
             var docs = db.Documents
                 .Where(x => x.Domain == Domain);
@@ -97,7 +109,7 @@ namespace Kennedy.Server.Views.Reports
                     Response.WriteLine();
                     Response.WriteLine($"### {doc.Meta}");
                 }
-                Response.WriteLine($"=> {doc.GeminiUrl}");
+                Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(doc.GeminiUrl)} {doc.GeminiUrl}");
             }
             Response.WriteLine();
         }

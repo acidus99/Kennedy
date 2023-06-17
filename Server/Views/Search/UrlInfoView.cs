@@ -64,21 +64,31 @@ namespace Kennedy.Server.Views.Search
         private void RenderMetadata()
         {
             Response.WriteLine($"## Metadata");
-            //if meta and parsed mimetype are the same, no reason so show raw meta
-            if (entry.Meta != entry.MimeType)
+
+            if (entry.StatusCode == GeminiParser.ConnectionErrorStatusCode)
             {
-                Response.WriteLine($"* Meta Line: {entry.Meta}");
+                Response.WriteLine($"* Connection Error: {entry.Meta}");
+                return;
             }
-            Response.WriteLine($"* Mimetype: {entry.MimeType}");
-            if (entry.Charset != null)
+
+            Response.WriteLine("* Response Line:");
+            Response.WriteLine("```");
+            Response.WriteLine($"{entry.StatusCode} {entry.Meta}");
+            Response.WriteLine("```");
+
+            if (GeminiParser.IsSuccessStatus(entry.StatusCode))
             {
-                Response.WriteLine($"* Charset: {entry.Charset}");
+                Response.WriteLine($"* Mimetype: {entry.MimeType}");
+                if (entry.Charset != null)
+                {
+                    Response.WriteLine($"* Charset: {entry.Charset}");
+                }
+                if (entry.Language != null)
+                {
+                    Response.WriteLine($"* Language: {FormatLanguage(entry.Language)}");
+                }
+                Response.WriteLine($"* Size: {FormatSize(entry.BodySize)}");
             }
-            if (entry.Language != null)
-            {
-                Response.WriteLine($"* Language: {FormatLanguage(entry.Language)}");
-            }
-            Response.WriteLine($"* Size: {FormatSize(entry.BodySize)}");
             Response.WriteLine($"* First Seen: {entry.FirstSeen.ToString("yyyy-MM-dd")}");
             Response.WriteLine($"* Indexed on: {entry.LastSuccessfulVisit?.ToString("yyyy-MM-dd")}");
         }
