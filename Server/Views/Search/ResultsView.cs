@@ -161,13 +161,35 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine("");
         }
 
-        private void QueryGemipedia(string? query)
+        private void QueryGemipedia(UserQuery query)
         {
-            if (query != null && Options.SearchPage == 1)
+            //only show Gemipedia results on first page
+            if(Options.SearchPage != 1)
             {
-                var client = new WikipediaApiClient();
-                TopGemipediaHit = client.TopResultSearch(query);
+                return;
             }
+
+            //we should only search Gemipedia for "simple" queries. So...
+            if(query.HasSiteScope || query.HasFileTypeScope)
+            {
+                //no need if limited to a site or a filetype
+                return;
+            }
+
+            if(query.TermsQuery == null)
+            {
+                //if there isn't a FTS component, do nothing
+                return;
+            }
+
+            //skip if more than a 2 word query
+            if(query.TermsQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length > 2)
+            {
+                return;
+            }
+
+            var client = new WikipediaApiClient();
+            TopGemipediaHit = client.TopResultSearch(query.RawQuery);
         }
 
         private void QueryFullText(UserQuery query)
@@ -183,7 +205,7 @@ namespace Kennedy.Server.Views.Search
 
         private void DoFullQuery(UserQuery query)
         {
-            Parallel.Invoke(() => QueryGemipedia(query.TermsQuery),
+            Parallel.Invoke(() => QueryGemipedia(query),
                             () => QueryFullText(query),
                             () => QueryImageSearch(query));
         }
