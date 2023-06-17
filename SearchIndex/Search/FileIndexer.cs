@@ -65,8 +65,11 @@ order by UrlID");
 
                     if (file.LinkText?.Length > 0)
                     {
-                        sb.Append(file.LinkText);
-                        sb.Append(' ');
+                        if (!sb.ToString().Contains(file.LinkText))
+                        {
+                            sb.Append(' ');
+                            sb.Append(file.LinkText);
+                        }
                     }
                 }
                 //handle the remaining buffer
