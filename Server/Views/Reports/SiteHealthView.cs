@@ -51,7 +51,6 @@ namespace Kennedy.Server.Views.Reports
 
             var docs = db.Documents
                 .Where(x => x.Domain == Domain);
-
             var totalDocs = docs.Count();
 
             if(totalDocs == 0)
@@ -62,27 +61,11 @@ namespace Kennedy.Server.Views.Reports
             
             Response.WriteLine($"# {Domain} - 🩺 Capsule Health Report");
             Response.WriteLine($"* Total URLs: {totalDocs}");
+            Response.WriteLine("Click on any URL to see more info, including incoming links to that URL.");
 
-            //find connectivity problems
-            var networkErrors = docs.Where(x => !x.IsAvailable)
-                                        .OrderBy(x => x.Meta)
-                                        .ThenBy(x=>x.Url);
-
-            if (networkErrors.Count() > 0)
-            {
-                RenderNetworkErrors(networkErrors);
-            }
-
-            var pageErrors = docs.Where(x => x.Domain == Domain &&
-                                            x.IsAvailable &&
-                                            x.StatusCode >= 40 &&
-                                            x.StatusCode < 60)
-                                   .OrderBy(x => x.StatusCode);
-
-            if(pageErrors.Count() > 0)
-            {
-                RenderPageErrors(pageErrors);
-            }            
+            RenderNetworkErrors(docs);
+            RenderPageErrors(docs);
+            RenderGonePage(docs);            
         }
 
         private void RenderUnknownDomain()
@@ -95,43 +78,99 @@ namespace Kennedy.Server.Views.Reports
             Response.WriteLine($"=> {RoutePaths.SiteHealthRoute} Try another Domain");
         }
 
-        private void RenderNetworkErrors(IEnumerable<Document> docsWithProblems)
+        private void RenderNetworkErrors(IQueryable<Document> docs)
         {
-            string meta = "";
             Response.WriteLine($"## Connectivity Issues");
-            Response.WriteLine($"* URLs with problems: {docsWithProblems.Count()}");
+            Response.WriteLine("This checks for any DNS, TLS, connection, or timeout issues.");
 
-            foreach (var doc in docsWithProblems)
+            //find connectivity problems
+            var networkErrors = docs.Where(x => !x.IsAvailable)
+                                        .OrderBy(x => x.Meta)
+                                        .ThenBy(x => x.Url);
+            var count = networkErrors.Count();
+
+            if (count == 0)
             {
-                if(doc.Meta != meta)
+                Response.WriteLine("* 👏 Nice! No problems found.");
+            }
+            else
+            {
+                string meta = "";
+                foreach (var doc in networkErrors)
                 {
-                    meta = doc.Meta;
-                    Response.WriteLine();
-                    Response.WriteLine($"### {doc.Meta}");
+                    if (doc.Meta != meta)
+                    {
+                        meta = doc.Meta;
+                        Response.WriteLine();
+                        Response.WriteLine($"### {doc.Meta}");
+                    }
+                    Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(doc.GeminiUrl)} {doc.GeminiUrl}");
                 }
-                Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(doc.GeminiUrl)} {doc.GeminiUrl}");
             }
             Response.WriteLine();
         }
 
-        private void RenderPageErrors(IEnumerable<Document> pageErrors)
+        private void RenderPageErrors(IQueryable<Document> docs)
         {
-            Response.WriteLine("## URL Issues");
-            Response.WriteLine($"* URLs with problems: {pageErrors.Count()}");
-            Response.WriteLine("Click URL to see more info, including incoming links.");
+            Response.WriteLine("## Broken or Missing URLs");
+            Response.WriteLine("This checks for any URLs with 4x or 5x status codes, indicating a broken or missing resource.");
 
-            int statusCode = 0;
+            var pageErrors = docs.Where(x => x.Domain == Domain &&
+                             x.IsAvailable &&
+                             x.StatusCode >= 40 &&
+                             x.StatusCode < 60 && x.StatusCode != 52)
+                    .OrderBy(x => x.StatusCode)
+                    .ThenBy(x => x.Url);
+            var count = pageErrors.Count();
 
-            foreach (var doc in pageErrors)
+            if(count == 0)
             {
-                if(doc.StatusCode != statusCode)
-                {
-                    statusCode = doc.StatusCode;
-                    Response.WriteLine();
-                    Response.WriteLine($"### Statue Code {doc.StatusCode}");
-                }
-                Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(doc.GeminiUrl)} {doc.GeminiUrl}");
+                Response.WriteLine("* 👏 Nice! No problems found.");
             }
+            else
+            {
+                Response.WriteLine($"* URLs with problems: {count}");
+                int statusCode = 0;
+
+                foreach (var doc in pageErrors)
+                {
+                    if (doc.StatusCode != statusCode)
+                    {
+                        statusCode = doc.StatusCode;
+                        Response.WriteLine();
+                        Response.WriteLine($"### Statue Code {doc.StatusCode}");
+                    }
+                    Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(doc.GeminiUrl)} {doc.GeminiUrl}");
+                }
+            }           
+        }
+
+        private void RenderGonePage(IQueryable<Document> docs)
+        {
+            Response.WriteLine("## Gone URLs");
+            Response.WriteLine("This checks for any URLs returing a \"52 GONE\" status code. " +
+                "This incidates that the resource is purposely missing. Capsules " +
+                "should use this when they remove content, but it's also possible " +
+                "there was a mistake with these URLs. You should review and verify " +
+                "these URLs are supposed to send a \"52 GONE\" status code.");
+
+            var gonePages = docs.Where(x => x.Domain == Domain &&
+                              x.IsAvailable &&
+                              x.StatusCode == 52)
+                              .OrderBy(x => x.Url);
+            var count = 0;
+            if (count == 0)
+            {
+                Response.WriteLine("* 👏 Nice! No problems found.");
+            }
+            else
+            {
+                Response.WriteLine($"* URLs with \"52 GONE\" status code: {count}");
+                foreach (var doc in gonePages)
+                {
+                    Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(doc.GeminiUrl)} {doc.GeminiUrl}");
+                }
+            }            
         }
     }
 }
