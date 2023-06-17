@@ -146,7 +146,8 @@ namespace Kennedy.SearchIndex.Web
 
                     entry.OutboundLinks = parsedResponse.Links.Count;
 
-                    entry.ContentType = parsedResponse.ContentType;
+                    entry.ContentType = parsedResponse.FormatType;
+                    entry.DetectedMimeType = parsedResponse.DetectedMimeType;
 
                     entry.Language = parsedResponse.Language;
                     entry.DetectedLanguage = null;
