@@ -14,6 +14,7 @@ namespace Kennedy.Data.Parsers.GemText
     public static class LinkFinder
     {
         static readonly Regex linkLine = new Regex(@"^=>\s*([^\s]+)\s*(.*)", RegexOptions.Compiled);
+        static readonly char[] splitChars = {' ', '\t' };
 
         /// <summary>
         /// Returns the link text from a link line. If not a link line, or no link text is present, returns ""
@@ -27,7 +28,7 @@ namespace Kennedy.Data.Parsers.GemText
                 return "";
             }
 
-            var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var parts = line.Split(splitChars, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             //part[0] is "=>"
             //part[1] is the url
             //part[2..n] are the optional link text if any 
@@ -49,7 +50,7 @@ namespace Kennedy.Data.Parsers.GemText
                     continue;
                 }
 
-                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                var parts = line.Split(splitChars, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 //part[0] is "=>"
                 //part[1] is the url
                 //part[2..n] are the optional link text if any 
