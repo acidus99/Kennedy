@@ -221,11 +221,18 @@ WHERE ");
             var sqlQuery = new DynamicQuery<SqliteParameter>();
 
             sqlQuery.Append(@"
-Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, (rank + (rank*0.3*PopularityRank)) * IIF(ContentType = 1, 1.03, 1) as TotalRank, snippet(FTS, 1, '[',']','…',20) as Snippet
-From FTS as fts
-Inner Join Documents as doc
-On doc.UrlID = fts.ROWID
-WHERE ");
+Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, (rank + (rank*0.3*PopularityRank)) * IIF(ContentType = 1, 1.03, 1) as TotalRank, ");
+
+            if (userQuery.HasFtsQuery)
+            {
+                sqlQuery.Append("snippet(FTS, 1, '[',']','…',20) as Snippet ");
+            }
+            else
+            {
+                sqlQuery.Append("substr(Body, 0, IIF(LENGTH(Body) > 100, 100, LENGTH(BODY))) as Snippet ");
+            }
+            sqlQuery.Append("From FTS as fts Inner Join Documents as doc On doc.UrlID = fts.ROWID WHERE ");
+
             if (userQuery.HasFtsQuery)
             {
                 sqlQuery.AppendWhereCondition("Body MATCH {} ");
@@ -244,7 +251,15 @@ WHERE ");
                 sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
             }
 
-            sqlQuery.Append("order by TotalRank LIMIT {} OFFSET {} ");
+            if (userQuery.HasFtsQuery)
+            {
+                sqlQuery.Append("order by TotalRank ");
+            }
+            else
+            {
+                sqlQuery.Append("order by ExternalInboundLinks desc, Url ");
+            }
+            sqlQuery.Append("LIMIT {} OFFSET {} ");
 
             sqlQuery.AddParameter("limit", limit);
             sqlQuery.AddParameter("offset", offset);
