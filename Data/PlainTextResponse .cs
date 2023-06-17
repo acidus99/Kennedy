@@ -32,7 +32,8 @@ namespace Kennedy.Data
         public PlainTextResponse(GeminiResponse resp)
         : base(resp)
         {
-            ContentType = ContentType.PlainText;
+            FormatType = ContentType.PlainText;
+            DetectedMimeType = "text/plain";
         }
 
     }

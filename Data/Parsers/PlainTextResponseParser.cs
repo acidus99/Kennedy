@@ -7,15 +7,28 @@ using Kennedy.Data.Parsers.GemText;
 
 namespace Kennedy.Data.Parsers
 {
-	public class PlainTextResponseParser : AbstractResponseParser
+    /// <summary>
+    /// Handles both properly labeled "text/plain" responses,
+    /// and responses that ARE text, but don't have a "text/" mimetype.
+    /// This means that text that isn't plain text, like "text/xml" or "text/x-diff" will not be parsed.
+    /// This is on purpose so I don't pollute the text indexes
+    /// </summary>
+	public class PlainTextResponseParser : AbstractTextParser
 	{
         LanguageDetector languageDetector = new LanguageDetector();
 
-        public override bool CanParse(GeminiResponse resp)
-            // If we are successful, there must be a MIME type, since the specification defines one if missing.
-            => resp.IsSuccess && resp.HasBodyText && resp.MimeType!.StartsWith("text/plain");
+        public override bool CanParse(GeminiResponse resp, bool isTextBody)
+        {
+            if (!isTextBody)
+            {
+                return false;
+            }
 
-        public override ParsedResponse Parse(GeminiResponse resp)
+            return resp.MimeType == "text/plain";
+            //return resp.MimeType!.StartsWith("text/plain") || !resp.MimeType!.StartsWith("text/");
+        }
+
+        public override ParsedResponse? Parse(GeminiResponse resp)
         {
             return new PlainTextResponse(resp)
             {

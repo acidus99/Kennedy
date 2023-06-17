@@ -1,22 +1,17 @@
 ﻿using Gemini.Net;
 using Kennedy.Data;
 
-
 namespace Kennedy.Data.Parsers
 {
     public class ResponseParser
     {
-        List<AbstractResponseParser> parsers;
+        BinaryParser binaryParser;
+        TextParser textParser;
 
         public ResponseParser()
         {
-            parsers = new List<AbstractResponseParser>()
-            {
-                new RedirectResponseParser(),
-                new GemTextResponseParser(),
-                new ImageResponseParser(),
-                new PlainTextResponseParser(),
-            };
+            binaryParser = new BinaryParser();
+            textParser = new TextParser();
         }
 
         public ParsedResponse Parse(GeminiUrl url, byte[] completeResponse)
@@ -27,21 +22,55 @@ namespace Kennedy.Data.Parsers
 
         public ParsedResponse Parse(GeminiResponse resp)
         {
-            foreach (var parser in parsers)
+            ParsedResponse? parsedResponse = TryParseRedirect(resp);
+            if(parsedResponse != null)
             {
-                if (parser.CanParse(resp))
-                {
-                    var doc = parser.Parse(resp);
-                    if (doc != null)
-                    {
-                        return doc;
-                    }
-                }
+                return parsedResponse;
             }
+
+            if (!resp.IsSuccess || !resp.HasBody)
+            {
+                //unknown response
+                return new ParsedResponse(resp);
+            }
+
+            //check for known binary formats
+            parsedResponse = binaryParser.Parse(resp);
+
+            if(parsedResponse != null)
+            {
+                return parsedResponse;
+            }
+
+            //check for text formats
+            parsedResponse = textParser.Parse(resp);
+
+            if(parsedResponse != null)
+            {
+                return parsedResponse;
+            }
+
+            //fail back on binary
             return new ParsedResponse(resp)
             {
-                ContentType = ContentType.Binary
+                FormatType = ContentType.Binary
             };
+        }
+
+        private ParsedResponse? TryParseRedirect(GeminiResponse resp)
+        {
+            if (resp.IsRedirect)
+            {
+                var link = FoundLink.Create(resp.RequestUrl, resp.Meta);
+                if (link != null)
+                {
+                    return new ParsedResponse(resp)
+                    {
+                        Links = { link }
+                    };
+                }
+            }
+            return null;
         }
     }
 }

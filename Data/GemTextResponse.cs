@@ -24,7 +24,8 @@ namespace Kennedy.Data
         public GemTextResponse(GeminiResponse resp)
         : base(resp)
         {
-            ContentType = ContentType.Gemtext;
+            FormatType = ContentType.Gemtext;
+            DetectedMimeType = "text/gemini";
         }
 
     }

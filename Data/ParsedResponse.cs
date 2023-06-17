@@ -6,7 +6,9 @@ namespace Kennedy.Data
 {
 	public class ParsedResponse : GeminiResponse
 	{
-		public ContentType ContentType { get; set; } = ContentType.Unknown;
+		public ContentType FormatType { get; set; } = ContentType.Unknown;
+
+		public string? DetectedMimeType { get; set; }
 
 		public List<FoundLink> Links { get; set; }
 

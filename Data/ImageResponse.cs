@@ -16,7 +16,7 @@ namespace Kennedy.Data
         public ImageResponse(GeminiResponse resp)
             : base(resp)
         {
-            ContentType = ContentType.Image;
+            FormatType = ContentType.Image;
         }
     }
 }

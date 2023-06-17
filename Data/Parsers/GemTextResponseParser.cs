@@ -7,15 +7,14 @@ using Kennedy.Data.Parsers.GemText;
 
 namespace Kennedy.Data.Parsers
 {
-	public class GemTextResponseParser : AbstractResponseParser
+	public class GemTextResponseParser : AbstractTextParser
 	{
         LanguageDetector languageDetector = new LanguageDetector();
+        
+        public override bool CanParse(GeminiResponse resp, bool isTextBody)
+            => isTextBody && resp.MimeType!.StartsWith("text/gemini");
 
-        public override bool CanParse(GeminiResponse resp)
-            // If we are successful, there mus be a MIME type, since the specification defines one if missing.
-            => resp.IsSuccess  && resp.HasBodyText && resp.MimeType!.StartsWith("text/gemini");
-
-        public override ParsedResponse Parse(GeminiResponse resp)
+        public override ParsedResponse? Parse(GeminiResponse resp)
         {
             string[] lines = LineParser.GetLines(resp.BodyText);
             List<string> noPreformatted = LineParser.RemovePreformattedLines(lines);
