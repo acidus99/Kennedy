@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 
 using Gemini.Net;
 using Kennedy.Crawler.Dns;
@@ -16,11 +17,11 @@ namespace Kennedy.Crawler.Protocols
     {
         public static RobotsChecker Global = new RobotsChecker();
 
-        Dictionary<string, RobotsTxtFile?> Cache;
+        ConcurrentDictionary<string, RobotsTxtFile?> Cache;
 
         public RobotsChecker()
         {
-            Cache = new Dictionary<string, RobotsTxtFile?>();
+            Cache = new ConcurrentDictionary<string, RobotsTxtFile?>();
         }
 
         public IWebCrawler? Crawler { get; set; } = null;
