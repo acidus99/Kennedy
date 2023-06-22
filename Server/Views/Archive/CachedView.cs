@@ -123,9 +123,14 @@ namespace Kennedy.Server.Views.Archive
             Response.WriteLine("```");
             Response.WriteLine($"{response.StatusCode} {response.Meta}");
             Response.WriteLine("```");
+
             if (response.IsRedirect)
             {
-                Response.WriteLine($"=> {RoutePaths.ViewCached(response.Meta, snapshot.Captured)} Follow this Redirect");
+                var redirectUrl = response.GetRedirectUrl();
+                if (redirectUrl != null)
+                {
+                    Response.WriteLine($"=> {RoutePaths.ViewCached(redirectUrl, snapshot.Captured)} Follow this Redirect");
+                }
             }
         }
 
