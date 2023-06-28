@@ -71,7 +71,6 @@ namespace Kennedy.Server.Views.Archive
             Response.WriteLine($"Unique Saves: {snapshots.GroupBy(x=>x.DataHash).Count()}");
 
             Response.WriteLine("## Saved copies");
-            var seenHashes = new Dictionary<string, bool>();
 
             int currentYear = 0;
 
@@ -82,17 +81,33 @@ namespace Kennedy.Server.Views.Archive
                     Response.WriteLine($"### {snapshot.Captured.Year}");
                     currentYear = snapshot.Captured.Year;
                 }
-
-                var contentLabel = "";
-
-                if (!seenHashes.ContainsKey(snapshot.DataHash))
-                {
-                    contentLabel = "🆕 ";
-                    seenHashes[snapshot.DataHash] = true;
-                }
-
-                Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot)} {contentLabel}{snapshot.Captured}. {FormatSize(snapshot?.Size ?? 0)}");
+                RenderSnapshot(snapshot);
             }
+        }
+
+        private void RenderSnapshot(Snapshot snapshot)
+        {
+            Response.Write($"=> {RoutePaths.ViewCached(snapshot)} ");
+            if (!snapshot.IsDuplicate)
+            {
+                Response.Write("🆕 ");
+            }
+            Response.Write(snapshot.Captured.ToString("yyyy-MM-dd"));
+            Response.Write($" • ");
+            if (GeminiParser.IsSuccessStatus(snapshot.StatusCode))
+            {
+                Response.Write($"{snapshot.Mimetype} • ");
+                Response.Write($"{FormatSize(snapshot?.Size ?? 0)}");
+            }
+            else if (GeminiParser.IsRedirectStatus(snapshot.StatusCode))
+            {
+                Response.Write($"↩️ Redirect");
+            }
+            else
+            {
+                Response.Write($"Status Code: {snapshot.StatusCode}");
+            }
+            Response.WriteLine();
         }
 
         private void ParseArgs()
