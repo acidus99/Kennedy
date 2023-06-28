@@ -63,7 +63,7 @@ namespace Kennedy.Server.Views.Search
             var suggestedQuery = QuerySuggestor.MakeOrQuery(query);
 
             Response.WriteLine($"=> {RoutePaths.Search(suggestedQuery.RawQuery)} Try searching \"{suggestedQuery}\" instead?");
-            Response.WriteLine($"=> {RoutePaths.Search()} New Search");
+            Response.WriteLine($"=> {RoutePaths.SearchRoute} New Search");
         }
 
         private void RenderResults(UserQuery query)
@@ -91,7 +91,7 @@ namespace Kennedy.Server.Views.Search
 
             if (ImageHits > 0)
             {
-                Response.WriteLine($"=> /image-search?{Request.Url.RawQuery} {ImageHits} matches on 🖼 Image Search for {query}");
+                Response.WriteLine($"=> {RoutePaths.ImageSearch(SanitizedQuery)} {ImageHits} matches on 🖼 Image Search for {query}");
                 shownHeader = true;
             }
 
@@ -125,8 +125,8 @@ namespace Kennedy.Server.Views.Search
             }
             Response.WriteLine($"Query time: {queryTime} ms");
             Response.WriteLine();
-            Response.WriteLine("=> /search 🔍 Another Search");
-            Response.WriteLine("=> /image-search 🖼 Image Search");
+            Response.WriteLine($"=> {RoutePaths.SearchRoute} 🔍 Another Search");
+            Response.WriteLine($"=> {RoutePaths.ImageSearchRoute} 🖼 Image Search");
             Response.WriteLine("=> / Home");
         }
 

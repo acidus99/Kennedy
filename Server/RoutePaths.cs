@@ -10,6 +10,7 @@ namespace Kennedy.Server
 	public static class RoutePaths 
 	{
 
+        public const string ImageSearchRoute = "/image-search";
         public const string SearchRoute = "/search";
         public const string UrlInfoRoute = "/page-info";
 
@@ -22,8 +23,8 @@ namespace Kennedy.Server
         public const string SiteHealthRoute = "/reports/site-health";
         public const string DomainBacklinksRoute = "/reports/domain-backlinks";
 
-        public static string Search()
-            => SearchRoute;
+        public static string ImageSearch(string terms)
+            => $"{ImageSearchRoute}?{HttpUtility.UrlEncode(terms)}";
 
         public static string Search(string terms)
             => $"{SearchRoute}?{HttpUtility.UrlEncode(terms)}";

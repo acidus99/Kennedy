@@ -26,11 +26,11 @@ namespace Kennedy.Server
             };
 
             //text search
-            server.OnRequest("/search", SearchController.Search);
+            server.OnRequest(RoutePaths.SearchRoute, SearchController.Search);
             server.OnRequest("/lucky", SearchController.LuckySearch);
 
             //image search
-            server.OnRequest("/image-search", ImageSearchController.Search);
+            server.OnRequest(RoutePaths.ImageSearchRoute, ImageSearchController.Search);
 
             server.OnRequest(RoutePaths.ViewUrlHistoryRoute, ArchiveController.UrlHistory);
             server.OnRequest(RoutePaths.ViewCachedRoute, ArchiveController.Cached);
