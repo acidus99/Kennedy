@@ -1,78 +1,27 @@
-﻿gemini://gemini.omarpolo.com/cgi/gempkg/math/labplot/	@@@REQUEST
-
-when its excluded by ROBOTS????
-
-
+﻿
 Crawling metrics:
     - New URLs per URL processed? Running average? Shows how much its growing
 
     - should I track in the crawler if a document can be indexed? Then use something like host health tracker to determine how many responses
 in the last 100 have been indexable, and then discard URLs if its not indexable?
 
-
 Ranking ideas:
     - Use crawl depth as a component of ranking. "Deeper" pages ranking lower?
 
-
-
 === WARC work:
-    - Need to grab (latest?) robots.txt (from archive? from the scan datbase) and prune items when importing WARC (especially when loading in older WARCs)
-    - "gemini://kennedy.gemi.dev/page-info?id=-*" are in archive, but shouldn't since robots excludes it
-    - "kennedy" search results are indexed as a result in Kennedy ?!?!? (Search for cats)
-
     - oh snap, when importing multiple WARCs into the search index, if a later search index has an error like a timeout, we aren't clearing the FTS entries for it
     - crash importing WARC: /Users/billy/HDD Inside/Kennedy-Work/WARCs/2023-04-20.warc	42700	316 ms
-
 
     = Seeing things in image table that aren't in imageserarch table
         = looks like they don't have targetIDs... orphaned content?
 
-
     = Also seeing LastVisit > LastSuccessful where Status = 20
-
-
 
 GeminiRequestor
 === Truncated body should still have some content
 
-
-- Charsets
-    - Not using them when parsing/indexing content
-    - Incorrectly outputing all content as UTF-8 in archive view
-
-- Archive view
-    - Setting a top header on all text content, but header has Gemtext markup
-        - Prehaps wrap text in preformatted gates?
-    - Not rewriting hyperlinks in Archive View
-    - Better handling of non-text content
-        - always show a text landing page
-        - Include text about when it was captured
-        - have link to the file
-        - have link to other verions
-
-
-
-- Delorean
-
-	- Show number of captures in match view?
-	- Increase number of match views
-	- Maybe should a filetype icon?
-		probably makes sense to do this for the PAge Info page aas well.
-
-
-
-    - If a response is not a 20, (like a redirect) show that in the Url history view. Right now it just looks like empty repsonses (size 0 B)
-        gemini://kennedy.gemi.dev/archive/history?gemini%3a%2f%2fgemlog.blue%2fusers%2fsu
-
-
-Diff/stuff in archive is odd:
-
-gemini://localhost/archive/history?gemini%3a%2f%2fnicksphere.ch%2f2021%2f01%2f31%2fsite-update-008%2f
-
 //crawler
 - Support 44 slow down
-
-
 
 
 // WARC refactor:
@@ -81,9 +30,6 @@ gemini://localhost/archive/history?gemini%3a%2f%2fnicksphere.ch%2f2021%2f01%2f31
 - 44 slow downs probably shouldn't be imported into the search DB or archive
 
 - WarcProtocol parser is pretty slow. 2x slower than warcio on my laptop, and about 100x slower than a raw read baseline
-
-- File extension needs to be added to Documents data to better support future "ext:" search operator
-- File type detection needs to be added to support future "type:png" search operator
 
 Archive maintenance
 - need a daily/weekly job that grabs robots.txt and updates the archive to remove content from it
