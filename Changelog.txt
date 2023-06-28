@@ -15,3 +15,6 @@
 - Feature: Streamlined search engine results pages for text and image searches
 - Feature: Improved ogranization of meta data in more page info view
 - Feature: Add Domain Backlinks view
+- Feature: Include text files in FTS index.
+- Feature: Index all file types just like images
+- Feature: Add site: scope and filetype: scopes
