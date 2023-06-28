@@ -18,3 +18,4 @@
 - Feature: Include text files in FTS index.
 - Feature: Index all file types just like images
 - Feature: Add site: scope and filetype: scopes
+- Feature: Show simple date, mimetype, redirects, and status code in URL history view
