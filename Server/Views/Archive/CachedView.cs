@@ -62,10 +62,12 @@ namespace Kennedy.Server.Views.Archive
             GeminiResponse response = reader.ReadResponse(snapshot);
 
             Response.Success();
-            Response.Write($"> This an archived version of {snapshot.Url!.FullUrl} captured on {snapshot.Captured.ToString("yyyy-MM-dd")}. ");
+            Response.Write($"> This an archived version of {snapshot.Url!.FullUrl} ");
+            Response.Write($"captured on {snapshot.Captured.ToString("yyyy-MM-dd")} at ");
+            Response.Write($"{snapshot.Captured.ToString("HH:mm:ss")}.");
             if (snapshot.IsGemtext)
             {
-                Response.Write("Gemini links have been rewritten to link to archived content");
+                Response.Write(" Gemini links have been rewritten to link to archived content");
             }
             Response.WriteLine();
             Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(snapshot.Url.GeminiUrl)} More Information in 🏎 Delorean Time Machine");
