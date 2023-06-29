@@ -70,6 +70,13 @@ namespace Kennedy.Server.Views.Archive
             Response.WriteLine($"Saved {snapshots.Length} times between {first.Captured.ToString("MMMM d yyyy")} and {last.Captured.ToString("MMMM d yyyy")}");
             Response.WriteLine($"Unique Saves: {snapshots.GroupBy(x=>x.DataHash).Count()}");
 
+            var truncatedCount = snapshots.Where(x => x.IsBodyTruncated).Count();
+            if(truncatedCount > 0)
+            {
+                Response.WriteLine();
+                Response.WriteLine($"{truncatedCount} snapshots are truncated, meaning the entire file is not there. Depending on the type file type, these truncated snapshots may not be able to be opened.");
+            }
+
             Response.WriteLine("## Saved copies");
 
             int currentYear = 0;
@@ -97,7 +104,11 @@ namespace Kennedy.Server.Views.Archive
             if (GeminiParser.IsSuccessStatus(snapshot.StatusCode))
             {
                 Response.Write($"{snapshot.Mimetype} • ");
-                Response.Write($"{FormatSize(snapshot?.Size ?? 0)}");
+                Response.Write($"{FormatSize(snapshot.Size)}");
+                if(snapshot.IsBodyTruncated)
+                {
+                    Response.Write(" • Truncated Body");
+                }
             }
             else if (GeminiParser.IsRedirectStatus(snapshot.StatusCode))
             {
