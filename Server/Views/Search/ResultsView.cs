@@ -42,6 +42,13 @@ namespace Kennedy.Server.Views.Search
             Options = new SearchOptions(Request.Url, "/search");
 
             Response.Success();
+
+            if(!query.IsValidTextQuery)
+            {
+                RenderBadQuery(query);
+                return;
+            }
+
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Search");
             Response.WriteLine();
 
@@ -56,6 +63,14 @@ namespace Kennedy.Server.Views.Search
             }
         }
 
+        private void RenderBadQuery(UserQuery query)
+        {
+            Response.WriteLine("Sorry, we could not understand the query for a text search.");
+            Response.WriteLine($"> {query.RawQuery}");
+
+            Response.WriteLine($"=> {RoutePaths.SearchRoute} New Search");
+        }
+
         private void RenderNoResults(UserQuery query)
         {
             Response.WriteLine("Sorry, no results for your search.");
@@ -65,6 +80,7 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine($"=> {RoutePaths.Search(suggestedQuery.RawQuery)} Try searching \"{suggestedQuery}\" instead?");
             Response.WriteLine($"=> {RoutePaths.SearchRoute} New Search");
         }
+
 
         private void RenderResults(UserQuery query)
         {
@@ -174,21 +190,14 @@ namespace Kennedy.Server.Views.Search
                 return;
             }
 
-            //we should only search Gemipedia for "simple" queries. So...
-            if(query.HasSiteScope || query.HasFileTypeScope)
+            //we should only search Gemipedia for "simple" queries (FTS component, no other operators
+            if (!query.IsSimpleQuery)
             {
-                //no need if limited to a site or a filetype
-                return;
-            }
-
-            if(query.TermsQuery == null)
-            {
-                //if there isn't a FTS component, do nothing
                 return;
             }
 
             //skip if more than a 2 word query
-            if(query.TermsQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length > 2)
+            if(query.TermsQuery!.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length > 2)
             {
                 return;
             }
@@ -205,7 +214,10 @@ namespace Kennedy.Server.Views.Search
 
         private void QueryImageSearch(UserQuery query)
         {
-            ImageHits = SearchEngine.GetImageResultsCount(query);
+            if (query.IsValidImageQuery)
+            {
+                ImageHits = SearchEngine.GetImageResultsCount(query);
+            }
         }
 
         private void DoFullQuery(UserQuery query)

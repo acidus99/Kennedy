@@ -4,11 +4,9 @@ using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Web;
-using System.Text.RegularExpressions;
 
 namespace Kennedy.SearchIndex.Search
 {
@@ -79,6 +77,11 @@ namespace Kennedy.SearchIndex.Search
 
         public int GetImageResultsCount(UserQuery userQuery)
         {
+            if(!userQuery.IsValidImageQuery)
+            {
+                throw new ArgumentException("Not a valid query for image search");
+            }
+
             using (var db = GetContext())
             {
                 var sqlQuery = new DynamicQuery<SqliteParameter>();
@@ -110,12 +113,19 @@ namespace Kennedy.SearchIndex.Search
                     sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
                 }
 
-                return db.Database.SqlQuery<int>(sqlQuery.GetFormattableString()).First();
+                var sql = sqlQuery.GetFormattableString();
+
+                return db.Database.SqlQuery<int>(sql).First();
             }
         }
 
         private FormattableString GetImageSearchQuery(UserQuery userQuery, int offset, int limit)
         {
+            if (!userQuery.IsValidImageQuery)
+            {
+                throw new ArgumentException("Not a valid query for image search");
+            }
+
             var sqlQuery = new DynamicQuery<SqliteParameter>();
 
             sqlQuery.Append(@"
@@ -168,7 +178,12 @@ WHERE ");
 
         public int GetTextResultsCount(UserQuery userQuery)
         {
-            using(var db = GetContext())
+            if (!userQuery.IsValidTextQuery)
+            {
+                throw new ArgumentException("Not a valid query for textsearch");
+            }
+
+            using (var db = GetContext())
             {
                 var sqlQuery = new DynamicQuery<SqliteParameter>();
                 sqlQuery.Append("Select count(*) as Value From FTS ");
@@ -184,8 +199,14 @@ WHERE ");
 
                 if(userQuery.HasFtsQuery)
                 {
-                    sqlQuery.AppendWhereCondition("Body MATCH {} ");
+                    sqlQuery.AppendWhereCondition("FTS.Body MATCH {} ");
                     sqlQuery.AddParameter("query", userQuery.FTSQuery);
+                }
+
+                if(userQuery.HasTitleScope)
+                {
+                    sqlQuery.AppendWhereCondition("FTS.Title MATCH {} ");
+                    sqlQuery.AddParameter("title", userQuery.TitleScope);
                 }
 
                 if (userQuery.HasSiteScope)
@@ -208,6 +229,11 @@ WHERE ");
 
         public List<FullTextSearchResult> DoTextSearch(UserQuery query, int offset, int limit)
         {
+            if (!query.IsValidTextQuery)
+            {
+                throw new ArgumentException("Not a valid query for textsearch");
+            }
+
             using (var db = GetContext())
             {
                 var sql = GetTextSearchQuery(query, offset, limit);
@@ -235,8 +261,14 @@ Select Url, BodySize, IsBodyTruncated, doc.Title, UrlID, DetectedLanguage, LineC
 
             if (userQuery.HasFtsQuery)
             {
-                sqlQuery.AppendWhereCondition("Body MATCH {} ");
+                sqlQuery.AppendWhereCondition("FTS.Body MATCH {} ");
                 sqlQuery.AddParameter("query", userQuery.FTSQuery);
+            }
+
+            if (userQuery.HasTitleScope)
+            {
+                sqlQuery.AppendWhereCondition("FTS.Title MATCH {} ");
+                sqlQuery.AddParameter("title", userQuery.TitleScope);
             }
 
             if (userQuery.HasSiteScope)

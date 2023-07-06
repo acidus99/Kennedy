@@ -1,6 +1,7 @@
 ﻿namespace Kennedy.SearchIndex.Search;
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -14,10 +15,22 @@ public class QueryParser
 	readonly static Regex siteScopeRegex = new Regex(@"\bsite\:\s*([0-9a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     readonly static Regex fileTypeScopeRegex = new Regex(@"\bfiletype\:\s*([0-9a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+	readonly static Regex[] titleScopeRegexes =
+	{
+		new Regex(@"\bintitle:\s*([^\""\s]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+		new Regex(@"\bintitle:\s*\""([^\""]+)\""", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+	};
+
     public UserQuery Parse(string inputQuery)
 	{
 		string rawQuery = Normalize(inputQuery);
 		string termsQuery = rawQuery;
+
+		string? titleScope = GetSearchOption(termsQuery, titleScopeRegexes);
+		if(titleScope != null)
+		{
+			termsQuery = RemoveSearchOption(termsQuery, titleScopeRegexes);
+		}
 
 		string? siteScope = GetSearchOption(termsQuery, siteScopeRegex);
 		if(siteScope != null)
@@ -38,6 +51,7 @@ public class QueryParser
 			RawQuery = inputQuery,
 			SiteScope = siteScope,
 			TermsQuery = termsQuery,
+			TitleScope = titleScope
 		};
 	}
 
@@ -47,7 +61,20 @@ public class QueryParser
 		return whitespaceRuns.Replace(s, " ");
 	}
 
-	private string? GetSearchOption(string query, Regex rule)
+    private string? GetSearchOption(string query, IEnumerable<Regex> regexes)
+	{
+		foreach(var regex in regexes)
+		{
+			string? result = GetSearchOption(query, regex);
+			if(result != null)
+			{
+				return result;
+			}
+		}
+		return null;
+	}
+
+    private string? GetSearchOption(string query, Regex rule)
 	{
 		var match = rule.Match(query);
 		if(!match.Success)
@@ -56,6 +83,15 @@ public class QueryParser
 		}
 		return match.Groups[1].Value.ToLower();
 	}
+
+	private string RemoveSearchOption(string query, IEnumerable<Regex> regexes)
+	{
+        foreach (var regex in regexes)
+        {
+			query = RemoveSearchOption(query, regex);
+        }
+        return query;
+    } 
 
 	private string RemoveSearchOption(string query, Regex regex)
 		=> Normalize(regex.Replace(query, ""));

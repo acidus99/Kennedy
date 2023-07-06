@@ -30,8 +30,14 @@ namespace Kennedy.Server.Views.Search
             UserQuery query = queryParser.Parse(SanitizedQuery);
 
             Options = new SearchOptions(Request.Url, RoutePaths.ImageSearchRoute);
-
             Response.Success();
+
+            if (!query.IsValidImageQuery)
+            {
+                RenderBadQuery(query);
+                return;
+            }
+
             Response.WriteLine($"# '{query}' - 🔭 Kennedy Image Search");
             Response.WriteLine();
 
@@ -85,6 +91,15 @@ namespace Kennedy.Server.Views.Search
             Response.WriteLine("=> /search 🔍 Text Search");
             Response.WriteLine("=> / Home");
         }
+
+        private void RenderBadQuery(UserQuery query)
+        {
+            Response.WriteLine("Sorry, we could not understand the query for a image search.");
+            Response.WriteLine($"> {query.RawQuery}");
+
+            Response.WriteLine($"=> {RoutePaths.ImageSearchRoute} 🖼 New Search");
+        }
+
 
         private void RenderNoResults(UserQuery query)
         {
