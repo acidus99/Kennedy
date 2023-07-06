@@ -54,7 +54,7 @@ public class QueryParser
 		{
 			return null;
 		}
-		return match.Groups[1].Value;
+		return match.Groups[1].Value.ToLower();
 	}
 
 	private string RemoveSearchOption(string query, Regex regex)
