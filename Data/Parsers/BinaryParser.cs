@@ -62,7 +62,7 @@ namespace Kennedy.Data.Parsers
 					ImageType = imageInfo.Metadata.DecodedImageFormat!.Name,
 					IsTransparent = isTranparent
 				};
-			} catch (Exception ex)
+			} catch (Exception)
 			{
 			}
 
