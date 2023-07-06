@@ -119,7 +119,7 @@ namespace Kennedy.SearchIndex.Search
             var sqlQuery = new DynamicQuery<SqliteParameter>();
 
             sqlQuery.Append(@"
-Select img.UrlID, url, BodySize, Width, Height, ImageType, snippet(ImageSearch, 0, '[',']','…',20) as Snippet, ( rank + (rank*0.3*PopularityRank)) as tot
+Select img.UrlID, url, BodySize, IsBodyTruncated, Width, Height, ImageType, snippet(ImageSearch, 0, '[',']','…',20) as Snippet, ( rank + (rank*0.3*PopularityRank)) as tot
 From ImageSearch as fts
  Inner Join Images as img
 On img.UrlID = fts.ROWID
@@ -221,7 +221,7 @@ WHERE ");
             var sqlQuery = new DynamicQuery<SqliteParameter>();
 
             sqlQuery.Append(@"
-Select Url, BodySize, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, (rank + (rank*0.3*PopularityRank)) * IIF(ContentType = 1, 1.03, 1) as TotalRank, ");
+Select Url, BodySize, IsBodyTruncated, doc.Title, UrlID, DetectedLanguage, LineCount, MimeType, (rank + (rank*0.3*PopularityRank)) * IIF(ContentType = 1, 1.03, 1) as TotalRank, ");
 
             if (userQuery.HasFtsQuery)
             {

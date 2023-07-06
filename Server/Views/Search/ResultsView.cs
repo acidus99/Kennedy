@@ -135,15 +135,20 @@ namespace Kennedy.Server.Views.Search
             var resultTitle = result.Title ?? FormatFilename(result.GeminiUrl);
 
             // Write link line with meta data.
-            Response.Write($"=> {result.Url} {FormatCount(resultNumber)}. {resultTitle} ({result.Mimetype} • ");
+            Response.Write($"=> {result.Url} {FormatCount(resultNumber)}. {resultTitle} ({result.Mimetype}");
 
             if (result.LineCount != null)
             {
+                Response.Write(" • ");
                 Response.Write(result.LineCount.Value.ToString());
-                Response.Write(" Lines • ");
+                Response.Write(" Lines");
             }
-            Response.Write($"{FormatSize(result.BodySize)})");
-            Response.WriteLine();
+            if (!result.IsBodyTruncated)
+            {
+                Response.Write(" • ");
+                Response.Write($"{FormatSize(result.BodySize)}");
+            }
+            Response.WriteLine(")");
             Response.WriteLine($"* {FormatUrl(result.GeminiUrl)}");
             
             if (result.DetectedLanguage != null && result.DetectedLanguage != "en")

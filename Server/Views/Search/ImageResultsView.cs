@@ -98,7 +98,12 @@ namespace Kennedy.Server.Views.Search
 
         private void WriteResultEntry(Response resp, ImageSearchResult result, int resultNumber)
         {
-            Response.WriteLine($"=> {result.Url} {FormatCount(resultNumber)}. {FormatFilename(result.GeminiUrl)} ({result.Width} x {result.Height} • {result.ImageType} • {FormatSize(result.BodySize)})");
+            Response.Write($"=> {result.Url} {FormatCount(resultNumber)}. {FormatFilename(result.GeminiUrl)} ({result.Width} x {result.Height} • {result.ImageType}");
+            if (!result.IsBodyTruncated)
+            {
+                Response.Write($" • {FormatSize(result.BodySize)}");
+            }
+            Response.WriteLine(")");
             Response.WriteLine($"* {FormatUrl(result.GeminiUrl)}");
             Response.WriteLine(">" + FormatSnippet(result.Snippet));
             Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(result.GeminiUrl)} ℹ️ More Info / Archived Copy");

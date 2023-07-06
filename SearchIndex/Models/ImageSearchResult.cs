@@ -26,6 +26,7 @@ namespace Kennedy.SearchIndex.Models
             }
         }
 
+        public required bool IsBodyTruncated { get; set; }
         public required int BodySize { get; set; }
         public required string Snippet { get; set; }
 

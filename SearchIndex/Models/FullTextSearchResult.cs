@@ -31,6 +31,7 @@ namespace Kennedy.SearchIndex.Models
 
         public required string Mimetype { get; set; }
 
+        public required bool IsBodyTruncated { get; set; }
         public required int BodySize { get; set; }
         public required string? Title { get; set; }
         public required string Snippet { get; set; }
