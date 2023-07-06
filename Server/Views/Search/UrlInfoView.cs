@@ -33,6 +33,8 @@ namespace Kennedy.Server.Views.Search
                 return;
             }
 
+            Response.Success();
+
             Document? possibleEntry =  db.Documents
                 .Where(x => x.UrlID == url.ID)
                 .Include(x => x.Image!)
@@ -45,8 +47,6 @@ namespace Kennedy.Server.Views.Search
                 return;
             }
             entry = possibleEntry;
-
-            Response.Success();
 
             Response.WriteLine($"# ℹ️ Page Info: {entry.GeminiUrl.Path}");
             Response.WriteLine($"=> {entry.Url} Visit Current Url");
