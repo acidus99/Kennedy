@@ -11,8 +11,8 @@ public class QueryParser
 
 	readonly static Regex whitespaceRuns = new Regex(@"\s+");
 
-	readonly static Regex siteScopeRegex = new Regex(@"\bsite\:\s*([a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    readonly static Regex fileTypeScopeRegex = new Regex(@"\bfiletype\:\s*([a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	readonly static Regex siteScopeRegex = new Regex(@"\bsite\:\s*([0-9a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    readonly static Regex fileTypeScopeRegex = new Regex(@"\bfiletype\:\s*([0-9a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     public UserQuery Parse(string inputQuery)
 	{
