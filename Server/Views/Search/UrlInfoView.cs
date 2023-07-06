@@ -87,7 +87,15 @@ namespace Kennedy.Server.Views.Search
                 {
                     Response.WriteLine($"* Language: {FormatLanguage(entry.Language)}");
                 }
-                Response.WriteLine($"* Size: {FormatSize(entry.BodySize)}");
+
+                if (!entry.IsBodyTruncated)
+                {
+                    Response.WriteLine($"* Size: {FormatSize(entry.BodySize)}");
+                }
+                else
+                {
+                    Response.WriteLine($"* Size: > {FormatSize(entry.BodySize)}. The exact size is unknown since it exceeded our download limit.");
+                }
             }
             Response.WriteLine($"* First Seen: {entry.FirstSeen.ToString("yyyy-MM-dd")}");
             Response.WriteLine($"* Indexed on: {entry.LastSuccessfulVisit?.ToString("yyyy-MM-dd")}");
