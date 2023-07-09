@@ -30,7 +30,7 @@ public class WebCrawler : IWebCrawler
     int CrawlerThreads;
     ThreadSafeCounter TotalUrlsRequested;
     ThreadSafeCounter TotalUrlsProcessed;
-    ErrorLog errorLog;
+    UrlLogger urlLogger;
 
     int UrlLimit;
 
@@ -59,13 +59,13 @@ public class WebCrawler : IWebCrawler
 
         ConfigureDirectories();
         LanguageDetector.ConfigFileDirectory = CrawlerOptions.ConfigDir;
-        errorLog = new ErrorLog(CrawlerOptions.ErrorLog);
+        urlLogger = new UrlLogger(CrawlerOptions.UrlLog);
 
         TotalUrlsRequested = new ThreadSafeCounter();
         TotalUrlsProcessed = new ThreadSafeCounter();
 
         UrlFrontier = new BalancedUrlFrontier(CrawlerThreads);
-        FrontierWrapper = new UrlFrontierWrapper(UrlFrontier);
+        FrontierWrapper = new UrlFrontierWrapper(UrlFrontier, urlLogger);
         seenContentTracker = new SeenContentTracker();
 
         ProactiveLinksFinder = new ProactiveLinksFinder();
@@ -149,6 +149,7 @@ public class WebCrawler : IWebCrawler
     private void FinalizeCrawl()
     {
         CrawlerStopwatch.Stop();
+        urlLogger.Close();
         ResultsWarc.Close();
     }
 
@@ -197,11 +198,6 @@ public class WebCrawler : IWebCrawler
         //null means it was ignored by robots
         if (response != null)
         {
-            if (response.IsConnectionError)
-            {
-                errorLog.LogError(response.Meta, response.RequestUrl.NormalizedUrl);
-            }
-
             ResultsWarc.AddToQueue(response, connectionInfo);
 
             //if we haven't seen this content before, parse it for links and add them to the frontier
@@ -211,8 +207,10 @@ public class WebCrawler : IWebCrawler
             }
             //add proactive URLs
             FrontierWrapper.AddUrls(entry.DepthFromSeed, ProactiveLinksFinder.FindLinks(response), false);
+        } else
+        {
+            urlLogger.Log("Excluded by Robots.txt", entry.Url.NormalizedUrl);
         }
-        HackLogger.Log(entry.Url, "PROCESSED");
         TotalUrlsProcessed.Increment();
     }
 
@@ -226,7 +224,6 @@ public class WebCrawler : IWebCrawler
         var url = UrlFrontier.GetUrl(crawlerID);
         if (url != null)
         {
-            HackLogger.Log(url.Url, "REQUEST");
             TotalUrlsRequested.Increment();
         }
         return url;
