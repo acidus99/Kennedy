@@ -119,10 +119,12 @@ namespace Kennedy.Archive
                 };
 
                 //does this response already exist (for this URL or another)?
-                var previousSnapshot = db.Snapshots
-                    .Where(x=> x.DataHash == dataHash).FirstOrDefault();
+                var previousSnapshots = db.Snapshots
+                    .Where(x=> x.DataHash == dataHash);
 
-                if (previousSnapshot == null)
+                var first = previousSnapshots.FirstOrDefault();
+
+                if (first == null)
                 {
                     //this datahash is unique, so write it to storage
                     var packFile = packManager.GetPack(dataHash);
@@ -131,16 +133,11 @@ namespace Kennedy.Archive
                 else
                 {
                     //use the same offset as previous on
-                    snapshot.Offset = previousSnapshot.Offset;
+                    snapshot.Offset = first.Offset;
 
-                    //is this a duplicate for this URL
-                    if (previousSnapshot.UrlId == snapshot.UrlId)
-                    {
-                        snapshot.IsDuplicate = true;
-                    } else
-                    {
-                        snapshot.IsGlobalDuplicate = true;
-                    }
+                    //does this hash exist for this URL id?
+                    snapshot.IsDuplicate = previousSnapshots.Where(x => x.UrlId == snapshot.UrlId).Any();
+                    snapshot.IsGlobalDuplicate = previousSnapshots.Where(x => x.UrlId != snapshot.UrlId).Any();
                 }
                 db.Snapshots.Add(snapshot);
                 db.SaveChanges();
