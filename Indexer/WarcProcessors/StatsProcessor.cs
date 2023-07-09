@@ -16,7 +16,8 @@ namespace Kennedy.Indexer.WarcProcessors
 
         string OutputDir;
 
-        public StatsProcessor(string outDir)
+        public StatsProcessor(string outDir, string configDirectory)
+            :base(configDirectory)
 		{
             AuthoritySizes = new Dictionary<string, long>(5000);
             AuthorityCounts = new Dictionary<string, long>(5000);

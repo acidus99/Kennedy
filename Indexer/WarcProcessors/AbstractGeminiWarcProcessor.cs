@@ -3,12 +3,20 @@ using Warc;
 
 using Gemini.Net;
 using Kennedy.Data;
+using Kennedy.Crawler.Filters;
 
 namespace Kennedy.Indexer.WarcProcessors
 {
 	public abstract class AbstractGeminiWarcProcessor : IWarcProcessor
     {
         System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+
+        DenyListFilter denyFilter;
+ 
+        public AbstractGeminiWarcProcessor(string configDirectory)
+        {
+            denyFilter = new DenyListFilter(configDirectory);
+        }
 
         public void ProcessRecord(WarcRecord record)
 		{
@@ -20,10 +28,6 @@ namespace Kennedy.Indexer.WarcProcessors
                     stopwatch.Restart();
                     ProcessGeminiResponse(geminiResponse);
                     stopwatch.Stop();
-                    if (stopwatch.ElapsedMilliseconds > 1000)
-                    {
-                        int xxx = 5;
-                    }
                 }
             }
         }
@@ -38,6 +42,13 @@ namespace Kennedy.Indexer.WarcProcessors
             try
             {
                 var url = new GeminiUrl(StripRobots(responseRecord.TargetUri));
+
+                UrlFilterResult result = denyFilter.IsUrlAllowed(url);
+
+                if (!result.IsAllowed)
+                {
+                    return null;
+                }
 
                 var response = GeminiParser.ParseResponseBytes(url, responseRecord.ContentBlock);
                 response.RequestSent = responseRecord.Date;

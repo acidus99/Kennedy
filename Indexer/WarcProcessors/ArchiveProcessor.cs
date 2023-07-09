@@ -21,7 +21,8 @@ public class ArchiveProcessor : AbstractGeminiWarcProcessor
     Archiver archiver;
     Dictionary<Authority, bool> changedAuthorities = new Dictionary<Authority, bool>();
 
-    public ArchiveProcessor(string archiveDirectory)
+    public ArchiveProcessor(string archiveDirectory, string configDirectory)
+        : base(configDirectory)
 	{
         if (!archiveDirectory.EndsWith(Path.DirectorySeparatorChar))
         {

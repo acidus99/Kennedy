@@ -14,6 +14,7 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
     ResponseParser responseParser;
 
     public SearchProcessor(string storageDirectory, string configDirectory)
+        :base(configDirectory)
 	{
         if (!storageDirectory.EndsWith(Path.DirectorySeparatorChar))
         {
