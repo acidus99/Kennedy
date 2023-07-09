@@ -42,7 +42,7 @@ namespace Kennedy.Server.Controllers
 
         public static void Stats(GeminiRequest request, Response response, GeminiServer app)
         {
-            var view = new StatsView(request, response, app);
+            var view = new ArchiveStatsView(request, response, app);
             view.Render();
         }
     }

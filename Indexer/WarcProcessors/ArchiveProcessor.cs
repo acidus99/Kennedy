@@ -123,7 +123,7 @@ public class ArchiveProcessor : AbstractGeminiWarcProcessor
         };
 
         var json = JsonSerializer.Serialize<ArchiveStats>(stats, options);
-        File.WriteAllText(ArchiveDirectory + "stats.json", json);
+        File.WriteAllText(ArchiveDirectory + "archive-stats.json", json);
     }
 
     private RobotsTxtFile? GetRobots(Authority authority)

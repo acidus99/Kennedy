@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Kennedy.Server.Views;
+using Kennedy.Server.Views.Archive;
 using Kennedy.Server.Views.Search;
 using RocketForce;
 
@@ -16,6 +17,12 @@ namespace Kennedy.Server.Controllers
                 return;
             }
             var view = new ResultsView(request, response, app);
+            view.Render();
+        }
+
+        public static void Stats(GeminiRequest request, Response response, GeminiServer app)
+        {
+            var view = new SearchStatsView(request, response, app);
             view.Render();
         }
 

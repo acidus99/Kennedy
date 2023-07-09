@@ -11,5 +11,11 @@ namespace Kennedy.Server
         public required string KeyFile { get; set; }
         public required string PublicRoot { get; set; }
         public required string DataRoot { get; set; }
+
+        public string ArchiveStatsFile
+            => DataRoot + "archive-stats.json";
+
+        public string SearchStatsFile
+            => DataRoot + "search-stats.json";
     }
 }

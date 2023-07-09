@@ -12,16 +12,16 @@ namespace Kennedy.Server.Views.Archive
     /// <summary>
     /// Shows the details about a 
     /// </summary>
-    internal class StatsView :AbstractView
+    internal class ArchiveStatsView :AbstractView
     {
 
-        public StatsView(GeminiRequest request, Response response, GeminiServer app)
+        public ArchiveStatsView(GeminiRequest request, Response response, GeminiServer app)
             : base(request, response, app) { }
 
         public override void Render()
         {
             Response.Success();
-            Response.WriteLine($"# 📏 Nerdy Stats");
+            Response.WriteLine($"# 📏 Archive Statistics");
             Response.WriteLine();
 
             var stats = GetStats();
@@ -65,7 +65,7 @@ namespace Kennedy.Server.Views.Archive
         {
             try
             {
-                return JsonSerializer.Deserialize<ArchiveStats>(File.ReadAllText(Settings.Global.DataRoot + "stats.json"));
+                return JsonSerializer.Deserialize<ArchiveStats>(File.ReadAllText(Settings.Global.ArchiveStatsFile));
             }
             catch
             {

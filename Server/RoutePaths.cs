@@ -12,6 +12,7 @@ namespace Kennedy.Server
 
         public const string ImageSearchRoute = "/image-search";
         public const string SearchRoute = "/search";
+        public const string SearchStatsRoute = "/stats";
         public const string UrlInfoRoute = "/page-info";
 
 
