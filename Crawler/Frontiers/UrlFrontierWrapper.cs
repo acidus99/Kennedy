@@ -6,7 +6,7 @@ using Gemini.Net;
 
 using Kennedy.Data;
 
-using Kennedy.Crawler.Frontiers;
+using Kennedy.Crawler.Filters;
 using Kennedy.Crawler.Logging;
 using Kennedy.Crawler.Utils;
 
@@ -16,14 +16,17 @@ namespace Kennedy.Crawler.Frontiers
     {
         IUrlFrontier UrlFrontier;
         List<IUrlFilter> UrlFilters;
-        IUrlFilter SeenUrlFilter;
+        SeenUrlFilter SeenUrlFilter;
+
+        UrlLogger UrlLogger;
 
         public ThreadSafeCounter TotalUrls;
         public ThreadSafeCounter PassedUrls;
 
-        public UrlFrontierWrapper(IUrlFrontier frontier)
+        public UrlFrontierWrapper(IUrlFrontier frontier, UrlLogger urlLogger)
         {
             UrlFrontier = frontier;
+            UrlLogger = urlLogger;
             SeenUrlFilter = new SeenUrlFilter();
 
             UrlFilters = new List<IUrlFilter>
@@ -41,23 +44,34 @@ namespace Kennedy.Crawler.Frontiers
 
         private void AddUrl(UrlFrontierEntry entry)
         {
+            UrlFilterResult result;
             TotalUrls.Increment();
+            //peek if we have seen it before. If we have, no need to check the other filters
+            if(SeenUrlFilter.IsAlreadySeen(entry.Url))
+            { 
+                return;
+            }
+
             foreach (var filter in UrlFilters)
             {
-                if (!filter.IsUrlAllowed(entry))
+                result = filter.IsUrlAllowed(entry);
+                if (!result.IsAllowed)
                 {
+                    UrlLogger.Log(result.Reason, entry.Url.NormalizedUrl);
                     return;
                 }
             }
 
             //if everything else passed, then check the SeenUrlFilter
             //since that also makes note of the URL's hash
-            if(SeenUrlFilter.IsUrlAllowed(entry))
+            result = SeenUrlFilter.IsUrlAllowed(entry);
+            if (result.IsAllowed)
             {
                 //all allowed, pass it to the UrlFrontier
                 PassedUrls.Increment();
                 UrlFrontier.AddUrl(entry);
             }
+            //no need to log seen URLs, since that is a ton of links
         }
 
         public void AddUrls(int parentDepth, IEnumerable<FoundLink>? links, bool isRobotsLimits = true)

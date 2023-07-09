@@ -18,12 +18,14 @@
     <None Remove="config\" />
     <None Remove="config\block-list.txt" />
     <None Remove="config\Core14.profile.xml" />
+    <None Remove="Filters\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Dns\" />
     <Folder Include="Utils\" />
     <Folder Include="Logging\" />
     <Folder Include="config\" />
+    <Folder Include="Filters\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="config\block-list.txt">

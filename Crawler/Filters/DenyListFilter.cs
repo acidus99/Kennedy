@@ -3,10 +3,11 @@ using Gemini.Net;
 using Kennedy.Crawler.Utils;
 using Kennedy.Data;
 
-namespace Kennedy.Crawler.Frontiers
+namespace Kennedy.Crawler.Filters
 {
 	public class DenyListFilter : IUrlFilter
 	{
+        static readonly UrlFilterResult Denied = new UrlFilterResult(false, "Matches Deny List Filter");
 
         /// <summary>
         /// table to URLs prefixes to exclide, sorted by URL authority
@@ -18,8 +19,13 @@ namespace Kennedy.Crawler.Frontiers
         ThreadSafeCounter excludedCounter = new ThreadSafeCounter();
 
         public DenyListFilter()
+            :this(CrawlerOptions.ConfigDir)
         {
-            var dataFile = CrawlerOptions.ConfigDir + "block-list.txt";
+        }
+
+        public DenyListFilter(string configDir)
+        {
+            var dataFile = configDir + "block-list.txt";
             excludedUrls = new Dictionary<string, List<string>>();
             globalRules = new List<string>();
             LoadExclusions(dataFile);
@@ -58,29 +64,33 @@ namespace Kennedy.Crawler.Frontiers
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        public bool IsUrlAllowed(UrlFrontierEntry entry)
+        ///
+        public UrlFilterResult IsUrlAllowed(UrlFrontierEntry entry)
+            => IsUrlAllowed(entry.Url);
+
+        public UrlFilterResult IsUrlAllowed(GeminiUrl url)
         {
-            var normalized = entry.Url.NormalizedUrl;
+            var normalized = url.NormalizedUrl;
 
             if (globalRules.Where(x => normalized.StartsWith(x)).Count() > 0)
             {
-                return false;
+                return Denied;
             }
 
-            if (!excludedUrls.ContainsKey(entry.Url.Authority))
+            if (!excludedUrls.ContainsKey(url.Authority))
             {
-                return true;
+                return UrlFilterResult.Allowed;
             }
 
-            foreach (string urlPrefix in excludedUrls[entry.Url.Authority])
+            foreach (string urlPrefix in excludedUrls[url.Authority])
             {
                 if (normalized.StartsWith(urlPrefix))
                 {
                     excludedCounter.Increment();
-                    return false;
+                    return Denied;
                 }
             }
-            return true;
+            return UrlFilterResult.Allowed;
         }
     }
 }

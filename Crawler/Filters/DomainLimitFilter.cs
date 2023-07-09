@@ -4,7 +4,7 @@ using Gemini.Net;
 using Kennedy.Crawler.Utils;
 using Kennedy.Data;
 
-namespace Kennedy.Crawler.Frontiers
+namespace Kennedy.Crawler.Filters
 {
 	public class DomainLimitFilter : IUrlFilter
 	{
@@ -17,10 +17,17 @@ namespace Kennedy.Crawler.Frontiers
             MaxHits = maxHits;
 		}
 
-        public bool IsUrlAllowed(UrlFrontierEntry entry)
+        public UrlFilterResult IsUrlAllowed(UrlFrontierEntry entry)
         {
             int hits = DomainHits.Add(entry.Url.Authority);
-            return (hits <= MaxHits);
+            if (hits <= MaxHits)
+            {
+                return UrlFilterResult.Allowed;
+            }
+            else
+            {
+                return new UrlFilterResult(false, $"Domain hits exceeded. Hits = {hits}");
+            }
         }
     }
 }
