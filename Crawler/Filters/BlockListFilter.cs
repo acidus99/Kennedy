@@ -68,7 +68,7 @@ namespace Kennedy.Crawler.Filters
             {
                 if(rule.IsMatch(url))
                 {
-                    return Denied;
+                    return new BlockResult(false, "Blocked by rule:\t" + rule.Definition);
                 }
             }
 
@@ -81,8 +81,8 @@ namespace Kennedy.Crawler.Filters
             foreach (var rule in siteRules[url.Authority])
             {
                 if(rule.IsMatch(url))
-                { 
-                    return Denied;
+                {
+                    return new BlockResult(false, "Blocked by rule:\t" + rule.Definition);
                 }
             }
             return BlockResult.Allowed;
