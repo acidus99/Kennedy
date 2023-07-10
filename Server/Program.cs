@@ -37,6 +37,7 @@ namespace Kennedy.Server
             server.OnRequest(RoutePaths.ViewCachedRoute, ArchiveController.Cached);
             server.OnRequest(RoutePaths.SearchArchiveRoute, ArchiveController.Search);
             server.OnRequest(RoutePaths.ArchiveStatsRoute, ArchiveController.Stats);
+            server.OnRequest(RoutePaths.ArchiveIndexRoute, ArchiveController.Index);
             server.OnRequest("/delorean", ArchiveController.Redirect);
 
             server.OnRequest(RoutePaths.SiteHealthRoute, ReportsController.SiteHealth);

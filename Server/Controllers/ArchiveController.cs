@@ -45,5 +45,11 @@ namespace Kennedy.Server.Controllers
             var view = new ArchiveStatsView(request, response, app);
             view.Render();
         }
+
+        public static void Index(GeminiRequest request, Response response, GeminiServer app)
+        {
+            var view = new IndexView(request, response, app);
+            view.Render();
+        }
     }
 }
