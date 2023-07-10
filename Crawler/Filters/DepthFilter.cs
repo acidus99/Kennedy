@@ -15,13 +15,13 @@ namespace Kennedy.Crawler.Filters
             DepthLimit = limit;
 		}
 
-        public UrlFilterResult IsUrlAllowed(UrlFrontierEntry entry)
+        public BlockResult IsUrlAllowed(UrlFrontierEntry entry)
         {
             if(entry.DepthFromSeed < DepthLimit)
             {
-                return UrlFilterResult.Allowed;
+                return BlockResult.Allowed;
             }
-            return new UrlFilterResult(false, $"Depth {entry.DepthFromSeed} exceeds depth limit of {DepthLimit}");
+            return new BlockResult(false, $"Depth {entry.DepthFromSeed} exceeds depth limit of {DepthLimit}");
         }
     }
 }

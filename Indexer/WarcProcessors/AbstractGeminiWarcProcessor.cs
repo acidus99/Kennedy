@@ -11,11 +11,11 @@ namespace Kennedy.Indexer.WarcProcessors
     {
         System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
 
-        DenyListFilter denyFilter;
+        BlockListFilter denyFilter;
  
         public AbstractGeminiWarcProcessor(string configDirectory)
         {
-            denyFilter = new DenyListFilter(configDirectory);
+            denyFilter = new BlockListFilter(configDirectory);
         }
 
         public void ProcessRecord(WarcRecord record)
@@ -43,7 +43,7 @@ namespace Kennedy.Indexer.WarcProcessors
             {
                 var url = new GeminiUrl(StripRobots(responseRecord.TargetUri));
 
-                UrlFilterResult result = denyFilter.IsUrlAllowed(url);
+                BlockResult result = denyFilter.IsUrlAllowed(url);
 
                 if (!result.IsAllowed)
                 {

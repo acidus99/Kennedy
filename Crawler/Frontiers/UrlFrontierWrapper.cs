@@ -32,7 +32,7 @@ namespace Kennedy.Crawler.Frontiers
             UrlFilters = new List<IUrlFilter>
             {
                 new DepthFilter(),
-                new DenyListFilter(),
+                new BlockListFilter(),
                 new DomainLimitFilter(),
             };
 
@@ -44,7 +44,7 @@ namespace Kennedy.Crawler.Frontiers
 
         private void AddUrl(UrlFrontierEntry entry)
         {
-            UrlFilterResult result;
+            BlockResult result;
             TotalUrls.Increment();
             //peek if we have seen it before. If we have, no need to check the other filters
             if(SeenUrlFilter.IsAlreadySeen(entry.Url))

@@ -17,16 +17,16 @@ namespace Kennedy.Crawler.Filters
             MaxHits = maxHits;
 		}
 
-        public UrlFilterResult IsUrlAllowed(UrlFrontierEntry entry)
+        public BlockResult IsUrlAllowed(UrlFrontierEntry entry)
         {
             int hits = DomainHits.Add(entry.Url.Authority);
             if (hits <= MaxHits)
             {
-                return UrlFilterResult.Allowed;
+                return BlockResult.Allowed;
             }
             else
             {
-                return new UrlFilterResult(false, $"Domain hits exceeded. Hits = {hits}");
+                return new BlockResult(false, $"Domain hits exceeded. Hits = {hits}");
             }
         }
     }

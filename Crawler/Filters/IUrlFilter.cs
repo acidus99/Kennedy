@@ -9,6 +9,6 @@ namespace Kennedy.Crawler.Filters
     /// </summary>
     public interface IUrlFilter
     {
-        public abstract UrlFilterResult IsUrlAllowed(UrlFrontierEntry entry);
+        public abstract BlockResult IsUrlAllowed(UrlFrontierEntry entry);
     }
 }

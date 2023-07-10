@@ -9,7 +9,7 @@ namespace Kennedy.Crawler.Filters
 {
     public class SeenUrlFilter : IUrlFilter
     {
-        static readonly UrlFilterResult Denied = new UrlFilterResult(false, "Already Seen URL");
+        static readonly BlockResult Denied = new BlockResult(false, "Already Seen URL");
 
         /// <summary>
         /// Lookup table of URLs we have seen before
@@ -38,14 +38,14 @@ namespace Kennedy.Crawler.Filters
         /// </summary>
         /// <param name="url"></param>
         /// <returns>URL has not been seen before during this crawl</returns>
-        public UrlFilterResult IsUrlAllowed(UrlFrontierEntry entry)
+        public BlockResult IsUrlAllowed(UrlFrontierEntry entry)
         {
             lock (locker)
             {
                 if (!SeenUrls.ContainsKey(entry.Url.ID))
                 {
                     SeenUrls[entry.Url.ID] = true;
-                    return UrlFilterResult.Allowed;
+                    return BlockResult.Allowed;
                 }
             }
             seenCounter.Increment();
