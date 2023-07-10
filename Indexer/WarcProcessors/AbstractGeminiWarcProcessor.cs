@@ -41,13 +41,19 @@ namespace Kennedy.Indexer.WarcProcessors
 
             try
             {
+                bool isProactive = IsProactiveRequest(responseRecord);
+
                 var url = new GeminiUrl(StripRobots(responseRecord.TargetUri));
 
-                BlockResult result = denyFilter.IsUrlAllowed(url);
-
-                if (!result.IsAllowed)
+                if (!isProactive)
                 {
-                    return null;
+                    BlockResult result = denyFilter.IsUrlAllowed(url);
+
+                    if (!result.IsAllowed)
+                    {
+                        File.AppendAllText("/tmp/deny.txt", result.Reason + "\n");
+                        return null;
+                    }
                 }
 
                 var response = GeminiParser.ParseResponseBytes(url, responseRecord.ContentBlock);
@@ -61,6 +67,22 @@ namespace Kennedy.Indexer.WarcProcessors
                 Console.WriteLine("Malformed Gemini response record. Skipping");
                 return null;
             }
+        }
+
+        protected bool IsProactiveRequest(ResponseRecord responseRecord)
+        {
+            return IsProactiveRequest(new GeminiUrl(responseRecord.TargetUri!));
+        }
+
+        protected bool IsProactiveRequest(GeminiUrl url)
+        {
+            if (url.Path == "/robots.txt" ||
+                url.Path == "/favicon.txt" ||
+                url.Path == "/.well-known/security.txt")
+            {
+                return true;
+            }
+            return false;
         }
 
         private Uri StripRobots(Uri url)

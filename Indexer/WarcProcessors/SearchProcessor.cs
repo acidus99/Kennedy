@@ -50,16 +50,7 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
         wrapperDB.StoreResponse(parsedResponse);
     }
 
-    private bool IsProactiveRequest(GeminiUrl url)
-    {
-        if(url.Path == "/robots.txt" ||
-            url.Path == "/favicon.txt" ||
-            url.Path == "/.well-known/security.txt")
-        {
-            return true;
-        }
-        return false;
-    }
+
 
     /// <summary>
     /// Writes a statistics file to the archive output directory
