@@ -8,7 +8,10 @@ namespace Kennedy.Crawler.Protocols
 {
     public class GeminiProtocolHandler
     {
-        GeminiRequestor requestor = new GeminiRequestor();
+        GeminiRequestor requestor = new GeminiRequestor
+        {
+            MaxResponseSize = 10 * 1024 * 1024
+        };
 
         public GeminiResponse? Request(UrlFrontierEntry entry)
         {
