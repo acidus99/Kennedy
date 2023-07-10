@@ -29,7 +29,7 @@ namespace Kennedy.Crawler.Filters
 			if (ruleDefinition.StartsWith("regex:") && ruleDefinition.Length >= 7)
 			{
 				_type = RuleType.Regex;
-				_regex = new Regex(ruleDefinition.Substring(6));
+				_regex = new Regex(ruleDefinition.Substring(6).Trim());
 				Scope = "";
 				return;
 			}
