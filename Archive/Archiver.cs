@@ -13,6 +13,8 @@ namespace Kennedy.Archive
 {
 	public class Archiver
 	{
+        const int FileSizeLimit = 5 * 1024 * 1024;
+
         SnapshotReader snapshotReader;
         PackManager packManager;
         string ArchiveDBPath;
@@ -31,41 +33,6 @@ namespace Kennedy.Archive
         public ArchiveDbContext GetContext()
             => new ArchiveDbContext(ArchiveDBPath);
 
-        private bool AlreadyInArchive(GeminiResponse response)
-        {
-            using (var db = GetContext())
-            {
-                //are the capture times the same? If so, don't save it, because we are adding something
-                //that has already been added.
-                if (db.Snapshots
-                    .Where(x => x.UrlId == response.RequestUrl.ID && x.Captured == response.ResponseReceived)
-                    .Any())
-                {
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        private bool CanBeArchived(GeminiResponse response)
-        {
-            if (response.IsConnectionError)
-            {
-                return false;
-            }
-            else if (response.IsSuccess && response.HasBody)
-            {
-                return true;
-            }
-            else if (response.IsInput ||
-                response.IsRedirect ||
-                response.IsAuth)
-            {
-                return true;
-            }
-            return false;
-        }
-
         /// <summary>
         /// Archives a response without a body
         /// </summary>
@@ -77,7 +44,7 @@ namespace Kennedy.Archive
         /// <returns></returns>
         public bool ArchiveResponse(GeminiResponse response, bool isPublic = true)
         {
-            if (!CanBeArchived(response))
+            if (!ShouldBeArchived(response))
             {
                 return false;
             }
@@ -85,6 +52,8 @@ namespace Kennedy.Archive
             {
                 return false;
             }
+
+            response = TruncateIfNecessary(response);
 
             using (var db = GetContext())
             {
@@ -204,6 +173,80 @@ namespace Kennedy.Archive
                 return null;
             }
             return snapshotReader.ReadResponse(snapshot);
+        }
+
+        private bool AlreadyInArchive(GeminiResponse response)
+        {
+            using (var db = GetContext())
+            {
+                //are the capture times the same? If so, don't save it, because we are adding something
+                //that has already been added.
+                if (db.Snapshots
+                    .Where(x => x.UrlId == response.RequestUrl.ID && x.Captured == response.ResponseReceived)
+                    .Any())
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Should a response be archived?
+        /// Based on the status code, the body and it's size, the mimetype, and whether the body is truncates.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        private bool ShouldBeArchived(GeminiResponse response)
+        {
+            if (!ShouldArchiveStatus(response))
+            {
+                return false;
+            }
+
+            //if it's a non-text body larger than our size limit, skip it
+            if (response.BodySize > FileSizeLimit && !response.MimeType!.StartsWith("text"))
+            {
+                return false;
+            }
+
+            //if it's a non-text truncated body response skip it
+            if (response.HasBody && response.IsBodyTruncated && !response.MimeType!.StartsWith("text"))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Based on the status code and whether a body is present, should we archive this?
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        private bool ShouldArchiveStatus(GeminiResponse response)
+        {
+            if (response.IsSuccess && response.HasBody)
+            {
+                return true;
+            }
+            else if (response.IsInput ||
+                response.IsRedirect ||
+                response.IsAuth)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private GeminiResponse TruncateIfNecessary(GeminiResponse response)
+        {
+            if (response.BodySize > FileSizeLimit)
+            {
+                response.BodyBytes = response.BodyBytes!.Take(FileSizeLimit).ToArray();
+                response.IsBodyTruncated = true;
+            }
+            return response;
         }
     }
 }
