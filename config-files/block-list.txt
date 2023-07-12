@@ -30,6 +30,9 @@ gemini://rawtext.club/~sloum/geminews/$
 gemini://taz.de/$
 gemini://teapot.styx.org/yesterday/
 gemini://tobykurien.com/maverick/$
+#hacker news proxy
+gemini://gem.graypegg.com/hn?
+gemini://gem.graypegg.com/hn/$
 
 
 ## Personally clips library someone's Firefox clips library. all HTTP stuff
