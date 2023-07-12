@@ -28,6 +28,7 @@ namespace Kennedy.Server
             //text search
             server.OnRequest(RoutePaths.SearchRoute, SearchController.Search);
             server.OnRequest(RoutePaths.SearchStatsRoute, SearchController.Stats);
+            server.OnRequest(RoutePaths.SiteSearchRoute, SearchController.SiteSearch);
             server.OnRequest("/lucky", SearchController.LuckySearch);
 
             //image search

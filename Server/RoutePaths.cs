@@ -3,18 +3,16 @@ using Gemini.Net;
 using System.Web;
 
 using Kennedy.Archive.Db;
-using System.Runtime.Intrinsics.X86;
 
 namespace Kennedy.Server
 {
 	public static class RoutePaths 
 	{
-
         public const string ImageSearchRoute = "/image-search";
         public const string SearchRoute = "/search";
         public const string SearchStatsRoute = "/stats";
+        public const string SiteSearchRoute = "/sitesearch";
         public const string UrlInfoRoute = "/page-info";
-
 
         public const string ViewCachedRoute = "/archive/cached";
         public const string ViewUrlHistoryRoute = "/archive/history";
@@ -24,11 +22,14 @@ namespace Kennedy.Server
         public const string SiteHealthRoute = "/reports/site-health";
         public const string DomainBacklinksRoute = "/reports/domain-backlinks";
 
-        public static string ImageSearch(string terms)
-            => $"{ImageSearchRoute}?{HttpUtility.UrlEncode(terms)}";
+        public static string ImageSearch(string query)
+            => $"{ImageSearchRoute}?{HttpUtility.UrlEncode(query)}";
 
-        public static string Search(string terms)
-            => $"{SearchRoute}?{HttpUtility.UrlEncode(terms)}";
+        public static string Search(string query)
+            => $"{SearchRoute}?{HttpUtility.UrlEncode(query)}";
+
+        public static string SiteSearch(string capsule)
+            => $"gemini://kennedy.gemi.dev{SiteSearchRoute}/{capsule}/";
 
         public static string ViewCached(GeminiUrl url)
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={DateTime.Now}";
@@ -53,8 +54,6 @@ namespace Kennedy.Server
 
         public static string ViewUrlHistory(GeminiUrl url)
             => $"{ViewUrlHistoryRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";
-
-        
 
     }
 }

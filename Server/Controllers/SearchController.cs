@@ -11,13 +11,46 @@ namespace Kennedy.Server.Controllers
     {
         public static void Search(GeminiRequest request, Response response, GeminiServer app)
         {
-            if(!request.Url.HasQuery)
+            if (!request.Url.HasQuery)
             {
                 response.Input("Enter search query");
                 return;
             }
             var view = new ResultsView(request, response, app);
             view.Render();
+        }
+
+        public static void SiteSearch(GeminiRequest request, Response response, GeminiServer app)
+        {
+            //are they making a new site search?
+            if(request.Route == RoutePaths.SiteSearchRoute)
+            {
+                if (!request.Url.HasQuery)
+                {
+                    response.Input($"Enter domain name to create Site Search link.");
+                    return;
+                }
+                var view = new SiteSearchView(request, response, app);
+                view.Render();
+                return;
+            }
+
+            //pull out the capsule
+
+            string? capsule = Helpers.SiteSearch.GetSite(request.Route);
+            if(capsule == null)
+            {
+                response.Error("Invalid domain name");
+                return;
+            }
+
+            if(!request.Url.HasQuery)
+            {
+                response.Input($"Search '{capsule}' for?");
+                return;
+            }
+
+            response.Redirect(RoutePaths.Search($"site:{capsule} " + request.Url.Query));
         }
 
         public static void Stats(GeminiRequest request, Response response, GeminiServer app)
