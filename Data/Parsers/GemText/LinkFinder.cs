@@ -45,23 +45,19 @@ namespace Kennedy.Data.Parsers.GemText
             List<FoundLink> ret = new List<FoundLink>();
             foreach(string line in bodyLines)
             {
-                if(!line.StartsWith("=> "))
+                string buffer = line;
+
+                if(!buffer.StartsWith("=>") || buffer.Length < 3)
                 {
                     continue;
                 }
+                buffer = buffer.Substring(2).TrimStart();
 
-                var parts = line.Split(splitChars, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                //part[0] is "=>"
-                //part[1] is the url
-                //part[2..n] are the optional link text if any 
+                var parts = buffer.Split(splitChars, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                //part[0] is the url
+                //part[1..n] are the optional link text if any 
 
-                if(parts.Length < 2)
-                {
-                    //malformed line. doesn't have a URL field
-                    continue;
-                }
-
-                var url = parts[1];
+                var url = parts[0];
                 //sanity check, if its a fully qualified URL, ensure its a gemini URL. otherwise, we really don't care
                 if (url.Contains("://") && !url.StartsWith("gemini://"))
                 {
@@ -74,9 +70,9 @@ namespace Kennedy.Data.Parsers.GemText
                 {
                     string linkText = "";
                     //We have a link we care about, so reassemble the link text if any
-                    if(parts.Length > 2)
+                    if(parts.Length > 1)
                     {
-                        linkText = string.Join(' ', parts.Skip(2));
+                        linkText = string.Join(' ', parts.Skip(1));
                     }
                     ret.Add(new FoundLink
                     {
