@@ -18,12 +18,15 @@ namespace Kennedy.Crawler.Frontiers
         List<IUrlFilter> UrlFilters;
         SeenUrlFilter SeenUrlFilter;
 
-        UrlLogger UrlLogger;
+        Dictionary<string, bool> SeedAuthorities = new Dictionary<string, bool>();
+        public bool LimitCrawlToSeeds { get; set; } = false;
+
+        RejectedUrlLogger UrlLogger;
 
         public ThreadSafeCounter TotalUrls;
         public ThreadSafeCounter PassedUrls;
 
-        public UrlFrontierWrapper(IUrlFrontier frontier, UrlLogger urlLogger)
+        public UrlFrontierWrapper(IUrlFrontier frontier, RejectedUrlLogger urlLogger)
         {
             UrlFrontier = frontier;
             UrlLogger = urlLogger;
@@ -42,6 +45,18 @@ namespace Kennedy.Crawler.Frontiers
 
         public string ModuleName => "Url Filters";
 
+        public void AddSeed(GeminiUrl seedUrl)
+        {
+            if(LimitCrawlToSeeds)
+            {
+                if(!SeedAuthorities.ContainsKey(seedUrl.Authority))
+                {
+                    SeedAuthorities[seedUrl.Authority] = true;
+                }
+            }
+            UrlFrontier.AddSeed(seedUrl);
+        }
+
         private void AddUrl(UrlFrontierEntry entry)
         {
             BlockResult result;
@@ -52,12 +67,18 @@ namespace Kennedy.Crawler.Frontiers
                 return;
             }
 
+            if(LimitCrawlToSeeds & !SeedAuthorities.ContainsKey(entry.Url.Authority))
+            {
+                UrlLogger.LogRejection(entry.Url, "Not a seed URL authority");
+                return;
+            }
+
             foreach (var filter in UrlFilters)
             {
                 result = filter.IsUrlAllowed(entry);
                 if (!result.IsAllowed)
                 {
-                    UrlLogger.Log(result.Reason, entry.Url.NormalizedUrl);
+                    UrlLogger.LogRejection(entry.Url, result.RejectionType, result.SpecificRule);
                     return;
                 }
             }

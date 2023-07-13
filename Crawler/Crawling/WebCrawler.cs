@@ -30,7 +30,7 @@ public class WebCrawler : IWebCrawler
     int CrawlerThreads;
     ThreadSafeCounter TotalUrlsRequested;
     ThreadSafeCounter TotalUrlsProcessed;
-    UrlLogger urlLogger;
+    RejectedUrlLogger urlLogger;
 
     int UrlLimit;
 
@@ -52,6 +52,12 @@ public class WebCrawler : IWebCrawler
 
     bool UserQuit = false;
 
+    public bool LimitCrawlToSeeds
+    {
+        get { return FrontierWrapper.LimitCrawlToSeeds; }
+        set { FrontierWrapper.LimitCrawlToSeeds = value; }
+    }
+
     public WebCrawler(int crawlerThreads, int urlLimit)
     {
         CrawlerThreads = crawlerThreads;
@@ -59,7 +65,7 @@ public class WebCrawler : IWebCrawler
 
         ConfigureDirectories();
         LanguageDetector.ConfigFileDirectory = CrawlerOptions.ConfigDir;
-        urlLogger = new UrlLogger(CrawlerOptions.UrlLog);
+        urlLogger = new RejectedUrlLogger(CrawlerOptions.UrlLog);
 
         TotalUrlsRequested = new ThreadSafeCounter();
         TotalUrlsProcessed = new ThreadSafeCounter();
@@ -89,7 +95,7 @@ public class WebCrawler : IWebCrawler
     }
 
     public void AddSeed(string url)
-        => UrlFrontier.AddSeed(new GeminiUrl(url));
+        => FrontierWrapper.AddSeed(new GeminiUrl(url));
 
     public void DoCrawl()
     {
@@ -209,7 +215,7 @@ public class WebCrawler : IWebCrawler
             FrontierWrapper.AddUrls(entry.DepthFromSeed, ProactiveLinksFinder.FindLinks(response), false);
         } else
         {
-            urlLogger.Log("Excluded by Robots.txt", entry.Url.NormalizedUrl);
+            urlLogger.LogRejection(entry.Url, "Excluded by Robots.txt");
         }
         TotalUrlsProcessed.Increment();
     }

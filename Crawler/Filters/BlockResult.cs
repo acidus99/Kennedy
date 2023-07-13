@@ -7,12 +7,15 @@ namespace Kennedy.Crawler.Filters
 
         public bool IsAllowed { get; private set; }
 
-		public string Reason { get; private set; }
+		public string RejectionType { get; private set; }
 
-		public BlockResult(bool isAllowed, string reason = "")
+		public string SpecificRule { get; private set; }
+
+		public BlockResult(bool isAllowed, string rejectionType="", string specificRule ="")
 		{
 			IsAllowed = isAllowed;
-			Reason = reason;
+			RejectionType = rejectionType;
+			SpecificRule = specificRule;
 		}
 	}
 }

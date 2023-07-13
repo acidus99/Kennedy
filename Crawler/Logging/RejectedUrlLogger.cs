@@ -1,13 +1,14 @@
 ﻿using System.IO;
+using Gemini.Net;
 
 namespace Kennedy.Crawler.Logging
 {
-    public class UrlLogger
+    public class RejectedUrlLogger
     {
         StreamWriter fout;
         object locker;
 
-        public UrlLogger(string outputFile)
+        public RejectedUrlLogger(string outputFile)
         {
             locker = new object();
             fout = new StreamWriter(outputFile);
@@ -16,11 +17,11 @@ namespace Kennedy.Crawler.Logging
         public void Close()
             => fout.Close();
 
-        public void Log(string msg, string url)
+        public void LogRejection(GeminiUrl url, string rejectionType, string specificRule = "")
         {
             lock (locker)
             {
-                fout.WriteLine($"{msg}\t{url}");
+                fout.WriteLine($"{rejectionType}\t{specificRule}\t{url}");
             }
         }
     }

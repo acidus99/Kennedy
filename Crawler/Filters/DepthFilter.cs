@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using Gemini.Net;
 using Kennedy.Data;
 
@@ -21,7 +22,7 @@ namespace Kennedy.Crawler.Filters
             {
                 return BlockResult.Allowed;
             }
-            return new BlockResult(false, $"Depth {entry.DepthFromSeed} exceeds depth limit of {DepthLimit}");
+            return new BlockResult(false, "Depth Limit", $"Depth {entry.DepthFromSeed} exceeds limit of {DepthLimit}");
         }
     }
 }

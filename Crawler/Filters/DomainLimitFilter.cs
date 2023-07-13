@@ -26,7 +26,7 @@ namespace Kennedy.Crawler.Filters
             }
             else
             {
-                return new BlockResult(false, $"Domain hits exceeded. Hits = {hits}");
+                return new BlockResult(false, $"Domain Limit Exceeded", "Hits: {hits}");
             }
         }
     }

@@ -7,8 +7,6 @@ namespace Kennedy.Crawler.Filters
 {
 	public class BlockListFilter : IUrlFilter
 	{
-        static readonly BlockResult Denied = new BlockResult(false, "Matches Block List rule");
-
         /// <summary>
         /// table to URLs prefixes to exclide, sorted by URL authority
         /// </summary>
@@ -68,7 +66,7 @@ namespace Kennedy.Crawler.Filters
             {
                 if(rule.IsMatch(url))
                 {
-                    return new BlockResult(false, "Blocked by rule:\t" + rule.Definition);
+                    return new BlockResult(false, "Matches Block List", rule.Definition);
                 }
             }
 
@@ -82,7 +80,7 @@ namespace Kennedy.Crawler.Filters
             {
                 if(rule.IsMatch(url))
                 {
-                    return new BlockResult(false, "Blocked by rule:\t" + rule.Definition);
+                    return new BlockResult(false, "Matches Block List", rule.Definition);
                 }
             }
             return BlockResult.Allowed;
