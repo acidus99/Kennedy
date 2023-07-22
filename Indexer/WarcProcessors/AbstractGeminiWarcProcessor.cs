@@ -51,7 +51,7 @@ namespace Kennedy.Indexer.WarcProcessors
 
                     if (!result.IsAllowed)
                     {
-                        File.AppendAllText("/tmp/deny.txt", result.Reason + "\n");
+                        //File.AppendAllText("/tmp/deny.txt", result.Reason + "\n");
                         return null;
                     }
                 }

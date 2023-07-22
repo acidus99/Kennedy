@@ -50,8 +50,6 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
         wrapperDB.StoreResponse(parsedResponse);
     }
 
-
-
     /// <summary>
     /// Writes a statistics file to the archive output directory
     /// </summary>
