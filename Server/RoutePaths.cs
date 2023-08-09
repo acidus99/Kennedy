@@ -53,7 +53,11 @@ namespace Kennedy.Server
             => $"{UrlInfoRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";
 
         public static string ViewUrlHistory(GeminiUrl url)
-            => $"{ViewUrlHistoryRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";
+            => ViewUrlHistory(url.NormalizedUrl);
+
+        public static string ViewUrlHistory(string url)
+            => $"{ViewUrlHistoryRoute}?{HttpUtility.UrlEncode(url)}";
+
 
     }
 }
