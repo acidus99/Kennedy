@@ -18,11 +18,6 @@ namespace Kennedy.Server.Controllers
             view.Render();
         }
 
-        public static void Redirect(GeminiRequest request, Response response, GeminiServer app)
-        {
-            response.Redirect("/archive/");
-        }
-
         public static void Search(GeminiRequest request, Response response, GeminiServer app)
         {
             if (!request.Url.HasQuery)
