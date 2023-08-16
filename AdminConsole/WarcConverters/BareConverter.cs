@@ -25,7 +25,7 @@ namespace Kennedy.AdminConsole.WarcConverters
             db = new DocumentDbContext(CrawlLocation);
         }
 
-        protected override string ConverterName => "Domains Table (no backing store)";
+        protected override string ConverterName => "Documents Table (no backing store)";
 
         protected override void ConvertCrawl()
         {
