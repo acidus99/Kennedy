@@ -16,18 +16,6 @@ namespace Kennedy.Archive
             }
         }
 
-        public static byte[] Compressz(byte[] data)
-        {
-            using (var compressedStream = new MemoryStream())
-            using (var zipStream = new GZipStream(compressedStream, CompressionLevel.SmallestSize))
-            {
-                zipStream.Write(data, 0, data.Length);
-                zipStream.Close();
-                return compressedStream.ToArray();
-            }
-        }
-
-
         public static byte[] Decompress(byte[] data)
         {
             using (var compressedStream = new MemoryStream(data))
