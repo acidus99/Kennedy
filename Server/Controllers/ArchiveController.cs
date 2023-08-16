@@ -25,6 +25,14 @@ namespace Kennedy.Server.Controllers
                 response.Input("Search for URLs containing");
                 return;
             }
+
+            //if they are searching for a fully qualified URL, redirect them
+            if(request.Url.Query.ToLower().StartsWith("gemini://"))
+            {
+                response.Redirect(RoutePaths.ViewUrlHistory(request.Url.Query));
+                return;
+            }
+
             var view = new SearchResultsView(request, response, app);
             view.Render();
         }

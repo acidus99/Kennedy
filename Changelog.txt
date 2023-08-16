@@ -20,3 +20,4 @@
 - Feature: Add site: scope and filetype: scopes
 - Feature: Show simple date, mimetype, redirects, and status code in URL history view
 - Fixed: Added message is snapshot is truncated
+- Feature: Show URL history view if searching archive for a fully qualified URL
