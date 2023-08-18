@@ -4,8 +4,7 @@ using Kennedy.Warc;
 namespace Kennedy.AdminConsole.WarcConverters
 {
     /// <summary>
-    /// Converts the legacy TSV with response bodies stored in the directory-based storage system
-    /// to WARC records
+    /// Converts the legacy-A crawl format into a WARC file
     /// </summary>
 	public class LegacyAConverter : AbstractConverter
     {
