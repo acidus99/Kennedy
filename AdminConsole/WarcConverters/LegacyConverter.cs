@@ -24,7 +24,7 @@ namespace Kennedy.AdminConsole.WarcConverters
             //The legacy log.tsv format did not store the capture time for individual requests/responses
             //however we can get the time the crawl stated via the filename. That will be stored here
             string recoveredTime = GrabTime(crawlLocation);
-            Captured = DateTime.ParseExact(recoveredTime, "yyyy-MM-dd (hhmmss)", null);
+            Captured = DateTime.ParseExact(recoveredTime, "yyyy-MM-dd (HHmmss)", null);
         }
 
         static string GrabTime(string crawlLocation)
