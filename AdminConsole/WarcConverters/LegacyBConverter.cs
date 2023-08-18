@@ -4,7 +4,7 @@ using Kennedy.Warc;
 namespace Kennedy.AdminConsole.WarcConverters
 {
     /// <summary>
-    /// Converts the legacy-A crawl format into a WARC file
+    /// Converts the legacy-B crawl format into a WARC file
     /// </summary>
 	public class LegacyBConverter : AbstractConverter
 	{
@@ -13,7 +13,7 @@ namespace Kennedy.AdminConsole.WarcConverters
         /// </summary>
         DateTime Captured;
 
-        protected override string ConverterName => "Legacy log.tsv + directory-based storage system";
+        protected override string ConverterName => "Legacy-B";
 
         public LegacyBConverter(GeminiWarcCreator warcCreator, string crawlLocation)
             :base(warcCreator, crawlLocation)
