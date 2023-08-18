@@ -12,13 +12,13 @@ namespace Kennedy.AdminConsole.WarcConverters
 	public class DocumentConverter : AbstractConverter
     {
         DocumentDbContext db;
-        IDocumentStore documentStore;
+        CrawlDbDocumentStore documentStore;
 
         public DocumentConverter(GeminiWarcCreator warcCreator, string crawlLocation)
             :base(warcCreator, crawlLocation)
 		{
 			CrawlLocation = crawlLocation;
-            documentStore = new DocumentStore(crawlLocation + "page-store/");
+            documentStore = new CrawlDbDocumentStore(crawlLocation + "page-store/");
             db = new DocumentDbContext(CrawlLocation);
         }
 

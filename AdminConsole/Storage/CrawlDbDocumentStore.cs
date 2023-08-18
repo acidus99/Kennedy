@@ -7,15 +7,16 @@ using Gemini.Net;
 namespace Kennedy.AdminConsole.Storage
 {
     /// <summary>
-    /// DocumentStore stores the contents of a URL, and retrieves it
-    /// Document store implemented using an Object Store, backed onto a disk
-    /// It it use
+    /// Get the contents of a URL based on the hash of the URL.
+    /// Implemented using an Object Store, backed onto a disk
+    ///
+    /// This was used by the crawl-db format of crawls
     /// </summary>
-    public class DocumentStore : IDocumentStore
+    public class CrawlDbDocumentStore
     {
         ObjectStore store;
 
-        public DocumentStore(string outputDir)
+        public CrawlDbDocumentStore(string outputDir)
         {
             store = new ObjectStore(outputDir);
         }
