@@ -32,6 +32,10 @@ namespace Kennedy.AdminConsole
             string warcOutputDir = workingDir + "WARCs/";
             string sourceDir = workingDir + "pre-WARC/";
 
+            ImportLegacyA(warcOutputDir, ResolveDir("~/HDD Inside/Kennedy-Work/pre-WARCs/crawls/legacy-A/2021-11-26 (003500)/"));
+
+            return;
+
             ImportFullDatabases(warcOutputDir, sourceDir + "crawldb - docs and domains/foo.txt");
 
             ImportPartialDatabase(warcOutputDir, sourceDir + "crawldb - docs only/2022-01-09/");
@@ -39,6 +43,18 @@ namespace Kennedy.AdminConsole
             ImportFullDatabasesNoPageStore(warcOutputDir,  sourceDir + "crawldb - bare db/foo.txt");
 
             ImportLegacyDatabases(warcOutputDir, sourceDir + "original-format/foo.txt");
+        }
+
+        static void ImportLegacyA(string warcOutputDir, string crawlLocation)
+        {
+            var warcFile = CreateWarcName(crawlLocation);
+            using (var warcCreator = new GeminiWarcCreator(warcOutputDir + warcFile))
+            {
+                warcCreator.WriteWarcInfo(GetWarcFields());
+
+                LegacyAConverter converter = new LegacyAConverter(warcCreator, crawlLocation);
+                converter.WriteToWarc();
+            }
         }
 
         /// <summary>
@@ -137,7 +153,6 @@ namespace Kennedy.AdminConsole
         {
             return Path.GetDirectoryName(crawlLocation)!.Split(Path.DirectorySeparatorChar).Reverse().First() + ".warc";
         }
-
 
         private static string ResolveDir(string dir)
             => dir.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + '/');
