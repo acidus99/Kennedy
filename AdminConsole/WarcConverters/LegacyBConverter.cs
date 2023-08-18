@@ -4,10 +4,9 @@ using Kennedy.Warc;
 namespace Kennedy.AdminConsole.WarcConverters
 {
     /// <summary>
-    /// Converts the legacy TSV with response bodies stored in the directory-based storage system
-    /// to WARC records
+    /// Converts the legacy-A crawl format into a WARC file
     /// </summary>
-	public class LegacyConverter : AbstractConverter
+	public class LegacyBConverter : AbstractConverter
 	{
         /// <summary>
         /// When this crawl was run
@@ -16,7 +15,7 @@ namespace Kennedy.AdminConsole.WarcConverters
 
         protected override string ConverterName => "Legacy log.tsv + directory-based storage system";
 
-        public LegacyConverter(GeminiWarcCreator warcCreator, string crawlLocation)
+        public LegacyBConverter(GeminiWarcCreator warcCreator, string crawlLocation)
             :base(warcCreator, crawlLocation)
 		{
 			CrawlLocation = crawlLocation;
