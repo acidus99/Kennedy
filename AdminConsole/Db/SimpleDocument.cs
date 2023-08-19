@@ -18,8 +18,6 @@ namespace Kennedy.AdminConsole.Db
 
         public DateTime FirstSeen { get; set; }
 
-        public int ErrorCount { get; set; } = 0;
-
         [MaxLength(1024)]
         [Required]
         public string Url { get; set; } = "";
@@ -45,9 +43,6 @@ namespace Kennedy.AdminConsole.Db
 
         public ConnectStatus ConnectStatus { get; set; } = ConnectStatus.Unknown;
 
-        public long TrueID
-            => GeminiUrl.ID;
-
         [Required]
         public int Port { get; set; }
 
@@ -59,11 +54,6 @@ namespace Kennedy.AdminConsole.Db
         public string Meta { get; set; } = "";
 
         public string? MimeType { get; set; } = "";
-
-        public bool BodySkipped { get; set; }
-        
-        public bool BodySaved { get; set; } = false;
-
     }
 }
 
