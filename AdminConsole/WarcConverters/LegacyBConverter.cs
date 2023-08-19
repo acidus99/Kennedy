@@ -36,7 +36,7 @@ namespace Kennedy.AdminConsole.WarcConverters
             foreach (var line in File.ReadLines(CrawlLocation + "log.tsv"))
             {
                 RecordsProcessed++;
-                var fields = line.Split('\t', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                var fields = line.Split('\t', StringSplitOptions.TrimEntries);
                 if (fields.Length < 3 || fields[0] != "20")
                 {
                     continue;
@@ -44,6 +44,7 @@ namespace Kennedy.AdminConsole.WarcConverters
 
                 GeminiUrl url = new GeminiUrl(fields[2]);
                 int statusCode = Convert.ToInt32(fields[0]);
+                //its OK to have an empty meta, we will figure out MIME type later
                 string meta = fields[1];
 
                 byte[]? data = GetContentData(url);
@@ -59,13 +60,18 @@ namespace Kennedy.AdminConsole.WarcConverters
 
         private byte[]? GetContentData(GeminiUrl url)
         {
+
+            string path;
             try
             {
-                var path = GetPathForUrl(url);
+                path = GetPathForUrl(url);
                 return File.ReadAllBytes(path);
             }
-            catch (Exception)
-            { }
+            catch (Exception ex)
+            {
+                int xxx = 4;
+
+            }
             return null;
         }
 
@@ -73,7 +79,22 @@ namespace Kennedy.AdminConsole.WarcConverters
         {
             var dir = GetStorageDirectory(url);
             var file = GetStorageFilename(url);
-            return dir + file;
+
+            var path = dir + file;
+
+
+            //sanity check, are we trying to access a directory?
+            //then adjust it to be the index
+            if(Directory.Exists(path))
+            {
+                if (!path.EndsWith('/'))
+                {
+                    path += "/";
+                }
+                path += "index.gmi";
+            }
+
+            return path;
         }
 
         private string GetStorageDirectory(GeminiUrl url)
