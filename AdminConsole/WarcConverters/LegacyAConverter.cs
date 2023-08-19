@@ -18,8 +18,6 @@ namespace Kennedy.AdminConsole.WarcConverters
         public LegacyAConverter(GeminiWarcCreator warcCreator, string crawlLocation)
             : base(warcCreator, crawlLocation)
         {
-            CrawlLocation = crawlLocation;
-
             //The legacy log.tsv format did not store the capture time for individual requests/responses
             //however we can get the time the crawl stated via the filename. That will be stored here
             string recoveredTime = GrabTime(crawlLocation);
