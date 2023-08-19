@@ -107,7 +107,7 @@ namespace Kennedy.Warc
                 WarcInfoId = WarcInfoID,
                 TargetUri = url.Url
             };
-
+            SetBlockDigest(responseRecord);
             responseRecord.ConcurrentTo.Add(requestRecord.Id);
 
             //do we have a mime?
@@ -119,6 +119,11 @@ namespace Kennedy.Warc
             if (isTruncated)
             {
                 responseRecord.Truncated = "length";
+            }
+
+            if(bytes != null)
+            {
+                responseRecord.PayloadDigest = GetPayloadDigest(bytes);
             }
 
             Write(responseRecord);
@@ -182,9 +187,12 @@ namespace Kennedy.Warc
         }
 
         private string? GetPayloadDigest(GeminiResponse response)
-            => response.BodyBytes != null ?
-                GeminiParser.GetStrongHash(response.BodyBytes) :
-                null;
+            => GetPayloadDigest(response.BodyBytes);
+
+        private string? GetPayloadDigest(byte[]? bodyBytes)
+           => bodyBytes != null ?
+               GeminiParser.GetStrongHash(bodyBytes) :
+               null;
 
         private string? GetProtocolHeader(TlsConnectionInfo connection)
         {
