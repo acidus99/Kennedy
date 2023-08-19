@@ -34,7 +34,7 @@ public abstract class AbstractConverter
         ConvertCrawl();
         stopwatch.Stop();
         Console.WriteLine($"Completed!");
-        Console.WriteLine($"\tTime:\t{stopwatch.Elapsed.TotalSeconds}");
+        Console.WriteLine($"\tTime:\t{stopwatch.Elapsed.TotalSeconds} seconds");
         Console.WriteLine($"\tProcessed:\t{RecordsProcessed}");
         Console.WriteLine($"\tWritten:\t{RecordsWritten}");
     }
@@ -55,11 +55,6 @@ public abstract class AbstractConverter
 
     protected bool IsTruncated(SimpleDocument document)
     {
-        if (document.BodySkipped)
-        {
-            return true;
-        }
-
         if (document.Status == 20 && document.Meta.StartsWith("Requestor aborting due to reaching max download"))
         {
             return true;
