@@ -1,23 +1,10 @@
-﻿using System.Linq;
-
-using Microsoft.EntityFrameworkCore;
-using HashDepot;
-
-using Gemini.Net;
-
-using Kennedy.AdminConsole.WarcConverters;
+﻿using Kennedy.AdminConsole.WarcConverters;
 using Kennedy.Warc;
-
-using Kennedy.Archive;
-using Kennedy.Data;
-using Kennedy.Data.RobotsTxt;
-using Kennedy.SearchIndex;
-using Kennedy.SearchIndex.Models;
-using Kennedy.SearchIndex.Web;
 using Warc;
 
 namespace Kennedy.AdminConsole
 {
+
     class Program
     {
         static void Main(string[] args)
@@ -30,39 +17,15 @@ namespace Kennedy.AdminConsole
             }
 
             string warcOutputDir = workingDir + "WARCs/";
-            string sourceDir = workingDir + "pre-WARC/";
+            string sourceDir = workingDir + "pre-WARCs/";
 
-            ImportLegacyA(warcOutputDir, ResolveDir("~/HDD Inside/Kennedy-Work/pre-WARCs/crawls/legacy-A/2021-11-26 (003500)/"));
-
-            return;
-
-            ImportFullDatabases(warcOutputDir, sourceDir + "crawldb - docs and domains/foo.txt");
-
-            ImportPartialDatabase(warcOutputDir, sourceDir + "crawldb - docs only/2022-01-09/");
-
-            ImportFullDatabasesNoPageStore(warcOutputDir,  sourceDir + "crawldb - bare db/foo.txt");
-
-            ImportLegacyDatabases(warcOutputDir, sourceDir + "original-format/foo.txt");
+            ImportCrawl(ConverterType.LegacyA, warcOutputDir, sourceDir + "legacy-A/manifest.txt");
+            ImportCrawl(ConverterType.LegacyB, warcOutputDir, sourceDir + "legacy-B/manifest.txt");
+            ImportCrawl(ConverterType.LegacyC, warcOutputDir, sourceDir + "legacy-C/manifest.txt");
+            ImportCrawl(ConverterType.CrawlDb, warcOutputDir, sourceDir + "crawldb/manifest.txt");
         }
 
-        static void ImportLegacyA(string warcOutputDir, string crawlLocation)
-        {
-            var warcFile = CreateWarcName(crawlLocation);
-            using (var warcCreator = new GeminiWarcCreator(warcOutputDir + warcFile))
-            {
-                warcCreator.WriteWarcInfo(GetWarcFields());
-
-                LegacyAConverter converter = new LegacyAConverter(warcCreator, crawlLocation);
-                converter.WriteToWarc();
-            }
-        }
-
-        /// <summary>
-        /// Bulk imports Kennedy Search databases that have Documents, Domains, and are backed by a page-store
-        /// </summary>
-        /// <param name="warcOutputDir"></param>
-        /// <param name="manifest"></param>
-        static void ImportFullDatabases(string warcOutputDir, string manifest)
+        static void ImportCrawl(ConverterType type, string warcOutputDir, string manifest)
         {
             foreach (string crawlLocation in File.ReadLines(manifest))
             {
@@ -70,77 +33,31 @@ namespace Kennedy.AdminConsole
                 using (var warcCreator = new GeminiWarcCreator(warcOutputDir + warcFile))
                 {
                     warcCreator.WriteWarcInfo(GetWarcFields());
-
-                    AbstractConverter converter = new DomainConverter(warcCreator, crawlLocation);
-                    converter.WriteToWarc();
-
-                    converter = new DocumentConverter(warcCreator, crawlLocation);
+                    var converter = GetConverter(type, warcCreator, crawlLocation);
                     converter.WriteToWarc();
                 }
             }
         }
 
-        /// <summary>
-        /// Imports a Kennedy search database which has just a Documents table and is backed by a page-store
-        /// </summary>
-        /// <param name="warcOutputDir"></param>
-        /// <param name="manifest"></param>
-        static void ImportPartialDatabase(string warcOutputDir, string crawlLocation)
+        static AbstractConverter GetConverter(ConverterType type, GeminiWarcCreator warcCreator, string crawlLocation)
         {
-            var warcFile = CreateWarcName(crawlLocation);
-            using (var warcCreator = new GeminiWarcCreator(warcOutputDir + warcFile))
+            switch(type)
             {
-                warcCreator.WriteWarcInfo(GetWarcFields());
-                AbstractConverter converter= new DocumentConverter(warcCreator, crawlLocation);
-                converter.WriteToWarc();
+                case ConverterType.LegacyA:
+                    return new LegacyAConverter(warcCreator, crawlLocation);
+
+                case ConverterType.LegacyB:
+                    return new LegacyBConverter(warcCreator, crawlLocation);
+
+                case ConverterType.LegacyC:
+                    return new LegacyCConverter(warcCreator, crawlLocation);
+
+                case ConverterType.CrawlDb:
+                    return new CrawlDbConverter(warcCreator, crawlLocation);
             }
+
+            throw new ArgumentException("Unknown Converter Type", nameof(type));
         }
-
-        /// <summary>
-        /// Imports a Kennedy search database that doesn't have a backing page-store
-        /// </summary>
-        /// <param name="warcOutputDir"></param>
-        /// <param name="manifest"></param>
-        static void ImportFullDatabasesNoPageStore(string warcOutputDir, string manifest)
-        {
-            foreach (string crawlLocation in File.ReadLines(manifest))
-            {
-                var warcFile = CreateWarcName(crawlLocation);
-                using (var warcCreator = new GeminiWarcCreator(warcOutputDir + warcFile))
-                {
-                    warcCreator.WriteWarcInfo(GetWarcFields());
-
-                    //convert the domains
-                    AbstractConverter converter = new DomainConverter(warcCreator, crawlLocation);
-                    converter.WriteToWarc();
-                    
-                    converter = new BareConverter(warcCreator, crawlLocation);
-                    converter.WriteToWarc();
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// Bulk imports original format Kennedy Search databases (log.tsv) and the directory-based page-store
-        /// </summary>
-        /// <param name="warcOutputDir"></param>
-        /// <param name="manifest"></param>
-        static void ImportLegacyDatabases(string warcOutputDir, string manifest)
-        {
-            foreach (string crawlLocation in File.ReadLines(manifest))
-            {
-                var warcFile = CreateWarcName(crawlLocation);
-                using (var warcCreator = new GeminiWarcCreator(warcOutputDir + warcFile))
-                {
-                    warcCreator.WriteWarcInfo(GetWarcFields());
-
-                    AbstractConverter converter = new LegacyConverter(warcCreator, crawlLocation);
-                    converter.WriteToWarc();
-                }
-            }
-        }
-
         static WarcFields GetWarcFields()
             => new WarcFields
                     {
