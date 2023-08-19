@@ -16,9 +16,12 @@ namespace Kennedy.AdminConsole.Storage
     {
         ObjectStore store;
 
+        public bool Exists { get; set; }
+
         public CrawlDbDocumentStore(string outputDir)
         {
             store = new ObjectStore(outputDir);
+            Exists = Directory.Exists(outputDir);
         }
 
         public byte[] GetDocument(long urlID)
