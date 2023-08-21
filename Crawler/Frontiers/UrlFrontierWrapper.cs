@@ -55,6 +55,7 @@ namespace Kennedy.Crawler.Frontiers
                 }
             }
             UrlFrontier.AddSeed(seedUrl);
+            SeenUrlFilter.MarkAsSeen(seedUrl);
         }
 
         private void AddUrl(UrlFrontierEntry entry)

@@ -51,5 +51,15 @@ namespace Kennedy.Crawler.Filters
             seenCounter.Increment();
             return Denied;
         }
+
+        /// <summary>
+        /// Explicitly mark a URL as seen. Used wheen adding seeds to the frontier, since those URLs
+        /// don't go through the typical code paths
+        /// </summary>
+        /// <param name="url"></param>
+        public void MarkAsSeen(GeminiUrl url)
+        {
+            SeenUrls[url.ID] = true;
+        }
     }
 }
