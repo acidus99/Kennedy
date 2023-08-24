@@ -60,6 +60,9 @@ namespace Kennedy.AdminConsole.WarcConverters
             foreach (var doc in docDB.Documents)
             {
                 RecordsProcessed++;
+
+                //===== Validation
+
                 try
                 {
                     //some older crawls had bad URLs and ports in them
@@ -72,8 +75,13 @@ namespace Kennedy.AdminConsole.WarcConverters
                     continue;
                 }
 
-                ///====== Normalize the data
+                if(GeminiParser.IsSuccessStatus(doc.Status) && doc.Meta.Contains('\n'))
+                {
+                    //malformed meta, just skip it
+                    continue;
+                }
 
+                ///====== Normalize the data
                 //older crawls had a status of 0 if there was a connection error, so normalize that to our code 49
                 if (doc.Status == 0)
                 {
