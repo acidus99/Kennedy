@@ -32,7 +32,7 @@ namespace Kennedy.Indexer
             foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/all.txt")))
             {
                 //IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
-                IWarcProcessor processor = new ArchiveProcessor(outputDirectory);
+                IWarcProcessor processor = new ArchiveProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
                 ProcessWarc(inputWarc, processor);
             }
         }
