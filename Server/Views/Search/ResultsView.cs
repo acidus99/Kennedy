@@ -49,7 +49,7 @@ namespace Kennedy.Server.Views.Search
                 return;
             }
 
-            Response.WriteLine($"# '{query}' - 🔭 Kennedy Search");
+            Response.WriteLine($"# '{query}' - 🔭 Kennedy Search '\udcdc'");
             Response.WriteLine();
 
             ResultCount = SearchEngine.GetTextResultsCount(query);
@@ -119,6 +119,7 @@ namespace Kennedy.Server.Views.Search
             if (SearchResults != null)
             {
                 Response.WriteLine($"Showing {FormatCount(start)} - {FormatCount(start + SearchResults.Count - 1)} of {FormatCount(ResultCount)} results");
+                Response.WriteLine();
                 foreach (var result in SearchResults)
                 {
                     counter++;

@@ -16,6 +16,8 @@ namespace Kennedy.Crawler
 	/// </summary>
 	public class ResultsWriter
 	{
+        const int MaxUninterestingFileSize = 10 * 1024;
+
 		ConcurrentQueue<Tuple<GeminiResponse, TlsConnectionInfo?>> responses;
 		GeminiWarcCreator warcCreator;
 
@@ -57,9 +59,32 @@ namespace Kennedy.Crawler
 
 		private void WriteResponseToWarc(Tuple<GeminiResponse, TlsConnectionInfo?> response)
 		{
-			warcCreator.WriteSession(response.Item1, response.Item2);
+			var optimizedResponse = OptimizeForStoage(response.Item1);
+			warcCreator.WriteSession(optimizedResponse, response.Item2);
             Saved++;
         }
-	}
+
+        private GeminiResponse OptimizeForStoage(GeminiResponse response)
+        {
+            if (!response.HasBody || response.MimeType == null)
+            {
+                return response;
+            }
+
+            if(response.MimeType.StartsWith("text/") || response.MimeType.StartsWith("image/"))
+            {
+                return response;
+            }
+
+            if(response.BodySize > MaxUninterestingFileSize)
+            {
+                response.BodyBytes = response.BodyBytes!.Take(MaxUninterestingFileSize).ToArray();
+                response.IsBodyTruncated = true;
+            }
+
+            return response;
+        }
+
+    }
 }
 
