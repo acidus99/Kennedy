@@ -1,136 +1,132 @@
-#german news site which can lots of churning content
-gemini://taz.de/!
+# Rules:
+# There are 3 rule types:
+#
+# 1. Prefix rule: Any line with just a plain URL is a prefix rule. Any URL which starts with that line will be skipped
+# 	Example: "gemini://example.com/foo" will skip any URL starting with "gemini://example.com/foo"
+# 2. Sub Rule: Just like a prefix rule, but ends in the character "$" Any URL that starts with the line will be skipped, except an exact match. Example "gemini://example.com/$". This allows you to visit gemini://example.com/, but not visit subpages below gemini://example.com/
+# regex rule: starts with "regex:" prefix. Any URL matching the regex will be skipped. Use with care since regexes can be slow. Primarily used to catch git commits that are publicly available
 
-#more news
+## Source Repositories
+# Don't view specific commits or trees. This tends to index the most recent content, without making a copy of the entire source commit tree
+regex: \/commits?\/[a-fA-F0-9]{40,}
+regex: \/tree\/[a-zA-Z0-9]{40,}
+gemini://git.
+regex: \/git\/
+
+## Social media proxy
+#lots of churn and low value content, often poorly formatted for Gemini
+gemini://mastogem.remorse.us/$
+gemini://mastogem.picasoft.net/$
+gemini://vps01.rdelaage.ovh/$
+
+## New sites / Proxies
+# In general news sites are good to index/archive, since they content is coming from other sources, and it changes rapidly
+gemini://acidic.website/cgi-bin/npr/$
+# Poorly formatted for Gemini news site
+gemini://gemini.techrights.org/
+gemini://guardian.shit.cx/$
+# RSS feeds to various sites
+gemini://jpfox.fr/rss/
+gemini://rawtext.club/~sloum/geminews/$
+# German news site which can lots of churning content
+gemini://taz.de/$
 gemini://teapot.styx.org/yesterday/
+gemini://tobykurien.com/maverick/$
 
 
-#bonequest, huge amounts of low value content
-gemini://www.bonequest.com
+## Personally clips library someone's Firefox clips library. all HTTP stuff
+gemini://gemini.autonomy.earth/$
+gemini://iceworks.cc/z/$
 
-#alex stuff that is uses 44 rate limiting, which I don't support, so skip it
-gemini://communitywiki.org/
-gemini://campaignwiki.org
-gemini://alexschroeder.ch/
-
-gemini://vault.transjovian.org/
-
-#using 44 to tell me to slow down, but i dont have the logic to do that yet. so exclude
-gemini://yam655.com/
-
-#Radio stations
-gemini://thegonz.net:3965/stations/
-
-#git stuff for everything (* means match on all)
-gemini://git.*
-gemini://auragem.space/github/repo/
-
-# someone's Firefox clips library. all HTTP stuff
-gemini://gemini.autonomy.earth
+#russian stuff
+gemini://ake.crabdance.com/$
+gemini://ake.crabdance.com:1966/$
+gemini://gemlog.stargrave.org/$
 
 
-#endless stream on random numbers. We properly timeout, but not valuable content
-gemini://202x.moe/resonance
-gemini://acidic.website/cgi-bin/weather.tcl
+## Web Comic Proxies
+gemini://ecs.d2evs.net/proxy/oglaf.sh$
+gemini://ecs.d2evs.net/proxy/xkcd.sh$
+gemini://www.bonequest.com/$
 
-#russian mastidon stuff
-gemini://ake.crabdance.com:1966/channel/
-gemini://ake.crabdance.com:1966/message/
-
-
-gemini://ansi.hrtk.in/
-
-#Search engine
-gemini://auragem.space/searchengine/
-
-
-#hacker news proxy
-gemini://dioskouroi.xyz/top
-
-gemini://cadence.moe/chapo/
-gemini://caolan.uk/weather/
-gemini://carboncopy.xyz/cgi-bin/apache.gex/
-gemini://cfdocs.wetterberg.nu/
-gemini://chat.mozz.us/stream
-gemini://chat.mozz.us/submit
-
-gemini://drewdevault.com/cgi-bin/web.sh
-gemini://dw.schettler.net/
-gemini://ecs.d2evs.net/proxy/
-
-#gemini client torture test
-gemini://emacswiki.org/
-
+## Known not real hosts
+# I don't really need these, but no reason to visit something we know doesn't exit
 gemini://example.com/
 gemini://example.org/
-gemini://gemini.theuse.net/usenet-text/
-gemini://futagoza.gamiri.com/gmninkle/
-gemini://geddit.glv.one/c/
-gemini://geddit.glv.one/post
-gemini://geddit.pitr.ca/c/
-gemini://geddit.pitr.ca/post
-gemini://gem.benscraft.info/mailing-list
-gemini://gem.denarii.cloud/
-gemini://gem.garichankar.com/share_audio
-gemini://gemini.cabestan.tk/hn
-gemini://gemini.circumlunar.space/users/fgaz/calculator/
-gemini://gemini.marmaladefoo.com/cgi-bin/calc.cgi
-gemini://gemini.rob-bolton.co.uk/songs
+gemini://www.youtube.com/
 
-gemini://gemini.spam.works/users/dvn/archive/
-gemini://gemini.susa.net/cgi-bin/links_stu.lua
-gemini://gemini.susa.net/cgi-bin/search
-gemini://gemini.susa.net/cgi-bin/twitter
-gemini://gemini.susa.net/cgi-bin/vim-search
-gemini://gemini.techrights.org/
-gemini://gemini.thebackupbox.net/queryresponse
-gemini://gemini.thebackupbox.net/radio
-gemini://gemini.zachdecook.com/cgi-bin/ccel.sh
-gemini://gemiprox.pollux.casa/
-gemini://gemiprox.pollux.casa:1966/
-gemini://gmi.si3t.ch/www-gem/
-gemini://godocs.io/
-gemini://going-flying.com/git/cgi/gemini.git/
-gemini://gthudson.xyz/cgi-bin/quietplace.cgi
-gemini://guardian.shit.cx/
-gemini://hellomouse.net/user-pages/handicraftsman/ietf/
-gemini://higeki.jp/radio
-gemini://hn.filiuspatris.net/
-gemini://houston.coder.town/search
-gemini://iceworks.cc/z/
-gemini://illegaldrugs.net/cgi-bin/
-gemini://jpfox.fr/rss/
-gemini://kamalatta.ddnss.de/
-gemini://kwiecien.us/gemcast/
+## Message Borard
+# I tend to filter message boards that are full of low quality/test/spam messages
+gemini://nixo.xyz/$
+# geddit. don't look at threads or comments
+gemini://geddit.glv.one/c/
+gemini://geddit.glv.one/s/
+gemini://geddit.pitr.ca/c/
+gemini://geddit.pitr.ca/s/
+
+## Infinite CGIs
+gemini://caolan.uk/weather/$
+# bitcoin chain data
+gemini://gem.denarii.cloud/
+gemini://gemini.circumlunar.space/users/fgaz/calculator/
+gemini://gemini.marmaladefoo.com/cgi-bin/calc
+gemini://illegaldrugs.net/cgi-bin/gemhltv$
+gemini://illegaldrugs.net/cgi-bin/news.php$
+
+## Security
+# On the rare chance that the crawler is running on a system with a capsule, we shouldn't access it
 gemini://localhost/
-gemini://marginalia.nu/search
-gemini://mastogem.picasoft.net/
-gemini://matrix.kiwifarms.net/
-gemini://mozz.us/files/gemini-links.gmi
-gemini://nixo.xyz/notify
-gemini://nixo.xyz/reply/
-gemini://orrg.clttr.info/orrg.pl
-gemini://pon.ix.tc/cgi-bin/youtube.cgi
-gemini://pon.ix.tc/youtube/
-gemini://rawtext.club/~sloum/geminews
-gemini://rawtext.club/~sloum/geminilist
-gemini://runjimmyrunrunyoufuckerrun.com/fonts/
-gemini://runjimmyrunrunyoufuckerrun.com/tmp/
-gemini://schmittstefan.de/de/nachrichten/
-gemini://si3t.ch/code/
-gemini://simplynews.metalune.xyz/
+
+## Giant mirrors
+# I try to make all mirrors available. However some mirrors are incredibly large, or contain lower value info
+#ietf drafts,
+gemini://hellomouse.net/user-pages/handicraftsman/ietf/
+#archive of dress patterns
+gemini://tweek.zyxxyz.eu/valentina/
+# go games, odd notation
+gemini://tilde.club/~filip/library/go/
+#Song archives
 gemini://songs.zachdecook.com/chord.svg/
 gemini://songs.zachdecook.com/song.gmi.php/
-gemini://szczezuja.flounder.online/git/
-gemini://tictactoe.lanterne.chilliet.eu/
-gemini://tilde.club/~filip/library/
+
+
+## Gemini Radio, skip ogg files
+regex: gemini:\/\/kwiecien\.us\/gemcast\/.+?\.ogg
+
+## 44 stuff
+# 44 has historically been handled poorly. So skip some sites that I know use it until I support it
+gemini://alexschroeder.ch/$
+gemini://campaignwiki.org/$
+gemini://communitywiki.org/$
+gemini://yam655.com/$
+
+## Hate
+# OMG WTF?
+gemini://matrix.kiwifarms.net/
+
+## Interactive Games
+# There are some games that are not properly walled off by robots.txt
+gemini://tictactoe.lanterne.chilliet.eu/$
+#choose your own adventure stories
+gemini://futagoza.gamiri.com/gmninkle/?
+
+## LEGACY RULES
+# These rules were inherited from older block lists use by other crawlers. Many of these don't exist any longer. These exist for filter when importing only the oldest of archives
+
+gemini://ansi.hrtk.in/$
+gemini://gem.garichankar.com/share_audio
+gemini://gemini.cabestan.tk/hn
+gemini://gemini.rob-bolton.co.uk/songs
+gemini://gemini.thebackupbox.net/queryresponse
+gemini://gemini.thebackupbox.net/radio
+gemini://gemini.theuse.net/usenet-text/
+gemini://gemiprox.pollux.casa/$
+gemini://gemiprox.pollux.casa:1966/$
+gemini://higeki.jp/radio
+gemini://hn.filiuspatris.net/$
+gemini://schmittstefan.de/de/nachrichten/$
+gemini://si3t.ch/code/
+gemini://simplynews.metalune.xyz/$
+#Radio stations
+gemini://thegonz.net:3965/$
 gemini://tilde.team/~orichalcumcosmonaut/darcs/
-gemini://tobykurien.com/maverick/
-gemini://tweek.zyxxyz.eu/valentina/
-gemini://vault.transjovian.org/
-gemini://vps01.rdelaage.ovh/
-gemini://wikipedia.geminet.org/
-gemini://wikipedia.geminet.org:1966/
-gemini://wp.glv.one/
-gemini://wp.pitr.ca/
-gemini://www.youtube.com/
