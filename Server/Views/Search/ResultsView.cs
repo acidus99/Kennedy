@@ -49,7 +49,7 @@ namespace Kennedy.Server.Views.Search
                 return;
             }
 
-            Response.WriteLine($"# '{query}' - 🔭 Kennedy Search '\udcdc'");
+            Response.WriteLine($"# '{query}' - 🔭 Kennedy Search");
             Response.WriteLine();
 
             ResultCount = SearchEngine.GetTextResultsCount(query);
