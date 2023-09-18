@@ -155,6 +155,7 @@ namespace Kennedy.Server.Views.Archive
             => archive.Snapshots
                 .Where(x => x.UrlId == url.ID)
                 .Include(x => x.Url)
+                .Where(x=>x.Url != null && x.Url.IsPublic)
                 .OrderBy(x => Math.Abs(x.Captured.Ticks - targetTime.Ticks))
                 .FirstOrDefault();
     }
