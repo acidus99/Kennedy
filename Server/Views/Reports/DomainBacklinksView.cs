@@ -33,9 +33,7 @@ namespace Kennedy.Server.Views.Reports
 
             if (!DomainExists(authority.protocol, authority.domain, authority.port))
             {
-                Response.WriteLine($"# ↩️ Backlinks Report");
-                Response.WriteLine($"Uknown domain '{authority.domain}'");
-                Response.WriteLine($"=> {RoutePaths.DomainBacklinksRoute} Try again");
+                RenderUnknownDomain(authority.domain);
                 return;
             }
 
@@ -76,6 +74,16 @@ namespace Kennedy.Server.Views.Reports
                 }
                 Response.WriteLine();
             }
+        }
+
+        private void RenderUnknownDomain(string domain)
+        {
+            Response.WriteLine($"# ↩️ Backlinks Report");
+            Response.WriteLine("Sorry, Kennedy has no information about this domain:");
+            Response.WriteLine($"```");
+            Response.WriteLine($"{domain}");
+            Response.WriteLine($"```");
+            Response.WriteLine($"=> {RoutePaths.DomainBacklinksRoute} Try another Domain");
         }
 
         //counts how many items in a row have the same url, starting from an index
