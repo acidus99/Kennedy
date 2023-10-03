@@ -154,25 +154,33 @@ public class HtmlReverser
 
 	private string GetLink(Uri url)
 	{
-		//create a wayback link from the linkTarget
-		WaybackUrl targetLink = new WaybackUrl(url);
-
-		//if not to mozz, just return the source
-		if (!targetLink.IsMozzUrl)
+		try
 		{
-			return targetLink.SourceUrl.AbsoluteUri;
+			//create a wayback link from the linkTarget
+			WaybackUrl targetLink = new WaybackUrl(url);
+
+			//if not to mozz, just return the source
+			if (!targetLink.IsMozzUrl)
+			{
+				return targetLink.SourceUrl.AbsoluteUri;
+			}
+
+			var geminiTarget = targetLink.GetProxiedUrl();
+
+			string href = geminiTarget.ToString();
+
+			//is it to the same as the origin?
+			if (geminiTarget.Authority == Origin.Authority)
+			{
+				href = geminiTarget.Url.PathAndQuery;
+			}
+			return href;
 		}
-
-		var geminiTarget = targetLink.GetProxiedUrl();
-
-		string href = geminiTarget.ToString();
-
-		//is it to the same as the origin?
-		if (geminiTarget.Authority == Origin.Authority)
+		catch (UriFormatException)
 		{
-			href = geminiTarget.Url.PathAndQuery;
+			//we could not create a wayback URL. This might be an weird mailto url or something else, so return the raw, full URL
+			return WaybackUrl.GetRawSourceUrl(url);
 		}
-		return href;
 	}
 }
 

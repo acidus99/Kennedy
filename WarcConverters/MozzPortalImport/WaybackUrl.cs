@@ -83,5 +83,24 @@ public class WaybackUrl
         string bareUrl = HttpUtility.UrlDecode(SourceUrl.AbsolutePath.Substring("/gemini/".Length));
         return new GeminiUrl("gemini://" + bareUrl);
     }
+
+	public static string GetRawSourceUrl(Uri url)
+	{
+        //skip us into the path, into the segement with the timestamp
+        var path = url.PathAndQuery.Substring(5);
+
+        var index = path.IndexOf('/');
+        if (index < 0)
+        {
+            throw new ArgumentException("Could not parse out source URL from wayback url. Could not find slash.", nameof(url));
+        }
+
+        if (index + 1 > path.Length)
+        {
+            throw new ArgumentException("Could not parse out source URL from wayback url. String too short.", nameof(url));
+        }
+
+		return path.Substring(index + 1);
+    }
 }
 
