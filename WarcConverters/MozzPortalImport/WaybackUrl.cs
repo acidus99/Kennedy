@@ -60,8 +60,12 @@ public class WaybackUrl
 		SourceUrl = new Uri(path.Substring(index + 1));
     }
 
+	/// <summary>
+	/// Is this a URL that is using the Mozz proxy?
+	/// Use hostname and path to Gemini proxy output to filter
+	/// </summary>
 	public bool IsMozzUrl
-		=> (SourceUrl.Host == "portal.mozz.us");
+		=> (SourceUrl.Host == "portal.mozz.us" && SourceUrl.AbsolutePath.StartsWith("/gemini/"));
 
 	public bool IsCertificateRequest
 		=> SourceUrl.Query.StartsWith("?crt=");
@@ -75,6 +79,7 @@ public class WaybackUrl
 		{
 			throw new ApplicationException("Attempting to get the Gemini URL for a wayback URL that does not point at mozz proxy.");
 		}
+
         string bareUrl = HttpUtility.UrlDecode(SourceUrl.AbsolutePath.Substring("/gemini/".Length));
         return new GeminiUrl("gemini://" + bareUrl);
     }
