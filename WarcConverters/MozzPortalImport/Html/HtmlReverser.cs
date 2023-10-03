@@ -36,7 +36,8 @@ public class HtmlReverser
 		{
 			if (child.NodeType != NodeType.Element && child.TextContent.Trim().Length > 0)
 			{
-				throw new ApplicationException("Got a non empty, non element, node");
+				//this only happens on 2 old CAPCOM responses. I can ignore them
+				continue;
 			}
 
 			if(child is not IElement)
@@ -154,33 +155,52 @@ public class HtmlReverser
 
 	private string GetLink(Uri url)
 	{
-		try
-		{
-			//create a wayback link from the linkTarget
-			WaybackUrl targetLink = new WaybackUrl(url);
 
-			//if not to mozz, just return the source
-			if (!targetLink.IsMozzUrl)
+		if (url.Host == "web.archive.org") {
+
+			GeminiUrl geminiTarget;
+
+			//3 older pages have, for some reason, the mozz convert path on the web.archive.org hostname. URL rewritting problem on their end maybe?
+			//hack around it 
+			if (url.AbsolutePath.StartsWith("/gemini/"))
 			{
-				return targetLink.SourceUrl.AbsoluteUri;
+				string bareUrl = HttpUtility.UrlDecode(url.AbsolutePath.Substring("/gemini/".Length));
+                geminiTarget = new GeminiUrl("gemini://" + bareUrl);
 			}
-
-			var geminiTarget = targetLink.GetProxiedUrl();
-
-			string href = geminiTarget.ToString();
-
-			//is it to the same as the origin?
-			if (geminiTarget.Authority == Origin.Authority)
+			else
 			{
-				href = geminiTarget.Url.PathAndQuery;
-			}
-			return href;
-		}
-		catch (UriFormatException)
-		{
-			//we could not create a wayback URL. This might be an weird mailto url or something else, so return the raw, full URL
-			return WaybackUrl.GetRawSourceUrl(url);
-		}
-	}
+                try
+                {
+                    //create a wayback link from the linkTarget
+                    WaybackUrl targetLink = new WaybackUrl(url);
+
+                    //if not to mozz, just return the source
+                    if (!targetLink.IsMozzUrl)
+                    {
+                        return targetLink.SourceUrl.AbsoluteUri;
+                    }
+                    geminiTarget = targetLink.GetProxiedUrl();
+                }
+                catch (UriFormatException)
+                {
+                    //we could not create a wayback URL. This might be an weird mailto url or something else, so return the raw, full URL
+                    return WaybackUrl.GetRawSourceUrl(url);
+                }
+            }
+
+            string href = geminiTarget.ToString();
+
+            //is it to the same as the origin?
+            if (geminiTarget.Authority == Origin.Authority)
+            {
+                href = geminiTarget.Url.PathAndQuery;
+            }
+            return href;
+
+        }
+
+		//if its not to the wayback machine return the full thing
+        return url.OriginalString;
+    }
 }
 
