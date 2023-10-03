@@ -19,10 +19,31 @@ namespace Kennedy.AdminConsole
             string warcOutputDir = workingDir + "WARCs/";
             string sourceDir = workingDir + "pre-WARCs/";
 
-            ImportCrawl(ConverterType.LegacyA, warcOutputDir, sourceDir + "legacy-A/manifest.txt");
-            ImportCrawl(ConverterType.LegacyB, warcOutputDir, sourceDir + "legacy-B/manifest.txt");
-            ImportCrawl(ConverterType.LegacyC, warcOutputDir, sourceDir + "legacy-C/manifest.txt");
-            ImportCrawl(ConverterType.CrawlDb, warcOutputDir, sourceDir + "crawldb/manifest.txt");
+            ReadWarc();
+
+            //ImportCrawl(ConverterType.LegacyA, warcOutputDir, sourceDir + "legacy-A/manifest.txt");
+            //ImportCrawl(ConverterType.LegacyB, warcOutputDir, sourceDir + "legacy-B/manifest.txt");
+            //ImportCrawl(ConverterType.LegacyC, warcOutputDir, sourceDir + "legacy-C/manifest.txt");
+            //ImportCrawl(ConverterType.CrawlDb, warcOutputDir, sourceDir + "crawldb/manifest.txt");
+        }
+
+        static void ReadWarc()
+        {
+
+            WarcStats stats = new WarcStats();
+
+            foreach (var file in Directory.GetFiles("/Users/billy/HDD Inside/Kennedy-Work/WARCs/", "*.warc").OrderBy(x => x))
+            {
+                string filename = Path.GetFileName(file);
+                Console.WriteLine("Working on " + file);
+                stats.Scan(file);
+
+                //WarcTruncater.Fix(file, $"/Users/billy/HDD Inside/Kennedy-Work/better-WARCs/{filename}");
+            }
+            stats.WriteResults("/Users/billy/HDD Inside/Kennedy-Work/mime-stats.csv");
+
+
+            int x = 4;
         }
 
         static void ImportCrawl(ConverterType type, string warcOutputDir, string manifest)
@@ -73,6 +94,5 @@ namespace Kennedy.AdminConsole
 
         private static string ResolveDir(string dir)
             => dir.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + '/');
-
     }
 }

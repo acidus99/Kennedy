@@ -5,23 +5,26 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <WarningsAsErrors>Nullable</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Db\" />
     <None Remove="Storage\" />
+    <None Remove="WarcConverters\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Db\" />
     <Folder Include="Storage\" />
+    <Folder Include="WarcConverters\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
-    <ProjectReference Include="..\Warc\Kennedy.Warc.csproj" />
-    <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
     <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
-    <ProjectReference Include="..\Archive\Kennedy.Archive.csproj" />
+    <ProjectReference Include="..\Warc\Kennedy.Warc.csproj" />
     <ProjectReference Include="..\..\Warc.Net\Warc.Net.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.11" />
   </ItemGroup>
 </Project>
