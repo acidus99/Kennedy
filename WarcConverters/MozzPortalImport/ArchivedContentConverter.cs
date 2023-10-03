@@ -40,7 +40,8 @@ public class ArchivedContentConverter
         {
             if (mimeType == "text/plain")
             {
-                throw new ApplicationException($"Unhandled Proxied Content: Raw Request with text/plain response");
+                //force it to be treated as text/gemini
+                return ParseBinaryResponse(waybackUrl, "text/gemini", response.Content);
             }
         }
 
@@ -50,7 +51,7 @@ public class ArchivedContentConverter
                 return ParseHtmlResponse(waybackUrl, ReadAllText(response.Content));
 
             default:
-                return ParseBinaryResponse(waybackUrl, response.Content);
+                return ParseBinaryResponse(waybackUrl, mimeType, response.Content);
         }
     }
 
@@ -66,10 +67,9 @@ public class ArchivedContentConverter
         return mozzHtmlConverter.GetContent();
     }
 
-    private ArchivedContent ParseBinaryResponse(WaybackUrl waybackUrl, HttpContent content)
+    private ArchivedContent ParseBinaryResponse(WaybackUrl waybackUrl, string mimetype, HttpContent content)
     {
-        string responseLine = $"20 {content.Headers.ContentType!.MediaType}";
-
+        string responseLine = $"20 {mimetype}";
         GeminiResponse geminiResponse = new GeminiResponse(waybackUrl.GetProxiedUrl(), responseLine);
         geminiResponse.BodyBytes = content.ReadAsByteArrayAsync().Result;
         return new ArchivedContent
@@ -78,5 +78,4 @@ public class ArchivedContentConverter
             GeminiResponse = geminiResponse
         };
     }
-
 }
