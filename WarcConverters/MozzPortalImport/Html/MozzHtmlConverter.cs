@@ -123,7 +123,7 @@ public class MozzHtmlConverter
                 return ParsePlainText(response);
 
             default:
-                throw new ApplicationException("Unhandled Content Type in Gemini Meta!");
+                throw new ApplicationException($"Unhandled Content Type in Gemini Meta: {response.MimeType}");
         }
     }
 
