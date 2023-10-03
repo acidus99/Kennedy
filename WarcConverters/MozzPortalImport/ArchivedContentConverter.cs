@@ -31,7 +31,9 @@ public class ArchivedContentConverter
     {
         if (response.Content.Headers.ContentType == null || response.Content.Headers.ContentType.MediaType == null)
         {
-            throw new ApplicationException("Response does not have a Content-Type header");
+            //there are 7 odd files that made mozz's portal send an invalid content type (2 semi colons in it).
+            //force it to be treated as text/gemini
+            return ParseBinaryResponse(waybackUrl, "text/gemini", response.Content);
         }
 
         string mimeType = response.Content.Headers.ContentType.MediaType;
