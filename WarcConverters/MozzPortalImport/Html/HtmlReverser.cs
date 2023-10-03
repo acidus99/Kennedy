@@ -142,39 +142,37 @@ public class HtmlReverser
 
 	private void ConvertBlockquote(IElement element)
 	{
-            //Mozz's blockquotes can have new lines, so split them and do multiple gemtext blockquote lines
-            foreach (var line in element.TextContent.Split('\n'))
+		//Mozz's blockquotes can have new lines, so split them and do multiple gemtext blockquote lines
+		foreach (var line in element.TextContent.Split('\n'))
 		{
 			Buffer.AppendLine($"> {FormatText(line)}");
 		}
-        }
+	}
 
 	private string FormatText(string s)
 		=> HttpUtility.HtmlDecode(s);
 
-        private string GetLink(Uri url)
-        {
-
+	private string GetLink(Uri url)
+	{
 		//create a wayback link from the linkTarget
 		WaybackUrl targetLink = new WaybackUrl(url);
 
 		//if not to mozz, just return the source
-		if(!targetLink.IsMozzUrl)
+		if (!targetLink.IsMozzUrl)
 		{
 			return targetLink.SourceUrl.AbsoluteUri;
 		}
 
 		var geminiTarget = targetLink.GetProxiedUrl();
 
-            string href = geminiTarget.ToString();
+		string href = geminiTarget.ToString();
 
-            //is it to the same as the origin?
-            if (geminiTarget.Authority == Origin.Authority)
-            {
-                href = geminiTarget.Url.PathAndQuery;
-            }
+		//is it to the same as the origin?
+		if (geminiTarget.Authority == Origin.Authority)
+		{
+			href = geminiTarget.Url.PathAndQuery;
+		}
 		return href;
-        }
-
-    }
+	}
+}
 
