@@ -1,4 +1,4 @@
-﻿namespace Kennedy.WarcConverters.WarcConverters;
+﻿namespace Kennedy.WarcConverters;
 
 using Gemini.Net;
 using Kennedy.Warc;
