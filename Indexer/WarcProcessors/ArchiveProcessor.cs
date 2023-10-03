@@ -3,7 +3,7 @@
 using System;
 using System.Linq;
 using System.Text.Json;
-using Warc;
+using WarcDotNet;
 
 using Gemini.Net;
 

@@ -7,7 +7,7 @@ using System.Text;
 using Gemini.Net;
 using Kennedy.Data;
 
-using Warc;
+using WarcDotNet;
 
 namespace Kennedy.Warc
 {

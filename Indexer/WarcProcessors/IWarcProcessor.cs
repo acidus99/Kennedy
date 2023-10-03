@@ -1,6 +1,6 @@
 ﻿using System;
 
-using Warc;
+using WarcDotNet;
 
 namespace Kennedy.Indexer.WarcProcessors
 {

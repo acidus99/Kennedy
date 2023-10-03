@@ -1,17 +1,14 @@
 ﻿namespace Kennedy.WarcConverters;
 
 using System;
+using WarcDotNet;
 using Kennedy.Warc;
-using Kennedy.WarcConverters.WarcConverters;
-using Warc;
 
-
-
-	/// <summary>
-	/// Converts legacy crawls into WARCs
-	/// </summary>
-	public static class CrawlConverter
-	{
+/// <summary>
+/// Converts legacy crawls into WARCs
+/// </summary>
+public static class CrawlConverter
+{
     public static void Convert()
     {
         string workingDir = ResolveDir("~/HDD Inside/Kennedy-Work/");
@@ -34,7 +31,6 @@ using Warc;
 
     static void ReadWarc()
     {
-
         WarcStats stats = new WarcStats();
 
         foreach (var file in Directory.GetFiles(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs"), "*.warc").OrderBy(x => x))

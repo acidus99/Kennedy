@@ -1,7 +1,7 @@
 ﻿using System;
 
 using Gemini.Net;
-using Warc;
+using WarcDotNet;
 
 namespace Kennedy.Warc
 {

@@ -1,5 +1,5 @@
 ﻿using System;
-using Warc;
+using WarcDotNet;
 
 using Gemini.Net;
 using Kennedy.Data;

@@ -3,7 +3,7 @@
 using Gemini.Net;
 using Kennedy.Warc;
 
-using Warc;
+using WarcDotNet;
 
 using System.Collections.Concurrent;
 using System.Collections.Specialized;

@@ -8,7 +8,7 @@ using Kennedy.SearchIndex.Search;
 
 using Kennedy.Warc;
 
-using Warc;
+using WarcDotNet;
 
 using Kennedy.Indexer.WarcProcessors;
 using System.Diagnostics;
