@@ -1,11 +1,9 @@
-﻿using System;
-namespace Kennedy.WarcConverters.WarcConverters
+﻿namespace Kennedy.WarcConverters;
+
+public enum ConverterType
 {
-	public enum ConverterType
-	{
-		LegacyA,
-		LegacyB,
-		LegacyC,
-		CrawlDb
-	}
+	LegacyA,
+	LegacyB,
+	LegacyC,
+	CrawlDb
 }

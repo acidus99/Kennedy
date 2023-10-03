@@ -1,4 +1,4 @@
-﻿namespace Kennedy.WarcConverters.WarcConverters;
+﻿namespace Kennedy.WarcConverters;
 
 using System;
 using System.Diagnostics;
