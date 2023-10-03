@@ -21,7 +21,6 @@ public class MozzHtmlConverter
 
     GeminiUrl ProxiedUrl;
 
-
     public MozzHtmlConverter(WaybackUrl waybackUrl, string html)
     {
         if(!waybackUrl.IsMozzUrl)
@@ -94,7 +93,14 @@ public class MozzHtmlConverter
 
     private string GetResponseLine()
     {
-        var cells = DocumentRoot.QuerySelectorAll("table.response-table td").ToArray();
+        //grab the first table in the HTML
+        var table = DocumentRoot.QuerySelector("table");
+        if(table == null)
+        {
+            throw new ApplicationException($"Could not find a table in the parsed HTML.");
+        }
+
+        var cells = table.QuerySelectorAll("td").ToArray();
         if (cells.Length != 4)
         {
             throw new ApplicationException($"Did not find 4 cells in response table! Found {cells.Length}");
