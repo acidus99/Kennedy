@@ -4,6 +4,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        CrawlConverter.Convert();
+        MozzImporter.Import();
+        //CrawlConverter.Convert();
     }
 }

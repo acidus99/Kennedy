@@ -7,7 +7,7 @@ using Kennedy.WarcConverters.MozzPortalImport;
 
 class MozzImporter
 {
-    static void Import(string[] args)
+    public static void Import()
     {
         string urlsFile =  ResolveDir("~/tmp/mozz-dump/test-urls.txt");
 
