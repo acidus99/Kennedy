@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Kennedy.AdminConsole.WarcConverters
+namespace Kennedy.WarcConverters.WarcConverters
 {
 	public enum ConverterType
 	{

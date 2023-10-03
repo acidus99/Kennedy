@@ -1,9 +1,9 @@
-﻿namespace Kennedy.AdminConsole.WarcConverters;
+﻿namespace Kennedy.WarcConverters.WarcConverters;
 
 using System;
 using System.Diagnostics;
 using Kennedy.Warc;
-using Kennedy.AdminConsole.Db;
+using Kennedy.WarcConverters.Db;
 
 public abstract class AbstractConverter
 {

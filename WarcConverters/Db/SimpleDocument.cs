@@ -3,7 +3,7 @@ using Gemini.Net;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Kennedy.AdminConsole.Db
+namespace Kennedy.WarcConverters.Db
 {
     public class SimpleDocument
     {

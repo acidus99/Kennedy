@@ -1,8 +1,8 @@
-﻿using Kennedy.AdminConsole.WarcConverters;
+﻿using Kennedy.WarcConverters.WarcConverters;
 using Kennedy.Warc;
 using Warc;
 
-namespace Kennedy.AdminConsole
+namespace Kennedy.WarcConverters
 {
 
     class Program

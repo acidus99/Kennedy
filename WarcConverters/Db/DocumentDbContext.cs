@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 
-namespace Kennedy.AdminConsole.Db
+namespace Kennedy.WarcConverters.Db
 {
     //only support documents
 	public class DocumentDbContext : DbContext

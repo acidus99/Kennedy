@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 
-namespace Kennedy.AdminConsole.Db
+namespace Kennedy.WarcConverters.Db
 {
     /// <summary>
     /// Simple class to support querying the Domains table in older crawl databases

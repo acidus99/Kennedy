@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Kennedy.AdminConsole.Db
+namespace Kennedy.WarcConverters.Db
 {
     /// <summary>
     /// Status of the network connection made for a Gemini request.

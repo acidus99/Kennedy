@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using Kennedy.Data;
 using Gemini.Net;
 
-namespace Kennedy.AdminConsole.Storage
+namespace Kennedy.WarcConverters.Storage
 {
     /// <summary>
     /// Get the contents of a URL based on the hash of the URL.

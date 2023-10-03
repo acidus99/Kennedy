@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Gemini.Net;
 
-namespace Kennedy.AdminConsole.Storage
+namespace Kennedy.WarcConverters.Storage
 {
     /// <summary>
     /// disk-backed KV store, using a directory structure

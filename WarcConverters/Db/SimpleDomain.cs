@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Gemini.Net;
 using Microsoft.EntityFrameworkCore;
 
-namespace Kennedy.AdminConsole.Db
+namespace Kennedy.WarcConverters.Db
 {
     [Table("Domains")]
     public class SimpleDomain

@@ -1,9 +1,9 @@
 ﻿using Gemini.Net;
 using Kennedy.Warc;
 
-using Kennedy.AdminConsole.Storage;
+using Kennedy.WarcConverters.Storage;
 
-namespace Kennedy.AdminConsole.WarcConverters
+namespace Kennedy.WarcConverters.WarcConverters
 {
     /// <summary>
     /// Converts the legacy-C crawl format into a WARC file

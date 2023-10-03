@@ -1,10 +1,10 @@
 ﻿using System.Text;
 using Gemini.Net;
-using Kennedy.AdminConsole.Db;
-using Kennedy.AdminConsole.Storage;
+using Kennedy.WarcConverters.Db;
+using Kennedy.WarcConverters.Storage;
 using Kennedy.Warc;
 
-namespace Kennedy.AdminConsole.WarcConverters
+namespace Kennedy.WarcConverters.WarcConverters
 {
     /// <summary>
     /// Converts the "Documents" table from Kennedy Crawls into WARC files with a
