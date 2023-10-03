@@ -36,7 +36,7 @@ public class MozzHtmlConverter
         DocumentRoot = ParseToRoot(waybackUrl.Url, html);
     }
 
-    public ArchivedContent GetContent()
+    public ArchivedContent? GetContent()
     {
         if (WaybackUrl.IsCertificateRequest)
         {
@@ -74,9 +74,16 @@ public class MozzHtmlConverter
         };
     }
 
-    private ArchivedContent ParseGeminiResponse()
+    private ArchivedContent? ParseGeminiResponse()
     {
-        string responseLine = GetResponseLine();
+
+        string? responseLine = GetResponseLine();
+        if(responseLine == null)
+        {
+            //could not find a status code or meta, so there is nothing we can recover
+            return null;
+        }
+
         response = new GeminiResponse(ProxiedUrl, responseLine);
 
         response.RequestSent = WaybackUrl.Captured;
@@ -98,7 +105,7 @@ public class MozzHtmlConverter
         };
     }
 
-    private string GetResponseLine()
+    private string? GetResponseLine()
     {
         //grab the first table in the HTML
         var table = DocumentRoot.QuerySelector("table");
@@ -113,7 +120,14 @@ public class MozzHtmlConverter
             throw new ApplicationException($"Did not find 4 cells in response table! Found {cells.Length}");
         }
 
-        var statusCode = cells[1].TextContent.Trim().Substring(0, 2);
+        var statusCode = cells[1].TextContent.Trim();
+
+        if(string.IsNullOrEmpty(statusCode))
+        {
+            return null;
+        }
+
+        statusCode = statusCode.Substring(0, 2);
         var meta = cells[3].TextContent.Trim();
         return $"{statusCode} {meta}";
     }

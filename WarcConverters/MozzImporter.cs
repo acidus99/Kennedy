@@ -16,9 +16,9 @@ class MozzImporter
         StreamWriter logGood = new StreamWriter(File.Create(ResolveDir("~/tmp/mozz-dump/good-results.txt")));
         StreamWriter logBad = new StreamWriter(File.Create(ResolveDir("~/tmp/mozz-dump/bad-resultes.txt")));
 
-        var lines = File.ReadLines(urlsFile);
+        var lines = File.ReadLines(urlsFile).ToArray();
         int counter = 0;
-        int max = lines.Count();
+        int max = lines.Length;
         foreach (string url in lines)
         {
             counter++;
@@ -34,20 +34,28 @@ class MozzImporter
 
             try
             {
-                ArchivedContent content = contentConverter.Convert(waybackUrl);
+                ArchivedContent? content = contentConverter.Convert(waybackUrl);
                 string msg = "";
 
-                if (content.GeminiResponse != null)
+                if (content == null)
                 {
-                    msg = content.GeminiResponse.ToString();
+                    Console.WriteLine("No content can be recovered");
                 }
-                else if (content.Certificate != null)
+                else
                 {
-                    msg = "Certificate: " + content.Certificate.Subject;
+
+                    if (content.GeminiResponse != null)
+                    {
+                        msg = content.GeminiResponse.ToString();
+                    }
+                    else if (content.Certificate != null)
+                    {
+                        msg = "Certificate: " + content.Certificate.Subject;
+                    }
+                    Console.WriteLine(msg);
+                    logGood.WriteLine($"{url} {waybackUrl.GetProxiedUrl()} {msg}");
+                    logGood.Flush();
                 }
-                Console.WriteLine(msg);
-                logGood.WriteLine($"{url} {waybackUrl.GetProxiedUrl()} {msg}");
-                logGood.Flush();
             }
             catch (Exception ex)
             {
