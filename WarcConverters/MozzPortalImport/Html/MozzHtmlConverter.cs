@@ -1,6 +1,7 @@
 ﻿namespace Kennedy.WarcConverters.MozzPortalImport;
 
 using System;
+using System.Web;
 using System.Security.Cryptography.X509Certificates;
 
 using System.Text;
@@ -118,6 +119,9 @@ public class MozzHtmlConverter
             case "text/gemini":
                 return ParseGemtext(response);
 
+            case "text/plain":
+                return ParsePlainText(response);
+
             default:
                 throw new ApplicationException("Unhandled Content Type in Gemini Meta!");
         }
@@ -140,6 +144,20 @@ public class MozzHtmlConverter
 
         return GetEncoding(response).GetBytes(gemtextBody);
     }
+
+    private byte[] ParsePlainText(GeminiResponse response)
+    {
+
+        var preTag = DocumentRoot.QuerySelector("div.body pre");
+        if (preTag == null)
+        {
+            throw new ApplicationException("Could not locate pre tag inside of HTML of text/plain response!");
+        }
+
+        string plainText = HttpUtility.HtmlDecode(preTag.TextContent);
+        return GetEncoding(response).GetBytes(plainText);
+    }
+
 
     private IElement ParseToRoot(Uri htmlUrl, string html)
     {
