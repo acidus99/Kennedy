@@ -147,14 +147,9 @@ public class MozzHtmlConverter
         var context = BrowsingContext.New(Configuration.Default);
         var parser = context.GetService<IHtmlParser>();
 
-        IDocument document = context.OpenAsync(req => req.Address(htmlUrl).Content(html)).Result;
+        IDocument document = context.OpenAsync(req => req.Content(html)).Result;
 
-        if (document.FirstElementChild == null)
-        {
-            throw new ArgumentException("Html does not contain a root element", nameof(html));
-        }
-
-        return document.FirstElementChild;
+        return document.DocumentElement;
     }
 
     private string hack()

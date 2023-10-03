@@ -122,10 +122,10 @@ public class HtmlReverser
 				{
 					throw new ApplicationException("Anchor tag not followed by BR or SPAN tag!");
 				}
-				if(nextTag == "span")
+				if (nextTag == "span")
 				{
 					anchor.NextElementSibling.Remove();
-					if(deleted)
+					if (deleted)
 					{
 						throw new ApplicationException("Deleting two spans after an anchor!!!");
 					}
@@ -135,10 +135,10 @@ public class HtmlReverser
 			} while (checkAgain);
 		}
 
-		string href = GetLink(anchor.HyperReference(anchor.Href));
-        
+		string href = GetLink(new Uri(WaybackUrl.Url, anchor.GetAttribute("href")));
+
 		Buffer.Append($"=> {href} {anchor.TextContent}");
-        }
+	}
 
 	private void ConvertBlockquote(IElement element)
 	{
