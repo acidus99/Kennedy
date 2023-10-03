@@ -9,6 +9,7 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 using Gemini.Net;
+using System.Reflection.Metadata;
 
 public class MozzHtmlConverter
 {
@@ -82,7 +83,12 @@ public class MozzHtmlConverter
         response.ResponseReceived = WaybackUrl.Captured;
         if (response.IsSuccess)
         {
-            response.BodyBytes = ParseBody(response);
+            var bodyBytes = ParseBody(response);
+            response.BodyBytes = bodyBytes;
+            if(bodyBytes == null)
+            {
+                response.IsBodyTruncated = true;
+            }
         }
 
         return new ArchivedContent
@@ -122,6 +128,10 @@ public class MozzHtmlConverter
             case "text/plain":
                 return ParsePlainText(response);
 
+            case "image/jpeg":
+            case "image/png":
+                return ParseImage(response);
+
             default:
                 throw new ApplicationException($"Unhandled Content Type in Gemini Meta: {response.MimeType}");
         }
@@ -132,7 +142,6 @@ public class MozzHtmlConverter
 
     private byte[] ParseGemtext(GeminiResponse response)
     {
-
         var geminiRoot = DocumentRoot.QuerySelector("div.body div.gemini");
         if(geminiRoot == null)
         {
@@ -147,7 +156,6 @@ public class MozzHtmlConverter
 
     private byte[] ParsePlainText(GeminiResponse response)
     {
-
         var preTag = DocumentRoot.QuerySelector("div.body pre");
         if (preTag == null)
         {
@@ -158,6 +166,45 @@ public class MozzHtmlConverter
         return GetEncoding(response).GetBytes(plainText);
     }
 
+    private byte[]? ParseImage(GeminiResponse response)
+    {
+        var img = DocumentRoot.QuerySelector("div.body img");
+        if (img == null)
+        {
+            throw new ApplicationException("Could not locate pre img inside of HTML of image/* response!");
+        }
+
+        string? url = img.GetAttribute("src");
+
+        if(string.IsNullOrEmpty(url))
+        {
+            throw new ApplicationException("img tag did not have a src attribute, or it was empty");
+        }
+
+        if(url.StartsWith("data:") )
+        {
+            var parts = url.Split(',');
+            if(parts.Length !=2)
+            {
+                throw new ApplicationException("data URL didn't split into 2 parts");
+            }
+            if (!parts[0].Contains(";base64"))
+            {
+                throw new ApplicationException("data URL was not using base64 encoding!");
+            }
+            return Convert.FromBase64String(parts[1]);
+        }
+
+        Uri imgUrl = (new Uri(WaybackUrl.Url, url));
+
+        HttpRequestor httpRequestor = new HttpRequestor();
+        var imageResponse = httpRequestor.SendRequest(imgUrl);
+        if(imageResponse.IsSuccessStatusCode)
+        {
+            return imageResponse.Content.ReadAsByteArrayAsync().Result;
+        }
+        return null;
+    }
 
     private IElement ParseToRoot(Uri htmlUrl, string html)
     {
