@@ -67,10 +67,8 @@ public class LegacyBConverter : AbstractConverter
             path = GetPathForUrl(url);
             return File.ReadAllBytes(path);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            int xxx = 4;
-
         }
         return null;
     }

@@ -138,7 +138,7 @@ public class CrawlDbConverter: AbstractConverter
                 return documentStore.GetDocument(urlID);
             }
         }
-        catch(Exception ex)
+        catch(Exception)
         {
         }
         return null;

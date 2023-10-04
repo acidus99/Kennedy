@@ -65,14 +65,9 @@ namespace Kennedy.WarcConverters.MozzPortalImport
                         ContentType = fields[3]
                     });
                 }
-
-                if (ret.Count == 0)
-                {
-                    int xxx = 4;
-                }
-            } catch(Exception ex)
+            }
+            catch (Exception)
             {
-
             }
 
             return ret;
