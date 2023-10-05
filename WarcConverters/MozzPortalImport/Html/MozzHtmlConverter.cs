@@ -76,7 +76,6 @@ public class MozzHtmlConverter
 
     private ArchivedContent ParseGeminiResponse()
     {
-
         string? responseLine = GetResponseLine();
         if(responseLine == null)
         {
@@ -93,12 +92,7 @@ public class MozzHtmlConverter
         response.ResponseReceived = WaybackUrl.Captured;
         if (response.IsSuccess)
         {
-            var bodyBytes = ParseBody(response);
-            response.BodyBytes = bodyBytes;
-            if(bodyBytes == null)
-            {
-                response.IsBodyTruncated = true;
-            }
+            return ParseBody(response);
         }
 
         return new ArchivedContent
@@ -135,19 +129,26 @@ public class MozzHtmlConverter
         return $"{statusCode} {meta}";
     }
 
-    private byte[]? ParseBody(GeminiResponse response)
+    private ArchivedContent ParseBody(GeminiResponse response)
     {
-        switch(response.MimeType)
+        //var bodyBytes = ParseBody(response);
+        //response.BodyBytes = bodyBytes;
+        //if (bodyBytes == null)
+        //{
+        //    response.IsBodyTruncated = true;
+        //}
+
+        switch (response.MimeType)
         {
             case "text/gemini":
-                return ParseGemtext(response);
+                return ParseGemtextBody(response);
 
             case "text/plain":
-                return ParsePlainText(response);
+                return ParsePlainTextBody(response);
 
             case "image/jpeg":
             case "image/png":
-                return ParseImage(response);
+                return ParseImageBody(response);
 
             default:
                 throw new ApplicationException($"Unhandled Content Type in Gemini Meta: {response.MimeType}");
@@ -157,7 +158,7 @@ public class MozzHtmlConverter
     private Encoding GetEncoding(GeminiResponse response)
         => Encoding.GetEncoding((response.Charset == null) ? "utf-8" : response.Charset);
 
-    private byte[] ParseGemtext(GeminiResponse response)
+    private ArchivedContent ParseGemtextBody(GeminiResponse response)
     {
         var geminiRoot = DocumentRoot.QuerySelector("div.body div.gemini");
         if(geminiRoot == null)
@@ -168,10 +169,18 @@ public class MozzHtmlConverter
         HtmlReverser htmlReverser = new HtmlReverser(WaybackUrl, geminiRoot);
         var gemtextBody = htmlReverser.ReverseToGemtext();
 
-        return GetEncoding(response).GetBytes(gemtextBody);
+        response.BodyBytes = GetEncoding(response).GetBytes(gemtextBody);
+
+        ArchivedContent ret = new ArchivedContent
+        {
+            Url = WaybackUrl,
+            GeminiResponse = response
+        };
+
+        return ret;
     }
 
-    private byte[] ParsePlainText(GeminiResponse response)
+    private ArchivedContent ParsePlainTextBody(GeminiResponse response)
     {
         var preTag = DocumentRoot.QuerySelector("div.body pre");
         if (preTag == null)
@@ -180,10 +189,16 @@ public class MozzHtmlConverter
         }
 
         string plainText = HttpUtility.HtmlDecode(preTag.TextContent);
-        return GetEncoding(response).GetBytes(plainText);
+        response.BodyBytes = GetEncoding(response).GetBytes(plainText);
+
+        return new ArchivedContent
+        {
+            Url = WaybackUrl,
+            GeminiResponse = response
+        };
     }
 
-    private byte[]? ParseImage(GeminiResponse response)
+    private ArchivedContent ParseImageBody(GeminiResponse response)
     {
         var img = DocumentRoot.QuerySelector("div.body img");
         if (img == null)
@@ -198,10 +213,10 @@ public class MozzHtmlConverter
             throw new ApplicationException("img tag did not have a src attribute, or it was empty");
         }
 
-        if(url.StartsWith("data:") )
+        if (url.StartsWith("data:"))
         {
             var parts = url.Split(',');
-            if(parts.Length !=2)
+            if (parts.Length != 2)
             {
                 throw new ApplicationException("data URL didn't split into 2 parts");
             }
@@ -209,40 +224,34 @@ public class MozzHtmlConverter
             {
                 throw new ApplicationException("data URL was not using base64 encoding!");
             }
-            return Convert.FromBase64String(parts[1]);
+            response.BodyBytes = Convert.FromBase64String(parts[1]);
+
+            return new ArchivedContent
+            {
+                Url = WaybackUrl,
+                GeminiResponse = response
+            };
         }
 
-        Uri imgUrl = (new Uri(WaybackUrl.Url, url));
+        var fullyQualifiedImgSrc = new Uri(WaybackUrl.Url, url);
+        WaybackUrl imgUrl = new WaybackUrl(fullyQualifiedImgSrc);
 
-        HttpRequestor httpRequestor = new HttpRequestor();
-        var imageResponse = httpRequestor.SendRequest(imgUrl);
-        if(imageResponse.IsSuccessStatusCode)
+        var ret = new ArchivedContent
         {
-            return imageResponse.Content.ReadAsByteArrayAsync().Result;
-        }
-        return null;
+            Url = WaybackUrl
+        };
+        ret.MoreUrls.Add(imgUrl);
+
+        return ret;
     }
 
     private IElement ParseToRoot(Uri htmlUrl, string html)
     {
-        string hackyHtml = hack();
         var context = BrowsingContext.New(Configuration.Default);
         var parser = context.GetService<IHtmlParser>();
 
         IDocument document = context.OpenAsync(req => req.Content(html)).Result;
-
         return document.DocumentElement;
     }
-
-    private string hack()
-    {
-        var config = Configuration.Default.WithDefaultLoader();
-        var address = "https://web.archive.org/web/20220606030738if_/https://portal.mozz.us/gemini/arcanesciences.com/gemlog/22-06-05/words.txt";
-        var context = BrowsingContext.New(config);
-        var document = context.OpenAsync(address).Result;
-        return document.DocumentElement.OuterHtml;
-    }
-
-    
 }
 

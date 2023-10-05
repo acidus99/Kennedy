@@ -34,31 +34,28 @@ class MozzImporter
             counter++;
             WaybackUrl waybackUrl = pendingUrls.Dequeue();
 
-            Console.WriteLine($"{counter} of {pendingUrls.Count}\t{waybackUrl.GetProxiedUrl()}");
+            Console.WriteLine($"{pendingUrls.Count}\t{waybackUrl.GetProxiedUrl()}");
 
             try
             {
-                ArchivedContent? content = contentConverter.Convert(waybackUrl);
+                ArchivedContent content = contentConverter.Convert(waybackUrl);
+
+                content.MoreUrls.ForEach(x => pendingUrls.Enqueue(x));
                 string msg = "";
 
-                if (content == null)
+                if (content.GeminiResponse != null)
                 {
-                    Console.WriteLine("No content can be recovered");
+                    msg = content.GeminiResponse.ToString();
                 }
-                else
+                else if (content.Certificate != null)
                 {
-                    if (content.GeminiResponse != null)
-                    {
-                        msg = content.GeminiResponse.ToString();
-                    }
-                    else if (content.Certificate != null)
-                    {
-                        msg = "Certificate: " + content.Certificate.Subject;
-                    }
-                    Console.WriteLine(msg);
-                    logGood.WriteLine($"{waybackUrl.Url} {waybackUrl.GetProxiedUrl()} {msg}");
-                    logGood.Flush();
+                    msg = "Certificate: " + content.Certificate.Subject;
                 }
+
+                Console.WriteLine(msg);
+                logGood.WriteLine($"{waybackUrl.Url} {waybackUrl.GetProxiedUrl()} {msg}");
+                logGood.Flush();
+                
             }
             catch (Exception ex)
             {

@@ -22,6 +22,13 @@ public class ArchivedContentConverter
             case HttpStatusCode.OK:
                 return ParseHttpSuccess(waybackUrl, response);
 
+            case HttpStatusCode.NotFound:
+                //nothing to extract
+                return new ArchivedContent
+                {
+                    Url = waybackUrl
+                };
+
             default:
                 throw new ApplicationException($"Unhandled Status Code {response.StatusCode}");
         }
