@@ -36,7 +36,7 @@ public class MozzHtmlConverter
         DocumentRoot = ParseToRoot(waybackUrl.Url, html);
     }
 
-    public ArchivedContent? GetContent()
+    public ArchivedContent GetContent()
     {
         if (WaybackUrl.IsCertificateRequest)
         {
@@ -74,14 +74,17 @@ public class MozzHtmlConverter
         };
     }
 
-    private ArchivedContent? ParseGeminiResponse()
+    private ArchivedContent ParseGeminiResponse()
     {
 
         string? responseLine = GetResponseLine();
         if(responseLine == null)
         {
             //could not find a status code or meta, so there is nothing we can recover
-            return null;
+            return new ArchivedContent
+            {
+                Url = WaybackUrl
+            };
         }
 
         response = new GeminiResponse(ProxiedUrl, responseLine);

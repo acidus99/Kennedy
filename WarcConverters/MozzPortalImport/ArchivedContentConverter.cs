@@ -13,7 +13,7 @@ public class ArchivedContentConverter
         return httpRequestor.SendRequest(url);
     }
 
-    public ArchivedContent? Convert(WaybackUrl waybackUrl)
+    public ArchivedContent Convert(WaybackUrl waybackUrl)
     {
         var response = GetResponse(waybackUrl.Url);
 
@@ -27,7 +27,7 @@ public class ArchivedContentConverter
         }
     }
 
-    private ArchivedContent? ParseHttpSuccess(WaybackUrl waybackUrl, HttpResponseMessage response)
+    private ArchivedContent ParseHttpSuccess(WaybackUrl waybackUrl, HttpResponseMessage response)
     {
         if (response.Content.Headers.ContentType == null || response.Content.Headers.ContentType.MediaType == null)
         {
@@ -62,7 +62,7 @@ public class ArchivedContentConverter
         return content.ReadAsStringAsync().Result;
     }
 
-    private ArchivedContent? ParseHtmlResponse(WaybackUrl waybackUrl, string html)
+    private ArchivedContent ParseHtmlResponse(WaybackUrl waybackUrl, string html)
     {
         var mozzHtmlConverter = new MozzHtmlConverter(waybackUrl, html);
 
