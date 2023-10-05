@@ -102,5 +102,25 @@ public class WaybackUrl
 
 		return path.Substring(index + 1);
     }
+
+    public override bool Equals(object? obj)
+    {
+		if(obj == null)
+		{
+			return false;
+		}
+
+        var item = obj as WaybackUrl;
+
+        if (item == null)
+        {
+            return false;
+        }
+
+		return Url.Equals(item.Url);
+    }
+
+    public override int GetHashCode()
+		=> Url.GetHashCode();
 }
 
