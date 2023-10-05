@@ -16,21 +16,25 @@ class MozzImporter
         StreamWriter logGood = new StreamWriter(File.Create(ResolveDir("~/tmp/mozz-dump/good-results.txt")));
         StreamWriter logBad = new StreamWriter(File.Create(ResolveDir("~/tmp/mozz-dump/bad-resultes.txt")));
 
-        var lines = File.ReadLines(urlsFile).ToArray();
-        int counter = 0;
-        int max = lines.Length;
-        foreach (string url in lines)
+        Queue<WaybackUrl> pendingUrls = new Queue<WaybackUrl>();
+        //initialize with URLs from input file
+        foreach(string url in File.ReadLines(urlsFile).ToArray())
         {
-            counter++;
-
             WaybackUrl waybackUrl = new WaybackUrl(url);
 
             if (!waybackUrl.IsMozzUrl)
             {
                 throw new ApplicationException("Working on Wayback URL that is not for mozz proxy!");
             }
+            pendingUrls.Enqueue(waybackUrl);
+        }
+        int counter = 0;
+        while(pendingUrls.Count > 0)
+        {
+            counter++;
+            WaybackUrl waybackUrl = pendingUrls.Dequeue();
 
-            Console.WriteLine($"{counter} of {max}\t{waybackUrl.GetProxiedUrl()}");
+            Console.WriteLine($"{counter} of {pendingUrls.Count}\t{waybackUrl.GetProxiedUrl()}");
 
             try
             {
@@ -43,7 +47,6 @@ class MozzImporter
                 }
                 else
                 {
-
                     if (content.GeminiResponse != null)
                     {
                         msg = content.GeminiResponse.ToString();
@@ -53,14 +56,14 @@ class MozzImporter
                         msg = "Certificate: " + content.Certificate.Subject;
                     }
                     Console.WriteLine(msg);
-                    logGood.WriteLine($"{url} {waybackUrl.GetProxiedUrl()} {msg}");
+                    logGood.WriteLine($"{waybackUrl.Url} {waybackUrl.GetProxiedUrl()} {msg}");
                     logGood.Flush();
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                logBad.WriteLine($"{url} {waybackUrl.GetProxiedUrl()} {ex.Message}");
+                logBad.WriteLine($"{waybackUrl.Url} {waybackUrl.GetProxiedUrl()} {ex.Message}");
                 logBad.Flush();
             }
             Thread.Sleep(1500);
