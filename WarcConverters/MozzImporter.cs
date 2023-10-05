@@ -40,7 +40,11 @@ class MozzImporter
             {
                 ArchivedContent content = contentConverter.Convert(waybackUrl);
 
-                content.MoreUrls.ForEach(x => pendingUrls.Enqueue(x));
+                foreach(var url in content.MoreUrls)
+                {
+                    Console.WriteLine($"\tadding additional URL: {url.SourceUrl}");
+                    pendingUrls.Enqueue(url);
+                }
                 string msg = "";
 
                 if (content.GeminiResponse != null)
@@ -50,6 +54,10 @@ class MozzImporter
                 else if (content.Certificate != null)
                 {
                     msg = "Certificate: " + content.Certificate.Subject;
+                }
+                else
+                {
+                    msg = "no content could be extracted";
                 }
 
                 Console.WriteLine(msg);

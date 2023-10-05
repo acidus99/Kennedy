@@ -168,10 +168,10 @@ public class HtmlReverser
             throw new ApplicationException("Could not find an img tag inside of the figure tag");
         }
 
-		Uri fullyQualifiedUrl = new Uri(WaybackUrl.Url, element.GetAttribute("src"));
+		Uri fullyQualifiedUrl = new Uri(WaybackUrl.Url, img.GetAttribute("src"));
 
-		//is this something we should request later?
-		if(IsForWaybackMachine(fullyQualifiedUrl))
+		//is this something we should request later? only if its a mozz-proxied Gemini URL
+		if(IsForMozz(fullyQualifiedUrl))
 		{
 			MoreUrls.Add(new WaybackUrl(fullyQualifiedUrl));
 		}
@@ -185,12 +185,29 @@ public class HtmlReverser
     private string FormatText(string s)
 		=> HttpUtility.HtmlDecode(s);
 
-	private bool IsForWaybackMachine(Uri url)
-		=> url.Host == "web.archive.org";
+	private bool IsForMozz(Uri url)
+	{
+        try
+        {
+            //create a wayback link from the linkTarget
+            WaybackUrl targetLink = new WaybackUrl(url);
+			if(!targetLink.IsMozzUrl)
+			{
+				return false;
+			}
+			//force getting the gemini URL to try and force an exception 
+			targetLink.GetProxiedUrl();
+			return true;
+        }
+        catch (Exception)
+        {
+        }
+		return false;
+    }
 
 	private string GetLink(Uri url)
 	{
-		if (IsForWaybackMachine(url)) {
+		if (url.Host == "web.archive.org") {
 
 			GeminiUrl geminiTarget;
 
