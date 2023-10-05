@@ -16,7 +16,7 @@ class MozzImporter
         StreamWriter logGood = new StreamWriter(File.Create(ResolveDir("~/tmp/mozz-dump/good-results.txt")));
         StreamWriter logBad = new StreamWriter(File.Create(ResolveDir("~/tmp/mozz-dump/bad-resultes.txt")));
 
-        Queue<WaybackUrl> pendingUrls = new Queue<WaybackUrl>();
+        PendingQueue pendingUrls = new PendingQueue();
         //initialize with URLs from input file
         foreach(string url in File.ReadLines(urlsFile).ToArray())
         {
@@ -40,11 +40,7 @@ class MozzImporter
             {
                 ArchivedContent content = contentConverter.Convert(waybackUrl);
 
-                foreach(var url in content.MoreUrls)
-                {
-                    Console.WriteLine($"\tadding additional URL: {url.SourceUrl}");
-                    pendingUrls.Enqueue(url);
-                }
+                pendingUrls.Enqueue(content.MoreUrls);
                 string msg = "";
 
                 if (content.GeminiResponse != null)
@@ -60,7 +56,7 @@ class MozzImporter
                     msg = "no content could be extracted";
                 }
 
-                Console.WriteLine(msg);
+                Console.WriteLine("\t" + msg);
                 logGood.WriteLine($"{waybackUrl.Url} {waybackUrl.GetProxiedUrl()} {msg}");
                 logGood.Flush();
                 
