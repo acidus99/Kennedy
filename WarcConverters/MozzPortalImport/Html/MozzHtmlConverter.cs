@@ -131,13 +131,6 @@ public class MozzHtmlConverter
 
     private ArchivedContent ParseBody(GeminiResponse response)
     {
-        //var bodyBytes = ParseBody(response);
-        //response.BodyBytes = bodyBytes;
-        //if (bodyBytes == null)
-        //{
-        //    response.IsBodyTruncated = true;
-        //}
-
         switch (response.MimeType)
         {
             case "text/gemini":
@@ -176,6 +169,7 @@ public class MozzHtmlConverter
             Url = WaybackUrl,
             GeminiResponse = response
         };
+        ret.MoreUrls.AddRange(htmlReverser.MoreUrls);
 
         return ret;
     }

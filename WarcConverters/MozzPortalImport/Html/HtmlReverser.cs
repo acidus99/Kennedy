@@ -17,15 +17,22 @@ public class HtmlReverser
 	GeminiUrl Origin
 		=> WaybackUrl.GetProxiedUrl();
 
+	/// <summary>
+	/// Additional image URLs we should visit to get all the archived content
+	/// </summary>
+	public List<WaybackUrl> MoreUrls;
+
 	public HtmlReverser(WaybackUrl waybackUrl, IElement root)
 	{
 		WaybackUrl = waybackUrl;
 		Root = root;
 		Buffer = new StringBuilder();
+		MoreUrls = new List<WaybackUrl>();
 	}
 
 	public string ReverseToGemtext()
 	{
+		MoreUrls.Clear();
 		ConvertChildren(Root);
 		return Buffer.ToString();
 	}
@@ -51,8 +58,8 @@ public class HtmlReverser
 		}
 	}
 
-        private void Convert(IElement element)
-        {
+    private void Convert(IElement element)
+    {
 		string tag = element.TagName.ToLower();
 
 		switch(tag) 
@@ -65,49 +72,52 @@ public class HtmlReverser
 				ConvertBlockquote(element);
 				break;
 
-                case "br":
+            case "br":
 				Buffer.AppendLine();
+				break;
+
+			case "figure":
+				ConvertFigure(element);
 				break;
 
 			case "h1":
 				Buffer.AppendLine($"# {FormatText(element.TextContent)}");
 				break;
 
-                case "h2":
-                    Buffer.AppendLine($"## {FormatText(element.TextContent)}");
-                    break;
+            case "h2":
+                Buffer.AppendLine($"## {FormatText(element.TextContent)}");
+                break;
 
-                case "h3":
-                    Buffer.AppendLine($"### {FormatText(element.TextContent)}");
-                    break;
+            case "h3":
+                Buffer.AppendLine($"### {FormatText(element.TextContent)}");
+                break;
 
 			case "li":
-                    if (element.TextContent.Contains("\n"))
-                    {
-                        throw new ApplicationException("LI contains \\n");
-                    }
-                    Buffer.AppendLine($"* {FormatText(element.TextContent)}");
+                if (element.TextContent.Contains("\n"))
+                {
+                    throw new ApplicationException("LI contains \\n");
+                }
+                Buffer.AppendLine($"* {FormatText(element.TextContent)}");
 				break;
 
+            case "p":
+                Buffer.Append(FormatText(element.TextContent));
+                break;
 
-                case "p":
-                    Buffer.Append(FormatText(element.TextContent));
-                    break;
-
-                case "pre":
+            case "pre":
 				Buffer.AppendLine("```");
 				Buffer.AppendLine(element.TextContent);
-                    Buffer.AppendLine("```");
+                Buffer.AppendLine("```");
 				break;
 
 			case "ul":
 				ConvertChildren(element);
 				break;
 
-                default:
+            default:
 				throw new ApplicationException($"Unknown Tag '{tag}'");
 		}
-        }
+    }
 
 	private void ConvertAnchor(IHtmlAnchorElement anchor)
 	{
@@ -137,7 +147,6 @@ public class HtmlReverser
 		}
 
 		string href = GetLink(new Uri(WaybackUrl.Url, anchor.GetAttribute("href")));
-
 		Buffer.Append($"=> {href} {anchor.TextContent}");
 	}
 
@@ -150,13 +159,38 @@ public class HtmlReverser
 		}
 	}
 
-	private string FormatText(string s)
+    private void ConvertFigure(IElement element)
+    {
+        //figures appear when Mozz's portal is using the "inline images" feature
+        var img = element.QuerySelector("img");
+        if (img == null)
+        {
+            throw new ApplicationException("Could not find an img tag inside of the figure tag");
+        }
+
+		Uri fullyQualifiedUrl = new Uri(WaybackUrl.Url, element.GetAttribute("src"));
+
+		//is this something we should request later?
+		if(IsForWaybackMachine(fullyQualifiedUrl))
+		{
+			MoreUrls.Add(new WaybackUrl(fullyQualifiedUrl));
+		}
+
+        //write it out to the buffer
+        string href = GetLink(fullyQualifiedUrl);
+        string alt = img.GetAttribute("alt") ?? "";
+        Buffer.AppendLine($"=> {href} {alt}");
+    }
+
+    private string FormatText(string s)
 		=> HttpUtility.HtmlDecode(s);
+
+	private bool IsForWaybackMachine(Uri url)
+		=> url.Host == "web.archive.org";
 
 	private string GetLink(Uri url)
 	{
-
-		if (url.Host == "web.archive.org") {
+		if (IsForWaybackMachine(url)) {
 
 			GeminiUrl geminiTarget;
 
@@ -203,4 +237,3 @@ public class HtmlReverser
         return url.OriginalString;
     }
 }
-
