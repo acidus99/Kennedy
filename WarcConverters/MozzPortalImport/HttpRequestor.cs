@@ -15,7 +15,6 @@ public class HttpRequestor
     {
         Client = new HttpClient(new HttpClientHandler
         {
-            AllowAutoRedirect = true,
             CheckCertificateRevocationList = false,
             AutomaticDecompression = System.Net.DecompressionMethods.All,
         });
