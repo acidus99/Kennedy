@@ -92,6 +92,10 @@ public class HtmlReverser
                 Buffer.AppendLine($"### {FormatText(element.TextContent)}");
                 break;
 
+			case "hr":
+				Buffer.AppendLine("---");
+				break;
+
 			case "li":
                 if (element.TextContent.Contains("\n"))
                 {
