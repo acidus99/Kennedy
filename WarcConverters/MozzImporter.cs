@@ -7,6 +7,8 @@ using Kennedy.WarcConverters.MozzPortalImport;
 
 class MozzImporter
 {
+    public static readonly DateTime OnlyBefore = new DateTime(2023, 1, 1);
+
     public static void Import()
     {
         string urlsFile =  ResolveDir("~/tmp/mozz-dump/test-urls.txt");
@@ -21,13 +23,7 @@ class MozzImporter
         foreach(string url in File.ReadLines(urlsFile).ToArray())
         {
             WaybackUrl waybackUrl = new WaybackUrl(url);
-            if (!waybackUrl.IsMozzUrl)
-            {
-                continue;
-            }
-
-            //not long enought to be valid
-            if(url.Length < 79)
+            if(!UrlInScope(waybackUrl))
             {
                 continue;
             }
@@ -45,8 +41,13 @@ class MozzImporter
             try
             {
                 ArchivedContent content = contentConverter.Convert(waybackUrl);
-
-                pendingUrls.Enqueue(content.MoreUrls);
+                foreach(var url in content.MoreUrls)
+                {
+                    if(UrlInScope(url))
+                    {
+                        pendingUrls.Enqueue(url);
+                    }
+                }
                 string msg = "";
 
                 if (content.GeminiResponse != null)
@@ -81,6 +82,27 @@ class MozzImporter
 
         return;
 
+    }
+
+    private static bool UrlInScope(WaybackUrl url)
+    {
+        //not long enought to be valid
+        if (url.Url.OriginalString.Length < 79)
+        {
+            return false;
+        }
+
+        if (!url.IsMozzUrl)
+        {
+            return false;
+        }
+
+        if(url.Captured < OnlyBefore)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public static void BuildSnapshotUrls()
