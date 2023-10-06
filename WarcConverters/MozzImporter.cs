@@ -21,11 +21,17 @@ class MozzImporter
         foreach(string url in File.ReadLines(urlsFile).ToArray())
         {
             WaybackUrl waybackUrl = new WaybackUrl(url);
-
             if (!waybackUrl.IsMozzUrl)
             {
-                throw new ApplicationException("Working on Wayback URL that is not for mozz proxy!");
+                continue;
             }
+
+            //not long enought to be valid
+            if(url.Length < 79)
+            {
+                continue;
+            }
+
             pendingUrls.Enqueue(waybackUrl);
         }
         int counter = 0;
@@ -77,35 +83,35 @@ class MozzImporter
 
     }
 
-    //static void BuildSnapshotUrls()
-    //{
-    //    string urls = ResolveDir("~/tmp/NEW-mozz-capture-urls.txt");
+    public static void BuildSnapshotUrls()
+    {
+        string UrlsFile = ResolveDir("~/tmp/mozz-dump/wayback-capture-urls.txt");
 
-    //    WaybackClient wbclient = new WaybackClient();
+        WaybackClient wbclient = new WaybackClient();
 
-    //    StreamWriter fout = new StreamWriter(UrlsFile, false);
+        StreamWriter fout = new StreamWriter(UrlsFile, false);
 
-    //    var urls = wbclient.GetUrls("https://portal.mozz.us/gemini/");
-    //    var total = urls.Count;
-    //    int curr = 0;
-    //    int collected = 0;
-    //    foreach (var url in urls)
-    //    {
-    //        curr++;
-    //        Console.WriteLine($"{curr} of {total} - Captures: {collected}");
+        var urls = wbclient.GetUrls("https://portal.mozz.us/gemini/");
+        var total = urls.Count;
+        int curr = 0;
+        int collected = 0;
+        foreach (var url in urls)
+        {
+            curr++;
+            Console.WriteLine($"{curr} of {total} - Captures: {collected}");
 
-    //        var captures = wbclient.GetSnapshots(url);
+            var captures = wbclient.GetSnapshots(url);
 
-    //        foreach (var capture in captures)
-    //        {
-    //            collected++;
-    //            fout.WriteLine($"{capture.Timestamp} {capture.OriginalUrl} {capture.ContentType} {capture.CaptureUrl}");
-    //            fout.Flush();
-    //        }
-    //        System.Threading.Thread.Sleep(1500);
-    //    }
-    //    fout.Close();
-    //}
+            foreach (var capture in captures)
+            {
+                collected++;
+                fout.WriteLine($"{capture.Timestamp} {capture.OriginalUrl} {capture.ContentType} {capture.CaptureUrl}");
+                fout.Flush();
+            }
+            System.Threading.Thread.Sleep(2000);
+        }
+        fout.Close();
+    }
 
     private static string ResolveDir(string dir)
         => dir.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + '/');
