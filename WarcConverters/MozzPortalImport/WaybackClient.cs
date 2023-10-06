@@ -10,6 +10,12 @@ namespace Kennedy.WarcConverters.MozzPortalImport
         // HttpClient is intended to be instantiated once per application, rather than per-use. See Remarks.
         static readonly HttpClient client = new HttpClient();
 
+        public WaybackClient()
+        {
+            client.Timeout = TimeSpan.FromSeconds(60);
+            client.DefaultRequestHeaders.UserAgent.TryParseAdd("GeminiProxy/0.1 (gemini://gemi.dev/) gemini-proxy/0.1");
+        }
+
         public List<string> GetUrls(string prefix)
 		{
             List<String> ret = new List<string>();
@@ -39,37 +45,46 @@ namespace Kennedy.WarcConverters.MozzPortalImport
         {
             List<WaybackSnapshot> ret = new List<WaybackSnapshot>();
             var apiUrl = $"https://web.archive.org/cdx/search/cdx?url={HttpUtility.UrlEncode(url)}";
-            try
+
+            int remainingTries = 3;
+
+            while (remainingTries > 0)
             {
-                string resp = client.GetStringAsync(apiUrl).GetAwaiter().GetResult();
-                var lines = resp.Split('\n');
-                foreach (var line in lines)
+                ret.Clear();
+                try
                 {
-                    var fields = line.Split(' ');
-                    if (fields.Length != 7)
+                    string resp = client.GetStringAsync(apiUrl).GetAwaiter().GetResult();
+                    var lines = resp.Split('\n');
+                    foreach (var line in lines)
                     {
-                        //skip lines that don't have the right number of fields
-                        continue;
-                    }
+                        var fields = line.Split(' ');
+                        if (fields.Length != 7)
+                        {
+                            //skip lines that don't have the right number of fields
+                            continue;
+                        }
 
-                    if (fields[4] != "200")
-                    {
-                        //skip anything that isn't a 200
-                        continue;
-                    }
+                        if (!System.Text.RegularExpressions.Regex.IsMatch(fields[4], @"[2-3]\d\d"))
+                        {
+                            //skip anything that isn't a 200
+                            continue;
+                        }
 
-                    ret.Add(new WaybackSnapshot
-                    {
-                        Timestamp = fields[1],
-                        OriginalUrl = fields[2],
-                        ContentType = fields[3]
-                    });
+                        ret.Add(new WaybackSnapshot
+                        {
+                            Timestamp = fields[1],
+                            OriginalUrl = fields[2],
+                            ContentType = fields[3]
+                        });
+                    }
+                    return ret;
                 }
+                catch (Exception)
+                {
+                }
+                remainingTries--;
             }
-            catch (Exception)
-            {
-            }
-
+            Console.WriteLine("FAILED AFTER 3 TRIES!!!!");
             return ret;
         }
 
