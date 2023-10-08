@@ -33,3 +33,14 @@ GeminiRequestor
 
 Archive maintenance
 - need a daily/weekly job that grabs robots.txt and updates the archive to remove content from it
+
+
+
+--- showing all interactive elements
+
+select  Distinct srcdoc.Title, LinkText, tardoc.Meta, tardoc.Url , srcdoc.Url From Documents as tardoc
+join Links on Links.TargetUrlID = tardoc.UrlID
+join Documents as srcdoc on Links.SourceUrlID = srcdoc.UrlID
+Where IsExternal = false and tardoc.StatusCode = 10
+order by tardoc.URL DESC
+
