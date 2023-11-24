@@ -89,7 +89,7 @@ namespace Kennedy.SearchIndex.Search
 
                 //if we have other things besides term queries, we need to do a join
 
-                if (userQuery.HasSiteScope || userQuery.HasFileTypeScope)
+                if (userQuery.HasSiteScope || userQuery.HasFileTypeScope || userQuery.HasUrlScope)
                 {
                     sqlQuery.Append("Inner Join Documents On Documents.UrlID = ImageSearch.ROWID ");
                 }
@@ -111,6 +111,11 @@ namespace Kennedy.SearchIndex.Search
                 {
                     sqlQuery.AppendWhereCondition("FileExtension = {} ");
                     sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
+                }
+
+                if(userQuery.HasUrlScope)
+                {
+                    sqlQuery.AppendWhereCondition($"Path LIKE '%{userQuery.UrlScope}%' ");
                 }
 
                 var sql = sqlQuery.GetFormattableString();
@@ -155,6 +160,11 @@ WHERE ");
                 sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
             }
 
+            if (userQuery.HasUrlScope)
+            {
+                sqlQuery.AppendWhereCondition($"Path LIKE '%{userQuery.UrlScope}%' ");
+            }
+
             sqlQuery.Append("ORDER BY tot LIMIT {} OFFSET {}");
             sqlQuery.AddParameter("limit", limit);
             sqlQuery.AddParameter("offset", offset);
@@ -190,7 +200,7 @@ WHERE ");
 
                 //if we have other things besides term queries, we need to do a join
 
-                if(userQuery.HasSiteScope || userQuery.HasFileTypeScope)
+                if(userQuery.HasSiteScope || userQuery.HasFileTypeScope || userQuery.HasUrlScope)
                 {
                     sqlQuery.Append("Inner Join Documents On Documents.UrlID = fts.ROWID ");
                 }
@@ -219,6 +229,11 @@ WHERE ");
                 {
                     sqlQuery.AppendWhereCondition("FileExtension = {} ");
                     sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
+                }
+
+                if (userQuery.HasUrlScope)
+                {
+                    sqlQuery.AppendWhereCondition($"Path LIKE '%{userQuery.UrlScope}%' ");
                 }
 
                 var sql = sqlQuery.GetFormattableString();
@@ -281,6 +296,11 @@ Select Url, BodySize, IsBodyTruncated, doc.Title, UrlID, DetectedLanguage, LineC
             {
                 sqlQuery.AppendWhereCondition("FileExtension = {} ");
                 sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
+            }
+
+            if (userQuery.HasUrlScope)
+            {
+                sqlQuery.AppendWhereCondition($"Path LIKE '%{userQuery.UrlScope}%' ");
             }
 
             if (userQuery.HasFtsQuery)
