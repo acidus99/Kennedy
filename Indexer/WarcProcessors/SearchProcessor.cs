@@ -40,10 +40,10 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
 
     protected override void ProcessGeminiResponse(GeminiResponse geminiResponse)
     {
-        if(IsProactiveRequest(geminiResponse.RequestUrl))
-        {
-            return;
-        }
+        //if(IsProactiveRequest(geminiResponse.RequestUrl))
+        //{
+        //    return;
+        //}
 
         // Fully parsed the response to get type-specific metadata.
         ParsedResponse parsedResponse = responseParser.Parse(geminiResponse);
