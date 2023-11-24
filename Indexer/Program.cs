@@ -24,66 +24,58 @@ namespace Kennedy.Indexer
         static void Main(string[] args)
         {
 
-            FixWarc("/Users/billy/HDD Inside/Kennedy-Work/WARCs/2023-04-27.warc");
-            FixWarc("/Users/billy/HDD Inside/Kennedy-Work/WARCs/2023-05-24.warc");
-            FixWarc("/Users/billy/HDD Inside/Kennedy-Work/WARCs/2023-05-30.warc");
-            return;
-
-            //var outputDirectory = ResolveDir("~/kennedy-capsule/crawl-data/");
-            var outputDirectory = ResolveDir("~/tmp/");
-
-            IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
-            //IWarcProcessor processor = new ArchiveProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
-
-            //string inputWarc = ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/2023-09-08.warc");
-            string inputWarc = ResolveDir("~/HDD Inside/Kennedy-Work/gzipped/2023-09-08.warc.gz");
-
-            if(args.Length > 0)
+            Console.WriteLine("Kennedy Indexer");
+            if (args.Length != 2)
             {
-                inputWarc = args[0];
+                Console.WriteLine("Incorrect number of parameters.");
+                Console.WriteLine("Usage: Indexer [Output Directory] [Input WARC file]");
+                return;
             }
 
+            string outputDir = args[0];
+            string inputWarc = args[1];
 
-            ProcessWarc(inputWarc, processor);
+            if(!Directory.Exists(outputDir))
+            {
+                Console.WriteLine($"Cannot read output directory '{outputDir}'");
+                return;
+            }
 
+            if(!File.Exists(inputWarc))
+            {
+                Console.WriteLine($"Cannot read input WARC file '{inputWarc}'");
+                return;
+            }
 
-            //foreach (var inputWarc in File.ReadAllLines(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/all.txt")))
-            //foreach (var inputWarc in Directory.GetFiles(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs/"), "*.warc"))
-            //{
-            //    //IWarcProcessor processor = new SearchProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
-            //    IWarcProcessor processor = new ArchiveProcessor(outputDirectory, ResolveDir("~/kennedy-capsule/config/"));
-            //    ProcessWarc(inputWarc, processor);
-            //}
+            string configDir = ResolveDir("~/kennedy-capsule/config/");
+
+            IWarcProcessor searchProcessor = new SearchProcessor(outputDir, configDir);
+            IWarcProcessor archiveProcessor = new ArchiveProcessor(outputDir, configDir);
+
+            ProcessWarc(inputWarc, searchProcessor, archiveProcessor);
         }
 
-        /*
-         * 	Processed++;
-        */
-
-        static void FixWarc(string inputWarc)
-        {
-            string filename = Path.GetFileName(inputWarc);
-
-            string outputWarc = ResolveDir("~/tmp/") + filename;
-
-            WarcTruncater.Fix(inputWarc, outputWarc);
-        }
-
-        static void ProcessWarc(string inputWarc, IWarcProcessor processor)
+        static void ProcessWarc(string inputWarc, params IWarcProcessor [] processors)
         {
             using (WarcReader reader = new WarcReader(inputWarc))
             {
                 DateTime prev = DateTime.Now;
-                foreach(WarcRecord record in reader)
+                foreach (WarcRecord record in reader)
                 {
-                    processor.ProcessRecord(record);
+                    foreach (var processor in processors)
+                    {
+                        processor.ProcessRecord(record);
+                    }
                     if (reader.RecordsRead % 100 == 0)
                     {
                         Console.WriteLine($"{reader.Filename}\t{reader.RecordsRead}\t{Math.Truncate(DateTime.Now.Subtract(prev).TotalMilliseconds)} ms");
                         prev = DateTime.Now;
                     }
                 }
-                processor.FinalizeProcessing();
+                foreach (var processor in processors)
+                {
+                    processor.FinalizeProcessing();
+                }
             }
         }
 
