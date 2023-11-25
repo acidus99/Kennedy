@@ -21,6 +21,8 @@ public class QueryParser
 		new Regex(@"\bintitle:\s*\""([^\""]+)\""", RegexOptions.IgnoreCase | RegexOptions.Compiled),
 	};
 
+	readonly static Regex urlScopeRegex = new Regex(@"\binurl:\s*""?([^\s\""]+)""?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     public UserQuery Parse(string inputQuery)
 	{
 		string rawQuery = Normalize(inputQuery);
@@ -44,6 +46,12 @@ public class QueryParser
 			termsQuery = RemoveSearchOption(termsQuery, fileTypeScopeRegex);
 		}
 
+		string? urlScope = GetSearchOption(termsQuery, urlScopeRegex);
+		if(urlScope != null)
+		{
+			termsQuery = RemoveSearchOption(termsQuery, urlScopeRegex);
+        }
+
 		return new UserQuery
 		{
 			FileTypeScope = fileTypeScope,
@@ -51,7 +59,8 @@ public class QueryParser
 			RawQuery = inputQuery,
 			SiteScope = siteScope,
 			TermsQuery = termsQuery,
-			TitleScope = titleScope
+			TitleScope = titleScope,
+			UrlScope = urlScope
 		};
 	}
 
