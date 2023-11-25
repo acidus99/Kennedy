@@ -40,7 +40,7 @@ namespace Kennedy.Warc
             });
         }
 
-        public void WriteSession(GeminiResponse response, TlsConnectionInfo? connectionInfo)
+        public void WriteSession(GeminiResponse response, TlsConnectionInfo? connectionInfo = null)
         {
             var requestRecord = CreateRequestRecord(response.RequestUrl);
             requestRecord.SetDate(response.RequestSent);
@@ -127,6 +127,20 @@ namespace Kennedy.Warc
             }
 
             Write(responseRecord);
+        }
+
+        public void WriteLegacyCertificate(DateTime captured, GeminiUrl url, X509Certificate2 certificate)
+        {
+            var metadataRecord = new MetadataRecord
+            {
+                WarcInfoId = WarcInfoID,
+                ContentText = certificate.ExportCertificatePem(),
+                ContentType = "application/x-pem-file",
+                TargetUri = url.Url,
+                Date = captured,
+            };
+            SetBlockDigest(metadataRecord);
+            Write(metadataRecord);
         }
 
         private bool ShouldCreateCertificateRecord(GeminiUrl url)
