@@ -81,6 +81,8 @@ public class ArchivedContentConverter
         string responseLine = $"20 {mimetype}";
         GeminiResponse geminiResponse = new GeminiResponse(waybackUrl.GetProxiedUrl(), responseLine);
         geminiResponse.BodyBytes = content.ReadAsByteArrayAsync().Result;
+        geminiResponse.RequestSent = waybackUrl.Captured;
+        geminiResponse.ResponseReceived = waybackUrl.Captured;
         return new ArchivedContent
         {
             Url = waybackUrl,

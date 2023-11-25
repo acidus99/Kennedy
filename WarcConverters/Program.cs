@@ -4,9 +4,6 @@ class Program
 {
     static void Main(string[] args)
     {
-
-        //MozzImporter.BuildSnapshotUrls();
-        MozzImporter.Import();
-        //CrawlConverter.Convert();
+        CrawlConverter.Convert();
     }
 }

@@ -5,5 +5,6 @@ public enum ConverterType
 	LegacyA,
 	LegacyB,
 	LegacyC,
-	CrawlDb
+	CrawlDb,
+	MozzPortalArchive,
 }
