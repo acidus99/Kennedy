@@ -182,7 +182,7 @@ public class WebCrawler : IWebCrawler
     private string ComputeSpeed(double curr, double prev, double seconds)
     {
         double requestSec = (curr - prev) / seconds * 1000;
-        return $"{requestSec} req / sec";
+        return $"{requestSec.ToString("F1")} req / sec";
     }
 
     private void LogStatusToDisk(object? sender, System.Timers.ElapsedEventArgs e)
