@@ -29,19 +29,16 @@ public static class CrawlConverter
         //ImportCrawl(ConverterType.CrawlDb, warcOutputDir, sourceDir + "crawldb/manifest.txt");
     }
 
-    static void ReadWarc()
+    public static void FixWarcs()
     {
-        WarcStats stats = new WarcStats();
-
-        foreach (var file in Directory.GetFiles(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs"), "*.warc").OrderBy(x => x))
+        foreach (var inputFile in Directory.GetFiles(ResolveDir("~/HDD Inside/Kennedy-Work/WARCs"), "*.warc").OrderBy(x => x))
         {
-            string filename = Path.GetFileName(file);
-            Console.WriteLine("Working on " + file);
-            stats.Scan(file);
+            string filename = Path.GetFileName(inputFile);
+            Console.WriteLine("Working on " + inputFile);
+            string outputFile = ResolveDir("~/HDD Inside/Kennedy-Work/Fixed-WARCs/") + filename;
+            WarcCleaner.Fix(inputFile, outputFile);
         }
-        stats.WriteResults(ResolveDir("~/HDD Inside/Kennedy-Work/mime-stats.csv"));
     }
-
 
     /// <summary>
     /// Using a purpose-built function to better control WARC fields

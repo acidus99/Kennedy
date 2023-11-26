@@ -6,15 +6,12 @@ using WarcDotNet;
 namespace Kennedy.Warc
 {
     /// <summary>
-    /// One off class to rewrite WARCs and truncate them
+    /// One off class to cleaning WARCs
     /// </summary>
-	public static class WarcTruncater
+	public static class WarcCleaner
     {
-        const int MaxUninterestingFileSize = 1024 * 1024 + 2000;
-
         public static void Fix(string inputWarc, string outputWarc)
 		{
-
             DateTime prev = DateTime.Now;
             int Processed = 0;
             using (WarcWriter writer = new WarcWriter(outputWarc))
@@ -23,20 +20,23 @@ namespace Kennedy.Warc
                 {
                     foreach (var record in reader)
                     {
-                        if(reader.RecordsRead % 100 == 0)
+                        Processed++;
+                        if (record is RequestRecord requestRecord)
                         {
-                            Console.WriteLine(reader.RecordsRead);
-                        }
-
-                        if (record is RequestRecord)
-                        {
-                            FixBlockDigest(record);
+                            //Clear any payload digest from a request
+                            requestRecord.PayloadDigest = null;
+                            FixRobotsRequestRecord(requestRecord);
                         }
 
                         if (record is ResponseRecord responseRecord)
                         {
-                            FixBlockDigest(record);
-                            FixResponsePayload(responseRecord);
+                            FixRobotsResponseRecord(responseRecord);
+                        }
+
+                        //remove any block digest
+                        if (record is WarcInfoRecord infoRecord)
+                        {
+                            infoRecord.BlockDigest = null;
                         }
 
                         writer.Write(record);
@@ -53,13 +53,51 @@ namespace Kennedy.Warc
             Console.WriteLine($"Records: {Processed}\tTime: {seconds}s\tRate: {Processed / seconds} / s");
         }
 
-
-        private static void FixBlockDigest(WarcRecord record)
+        private static void UpdateBlockDigest(WarcRecord record)
         {
             if (record.ContentLength > 0)
             {
                 record.BlockDigest = GeminiParser.GetStrongHash(record.ContentBlock!);
             }
+        }
+        
+        private static void FixRobotsRequestRecord(RequestRecord requestRecord)
+        {
+            if(requestRecord.TargetUri == null)
+            {
+                return;
+            }
+
+            if (!requestRecord.TargetUri.AbsoluteUri.Contains("/robots.txt?kennedy-crawler"))
+            {
+                return;
+            }
+
+            string cleanUrl = requestRecord.TargetUri.AbsoluteUri.Replace("/robots.txt?kennedy-crawler", "/robots.txt");
+
+            GeminiUrl geminiUrl = new GeminiUrl(cleanUrl);
+
+            requestRecord.TargetUri = geminiUrl.Url;
+            requestRecord.ContentBlock = GeminiParser.CreateRequestBytes(geminiUrl);
+            UpdateBlockDigest(requestRecord);
+        }
+
+        private static void FixRobotsResponseRecord(ResponseRecord responseRecord)
+        {
+            if (responseRecord.TargetUri == null)
+            {
+                return;
+            }
+
+            if (!responseRecord.TargetUri.AbsoluteUri.Contains("/robots.txt?kennedy-crawler"))
+            {
+                return;
+            }
+
+            string cleanUrl = responseRecord.TargetUri.AbsoluteUri.Replace("/robots.txt?kennedy-crawler", "/robots.txt");
+
+            GeminiUrl geminiUrl = new GeminiUrl(cleanUrl);
+            responseRecord.TargetUri = geminiUrl.Url;
         }
 
         private static void FixResponsePayload(ResponseRecord responseRecord)
@@ -94,10 +132,7 @@ namespace Kennedy.Warc
             {
                 responseRecord.PayloadDigest = GeminiParser.GetStrongHash(response.BodyBytes!);
             }
-
         }
-
-
 
         //private static void OptimizeForStoage(ResponseRecord response)
         //{
