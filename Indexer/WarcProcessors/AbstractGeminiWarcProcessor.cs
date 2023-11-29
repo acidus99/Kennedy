@@ -2,7 +2,7 @@
 using WarcDotNet;
 
 using Gemini.Net;
-using Kennedy.Data;
+using Kennedy.Data.Utils;
 using Kennedy.Crawler.Filters;
 
 namespace Kennedy.Indexer.WarcProcessors
@@ -41,9 +41,8 @@ namespace Kennedy.Indexer.WarcProcessors
 
             try
             {
-                bool isProactive = IsProactiveRequest(responseRecord);
-
-                var url = new GeminiUrl(StripRobots(responseRecord.TargetUri));
+                bool isProactive = UrlUtility.IsProactiveUrl(responseRecord.TargetUri);
+                var url = new GeminiUrl(UrlUtility.RemoveCrawlerIdentifier(responseRecord.TargetUri));
 
                 if (!isProactive)
                 {
@@ -67,33 +66,6 @@ namespace Kennedy.Indexer.WarcProcessors
                 Console.WriteLine("Malformed Gemini response record. Skipping");
                 return null;
             }
-        }
-
-        protected bool IsProactiveRequest(ResponseRecord responseRecord)
-        {
-            return IsProactiveRequest(new GeminiUrl(responseRecord.TargetUri!));
-        }
-
-        protected bool IsProactiveRequest(GeminiUrl url)
-        {
-            if (url.Path == "/robots.txt" ||
-                url.Path == "/favicon.txt" ||
-                url.Path == "/.well-known/security.txt")
-            {
-                return true;
-            }
-            return false;
-        }
-
-        private Uri StripRobots(Uri url)
-        {
-            if (url.PathAndQuery == "/robots.txt?kennedy-crawler")
-            {
-                UriBuilder uriBuilder = new UriBuilder(url);
-                uriBuilder.Query = "";
-                return uriBuilder.Uri;
-            }
-            return url;
         }
 
         public abstract void FinalizeProcessing();
