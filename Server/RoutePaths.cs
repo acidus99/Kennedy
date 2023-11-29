@@ -45,9 +45,12 @@ namespace Kennedy.Server
             }
             return ViewCached(snapshot.Url.GeminiUrl, snapshot.Captured, useRaw);
         }
-        
+
         public static string ViewCached(GeminiUrl url, DateTime snapshotTime, bool useRaw = false)
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={snapshotTime.Ticks}&raw={useRaw}";
+
+        public static string ViewMostRecentCached(GeminiUrl url)
+            => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}";
 
         public static string ViewUrlInfo(GeminiUrl url)
             => $"{UrlInfoRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";

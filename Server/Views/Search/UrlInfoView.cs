@@ -50,7 +50,8 @@ namespace Kennedy.Server.Views.Search
 
             Response.WriteLine($"# ℹ️ Page Info: {entry.GeminiUrl.Path}");
             Response.WriteLine($"=> {entry.Url} Visit Current Url");
-            Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(entry.GeminiUrl)} View archived copies with 🏎 DeLorean Time Machine");
+            Response.WriteLine($"=> {RoutePaths.ViewMostRecentCached(entry.GeminiUrl)} View most recent cached version");
+            Response.WriteLine($"=> {RoutePaths.ViewUrlHistory(entry.GeminiUrl)} View all archived copies and history with 🏎 DeLorean Time Machine");
             //var emoji = entry.Favicon?.Emoji + " " ?? "";
             var emoji = "";
             Response.WriteLine($"=> {entry.GeminiUrl.RootUrl} Capsule: {emoji}{entry.GeminiUrl.Hostname}");
