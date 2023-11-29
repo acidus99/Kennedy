@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Linq;
-using System.IO;
 using System.Web;
 
 using Microsoft.EntityFrameworkCore;
 
 using Gemini.Net;
-using Kennedy.SearchIndex;
-using Kennedy.SearchIndex.Models;
 using RocketForce;
 using Kennedy.Archive.Db;
 using Kennedy.Archive;
-using System.Reflection.PortableExecutable;
 
 namespace Kennedy.Server.Views.Archive
 {
@@ -140,11 +136,31 @@ namespace Kennedy.Server.Views.Archive
         {
             var args = HttpUtility.ParseQueryString(Request.Url.RawQuery);
 
-            var url = GeminiUrl.MakeUrl(args["url"] ?? "")!;
-            var time = new DateTime(Convert.ToInt64(args["t"]));
+            var url = GeminiUrl.MakeUrl(args["url"]);
+            var time = ParseTime(args["t"]);
             var isRaw = ((args["raw"]?.ToLower() ?? "") == "true");
 
             return (url, time, isRaw);
+        }
+
+        /// <summary>
+        /// Attempts to parse the user's perferred time. If no valid time, use the current time
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private DateTime ParseTime(string? time)
+        {
+            if(time != null)
+            {
+                try
+                {
+                    return new DateTime(Convert.ToInt64(time));
+                }
+                catch (Exception)
+                {
+                }
+            }
+            return DateTime.Now;
         }
 
         /// <summary>
