@@ -119,10 +119,16 @@ namespace Kennedy.Server.Views.Search
         private void RenderTextMetaData()
         {
             Response.WriteLine("### Text Metadata");
-            var title = entry.Title ?? "(Could not determine)";
+
+            if (entry.ContentType == ContentType.Gemtext)
+            {
+                var title = entry.Title ?? "(Could not determine)";
+                Response.WriteLine($"* Title: {title}");
+            }
+
             var language = (entry.DetectedLanguage != null) ? FormatLanguage(entry.DetectedLanguage) : "(Could not determine)";
-            Response.WriteLine($"* Title: {title}");
             Response.WriteLine($"* Detected language: {language}");
+
             if (entry.LineCount != null)
             {
                 Response.WriteLine($"* Lines: {entry.LineCount}");

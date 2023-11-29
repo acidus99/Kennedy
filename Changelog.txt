@@ -21,3 +21,5 @@
 - Feature: Show simple date, mimetype, redirects, and status code in URL history view
 - Fixed: Added message is snapshot is truncated
 - Feature: Show URL history view if searching archive for a fully qualified URL
+- Feature: Add inurl: scope
+- Fixed: Only show title in URL info view for gemtext responses
