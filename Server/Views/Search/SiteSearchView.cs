@@ -1,4 +1,5 @@
 ﻿using RocketForce;
+using Gemini.Net;
 
 namespace Kennedy.Server.Views.Archive
 {
@@ -13,6 +14,12 @@ namespace Kennedy.Server.Views.Archive
                 
             Response.Success();
             Response.WriteLine($"# 🎯 Kennedy Site Search");
+
+            //if they gave us a gemini URL, be cool and work with that
+            if(capsule.StartsWith("gemini://"))
+            {
+                capsule = ExtractDomain(capsule);
+            }
 
             if (!Helpers.SiteSearch.IsValidCapsuleName(capsule))
             {
@@ -33,6 +40,16 @@ namespace Kennedy.Server.Views.Archive
             Response.WriteLine("```");
             Response.WriteLine($"=> {RoutePaths.SiteSearch(capsule)} 🔍 Search this capsule");
             Response.WriteLine("```");
+        }
+
+        private string ExtractDomain(string url)
+        {
+            GeminiUrl? gurl = GeminiUrl.MakeUrl(url);
+            if(gurl != null)
+            {
+                return gurl.Hostname;
+            }
+            return "";
         }
     }
 }
