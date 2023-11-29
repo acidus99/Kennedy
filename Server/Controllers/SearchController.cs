@@ -23,7 +23,8 @@ namespace Kennedy.Server.Controllers
         public static void SiteSearch(GeminiRequest request, Response response, GeminiServer app)
         {
             //are they making a new site search?
-            if(request.Route == RoutePaths.SiteSearchRoute)
+            if(request.Route == RoutePaths.SiteSearchRoute ||
+                request.Route == RoutePaths.SiteSearchRoute + "/")
             {
                 if (!request.Url.HasQuery)
                 {
@@ -36,7 +37,6 @@ namespace Kennedy.Server.Controllers
             }
 
             //pull out the capsule
-
             string? capsule = Helpers.SiteSearch.GetSite(request.Route);
             if(capsule == null)
             {
