@@ -10,10 +10,18 @@ namespace Kennedy.SearchIndex.Search
 	public interface ISearchDatabase
 	{
         /// <summary>
-        /// Adds a document to the search index, keyed by its URL
+        /// Updates the search index, if appropriate
         /// </summary>
         /// <param name="parsedResponse"></param>
         void UpdateIndex(ParsedResponse parsedResponse);
+
+        /// <summary>
+        /// Updates the search index for a specific URL
+        /// </summary>
+        /// <param name="urlID"></param>
+        /// <param name="filteredBody"></param>
+        /// <param name="title"></param>
+        void UpdateIndexForUrl(long urlID, string filteredBody, string? title = null);
 
         /// <summary>
         /// Removes a document from the search index, based on its URL ID

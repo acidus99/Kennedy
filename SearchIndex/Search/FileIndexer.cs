@@ -13,10 +13,10 @@ namespace Kennedy.SearchIndex.Search
     public class FileIndexer
     {
         string storageDirectory;
-        SearchDatabase searchDatabase;
+        ISearchDatabase searchDatabase;
         PathTokenizer pathTokenizer;
 
-        public FileIndexer(string storageDirectory, SearchDatabase searchDatabase)
+        public FileIndexer(string storageDirectory, ISearchDatabase searchDatabase)
         {
             this.storageDirectory = storageDirectory;
             this.searchDatabase = searchDatabase;
@@ -54,10 +54,7 @@ order by UrlID");
                             //the last thing to add is the indexable text from the url path
                             sb.Append(' ');
                             sb.Append(GetPathIndexText(currUrl));
-                            //full the buffer
-                            var indexable = sb.ToString();
-
-                            searchDatabase.UpdateTextIndex(currUrl.ID, indexable);
+                            searchDatabase.UpdateIndexForUrl(currUrl.ID, sb.ToString());
                         }
                         sb.Clear();
                         currUrl = new GeminiUrl(file.Url);
@@ -79,7 +76,7 @@ order by UrlID");
                     sb.Append(' ');
                     sb.Append(GetPathIndexText(currUrl));
                     //full the buffer
-                    searchDatabase.UpdateTextIndex(currUrl.ID, sb.ToString());
+                    searchDatabase.UpdateIndexForUrl(currUrl.ID, sb.ToString());
                 }
             }
         }

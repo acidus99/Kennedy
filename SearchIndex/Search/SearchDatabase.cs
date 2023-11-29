@@ -5,6 +5,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 using Kennedy.Data;
+using Kennedy.Data.Utils;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Web;
 
@@ -27,6 +28,19 @@ namespace Kennedy.SearchIndex.Search
 
         #region Add to Index
 
+        private bool ShouldIndexText(ParsedResponse parsedResponse)
+        {
+            if (parsedResponse is ITextResponse textDoc)
+            {
+                //only index text responses, with indexable text, that are also not proactive requests
+                if (!UrlUtility.IsProactiveUrl(parsedResponse.RequestUrl.Url))
+                {
+                    return textDoc.HasIndexableText;
+                }
+            }
+            return false;
+        }
+
         public void UpdateIndex(ParsedResponse parsedResponse)
         {
             if (parsedResponse is ITextResponse)
@@ -35,12 +49,12 @@ namespace Kennedy.SearchIndex.Search
 
                 if (textDoc.HasIndexableText)
                 {
-                    UpdateTextIndex(parsedResponse.RequestUrl.ID, textDoc.IndexableText!, textDoc.Title);
+                    UpdateIndexForUrl(parsedResponse.RequestUrl.ID, textDoc.IndexableText!, textDoc.Title);
                 }
             }
         }
 
-        public void UpdateTextIndex(long urlID, string filteredBody, string? title = null)
+        public void UpdateIndexForUrl(long urlID, string filteredBody, string? title = null)
         {
             using (var db = GetContext())
             {
