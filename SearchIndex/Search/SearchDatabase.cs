@@ -43,7 +43,7 @@ namespace Kennedy.SearchIndex.Search
 
         public void UpdateIndex(ParsedResponse parsedResponse)
         {
-            if (parsedResponse is ITextResponse)
+            if(ShouldIndexText(parsedResponse) && parsedResponse is ITextResponse)
             {
                 var textDoc = (ITextResponse)parsedResponse;
 
