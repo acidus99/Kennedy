@@ -9,7 +9,6 @@ using Kennedy.SearchIndex.Models;
 
 public class QueryParser
 {
-
 	readonly static Regex whitespaceRuns = new Regex(@"\s+");
 
 	readonly static Regex siteScopeRegex = new Regex(@"\bsite\:\s*([0-9a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);

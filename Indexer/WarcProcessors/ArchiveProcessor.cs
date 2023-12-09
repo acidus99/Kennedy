@@ -1,19 +1,12 @@
 ﻿namespace Kennedy.Indexer.WarcProcessors;
 
-using System;
 using System.Linq;
 using System.Text.Json;
-using WarcDotNet;
 
 using Gemini.Net;
 
 using Kennedy.Archive;
-using Kennedy.Data;
-using Kennedy.Data.Parsers;
-using Kennedy.SearchIndex.Web;
 using Kennedy.Data.RobotsTxt;
-using Kennedy.Archive.Db;
-
 
 public class ArchiveProcessor : AbstractGeminiWarcProcessor
 {

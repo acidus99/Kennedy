@@ -1,13 +1,9 @@
 ﻿namespace Kennedy.Indexer.WarcProcessors;
 
-using System;
-using WarcDotNet;
-
 using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.Data.Parsers;
 using Kennedy.SearchIndex;
-using Kennedy.Archive;
 using System.Text.Json;
 
 public class SearchProcessor : AbstractGeminiWarcProcessor
@@ -40,11 +36,6 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
 
     protected override void ProcessGeminiResponse(GeminiResponse geminiResponse)
     {
-        //if(IsProactiveRequest(geminiResponse.RequestUrl))
-        //{
-        //    return;
-        //}
-
         // Fully parsed the response to get type-specific metadata.
         ParsedResponse parsedResponse = responseParser.Parse(geminiResponse);
         wrapperDB.StoreResponse(parsedResponse);
