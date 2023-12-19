@@ -30,12 +30,12 @@ namespace Kennedy.Warc
             WrittenCertificates = new Dictionary<string, bool>();
         }
 
-        public void WriteWarcInfo(WarcFields fields)
+        public void WriteWarcInfo(WarcInfoFields fields)
         {
             Write(new WarcInfoRecord
             {
                 Id = WarcInfoID,
-                ContentType = WarcFields.ContentType,
+                ContentType = WarcInfoFields.ContentType,
                 ContentText = fields.ToString()
             });
         }
@@ -181,12 +181,12 @@ namespace Kennedy.Warc
             {
                 if (connectionInfo.Protocol.HasValue)
                 {
-                    record.AddCustomHeader("WARC-Protocol", GetProtocolHeader(connectionInfo));
+                    record.AddCustomField("WARC-Protocol", GetProtocolHeader(connectionInfo));
                 }
 
                 if (connectionInfo.CipherSuite.HasValue)
                 {
-                    record.AddCustomHeader("WARC-Cipher-Suite", GetCipherSuite(connectionInfo));
+                    record.AddCustomField("WARC-Cipher-Suite", GetCipherSuite(connectionInfo));
                 }
             }
         }
