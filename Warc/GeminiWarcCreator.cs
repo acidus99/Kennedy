@@ -186,7 +186,7 @@ namespace Kennedy.Warc
 
                 if (connectionInfo.CipherSuite.HasValue)
                 {
-                    record.AddCustomHeader("WARC-TLS-Cipher-Suite", GetCipherSuite(connectionInfo));
+                    record.AddCustomHeader("WARC-Cipher-Suite", GetCipherSuite(connectionInfo));
                 }
             }
         }
