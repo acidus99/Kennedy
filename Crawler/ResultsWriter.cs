@@ -28,7 +28,7 @@ namespace Kennedy.Crawler
 			Saved = 0;
 			responses = new ConcurrentQueue<Tuple<GeminiResponse, TlsConnectionInfo?>>();
 			warcCreator = new GeminiWarcCreator(warcDirectory + DateTime.Now.ToString("yyyy-MM-dd") + ".warc");
-			warcCreator.WriteWarcInfo(new WarcFields
+			warcCreator.WriteWarcInfo(new WarcInfoFields
 			{
 				{"software", "Kennedy Crawler"},
 				{"hostname", "kennedy.gemi.dev"},

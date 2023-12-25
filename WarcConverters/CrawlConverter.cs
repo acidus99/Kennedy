@@ -50,7 +50,7 @@ public static class CrawlConverter
     {
         using (var warcCreator = new GeminiWarcCreator(warcOutputFile))
         {
-            warcCreator.WriteWarcInfo(new WarcFields
+            warcCreator.WriteWarcInfo(new WarcInfoFields
             {
                 {"software", "Kennedy Mozz Portal Importer"},
                 {"details", "This WARC contains connect extract and converted from the Internet Archive"},
@@ -98,8 +98,8 @@ public static class CrawlConverter
         throw new ArgumentException("Unknown Converter Type", nameof(type));
     }
 
-    static WarcFields GetWarcFields()
-        => new WarcFields
+    static WarcInfoFields GetWarcFields()
+        => new WarcInfoFields
                 {
                     {"software", "Kennedy Legacy Crawl importer"},
                     {"hostname", "kennedy.gemi.dev"},

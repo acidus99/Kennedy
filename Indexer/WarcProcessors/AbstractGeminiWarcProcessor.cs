@@ -60,9 +60,9 @@ namespace Kennedy.Indexer.WarcProcessors
                 response.IsBodyTruncated = (responseRecord.Truncated?.Length > 0);
                 return response;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Console.WriteLine("Malformed Gemini response record. Skipping");
+                Console.WriteLine($"Malformed Gemini response record: {ex.Message}");
                 return null;
             }
         }
