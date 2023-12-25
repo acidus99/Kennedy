@@ -1,5 +1,4 @@
-﻿using System;
-using WarcDotNet;
+﻿using WarcDotNet;
 
 using Gemini.Net;
 using Kennedy.Data.Utils;
@@ -7,7 +6,7 @@ using Kennedy.Crawler.Filters;
 
 namespace Kennedy.Indexer.WarcProcessors
 {
-	public abstract class AbstractGeminiWarcProcessor : IWarcProcessor
+    public abstract class AbstractGeminiWarcProcessor : IWarcProcessor
     {
         System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
 
