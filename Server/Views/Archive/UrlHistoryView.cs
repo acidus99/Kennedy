@@ -1,140 +1,137 @@
-﻿using System.Linq;
-using Gemini.Net;
+﻿using Gemini.Net;
 using Kennedy.Archive.Db;
 using Microsoft.EntityFrameworkCore;
 using RocketForce;
+using System.Linq;
 
-namespace Kennedy.Server.Views.Archive
+namespace Kennedy.Server.Views.Archive;
+
+/// <summary>
+/// Shows the details about a 
+/// </summary>
+internal class UrlHistoryView : AbstractView
 {
+    public bool ShowAllSnapshots { get; set; } = false;
 
-    /// <summary>
-    /// Shows the details about a 
-    /// </summary>
-    internal class UrlHistoryView :AbstractView
+    GeminiUrl? AttemptedUrl;
+
+    public UrlHistoryView(GeminiRequest request, Response response, GeminiServer app)
+        : base(request, response, app) { }
+
+    public override void Render()
     {
+        ParseArgs();
 
-        public bool ShowAllSnapshots { get; set; } = false;
-
-        GeminiUrl? AttemptedUrl;
-
-        public UrlHistoryView(GeminiRequest request, Response response, GeminiServer app)
-            : base(request, response, app) { }
-
-        public override void Render()
+        if (AttemptedUrl == null)
         {
-            ParseArgs();
-
-            if(AttemptedUrl == null)
-            {
-                Response.Success();
-                Response.WriteLine($"# 🏎 DeLorean Time Machine");
-                Response.WriteLine();
-                Response.WriteLine("Invalid URL. Please enter a fully qualified, valid, Gemini URL.");
-                Response.WriteLine("=> /delorean Try Again");
-                return;
-            }
-
-            ArchiveDbContext db = new ArchiveDbContext(Settings.Global.DataRoot + "archive.db");
-
-            var urlEntry = db.Urls
-                .Where(x => x.Id == AttemptedUrl.ID && x.IsPublic)
-                .Include(x => x.Snapshots).
-                FirstOrDefault();
-
-            if (urlEntry == null)
-            {
-                Response.Success();
-                Response.WriteLine($"# 🏎 DeLorean Time Machine");
-                Response.WriteLine("No snapshots for that URL");
-                Response.WriteLine();
-                Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistoryRoute} Search Time Machine for cached Content");
-                Response.WriteLine("=> /search 🔭 New Kennedy Search");
-                return;
-            }
-
             Response.Success();
             Response.WriteLine($"# 🏎 DeLorean Time Machine");
             Response.WriteLine();
-            Response.WriteLine("Found this URL in Time Machine!");
-            Response.WriteLine($"=> {urlEntry.GeminiUrl.NormalizedUrl} {urlEntry.GeminiUrl.NormalizedUrl}");
-
-            var snapshots = urlEntry.Snapshots.OrderBy(x => x.Captured).ToArray();
-
-            var first = snapshots.First();
-            var last = snapshots.Last();
-
-            Response.WriteLine($"Saved {snapshots.Length} times between {first.Captured.ToString("MMMM d yyyy")} and {last.Captured.ToString("MMMM d yyyy")}");
-
-            var uniqueCount = snapshots.GroupBy(x => x.DataHash).Count();
-            Response.WriteLine($"Unique snapshots: {uniqueCount}");
-
-            var truncatedCount = snapshots.Where(x => x.IsBodyTruncated).Count();
-            if(truncatedCount > 0)
-            {
-                Response.WriteLine();
-                Response.WriteLine($"{truncatedCount} snapshots are truncated, meaning the entire file is not there. Depending on the type file type, these truncated snapshots may not be able to be opened.");
-            }
-
-            if (ShowAllSnapshots)
-            {
-                Response.WriteLine("## All Snapshots");
-                Response.WriteLine($"Showing all {snapshots.Length} snapshots for this URL.");
-                Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(urlEntry.GeminiUrl)} Show only unique snapshots");
-            }
-            else
-            {
-                Response.WriteLine("## Unique Snapshots");
-                Response.WriteLine($"Showing {uniqueCount} snapshots that have unique content for this URL.");
-                Response.WriteLine($"=> {RoutePaths.ViewUrlFullHistory(urlEntry.GeminiUrl)} Show all snapshots");
-
-                snapshots = snapshots.Where(x => !x.IsDuplicate).ToArray();
-            }
-
-            int currentYear = 0;
-
-            foreach(var snapshot in snapshots)
-            {
-                if(currentYear < snapshot.Captured.Year)
-                {
-                    Response.WriteLine($"### {snapshot.Captured.Year}");
-                    currentYear = snapshot.Captured.Year;
-                }
-                RenderSnapshot(snapshot);
-            }
+            Response.WriteLine("Invalid URL. Please enter a fully qualified, valid, Gemini URL.");
+            Response.WriteLine("=> /delorean Try Again");
+            return;
         }
 
-        private void RenderSnapshot(Snapshot snapshot)
+        ArchiveDbContext db = new ArchiveDbContext(Settings.Global.DataRoot + "archive.db");
+
+        var urlEntry = db.Urls
+            .Where(x => x.Id == AttemptedUrl.ID && x.IsPublic)
+            .Include(x => x.Snapshots).
+            FirstOrDefault();
+
+        if (urlEntry == null)
         {
-            Response.Write($"=> {RoutePaths.ViewCached(snapshot)} ");
-            if (!snapshot.IsDuplicate)
-            {
-                Response.Write("🆕 ");
-            }
-            Response.Write(snapshot.Captured.ToString("yyyy-MM-dd"));
-            Response.Write($" • ");
-            if (GeminiParser.IsSuccessStatus(snapshot.StatusCode))
-            {
-                Response.Write($"{snapshot.Mimetype} • ");
-                Response.Write($"{FormatSize(snapshot.Size)}");
-                if(snapshot.IsBodyTruncated)
-                {
-                    Response.Write(" • Truncated Body");
-                }
-            }
-            else if (GeminiParser.IsRedirectStatus(snapshot.StatusCode))
-            {
-                Response.Write($"↩️ Redirect");
-            }
-            else
-            {
-                Response.Write($"Status Code: {snapshot.StatusCode}");
-            }
+            Response.Success();
+            Response.WriteLine($"# 🏎 DeLorean Time Machine");
+            Response.WriteLine("No snapshots for that URL");
             Response.WriteLine();
+            Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistoryRoute} Search Time Machine for cached Content");
+            Response.WriteLine("=> /search 🔭 New Kennedy Search");
+            return;
         }
 
-        private void ParseArgs()
+        Response.Success();
+        Response.WriteLine($"# 🏎 DeLorean Time Machine");
+        Response.WriteLine();
+        Response.WriteLine("Found this URL in Time Machine!");
+        Response.WriteLine($"=> {urlEntry.GeminiUrl.NormalizedUrl} {urlEntry.GeminiUrl.NormalizedUrl}");
+
+        var snapshots = urlEntry.Snapshots.OrderBy(x => x.Captured).ToArray();
+
+        var first = snapshots.First();
+        var last = snapshots.Last();
+
+        Response.WriteLine($"Saved {snapshots.Length} times between {first.Captured.ToString("MMMM d yyyy")} and {last.Captured.ToString("MMMM d yyyy")}");
+
+        var uniqueCount = snapshots.GroupBy(x => x.DataHash).Count();
+        Response.WriteLine($"Unique snapshots: {uniqueCount}");
+
+        var truncatedCount = snapshots.Where(x => x.IsBodyTruncated).Count();
+        if (truncatedCount > 0)
         {
-            AttemptedUrl = GeminiUrl.MakeUrl(Request.Url.Query);
+            Response.WriteLine();
+            Response.WriteLine($"{truncatedCount} snapshots are truncated, meaning the entire file is not there. Depending on the type file type, these truncated snapshots may not be able to be opened.");
         }
+
+        if (ShowAllSnapshots)
+        {
+            Response.WriteLine("## All Snapshots");
+            Response.WriteLine($"Showing all {snapshots.Length} snapshots for this URL.");
+            Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(urlEntry.GeminiUrl)} Show only unique snapshots");
+        }
+        else
+        {
+            Response.WriteLine("## Unique Snapshots");
+            Response.WriteLine($"Showing {uniqueCount} snapshots that have unique content for this URL.");
+            Response.WriteLine($"=> {RoutePaths.ViewUrlFullHistory(urlEntry.GeminiUrl)} Show all snapshots");
+
+            snapshots = snapshots.Where(x => !x.IsDuplicate).ToArray();
+        }
+
+        int currentYear = 0;
+
+        foreach (var snapshot in snapshots)
+        {
+            if (currentYear < snapshot.Captured.Year)
+            {
+                Response.WriteLine($"### {snapshot.Captured.Year}");
+                currentYear = snapshot.Captured.Year;
+            }
+            RenderSnapshot(snapshot);
+        }
+    }
+
+    private void RenderSnapshot(Snapshot snapshot)
+    {
+        Response.Write($"=> {RoutePaths.ViewCached(snapshot)} ");
+        if (!snapshot.IsDuplicate)
+        {
+            Response.Write("🆕 ");
+        }
+        Response.Write(snapshot.Captured.ToString("yyyy-MM-dd"));
+        Response.Write($" • ");
+        if (GeminiParser.IsSuccessStatus(snapshot.StatusCode))
+        {
+            Response.Write($"{snapshot.Mimetype} • ");
+            Response.Write($"{FormatSize(snapshot.Size)}");
+            if (snapshot.IsBodyTruncated)
+            {
+                Response.Write(" • Truncated Body");
+            }
+        }
+        else if (GeminiParser.IsRedirectStatus(snapshot.StatusCode))
+        {
+            Response.Write($"↩️ Redirect");
+        }
+        else
+        {
+            Response.Write($"Status Code: {snapshot.StatusCode}");
+        }
+        Response.WriteLine();
+    }
+
+    private void ParseArgs()
+    {
+        AttemptedUrl = GeminiUrl.MakeUrl(Request.Url.Query);
     }
 }

@@ -1,9 +1,8 @@
-﻿using System;
-using System.Text;
-
+﻿using Gemini.Net;
+using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Gemini.Net;
+using System.Text;
 
 namespace Kennedy.Server.Helpers;
 
@@ -75,13 +74,13 @@ public class CertChecker
 
         return FormatHash(SHA256.HashData(GetPublicKeyBytes()), false, false);
     }
- 
+
     private string FormatHash(byte[] data, bool makeUpper = true, bool addSeparator = true)
     {
         string hash = Convert.ToHexString(data);
         hash = (makeUpper) ? hash.ToUpper() : hash.ToLower();
 
-        if(addSeparator)
+        if (addSeparator)
         {
             hash = AddSeparators(hash, ':');
         }

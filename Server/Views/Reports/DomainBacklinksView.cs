@@ -1,144 +1,135 @@
-﻿using System;
+﻿using Gemini.Net;
+using Kennedy.SearchIndex.Web;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using RocketForce;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
-using System.Text;
-using System.Web;
-using Microsoft.EntityFrameworkCore;
 
-using Gemini.Net;
-using Kennedy.SearchIndex.Web;
-using Kennedy.SearchIndex.Search;
-using Kennedy.SearchIndex.Models;
-using Kennedy.Data;
-using RocketForce;
-using Kennedy.Archive.Db;
-using Microsoft.Data.Sqlite;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+namespace Kennedy.Server.Views.Reports;
 
-namespace Kennedy.Server.Views.Reports
+internal class DomainBacklinksView : AbstractView
 {
-    internal class DomainBacklinksView :AbstractView
+    public DomainBacklinksView(GeminiRequest request, Response response, GeminiServer app)
+        : base(request, response, app) { }
+
+    WebDatabaseContext db = new WebDatabaseContext(Settings.Global.DataRoot);
+
+    public override void Render()
     {
-        public DomainBacklinksView(GeminiRequest request, Response response, GeminiServer app)
-            : base(request, response, app) { }
+        var authority = ParseAuthory(SanitizedQuery);
 
-        WebDatabaseContext db = new WebDatabaseContext(Settings.Global.DataRoot);
+        Response.Success();
 
-        public override void Render()
+        if (!DomainExists(authority.protocol, authority.domain, authority.port))
         {
-            var authority = ParseAuthory(SanitizedQuery);
+            RenderUnknownDomain(authority.domain);
+            return;
+        }
 
-            Response.Success();
+        Response.WriteLine($"# {authority.domain} - ↩️ Backlinks Report");
+        Response.WriteLine($"Protocol: {authority.protocol}");
+        Response.WriteLine($"Domain: {authority.domain}");
+        Response.WriteLine($"Port: {authority.port}");
 
-            if (!DomainExists(authority.protocol, authority.domain, authority.port))
+        List<Backlink> backlinks = GetBacklinks(authority.protocol, authority.domain, authority.port);
+
+        Response.WriteLine($"Backlinks: {backlinks.Count}");
+
+        string prev = "";
+        int urlGroupNumber = 0;
+        int urlNumber = 0;
+        for (int i = 0; i < backlinks.Count; i++)
+        {
+            var backlink = backlinks[i];
+
+            if (backlink.TargetUrl.NormalizedUrl != prev)
             {
-                RenderUnknownDomain(authority.domain);
-                return;
-            }
-
-            Response.WriteLine($"# {authority.domain} - ↩️ Backlinks Report");
-            Response.WriteLine($"Protocol: {authority.protocol}");
-            Response.WriteLine($"Domain: {authority.domain}");
-            Response.WriteLine($"Port: {authority.port}");
-
-            List<Backlink> backlinks = GetBacklinks(authority.protocol, authority.domain, authority.port);
-
-            Response.WriteLine($"Backlinks: {backlinks.Count}");
-
-            string prev = "";
-            int urlGroupNumber = 0;
-            int urlNumber = 0;
-            for(int i =0; i < backlinks.Count; i++)
-            {
-                var backlink = backlinks[i];
-
-                if(backlink.TargetUrl.NormalizedUrl != prev)
-                {
-                    urlNumber = 0;
-                    urlGroupNumber++;
-                    prev = backlink.TargetUrl.NormalizedUrl;
-                    Response.WriteLine();
-                    Response.WriteLine($"## {urlGroupNumber}. Url: {backlink.TargetUrl.Path}");
-                    Response.WriteLine($"=> {backlink.TargetUrl} Full Url: {backlink.TargetUrl}");
-                    Response.WriteLine($"Status Code: {backlink.StatusCode}");
-                    Response.WriteLine($"{CountUrls(backlinks, i)} Backlinks:");
-                }
-
-                urlNumber++;
-
-                Response.Write($"=> {backlink.SourceUrl} {urlNumber}. \"{backlink.SourceUrl}\"");
-                if(!string.IsNullOrEmpty(backlink.LinkText))
-                {
-                    Response.Write($" with link \"{backlink.LinkText}\"");
-                }
+                urlNumber = 0;
+                urlGroupNumber++;
+                prev = backlink.TargetUrl.NormalizedUrl;
                 Response.WriteLine();
+                Response.WriteLine($"## {urlGroupNumber}. Url: {backlink.TargetUrl.Path}");
+                Response.WriteLine($"=> {backlink.TargetUrl} Full Url: {backlink.TargetUrl}");
+                Response.WriteLine($"Status Code: {backlink.StatusCode}");
+                Response.WriteLine($"{CountUrls(backlinks, i)} Backlinks:");
             }
-        }
 
-        private void RenderUnknownDomain(string domain)
-        {
-            Response.WriteLine($"# ↩️ Backlinks Report");
-            Response.WriteLine("Sorry, Kennedy has no information about this domain:");
-            Response.WriteLine($"```");
-            Response.WriteLine($"{domain}");
-            Response.WriteLine($"```");
-            Response.WriteLine($"=> {RoutePaths.DomainBacklinksRoute} Try another Domain");
-        }
+            urlNumber++;
 
-        //counts how many items in a row have the same url, starting from an index
-        private int CountUrls(List<Backlink> backlinks, int currIndex)
-        {
-            int count = 0;
-
-            string targetUrl = backlinks[currIndex].TargetUrl.NormalizedUrl;
-
-            for (; currIndex < backlinks.Count; currIndex++)
+            Response.Write($"=> {backlink.SourceUrl} {urlNumber}. \"{backlink.SourceUrl}\"");
+            if (!string.IsNullOrEmpty(backlink.LinkText))
             {
-                var currUrl = backlinks[currIndex].TargetUrl.NormalizedUrl;
-                if (targetUrl != currUrl)
-                {
-                    break;
-                }
-                count++;
+                Response.Write($" with link \"{backlink.LinkText}\"");
             }
-            return count;
+            Response.WriteLine();
         }
+    }
 
-        private (string protocol, string domain, int port) ParseAuthory(string s)
+    private void RenderUnknownDomain(string domain)
+    {
+        Response.WriteLine($"# ↩️ Backlinks Report");
+        Response.WriteLine("Sorry, Kennedy has no information about this domain:");
+        Response.WriteLine($"```");
+        Response.WriteLine($"{domain}");
+        Response.WriteLine($"```");
+        Response.WriteLine($"=> {RoutePaths.DomainBacklinksRoute} Try another Domain");
+    }
+
+    //counts how many items in a row have the same url, starting from an index
+    private int CountUrls(List<Backlink> backlinks, int currIndex)
+    {
+        int count = 0;
+
+        string targetUrl = backlinks[currIndex].TargetUrl.NormalizedUrl;
+
+        for (; currIndex < backlinks.Count; currIndex++)
         {
-            s = s.ToLower();
-            int index = s.IndexOf(':');
-
-            if (index >= 1 && s.Length > index + 1)
+            var currUrl = backlinks[currIndex].TargetUrl.NormalizedUrl;
+            if (targetUrl != currUrl)
             {
-                try
-                {
-                    return ("gemini", s.Substring(0, index), Convert.ToInt32(s.Substring(index + 1)));
-                }
-                catch (Exception)
-                {
-                }
+                break;
             }
-            return ("gemini", s, 1965);
+            count++;
         }
+        return count;
+    }
 
-        private bool DomainExists(string protocol, string domain, int port)
-        {
-            return db.Documents
-                .Where(x => x.Protocol == protocol && x.Domain == domain && x.Port == port)
-                .FirstOrDefault() != null;
-        }
+    private (string protocol, string domain, int port) ParseAuthory(string s)
+    {
+        s = s.ToLower();
+        int index = s.IndexOf(':');
 
-        private List<Backlink> GetBacklinks(string protocol, string domain, int port)
+        if (index >= 1 && s.Length > index + 1)
         {
-            var ret = new List<Backlink>();
             try
             {
-                using (var connection = db.Database.GetDbConnection())
-                {
-                    connection.Open();
-                    SqliteCommand cmd = new SqliteCommand(
+                return ("gemini", s.Substring(0, index), Convert.ToInt32(s.Substring(index + 1)));
+            }
+            catch (Exception)
+            {
+            }
+        }
+        return ("gemini", s, 1965);
+    }
+
+    private bool DomainExists(string protocol, string domain, int port)
+    {
+        return db.Documents
+            .Where(x => x.Protocol == protocol && x.Domain == domain && x.Port == port)
+            .FirstOrDefault() != null;
+    }
+
+    private List<Backlink> GetBacklinks(string protocol, string domain, int port)
+    {
+        var ret = new List<Backlink>();
+        try
+        {
+            using (var connection = db.Database.GetDbConnection())
+            {
+                connection.Open();
+                SqliteCommand cmd = new SqliteCommand(
 @"
 select source.Url as surl, Links.LinkText as linktext, target.Url as turl, target.StatusCode as sc
 FROM Documents as source
@@ -151,45 +142,44 @@ and target.Domain = $domain and target.Protocol = $protocol and target.Port = $p
 order by target.Url
 ", (SqliteConnection?)connection);
 
-                    cmd.Parameters.Add(new SqliteParameter("domain", domain));
-                    cmd.Parameters.Add(new SqliteParameter("protocol", protocol));
-                    cmd.Parameters.Add(new SqliteParameter("port", port));
-                    SqliteDataReader reader = cmd.ExecuteReader();
+                cmd.Parameters.Add(new SqliteParameter("domain", domain));
+                cmd.Parameters.Add(new SqliteParameter("protocol", protocol));
+                cmd.Parameters.Add(new SqliteParameter("port", port));
+                SqliteDataReader reader = cmd.ExecuteReader();
 
-                    while (reader.Read())
+                while (reader.Read())
+                {
+                    int ordinal = reader.GetOrdinal("linktext");
+
+                    string? linkText = reader.IsDBNull(ordinal) ?
+                                        null : reader.GetString(ordinal).Trim();
+
+                    ret.Add(new Backlink
                     {
-                        int ordinal = reader.GetOrdinal("linktext");
-
-                        string? linkText = reader.IsDBNull(ordinal) ?
-                                            null : reader.GetString(ordinal).Trim();
-
-                        ret.Add(new Backlink
-                        {
-                            SourceUrl = new GeminiUrl(reader.GetString(reader.GetOrdinal("surl"))),
-                            TargetUrl = new GeminiUrl(reader.GetString(reader.GetOrdinal("turl"))),
-                            StatusCode = reader.GetInt32(reader.GetOrdinal("sc")),
-                            LinkText = linkText
-                        });
-                    }
-                    return ret;
+                        SourceUrl = new GeminiUrl(reader.GetString(reader.GetOrdinal("surl"))),
+                        TargetUrl = new GeminiUrl(reader.GetString(reader.GetOrdinal("turl"))),
+                        StatusCode = reader.GetInt32(reader.GetOrdinal("sc")),
+                        LinkText = linkText
+                    });
                 }
+                return ret;
             }
-            catch (Exception)
-            {
-
-            }
-            return ret;
         }
-
-        private class Backlink
+        catch (Exception)
         {
-            public required GeminiUrl SourceUrl { get; set; }
 
-            public required GeminiUrl TargetUrl { get; set; }
-
-            public string? LinkText { get; set; }
-
-            public required int StatusCode { get; set; }
         }
+        return ret;
+    }
+
+    private class Backlink
+    {
+        public required GeminiUrl SourceUrl { get; set; }
+
+        public required GeminiUrl TargetUrl { get; set; }
+
+        public string? LinkText { get; set; }
+
+        public required int StatusCode { get; set; }
     }
 }

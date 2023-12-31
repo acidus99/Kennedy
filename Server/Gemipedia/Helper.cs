@@ -1,14 +1,11 @@
-﻿using System;
-using System.Net;
-using System.IO;
+﻿using System.Net;
 
-namespace Kennedy.Gemipedia
-{
+namespace Kennedy.Gemipedia;
+
 	public static class Helper
 	{
-        const string GemipediaRoot = "gemini://gemi.dev/cgi-bin/wp.cgi/";
+    const string GemipediaRoot = "gemini://gemi.dev/cgi-bin/wp.cgi/";
 
-        public static string ArticleUrl(ArticleSummary article)
-            => $"{GemipediaRoot}view?{WebUtility.UrlEncode(article.Title)}";
-    }
+    public static string ArticleUrl(ArticleSummary article)
+        => $"{GemipediaRoot}view?{WebUtility.UrlEncode(article.Title)}";
 }
