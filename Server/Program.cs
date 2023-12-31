@@ -28,23 +28,30 @@ namespace Kennedy.Server
             //text search
             server.OnRequest(RoutePaths.SearchRoute, SearchController.Search);
             server.OnRequest(RoutePaths.SearchStatsRoute, SearchController.Stats);
-            server.OnRequest(RoutePaths.SiteSearchRoute, SearchController.SiteSearch);
             server.OnRequest("/lucky", SearchController.LuckySearch);
+
+            //site-search routes
+            server.OnRequest(RoutePaths.SiteSearchCreateRoute, SearchController.SiteSearchCreate);
+            server.OnRequest(RoutePaths.SiteSearchRunRoute, SearchController.SiteSearchRun);
 
             //image search
             server.OnRequest(RoutePaths.ImageSearchRoute, ImageSearchController.Search);
 
-            server.OnRequest(RoutePaths.ViewUrlHistoryRoute, ArchiveController.UrlHistory);
+            //archive routes
+            server.OnRequest(RoutePaths.ViewUrlFullHistoryRoute, ArchiveController.UrlFullHistory);
+            server.OnRequest(RoutePaths.ViewUrlUniqueHistoryRoute, ArchiveController.UrlHistory);
             server.OnRequest(RoutePaths.ViewCachedRoute, ArchiveController.Cached);
             server.OnRequest(RoutePaths.SearchArchiveRoute, ArchiveController.Search);
             server.OnRequest(RoutePaths.ArchiveStatsRoute, ArchiveController.Stats);
 
+            //tool routes
             server.OnRequest(RoutePaths.SiteHealthRoute, ReportsController.SiteHealth);
             server.OnRequest(RoutePaths.DomainBacklinksRoute, ReportsController.DomainBacklinks);
+            server.OnRequest(RoutePaths.CertCheckRoute, CertsController.Check);
+            server.OnRequest("/page-info", SearchController.UrlInfo);
 
             server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
             server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
-            server.OnRequest("/page-info", SearchController.UrlInfo);
 
             //deprecate old hashtags/mentions
             server.AddRedirect(new Redirect

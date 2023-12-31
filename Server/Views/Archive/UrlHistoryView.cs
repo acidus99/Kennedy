@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.Linq;
 using Gemini.Net;
-
 using Kennedy.Archive.Db;
-using Kennedy.Archive.Pack;
-using Kennedy.SearchIndex;
 using Microsoft.EntityFrameworkCore;
 using RocketForce;
 
@@ -18,6 +12,8 @@ namespace Kennedy.Server.Views.Archive
     /// </summary>
     internal class UrlHistoryView :AbstractView
     {
+
+        public bool ShowAllSnapshots { get; set; } = false;
 
         GeminiUrl? AttemptedUrl;
 
@@ -51,7 +47,7 @@ namespace Kennedy.Server.Views.Archive
                 Response.WriteLine($"# 🏎 DeLorean Time Machine");
                 Response.WriteLine("No snapshots for that URL");
                 Response.WriteLine();
-                Response.WriteLine($"=> {RoutePaths.ViewUrlHistoryRoute} Search Time Machine for cached Content");
+                Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistoryRoute} Search Time Machine for cached Content");
                 Response.WriteLine("=> /search 🔭 New Kennedy Search");
                 return;
             }
@@ -68,7 +64,9 @@ namespace Kennedy.Server.Views.Archive
             var last = snapshots.Last();
 
             Response.WriteLine($"Saved {snapshots.Length} times between {first.Captured.ToString("MMMM d yyyy")} and {last.Captured.ToString("MMMM d yyyy")}");
-            Response.WriteLine($"Unique Saves: {snapshots.GroupBy(x=>x.DataHash).Count()}");
+
+            var uniqueCount = snapshots.GroupBy(x => x.DataHash).Count();
+            Response.WriteLine($"Unique snapshots: {uniqueCount}");
 
             var truncatedCount = snapshots.Where(x => x.IsBodyTruncated).Count();
             if(truncatedCount > 0)
@@ -77,7 +75,20 @@ namespace Kennedy.Server.Views.Archive
                 Response.WriteLine($"{truncatedCount} snapshots are truncated, meaning the entire file is not there. Depending on the type file type, these truncated snapshots may not be able to be opened.");
             }
 
-            Response.WriteLine("## Saved copies");
+            if (ShowAllSnapshots)
+            {
+                Response.WriteLine("## All Snapshots");
+                Response.WriteLine($"Showing all {snapshots.Length} snapshots for this URL.");
+                Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(urlEntry.GeminiUrl)} Show only unique snapshots");
+            }
+            else
+            {
+                Response.WriteLine("## Unique Snapshots");
+                Response.WriteLine($"Showing {uniqueCount} snapshots that have unique content for this URL.");
+                Response.WriteLine($"=> {RoutePaths.ViewUrlFullHistory(urlEntry.GeminiUrl)} Show all snapshots");
+
+                snapshots = snapshots.Where(x => !x.IsDuplicate).ToArray();
+            }
 
             int currentYear = 0;
 

@@ -54,7 +54,7 @@ namespace Kennedy.Server.Views.Archive
             int counter = 1;
             foreach (var url in urls)
             {
-                Response.WriteLine($"=>{RoutePaths.ViewUrlHistory(url.GeminiUrl)} {counter}. {url.GeminiUrl.NormalizedUrl}");
+                Response.WriteLine($"=>{RoutePaths.ViewUrlUniqueHistory(url.GeminiUrl)} {counter}. {url.GeminiUrl.NormalizedUrl}");
                 counter++;
             }
         }

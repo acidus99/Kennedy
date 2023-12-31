@@ -20,22 +20,20 @@ namespace Kennedy.Server.Controllers
             view.Render();
         }
 
-        public static void SiteSearch(GeminiRequest request, Response response, GeminiServer app)
+        public static void SiteSearchCreate(GeminiRequest request, Response response, GeminiServer app)
         {
             //are they making a new site search?
-            if(request.Route == RoutePaths.SiteSearchRoute ||
-                request.Route == RoutePaths.SiteSearchRoute + "/")
+            if (!request.Url.HasQuery)
             {
-                if (!request.Url.HasQuery)
-                {
-                    response.Input($"Enter domain name to create Site Search link.");
-                    return;
-                }
-                var view = new SiteSearchView(request, response, app);
-                view.Render();
+                response.Input($"Enter domain name to create Site Search link.");
                 return;
             }
+            var view = new SiteSearchView(request, response, app);
+            view.Render();
+        }
 
+        public static void SiteSearchRun(GeminiRequest request, Response response, GeminiServer app)
+        {
             //pull out the capsule
             string? capsule = Helpers.SiteSearch.GetSite(request.Route);
             if(capsule == null)

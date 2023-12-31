@@ -18,6 +18,18 @@ namespace Kennedy.Server.Controllers
             view.Render();
         }
 
+        public static void UrlFullHistory(GeminiRequest request, Response response, GeminiServer app)
+        {
+            if (!request.Url.HasQuery)
+            {
+                response.Input("Enter specific URL");
+                return;
+            }
+            var view = new UrlHistoryView(request, response, app);
+            view.ShowAllSnapshots = true;
+            view.Render();
+        }
+
         public static void Search(GeminiRequest request, Response response, GeminiServer app)
         {
             if (!request.Url.HasQuery)
@@ -29,7 +41,7 @@ namespace Kennedy.Server.Controllers
             //if they are searching for a fully qualified URL, redirect them
             if(request.Url.Query.ToLower().StartsWith("gemini://"))
             {
-                response.Redirect(RoutePaths.ViewUrlHistory(request.Url.Query));
+                response.Redirect(RoutePaths.ViewUrlUniqueHistory(request.Url.Query));
                 return;
             }
 

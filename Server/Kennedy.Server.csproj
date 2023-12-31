@@ -27,6 +27,7 @@
     <None Remove="Controllers\" />
     <None Remove="Views\Reports\" />
     <None Remove="Helpers\" />
+    <None Remove="Views\Certs\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\" />
@@ -37,6 +38,7 @@
     <Folder Include="Controllers\" />
     <Folder Include="Views\Reports\" />
     <Folder Include="Helpers\" />
+    <Folder Include="Views\Certs\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.PROD.json">
@@ -58,5 +60,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="DiffPlex" Version="1.7.2" />
   </ItemGroup>
 </Project>

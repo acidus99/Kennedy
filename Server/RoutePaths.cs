@@ -11,13 +11,19 @@ namespace Kennedy.Server
         public const string ImageSearchRoute = "/image-search";
         public const string SearchRoute = "/search";
         public const string SearchStatsRoute = "/stats";
-        public const string SiteSearchRoute = "/sitesearch";
+        
         public const string UrlInfoRoute = "/page-info";
 
+        public const string SiteSearchCreateRoute = "/site-search/create";
+        public const string SiteSearchRunRoute = "/site-search/s/";
+
         public const string ViewCachedRoute = "/archive/cached";
-        public const string ViewUrlHistoryRoute = "/archive/history";
+        public const string ViewUrlUniqueHistoryRoute = "/archive/history";
+        public const string ViewUrlFullHistoryRoute = "/archive/history-all";
         public const string SearchArchiveRoute = "/archive/search";
         public const string ArchiveStatsRoute = "/archive/stats";
+
+        public const string CertCheckRoute = "/certs/validator/check";
 
         public const string SiteHealthRoute = "/reports/site-health";
         public const string DomainBacklinksRoute = "/reports/domain-backlinks";
@@ -29,7 +35,7 @@ namespace Kennedy.Server
             => $"{SearchRoute}?{HttpUtility.UrlEncode(query)}";
 
         public static string SiteSearch(string capsule)
-            => $"gemini://kennedy.gemi.dev{SiteSearchRoute}/{capsule}/";
+            => $"gemini://kennedy.gemi.dev{SiteSearchRunRoute}{capsule}/";
 
         public static string ViewCached(GeminiUrl url)
             => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={DateTime.Now}";
@@ -55,12 +61,18 @@ namespace Kennedy.Server
         public static string ViewUrlInfo(GeminiUrl url)
             => $"{UrlInfoRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";
 
-        public static string ViewUrlHistory(GeminiUrl url)
-            => ViewUrlHistory(url.NormalizedUrl);
+        public static string ViewUrlUniqueHistory(GeminiUrl url)
+            => ViewUrlUniqueHistory(url.NormalizedUrl);
 
-        public static string ViewUrlHistory(string url)
-            => $"{ViewUrlHistoryRoute}?{HttpUtility.UrlEncode(url)}";
+        public static string ViewUrlUniqueHistory(string url)
+            => $"{ViewUrlUniqueHistoryRoute}?{HttpUtility.UrlEncode(url)}";
 
+
+        public static string ViewUrlFullHistory(GeminiUrl url)
+          => ViewUrlFullHistory(url.NormalizedUrl);
+
+        public static string ViewUrlFullHistory(string url)
+            => $"{ViewUrlFullHistoryRoute}?{HttpUtility.UrlEncode(url)}";
 
     }
 }

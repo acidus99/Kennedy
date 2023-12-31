@@ -24,7 +24,7 @@ namespace Kennedy.Server.Views.Archive
             if (!Helpers.SiteSearch.IsValidCapsuleName(capsule))
             {
                 Response.WriteLine("Invalid domain name. Please enter a regular domain name.");
-                Response.WriteLine($"=> {RoutePaths.SiteSearchRoute} Try again");
+                Response.WriteLine($"=> {RoutePaths.SiteSearchCreateRoute} Try again");
                 return;
             }
 
