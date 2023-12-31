@@ -64,8 +64,21 @@ internal class CachedView : AbstractView
             Response.Write(" Gemini links have been rewritten to link to archived content");
         }
         Response.WriteLine();
-        Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(snapshot.Url.GeminiUrl)} More Information in 🏎 Delorean Time Machine");
-        Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot, true)} View Raw");
+        Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot, true)} View Original");
+        Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(snapshot.Url.GeminiUrl)} More Information");
+        var others = GetNextPreviousSnapshots(snapshot);
+
+        if (others.before != null)
+        {
+            Response.WriteLine($"=> {RoutePaths.ViewCached(others.before)} ⬅️ Previous capture ({others.before.Captured.ToString("yyyy-MM-dd")})");
+        }
+
+        if (others.after != null)
+        {
+            Response.WriteLine($"=> {RoutePaths.ViewCached(others.after)} ➡️ Next capture ({others.after.Captured.ToString("yyyy-MM-dd")})");
+        }
+
+        
         Response.WriteLine("-=-=-=-=-=-=-");
         Response.WriteLine();
 
@@ -159,6 +172,38 @@ internal class CachedView : AbstractView
             }
         }
         return DateTime.Now;
+    }
+
+    private (Snapshot? before, Snapshot? after) GetNextPreviousSnapshots(Snapshot selected)
+    {
+        Snapshot? before = null;
+        Snapshot? after = null;
+
+        var snaps = archive.Snapshots.Where(x => x.UrlId == selected.Url!.Id)
+            .Include(x => x.Url)
+            .Where(x => x.Url != null && x.Url.IsPublic)
+            .OrderBy(x => x.Captured)
+            .ToArray();
+
+        for (int i = 0; i < snaps.Length; i++)
+        {
+            if (snaps[i].IsDuplicate)
+            {
+                continue;
+            }
+
+            if (snaps[i].Captured < selected.Captured)
+            {
+                before = snaps[i];
+            }
+            if (snaps[i].Captured > selected.Captured)
+            {
+                after = snaps[i];
+                break;
+            }
+        }
+
+        return (before, after);
     }
 
     /// <summary>
