@@ -1,5 +1,7 @@
 ﻿using System;
 
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using FileSignatures;
 using Gemini.Net;
 
