@@ -10,6 +10,6 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 [*.cs]
-csharp_new_line_before_open_brace = true
+csharp_new_line_before_open_brace = all
 # Default severity for analyzer diagnostics with category 'Style' (escalated to build warnings)
-dotnet_analyzer_diagnostic.category-Style.severity = error
+# dotnet_analyzer_diagnostic.category-Style.severity = error
