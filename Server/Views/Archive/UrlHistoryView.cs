@@ -28,7 +28,8 @@ internal class UrlHistoryView : AbstractView
             Response.WriteLine($"# 🏎 DeLorean Time Machine");
             Response.WriteLine();
             Response.WriteLine("Invalid URL. Please enter a fully qualified, valid, Gemini URL.");
-            Response.WriteLine("=> /delorean Try Again");
+            Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistoryRoute} Try another URL");
+            Response.WriteLine($"=> {RoutePaths.SearchArchiveRoute} Search for parts of a URL");
             return;
         }
 
