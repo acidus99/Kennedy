@@ -23,6 +23,8 @@ internal class DiffView : AbstractView
         public Snapshot? Current;
     }
 
+
+    private bool ShowFullHistory = false;
     private DiffPair PreviousDiff = new DiffPair();
     private DiffPair CurrentDiff = new DiffPair();
     private DiffPair NextDiff = new DiffPair();
@@ -43,13 +45,14 @@ internal class DiffView : AbstractView
             RenderInvalidDiff();
             return;
         }
-
+        ShowFullHistory = args.showFull;
         LoadSnapshots(args.url, args.previous.Value, args.current.Value);
 
-        RenderDiff(args.showFull);
+        RenderHeader();
+        RenderDiff();
     }
 
-    private void RenderDiff(bool showFull)
+    private void RenderDiff()
     {
         if (CurrentDiff.Current == null || CurrentDiff.Previous == null)
         {
@@ -57,56 +60,77 @@ internal class DiffView : AbstractView
             return;
         }
 
+        var prevResponse = reader.ReadResponse(CurrentDiff.Previous);
+        var currResponse = reader.ReadResponse(CurrentDiff.Current);
+
+        if(!prevResponse.IsSuccess || !currResponse.IsSuccess)
+        {
+            Response.WriteLine("Status codes differ between snapshots. Cannot show a Differences view.");
+            RenderResponseLine(CurrentDiff.Previous, prevResponse);
+            RenderResponseLine(CurrentDiff.Current, currResponse);
+            return;
+        }
+
+        if (!CurrentDiff.Current.IsText || !CurrentDiff.Previous.IsText)
+        {
+            Response.WriteLine("Non-text responses selected. Differences view can only by used to show text responses.");
+            RenderResponseLine(CurrentDiff.Previous, prevResponse);
+            RenderResponseLine(CurrentDiff.Current, currResponse);
+            return;
+        }
+
+        var diff = InlineDiffBuilder.Diff(prevResponse.BodyText, currResponse.BodyText);
+
+        RenderLineDiffs(diff.Lines, ShowFullHistory);
+    }
+
+    private void RenderResponseLine(Snapshot snapshot, GeminiResponse response)
+    {
+        Response.WriteLine($"Response line on {snapshot.Captured.ToString("yyyy-MM-dd HH:mm:ss")}");
+        Response.WriteLine("```");
+        Response.WriteLine(response.ResponseLine);
+        Response.WriteLine("```");
+    }
+
+    private void RenderHeader()
+    {
         Response.Success();
-        Response.WriteLine($"> 🚧 Differences View for {FormatUrl(CurrentDiff.Current.Url!.GeminiUrl)}");
-        Response.WriteLine($"* Between {CurrentDiff.Previous.Captured.ToString("yyyy-MM-dd HH:mm:ss")} GMT and {CurrentDiff.Current.Captured.ToString("yyyy-MM-dd HH:mm:ss")} GMT");
+        Response.WriteLine($"> 🚧 Differences View for {FormatUrl(CurrentDiff.Current!.Url!.GeminiUrl)}");
+        Response.WriteLine($"* Between {CurrentDiff.Previous!.Captured.ToString("yyyy-MM-dd HH:mm:ss")} GMT and {CurrentDiff.Current.Captured.ToString("yyyy-MM-dd HH:mm:ss")} GMT");
         Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(CurrentDiff.Current.Url.GeminiUrl)} More Information");
 
-        if(showFull)
+        if (ShowFullHistory)
         {
             Response.WriteLine($"=> {RoutePaths.ViewDiff(CurrentDiff.Previous, CurrentDiff.Current, false)} Showing all lines. See only changed lines?");
-        } else
+        }
+        else
         {
             Response.WriteLine($"=> {RoutePaths.ViewDiff(CurrentDiff.Previous, CurrentDiff.Current, true)} Showing changed lines. See all lines?");
         }
 
 
-        if(PreviousDiff.Previous != null && PreviousDiff.Current != null)
+        if (PreviousDiff.Previous != null && PreviousDiff.Current != null)
         {
-            Response.Write($"=> {RoutePaths.ViewDiff(PreviousDiff.Previous, PreviousDiff.Current, showFull)} ");
+            Response.Write($"=> {RoutePaths.ViewDiff(PreviousDiff.Previous, PreviousDiff.Current, ShowFullHistory)} ");
             Response.WriteLine($"⬅️ 🚧 Previous difference ({PreviousDiff.Previous.Captured.ToString("yyyy-MM-dd HH:mm:ss")} GMT to {PreviousDiff.Current.Captured.ToString("yyyy-MM-dd HH:mm:ss")} GMT)");
         }
 
         if (NextDiff.Previous != null && NextDiff.Current != null)
         {
-            Response.Write($"=> {RoutePaths.ViewDiff(NextDiff.Previous, NextDiff.Current, showFull)} ");
+            Response.Write($"=> {RoutePaths.ViewDiff(NextDiff.Previous, NextDiff.Current, ShowFullHistory)} ");
             Response.WriteLine($"➡️ 🚧 Next difference ({NextDiff.Previous.Captured.ToString("yyyy-MM-dd HH:mm:ss")} GMT to {NextDiff.Current.Captured.ToString("yyyy-MM-dd HH:mm:ss")} GMT)");
         }
 
         Response.WriteLine("-=-=-=-=-=-=-");
         Response.WriteLine();
-
-        if (!CurrentDiff.Current.IsGemtext || !CurrentDiff.Previous.IsGemtext)
-        {
-            Response.WriteLine("Diff view only works for Gemtext responses");
-            return;
-        }
-
-        var prevResponse = reader.ReadResponse(CurrentDiff.Previous);
-        var currResponse = reader.ReadResponse(CurrentDiff.Current);
-
-        var diff = InlineDiffBuilder.Diff(prevResponse.BodyText, currResponse.BodyText);
-
-        RenderLineDiffs(diff.Lines, showFull);
     }
 
     private void RenderLineDiffs(List<DiffPiece> lines, bool renderUnchanged = false)
     {
-        Response.WriteLine("```");
+        Response.WriteLine("``` diff view");
 
         foreach (var line in lines)
         {
-
             if (!renderUnchanged && line.Type == ChangeType.Unchanged)
             {
                 continue;
