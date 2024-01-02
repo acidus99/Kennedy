@@ -43,7 +43,7 @@ internal class UrlInfoView : AbstractView
         }
         entry = possibleEntry;
 
-        Response.WriteLine($"# ℹ️ Page Info: {entry.GeminiUrl.Path}");
+        Response.WriteLine($"# ℹ️ {FormatUrl(entry.GeminiUrl)}");
         Response.WriteLine($"=> {entry.Url} Visit Current Url");
         Response.WriteLine($"=> {RoutePaths.ViewMostRecentCached(entry.GeminiUrl)} View most recent cached version");
         Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(entry.GeminiUrl)} View all archived copies and history with 🏎 DeLorean Time Machine");
@@ -60,7 +60,7 @@ internal class UrlInfoView : AbstractView
     private void RenderMetadata()
     {
         Response.WriteLine($"## Metadata");
-
+        Response.WriteLine($"* {entry.GeminiUrl}");
         if (entry.StatusCode == GeminiParser.ConnectionErrorStatusCode)
         {
             Response.WriteLine($"* Connection Error: {entry.Meta}");
