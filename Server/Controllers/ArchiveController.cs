@@ -53,6 +53,18 @@ public static class ArchiveController
         view.Render();
     }
 
+    public static void Diff(GeminiRequest request, Response response, GeminiServer app)
+    {
+        var view = new DiffView(request, response, app);
+        view.Render();
+    }
+
+    public static void DiffHistory(GeminiRequest request, Response response, GeminiServer app)
+    {
+        var view = new DiffHistoryView(request, response, app);
+        view.Render();
+    }
+
     public static void Stats(GeminiRequest request, Response response, GeminiServer app)
     {
         var view = new ArchiveStatsView(request, response, app);

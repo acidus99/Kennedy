@@ -54,8 +54,7 @@ internal class UrlHistoryView : AbstractView
         Response.Success();
         Response.WriteLine($"# 🏎 DeLorean Time Machine");
         Response.WriteLine();
-        Response.WriteLine("Found this URL in Time Machine!");
-        Response.WriteLine($"=> {urlEntry.GeminiUrl.NormalizedUrl} {urlEntry.GeminiUrl.NormalizedUrl}");
+        Response.WriteLine($"=> {urlEntry.GeminiUrl.NormalizedUrl} {FormatUrl(urlEntry.GeminiUrl)}");
 
         var snapshots = urlEntry.Snapshots.OrderBy(x => x.Captured).ToArray();
 
@@ -87,6 +86,11 @@ internal class UrlHistoryView : AbstractView
             Response.WriteLine($"=> {RoutePaths.ViewUrlFullHistory(urlEntry.GeminiUrl)} Show all snapshots");
 
             snapshots = snapshots.Where(x => !x.IsDuplicate).ToArray();
+        }
+
+        if (uniqueCount > 1)
+        {
+            Response.WriteLine($"=> {RoutePaths.ViewDiffHistory(AttemptedUrl)} 🚧 View Snapshot Differences");
         }
 
         int currentYear = 0;

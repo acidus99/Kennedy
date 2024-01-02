@@ -38,6 +38,8 @@ class Program
         server.OnRequest(RoutePaths.ViewUrlFullHistoryRoute, ArchiveController.UrlFullHistory);
         server.OnRequest(RoutePaths.ViewUrlUniqueHistoryRoute, ArchiveController.UrlHistory);
         server.OnRequest(RoutePaths.ViewCachedRoute, ArchiveController.Cached);
+        server.OnRequest(RoutePaths.ViewDiffHistoryRoute, ArchiveController.DiffHistory);
+        server.OnRequest(RoutePaths.ViewDiffRoute, ArchiveController.Diff);
         server.OnRequest(RoutePaths.SearchArchiveRoute, ArchiveController.Search);
         server.OnRequest(RoutePaths.ArchiveStatsRoute, ArchiveController.Stats);
 

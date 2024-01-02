@@ -17,6 +17,8 @@ public static class RoutePaths
     public const string SiteSearchRunRoute = "/site-search/s/";
 
     public const string ViewCachedRoute = "/archive/cached";
+    public const string ViewDiffRoute = "/archive/diff";
+    public const string ViewDiffHistoryRoute = "/archive/diff-history";
     public const string ViewUrlUniqueHistoryRoute = "/archive/history";
     public const string ViewUrlFullHistoryRoute = "/archive/history-all";
     public const string SearchArchiveRoute = "/archive/search";
@@ -54,6 +56,12 @@ public static class RoutePaths
     public static string ViewCached(GeminiUrl url, DateTime snapshotTime, bool useRaw = false)
         => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={snapshotTime.Ticks}&raw={useRaw}";
 
+    public static string ViewDiffHistory(GeminiUrl url)
+        => $"{ViewDiffHistoryRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";
+
+    public static string ViewDiff(Snapshot previous, Snapshot current, bool showFull = false)
+        => $"{ViewDiffRoute}?url={HttpUtility.UrlEncode(current.Url!.GeminiUrl.NormalizedUrl)}&pt={previous.Captured.Ticks}&t={current.Captured.Ticks}&full={showFull}";
+
     public static string ViewMostRecentCached(GeminiUrl url)
         => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}";
 
@@ -65,7 +73,6 @@ public static class RoutePaths
 
     public static string ViewUrlUniqueHistory(string url)
         => $"{ViewUrlUniqueHistoryRoute}?{HttpUtility.UrlEncode(url)}";
-
 
     public static string ViewUrlFullHistory(GeminiUrl url)
       => ViewUrlFullHistory(url.NormalizedUrl);

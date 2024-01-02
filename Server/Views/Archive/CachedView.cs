@@ -56,7 +56,7 @@ internal class CachedView : AbstractView
         GeminiResponse response = reader.ReadResponse(snapshot);
 
         Response.Success();
-        Response.Write($"> This an archived version of {snapshot.Url!.FullUrl} ");
+        Response.Write($"> 💾 Archived View for {FormatUrl(snapshot.Url!.GeminiUrl)} ");
         Response.Write($"captured on {snapshot.Captured.ToString("yyyy-MM-dd")} at ");
         Response.Write($"{snapshot.Captured.ToString("HH:mm:ss")}.");
         if (snapshot.IsGemtext)
@@ -64,7 +64,7 @@ internal class CachedView : AbstractView
             Response.Write(" Gemini links have been rewritten to link to archived content");
         }
         Response.WriteLine();
-        Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot, true)} View Original");
+        Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot, true)} View Raw");
         Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(snapshot.Url.GeminiUrl)} More Information");
         var others = GetNextPreviousSnapshots(snapshot);
 
@@ -78,7 +78,11 @@ internal class CachedView : AbstractView
             Response.WriteLine($"=> {RoutePaths.ViewCached(others.after)} ➡️ Next capture ({others.after.Captured.ToString("yyyy-MM-dd")})");
         }
 
-        
+        if (!snapshot.IsDuplicate && others.before != null)
+        {
+            Response.WriteLine($"=> {RoutePaths.ViewDiff(others.before, snapshot)} 🚧 View Differences");
+        }
+
         Response.WriteLine("-=-=-=-=-=-=-");
         Response.WriteLine();
 
