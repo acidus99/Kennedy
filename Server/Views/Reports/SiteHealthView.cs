@@ -38,6 +38,9 @@ internal class SiteHealthView : AbstractView
             }
         }
 
+        //ensure lowercased
+        Domain = Domain.ToLower();
+
         var db = new WebDatabaseContext(Settings.Global.DataRoot);
 
         var docs = db.Documents
