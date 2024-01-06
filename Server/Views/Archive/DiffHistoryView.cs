@@ -66,7 +66,7 @@ internal class DiffHistoryView : AbstractView
         var first = snapshots.First();
         var last = snapshots.Last();
 
-        if (!snapshots.Where(x=>x.IsGemtext).Any())
+        if (!snapshots.Where(x=>x.IsText).Any())
         {
             Response.WriteLine("Can only view differences of Gemtext files");
             return;
