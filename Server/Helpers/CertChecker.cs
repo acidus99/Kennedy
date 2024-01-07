@@ -15,7 +15,7 @@ public class CertChecker
         GeminiRequestor requestor = new GeminiRequestor { AbortTimeout = 10000, ConnectionTimeout = 10000 };
         var resp = requestor.Request(url);
 
-        cert = requestor.RemoteCertificate;
+        cert = resp.TlsInfo?.RemoteCertificate;
 
         return (cert != null);
     }

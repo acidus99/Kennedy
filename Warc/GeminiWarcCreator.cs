@@ -40,13 +40,13 @@ namespace Kennedy.Warc
             });
         }
 
-        public void WriteSession(GeminiResponse response, TlsConnectionInfo? connectionInfo = null)
+        public void WriteSession(GeminiResponse response)
         {
             var requestRecord = CreateRequestRecord(response.RequestUrl);
             requestRecord.SetDate(response.RequestSent);
 
             requestRecord.IpAddress = response.RemoteAddress?.ToString();
-            AppendTlsInfo(requestRecord, connectionInfo);
+            AppendTlsInfo(requestRecord, response.TlsInfo);
 
             Write(requestRecord);
 
@@ -63,7 +63,7 @@ namespace Kennedy.Warc
 
             responseRecord.SetDate(response.ResponseReceived);
             SetBlockDigest(responseRecord);
-            AppendTlsInfo(responseRecord, connectionInfo);
+            AppendTlsInfo(responseRecord, response.TlsInfo);
 
             responseRecord.ConcurrentTo.Add(requestRecord.Id);
 
@@ -74,13 +74,13 @@ namespace Kennedy.Warc
 
             Write(responseRecord);
 
-            if(connectionInfo != null && connectionInfo.RemoteCertificate != null && ShouldCreateCertificateRecord(response.RequestUrl))
+            if(response.TlsInfo != null && response.TlsInfo.RemoteCertificate != null && ShouldCreateCertificateRecord(response.RequestUrl))
             {
                 var metadataRecord = new MetadataRecord
                 {
                     WarcInfoId = WarcInfoID,
                     ReferersTo = responseRecord.Id,
-                    ContentText = connectionInfo.RemoteCertificate.ExportCertificatePem(),
+                    ContentText = response.TlsInfo.RemoteCertificate.ExportCertificatePem(),
                     ContentType = "application/x-pem-file",
                     TargetUri = response.RequestUrl.Url
                 };

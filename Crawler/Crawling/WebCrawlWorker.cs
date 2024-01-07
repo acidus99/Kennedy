@@ -45,16 +45,14 @@ internal class WebCrawlWorker
             if (entry != null)
             {
                 GeminiResponse? response = null;
-                TlsConnectionInfo? connectionInfo = null;
 
                 if (hostTracker.ShouldSendRequest(entry.Url))
                 {
                     response = requestor.Request(entry);
-                    connectionInfo = requestor.GetConnectionInfo();
                     hostTracker.AddResponse(response);
                 }
 
-                Crawler.ProcessRequestResponse(entry, response, connectionInfo);
+                Crawler.ProcessRequestResponse(entry, response);
                 //if we got a response, we need to wait before doing the next
                 if (response != null)
                 {

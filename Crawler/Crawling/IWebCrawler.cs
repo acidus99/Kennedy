@@ -12,7 +12,7 @@ public interface IWebCrawler
 
     UrlFrontierEntry? GetUrl(int crawlerID = 0);
 
-    void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response, TlsConnectionInfo? connectionInfo);
+    void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response);
 
     void ProcessRobotsResponse(GeminiResponse response);
 }

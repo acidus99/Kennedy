@@ -18,7 +18,7 @@ namespace Kennedy.Crawler
 	{
         const int MaxUninterestingFileSize = 10 * 1024;
 
-		ConcurrentQueue<Tuple<GeminiResponse, TlsConnectionInfo?>> responses;
+		ConcurrentQueue<GeminiResponse> responses;
 		GeminiWarcCreator warcCreator;
 
 		public int Saved { get; private set; }
@@ -26,7 +26,7 @@ namespace Kennedy.Crawler
 		public ResultsWriter(string warcDirectory)
 		{
 			Saved = 0;
-			responses = new ConcurrentQueue<Tuple<GeminiResponse, TlsConnectionInfo?>>();
+			responses = new ConcurrentQueue<GeminiResponse>();
 			warcCreator = new GeminiWarcCreator(warcDirectory + DateTime.Now.ToString("yyyy-MM-dd") + ".warc");
 			warcCreator.WriteWarcInfo(new WarcInfoFields
 			{
@@ -37,14 +37,12 @@ namespace Kennedy.Crawler
 			});
         }
 
-		public void AddToQueue(GeminiResponse response, TlsConnectionInfo? connectionInfo)
-		{
-			responses.Enqueue(new Tuple<GeminiResponse, TlsConnectionInfo?>(response, connectionInfo));
-		}
+		public void AddToQueue(GeminiResponse response)
+			=> responses.Enqueue(response);
 
 		public void Flush()
 		{
-			Tuple<GeminiResponse, TlsConnectionInfo?>? response;
+			GeminiResponse? response;
 			while(responses.TryDequeue(out response))
 			{
 				WriteResponseToWarc(response);
@@ -57,10 +55,10 @@ namespace Kennedy.Crawler
 			warcCreator.Dispose();
 		}
 
-		private void WriteResponseToWarc(Tuple<GeminiResponse, TlsConnectionInfo?> response)
+		private void WriteResponseToWarc(GeminiResponse response)
 		{
-			var optimizedResponse = OptimizeForStoage(response.Item1);
-			warcCreator.WriteSession(optimizedResponse, response.Item2);
+			GeminiResponse optimizedResponse = OptimizeForStoage(response);
+			warcCreator.WriteSession(optimizedResponse);
             Saved++;
         }
 

@@ -195,16 +195,16 @@ public class WebCrawler : IWebCrawler
     public void ProcessRobotsResponse(GeminiResponse response)
     {
         TotalUrlsRequested.Increment();
-        ResultsWarc.AddToQueue(response, null);
+        ResultsWarc.AddToQueue(response);
         TotalUrlsProcessed.Increment();
     }
 
-    public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response, TlsConnectionInfo? connectionInfo)
+    public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response)
     { 
         //null means it was ignored by robots
         if (response != null)
         {
-            ResultsWarc.AddToQueue(response, connectionInfo);
+            ResultsWarc.AddToQueue(response);
 
             //if we haven't seen this content before, parse it for links and add them to the frontier
             if (!seenContentTracker.CheckAndRecord(response))

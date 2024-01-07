@@ -41,16 +41,6 @@ namespace Kennedy.Crawler.Protocols
                 return requestor.Request(entry.Url, ipAddress);
             }
         }
-
-        public TlsConnectionInfo GetConnectionInfo()
-        {
-            return new TlsConnectionInfo
-            {
-                Protocol = requestor.NegotiatedTlsProtocol,
-                CipherSuite = requestor.NegotiatedCipherSuite,
-                RemoteCertificate = requestor.RemoteCertificate
-            };
-        }
     }
 }
 
