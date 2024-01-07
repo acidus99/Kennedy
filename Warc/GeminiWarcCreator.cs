@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -46,7 +47,11 @@ namespace Kennedy.Warc
             requestRecord.SetDate(response.RequestSent);
 
             requestRecord.IpAddress = response.RemoteAddress?.ToString();
-            AppendTlsInfo(requestRecord, response.TlsInfo);
+
+            if (response.TlsInfo != null)
+            {
+                requestRecord = AppendTlsInfo(requestRecord, response.TlsInfo);
+            }
 
             Write(requestRecord);
 
@@ -175,30 +180,23 @@ namespace Kennedy.Warc
             }
         }
 
-        private void AppendTlsInfo(WarcRecord record, TlsConnectionInfo? connectionInfo)
+        private WarcRecord AppendTlsInfo(WarcRecord record, TlsConnectionInfo connectionInfo)
         {
-            if (connectionInfo != null)
+            if (connectionInfo.Protocol != null)
             {
-                if (connectionInfo.Protocol.HasValue)
-                {
-                    record.AddCustomField("WARC-Protocol", GetProtocolHeader(connectionInfo));
-                }
-
-                if (connectionInfo.CipherSuite.HasValue)
-                {
-                    record.AddCustomField("WARC-Cipher-Suite", GetCipherSuite(connectionInfo));
-                }
+                record.AddCustomField("WARC-Protocol", GetProtocolValue(connectionInfo.Protocol.Value));
             }
+
+            if (connectionInfo.CipherSuite != null)
+            {
+                record.AddCustomField("WARC-Cipher-Suite", GetCipherSuiteValue(connectionInfo.CipherSuite.Value));
+            }
+            return record;
         }
 
-        private string? GetCipherSuite(TlsConnectionInfo connection)
-        {
-            if (connection.CipherSuite != null)
-            {
-                return connection.CipherSuite.ToString();
-            }
-            return null;
-        }
+        private string GetCipherSuiteValue(TlsCipherSuite cipherSuite)
+            //no special formatting. We want the IETF ENUM value
+            => cipherSuite.ToString();
 
         private string? GetPayloadDigest(GeminiResponse response)
             => GetPayloadDigest(response.BodyBytes);
@@ -208,16 +206,11 @@ namespace Kennedy.Warc
                GeminiParser.GetStrongHash(bodyBytes) :
                null;
 
-        private string? GetProtocolHeader(TlsConnectionInfo connection)
+        private string? GetProtocolValue(SslProtocols protocol)
         {
-            if(connection.Protocol == null)
-            {
-                return null;
-            }
-
             // Disabling warning because we are only using these to parse
 #pragma warning disable SYSLIB0039 // Type or member is obsolete
-            switch (connection.Protocol)
+            switch (protocol)
             {
                 case SslProtocols.Tls13:
                     return "tls/1.3";
