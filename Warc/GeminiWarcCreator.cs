@@ -46,12 +46,9 @@ namespace Kennedy.Warc
             var requestRecord = CreateRequestRecord(response.RequestUrl);
             requestRecord.SetDate(response.RequestSent);
 
+            //add connection/TLS metadata
             requestRecord.IpAddress = response.RemoteAddress?.ToString();
-
-            if (response.TlsInfo != null)
-            {
-                requestRecord = AppendTlsInfo(requestRecord, response.TlsInfo);
-            }
+            AppendTlsInfo(requestRecord, response.TlsInfo);
 
             Write(requestRecord);
 
@@ -68,6 +65,8 @@ namespace Kennedy.Warc
 
             responseRecord.SetDate(response.ResponseReceived);
             SetBlockDigest(responseRecord);
+
+            //add TLS metadata
             AppendTlsInfo(responseRecord, response.TlsInfo);
 
             responseRecord.ConcurrentTo.Add(requestRecord.Id);
@@ -180,18 +179,20 @@ namespace Kennedy.Warc
             }
         }
 
-        private WarcRecord AppendTlsInfo(WarcRecord record, TlsConnectionInfo connectionInfo)
+        private void AppendTlsInfo(WarcRecord record, TlsConnectionInfo? connectionInfo)
         {
-            if (connectionInfo.Protocol != null)
+            if (connectionInfo != null)
             {
-                record.AddCustomField("WARC-Protocol", GetProtocolValue(connectionInfo.Protocol.Value));
-            }
+                if (connectionInfo.Protocol != null)
+                {
+                    record.AddCustomField("WARC-Protocol", GetProtocolValue(connectionInfo.Protocol.Value));
+                }
 
-            if (connectionInfo.CipherSuite != null)
-            {
-                record.AddCustomField("WARC-Cipher-Suite", GetCipherSuiteValue(connectionInfo.CipherSuite.Value));
+                if (connectionInfo.CipherSuite != null)
+                {
+                    record.AddCustomField("WARC-Cipher-Suite", GetCipherSuiteValue(connectionInfo.CipherSuite.Value));
+                }
             }
-            return record;
         }
 
         private string GetCipherSuiteValue(TlsCipherSuite cipherSuite)
