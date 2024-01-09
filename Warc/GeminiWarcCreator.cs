@@ -14,8 +14,12 @@ namespace Kennedy.Warc
 {
     public class GeminiWarcCreator : WarcWriter
     {
-        public const string RequestContentType = "application/gemini; msgtype=request";
-        public const string ResponseContentType = "application/gemini; msgtype=response";
+
+        public const string WarcProtocolField = "WARC-Protocol";
+        public const string WarcCipherSuiteField = "WARC-Cipher-Suite";
+
+        const string RequestContentType = "application/gemini; msgtype=request";
+        const string ResponseContentType = "application/gemini; msgtype=response";
 
         public Uri WarcInfoID { get; private set; }
 
@@ -50,6 +54,7 @@ namespace Kennedy.Warc
             requestRecord.IpAddress = response.RemoteAddress?.ToString();
             AppendTlsInfo(requestRecord, response.TlsInfo);
 
+
             Write(requestRecord);
 
             var responseRecord = new ResponseRecord
@@ -65,7 +70,6 @@ namespace Kennedy.Warc
 
             responseRecord.SetDate(response.ResponseReceived);
             SetBlockDigest(responseRecord);
-
             //add TLS metadata
             AppendTlsInfo(responseRecord, response.TlsInfo);
 
@@ -78,7 +82,7 @@ namespace Kennedy.Warc
 
             Write(responseRecord);
 
-            if(response.TlsInfo != null && response.TlsInfo.RemoteCertificate != null && ShouldCreateCertificateRecord(response.RequestUrl))
+            if (response.TlsInfo != null && response.TlsInfo.RemoteCertificate != null && ShouldCreateCertificateRecord(response.RequestUrl))
             {
                 var metadataRecord = new MetadataRecord
                 {
@@ -97,10 +101,8 @@ namespace Kennedy.Warc
 
         public void WriteLegacySession(GeminiUrl url, DateTime sent, int statusCode, string meta, string mime, byte[]? bytes, bool isTruncated = false)
         {
-
             var requestRecord = CreateRequestRecord(url);
             requestRecord.Date = sent;
-
             Write(requestRecord);
 
             var responseRecord = new ResponseRecord
@@ -125,7 +127,7 @@ namespace Kennedy.Warc
                 responseRecord.Truncated = "length";
             }
 
-            if(bytes != null)
+            if (bytes != null)
             {
                 responseRecord.PayloadDigest = GetPayloadDigest(bytes);
             }
@@ -149,7 +151,7 @@ namespace Kennedy.Warc
 
         private bool ShouldCreateCertificateRecord(GeminiUrl url)
         {
-            if(!WrittenCertificates.ContainsKey(url.Authority))
+            if (!WrittenCertificates.ContainsKey(url.Authority))
             {
                 WrittenCertificates.Add(url.Authority, true);
                 return true;
@@ -173,7 +175,7 @@ namespace Kennedy.Warc
 
         private void SetBlockDigest(WarcRecord record)
         {
-            if(record.ContentBlock != null)
+            if (record.ContentBlock != null)
             {
                 record.BlockDigest = GeminiParser.GetStrongHash(record.ContentBlock);
             }
@@ -185,12 +187,16 @@ namespace Kennedy.Warc
             {
                 if (connectionInfo.Protocol != null)
                 {
-                    record.AddCustomField("WARC-Protocol", GetProtocolValue(connectionInfo.Protocol.Value));
+                    string? val = GetProtocolValue(connectionInfo.Protocol.Value);
+                    if (val != null)
+                    {
+                        record.CustomFields.Add(WarcProtocolField, val);
+                    }
                 }
 
                 if (connectionInfo.CipherSuite != null)
                 {
-                    record.AddCustomField("WARC-Cipher-Suite", GetCipherSuiteValue(connectionInfo.CipherSuite.Value));
+                    record.CustomFields.Add(WarcCipherSuiteField, GetCipherSuiteValue(connectionInfo.CipherSuite.Value));
                 }
             }
         }
