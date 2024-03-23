@@ -60,6 +60,14 @@ class Program
             TargetUrl = "/archive/"
         });
 
+        //handle old "view cached" links
+        server.AddRedirect(new Redirect
+        {
+            IsTemporary = false,
+            UrlPrefix = "/cached",
+            TargetUrl = "/archive/"
+        });
+
         server.AddRedirect(new Redirect
         {
             IsTemporary = false,
