@@ -50,7 +50,8 @@ public class WebCrawler : IWebCrawler
     System.Timers.Timer DiskStatusTimer;
     Stopwatch CrawlerStopwatch;
 
-    bool UserQuit = false;
+    bool UserQuit;
+    string StopFilePath;
 
     public bool LimitCrawlToSeeds
     {
@@ -86,6 +87,15 @@ public class WebCrawler : IWebCrawler
             AutoReset = true,
         };
         DiskStatusTimer.Elapsed += LogStatusToDisk;
+
+        UserQuit = false;
+        StopFilePath = GetStopFilePath();
+    }
+
+    private string GetStopFilePath()
+    {
+        var info = new DirectoryInfo(".");
+        return info.FullName + "/stop";
     }
 
     private void ConfigureDirectories()
@@ -109,23 +119,7 @@ public class WebCrawler : IWebCrawler
         int prevRequested = 0;
         do
         {
-            if (Console.In is StreamReader)
-            {
-                if (Console.KeyAvailable)
-                {
-                    Console.WriteLine("stop? type 'quit'");
-                    Console.ReadKey(true);
-                    if (Console.ReadLine() == "quit")
-                    {
-                        Console.WriteLine("quiting...");
-                        UserQuit = true;
-                    }
-                    else
-                    {
-                        Console.WriteLine("resuming");
-                    }
-                }
-            }
+            CheckForQuit();
             Thread.Sleep(StatusIntervalScreen);
 
             int currRequested = TotalUrlsRequested.Count;
@@ -138,6 +132,43 @@ public class WebCrawler : IWebCrawler
         Console.WriteLine("COMPLETE!");
         Console.WriteLine($"Elapsed: {CrawlerStopwatch.Elapsed}\tTotal Requested: {TotalUrlsRequested.Count}\tTotal Processed: {TotalUrlsProcessed.Count}\tRemaining: {UrlFrontier.Count}");
         FinalizeCrawl();
+    }
+
+    private void CheckForQuit()
+    {
+        //CheckForInteractiveQuit();
+        CheckForFileQuit();
+    }
+
+    //private void CheckForInteractiveQuit()
+    //{
+    //    if (Console.In is StreamReader)
+    //    {
+    //        if (Console.KeyAvailable)
+    //        {
+    //            Console.WriteLine("stop? type 'quit'");
+    //            Console.ReadKey(true);
+    //            if (Console.ReadLine() == "quit")
+    //            {
+    //                Console.WriteLine("quiting...");
+    //                UserQuit = true;
+    //            }
+    //            else
+    //            {
+    //                Console.WriteLine("resuming");
+    //            }
+    //        }
+    //    }
+    //}
+
+    private void CheckForFileQuit()
+    {
+        if(File.Exists(StopFilePath))
+        {
+            UserQuit = true;
+            File.Delete(StopFilePath);
+            Console.WriteLine("Stop file detected. Stopping crawl");
+        }
     }
 
     private void WritePendingResults()
