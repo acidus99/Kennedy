@@ -216,6 +216,9 @@ public class WebCrawler : IWebCrawler
         return $"{requestSec.ToString("F1")} req / sec";
     }
 
+    public void LogUrlRejection(GeminiUrl url, string rejectionType, string specificRule = "")
+        => urlLogger.LogRejection(url, rejectionType, specificRule);
+
     private void LogStatusToDisk(object? sender, System.Timers.ElapsedEventArgs e)
     {
         StatusLogger logger = new StatusLogger(CrawlerOptions.Logs);
@@ -231,7 +234,7 @@ public class WebCrawler : IWebCrawler
     }
 
     public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response)
-    { 
+    {
         //null means it was ignored by robots
         if (response != null)
         {
@@ -244,9 +247,6 @@ public class WebCrawler : IWebCrawler
             }
             //add proactive URLs
             FrontierWrapper.AddUrls(entry.DepthFromSeed, ProactiveLinksFinder.FindLinks(response), false);
-        } else
-        {
-            urlLogger.LogRejection(entry.Url, "Excluded by Robots.txt");
         }
         TotalUrlsProcessed.Increment();
     }
