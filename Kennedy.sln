@@ -20,8 +20,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E21E988D-240D-42C6-A8AE-A2071DA0DEAF}"
 	ProjectSection(SolutionItems) = preProject
 		TODO.txt = TODO.txt
-		Changelog.txt = Changelog.txt
 		.editorconfig = .editorconfig
+		CHANGELOG.md = CHANGELOG.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Indexer", "Indexer\Kennedy.Indexer.csproj", "{FB666DDE-AB58-4924-AD2D-751838EF74D3}"
