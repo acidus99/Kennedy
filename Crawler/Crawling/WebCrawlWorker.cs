@@ -12,10 +12,7 @@ namespace Kennedy.Crawler.Crawling;
 /// </summary>
 internal class WebCrawlWorker
 {
-    /// <summary>
-    /// how long should we wait between requests to the same authority
-    /// </summary>
-    const int delayMs = 500;
+    const int MaxRetries = 5;
 
     public IWebCrawler Crawler;
     public int CrawlerID;
@@ -31,47 +28,70 @@ internal class WebCrawlWorker
     {
         var requestor = new GeminiProtocolHandler();
         var hostTracker = new HostHealthTracker();
+        var politeTracker = new PolitenessTracker();
+
+        bool shouldRetryUrl = false;
+
+        UrlFrontierEntry? entry = null;
 
         do
         {
-            UrlFrontierEntry? entry = Crawler.GetUrl(CrawlerID);
-
-            if (entry != null)
+            if (!shouldRetryUrl)
             {
-                GeminiResponse? response = null;
-
-                if (!hostTracker.ShouldSendRequest(entry.Url))
-                {
-                    Crawler.LogUrlRejection(entry.Url, "Host Health check failed");
-                }
-                else
-                {
-                    response = requestor.Request(entry);
-
-                    if (response == null)
-                    {
-                        Crawler.LogUrlRejection(entry.Url, "Excluded by Robots.txt");
-                    }
-
-                    hostTracker.AddResponse(response);
-                }
-
-                //if we got a URL entry, even if it was rejected for robots or health reasons,
-                //we always have to call process on it, so th inflight/being processed counts work out
-                Crawler.ProcessRequestResponse(entry, response);
-
-                //if we got a response, we need to wait before doing the next
-                if (response != null)
-                {
-                    //TODO implement backoff timing here based on 44 responses
-                    Thread.Sleep(delayMs);
-                }
+                entry = Crawler.GetUrl(CrawlerID);
             }
-            else
+
+            if (entry == null)
             {
                 //if there was no work for this worker, sleep for 10 seconds
                 Thread.Sleep(10000);
+                continue;
             }
+
+            GeminiResponse? response = null;
+
+            if (!hostTracker.ShouldSendRequest(entry.Url))
+            {
+                Crawler.LogUrlRejection(entry.Url, "Host Health check failed");
+                //if we got a URL entry, even if it was rejected for robots or health reasons,
+                //we always have to call process on it, so th inflight/being processed counts work out
+                Crawler.ProcessRequestResponse(entry, response);
+                continue;
+            }
+
+            shouldRetryUrl = false;
+            response = requestor.Request(entry);
+
+            if (response == null)
+            {
+                Crawler.LogUrlRejection(entry.Url, "Excluded by Robots.txt");
+                //if we got a URL entry, even if it was rejected for robots or health reasons,
+                //we always have to call process on it, so th inflight/being processed counts work out
+                Crawler.ProcessRequestResponse(entry, response);
+                continue;
+            }
+
+            if (response.IsSlowDown)
+            {
+                politeTracker.IncreasePoliteness(entry.Url);
+
+                if (entry.RetryCount < MaxRetries)
+                {
+                    shouldRetryUrl = true;
+                    entry.RetryCount++;
+                }
+            }
+
+            if (!shouldRetryUrl)
+            {
+                //if we aren't retrying it, add it to our host tracker
+                hostTracker.AddResponse(response);
+                //and process it
+                Crawler.ProcessRequestResponse(entry, response);
+            }
+
+            Thread.Sleep(politeTracker.GetDelay(entry.Url));
+
         } while (Crawler.KeepWorkersAlive);
     }
 }

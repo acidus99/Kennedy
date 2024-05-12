@@ -13,6 +13,10 @@ namespace Kennedy.Data
 
 		public bool IsProactive { get; set; } = false;
 
+		public bool IsRetry
+			=> RetryCount > 0;
+
+		public int RetryCount { get; set; } = 0;
 	}
 }
 
