@@ -21,16 +21,16 @@ namespace Kennedy.Crawler.Logging
         {
             lock (locker)
             {
-                fout.WriteLine($"{response.StatusCode}\t\"{Clean(response.Meta)}\t{response.RequestUrl}");
+                fout.WriteLine($"{response.StatusCode}\t{Clean(response.Meta)}\t{response.RequestUrl}");
             }
         }
 
         /// <summary>
-        /// cleans a string to be a field in a CSV
+        /// cleans a string to be a field in a TSV
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
         private string Clean(string s)
-            => s.Replace("\n", "").Replace("\r", "").Replace(",", "-");
+            => s.Replace("\n", "").Replace("\r", "").Replace("\t", " ");
     }
 }
