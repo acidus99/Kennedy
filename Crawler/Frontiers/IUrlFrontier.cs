@@ -5,7 +5,7 @@ using Kennedy.Crawler.Logging;
 
 namespace Kennedy.Crawler.Frontiers
 {
-    public interface IUrlFrontier : IStatusProvider
+    public interface IUrlFrontier
     {
         /// <summary>
         /// How many URLs are in the frontier
@@ -13,7 +13,6 @@ namespace Kennedy.Crawler.Frontiers
         int Count { get; }
 
         int Total { get; }
-
 
         void AddSeed(GeminiUrl url);
 
@@ -28,6 +27,5 @@ namespace Kennedy.Crawler.Frontiers
         /// </summary>
         /// <returns></returns>
         UrlFrontierEntry? GetUrl(int crawlerID);
-
     }
 }

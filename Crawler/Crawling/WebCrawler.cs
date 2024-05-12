@@ -22,15 +22,13 @@ public class WebCrawler : IWebCrawler
     const int StatusIntervalDisk = 60000;
     const int StatusIntervalScreen = 5000;
 
-    /// <summary>
-    /// how long should we wait between requests
-    /// </summary>
-    const int delayMs = 350;
-
     int CrawlerThreads;
     ThreadSafeCounter TotalUrlsRequested;
     ThreadSafeCounter TotalUrlsProcessed;
-    RejectedUrlLogger urlLogger;
+
+
+    RejectedUrlLogger rejectionLogger;
+    ResponseLogger responseLogger;
 
     int UrlLimit;
 
@@ -47,7 +45,6 @@ public class WebCrawler : IWebCrawler
 
     ResultsWriter ResultsWarc;
 
-    System.Timers.Timer DiskStatusTimer;
     Stopwatch CrawlerStopwatch;
 
     bool UserQuit;
@@ -66,13 +63,14 @@ public class WebCrawler : IWebCrawler
 
         ConfigureDirectories();
         LanguageDetector.ConfigFileDirectory = CrawlerOptions.ConfigDir;
-        urlLogger = new RejectedUrlLogger(CrawlerOptions.UrlLog);
+        rejectionLogger = new RejectedUrlLogger(CrawlerOptions.RejectionsLog);
+        responseLogger = new ResponseLogger(CrawlerOptions.ResponsesLog);
 
         TotalUrlsRequested = new ThreadSafeCounter();
         TotalUrlsProcessed = new ThreadSafeCounter();
 
         UrlFrontier = new BalancedUrlFrontier(CrawlerThreads);
-        FrontierWrapper = new UrlFrontierWrapper(UrlFrontier, urlLogger);
+        FrontierWrapper = new UrlFrontierWrapper(UrlFrontier, rejectionLogger);
         seenContentTracker = new SeenContentTracker();
 
         ProactiveLinksFinder = new ProactiveLinksFinder();
@@ -81,12 +79,6 @@ public class WebCrawler : IWebCrawler
         ResultsWarc = new ResultsWriter(CrawlerOptions.WarcDir);
 
         CrawlerStopwatch = new Stopwatch();
-        DiskStatusTimer = new System.Timers.Timer(StatusIntervalDisk)
-        {
-            Enabled = true,
-            AutoReset = true,
-        };
-        DiskStatusTimer.Elapsed += LogStatusToDisk;
 
         UserQuit = false;
         StopFilePath = GetStopFilePath();
@@ -111,7 +103,6 @@ public class WebCrawler : IWebCrawler
     {
         RobotsChecker.Global.Crawler = this;
         CrawlerStopwatch.Start();
-        DiskStatusTimer.Start();
 
         SpawnCrawlThreads();
         SpawnResultsWriter();
@@ -186,7 +177,7 @@ public class WebCrawler : IWebCrawler
     private void FinalizeCrawl()
     {
         CrawlerStopwatch.Stop();
-        urlLogger.Close();
+        rejectionLogger.Close();
         ResultsWarc.Close();
     }
 
@@ -217,18 +208,12 @@ public class WebCrawler : IWebCrawler
     }
 
     public void LogUrlRejection(GeminiUrl url, string rejectionType, string specificRule = "")
-        => urlLogger.LogRejection(url, rejectionType, specificRule);
-
-    private void LogStatusToDisk(object? sender, System.Timers.ElapsedEventArgs e)
-    {
-        StatusLogger logger = new StatusLogger(CrawlerOptions.Logs);
-        logger.LogStatus(FrontierWrapper);
-        logger.LogStatus(UrlFrontier);
-    }
+        => rejectionLogger.LogRejection(url, rejectionType, specificRule);
 
     public void ProcessRobotsResponse(GeminiResponse response)
     {
         TotalUrlsRequested.Increment();
+        responseLogger.LogUrlResponse(response);
         ResultsWarc.AddToQueue(response);
         TotalUrlsProcessed.Increment();
     }
@@ -238,6 +223,7 @@ public class WebCrawler : IWebCrawler
         //null means it was ignored by robots
         if (response != null)
         {
+            responseLogger.LogUrlResponse(response);
             ResultsWarc.AddToQueue(response);
 
             //if we haven't seen this content before, parse it for links and add them to the frontier

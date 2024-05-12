@@ -29,8 +29,6 @@ public class BalancedUrlFrontier : IUrlFrontier
 
     public int Total => totalUrls.Count;
 
-    public string ModuleName => "Balanced Url Frontier";
-
     public BalancedUrlFrontier(int totalWorkers)
     {
         locker = new object();
@@ -79,9 +77,6 @@ public class BalancedUrlFrontier : IUrlFrontier
 
     public UrlFrontierEntry? GetUrl(int crawlerID)
         => queues[crawlerID].GetUrl();
-
-    public string GetStatus()
-        => $"Queue Size:\t{Count}";
 
     public void AddUrl(UrlFrontierEntry entry)
     {

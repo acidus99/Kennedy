@@ -12,7 +12,7 @@ using Kennedy.Crawler.Utils;
 
 namespace Kennedy.Crawler.Frontiers
 {
-    public class UrlFrontierWrapper : IStatusProvider
+    public class UrlFrontierWrapper
     {
         IUrlFrontier UrlFrontier;
         List<IUrlFilter> UrlFilters;
@@ -42,8 +42,6 @@ namespace Kennedy.Crawler.Frontiers
             TotalUrls = new ThreadSafeCounter();
             PassedUrls = new ThreadSafeCounter();
         }
-
-        public string ModuleName => "Url Filters";
 
         public void AddSeed(GeminiUrl seedUrl)
         {
@@ -112,8 +110,5 @@ namespace Kennedy.Crawler.Frontiers
                 }
             }
         }
-
-        public string GetStatus()
-            => $"Url Filters\tInput: {TotalUrls.Count}\tPassed: {PassedUrls.Count}\tRejected: {TotalUrls.Count - PassedUrls.Count}";
     }
 }
