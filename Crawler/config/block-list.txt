@@ -10,7 +10,7 @@
 # Don't view specific commits or trees. This tends to index the most recent content, without making a copy of the entire source commit tree
 regex: \/commits?\/[a-fA-F0-9]{40,}
 regex: \/tree\/[a-zA-Z0-9]{40,}
-gemini://git.
+gemini://git.*
 regex: \/git\/
 
 ## Social media proxy
