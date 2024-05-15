@@ -1,15 +1,12 @@
-﻿namespace Kennedy.WarcConverters.MozzPortalImport;
-
-using System;
-using System.Web;
-using System.Security.Cryptography.X509Certificates;
-
+﻿using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Web;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 using Gemini.Net;
-using System.Reflection.Metadata;
+
+namespace Kennedy.WarcConverters.MozzPortalImport;
 
 public class MozzHtmlConverter
 {
@@ -25,7 +22,7 @@ public class MozzHtmlConverter
 
     public MozzHtmlConverter(WaybackUrl waybackUrl, string html)
     {
-        if(!waybackUrl.IsMozzUrl)
+        if (!waybackUrl.IsMozzUrl)
         {
             throw new ArgumentException("Attempting to extract from a wayback URL that is not a URL for the mozz proxy!");
         }
@@ -59,7 +56,7 @@ public class MozzHtmlConverter
         string tlsInfo = pre.TextContent;
 
         var index = tlsInfo.IndexOf("-----BEGIN CERTIFICATE-----");
-        if(index < 0)
+        if (index < 0)
         {
             throw new ApplicationException($"Could not find BEGIN CERTIFICATE block inside PRE tag for Certificate Request");
         }
@@ -77,7 +74,7 @@ public class MozzHtmlConverter
     private ArchivedContent ParseGeminiResponse()
     {
         string? responseLine = GetResponseLine();
-        if(responseLine == null)
+        if (responseLine == null)
         {
             //could not find a status code or meta, so there is nothing we can recover
             return new ArchivedContent
@@ -106,7 +103,7 @@ public class MozzHtmlConverter
     {
         //grab the first table in the HTML
         var table = DocumentRoot.QuerySelector("table");
-        if(table == null)
+        if (table == null)
         {
             throw new ApplicationException($"Could not find a table in the parsed HTML.");
         }
@@ -119,7 +116,7 @@ public class MozzHtmlConverter
 
         var statusCode = cells[1].TextContent.Trim();
 
-        if(string.IsNullOrEmpty(statusCode))
+        if (string.IsNullOrEmpty(statusCode))
         {
             return null;
         }
@@ -154,7 +151,7 @@ public class MozzHtmlConverter
     private ArchivedContent ParseGemtextBody(GeminiResponse response)
     {
         var geminiRoot = DocumentRoot.QuerySelector("div.body div.gemini");
-        if(geminiRoot == null)
+        if (geminiRoot == null)
         {
             throw new ApplicationException("Could not locate Gemini Root inside of HTML!");
         }
@@ -202,7 +199,7 @@ public class MozzHtmlConverter
 
         string? url = img.GetAttribute("src");
 
-        if(string.IsNullOrEmpty(url))
+        if (string.IsNullOrEmpty(url))
         {
             throw new ApplicationException("img tag did not have a src attribute, or it was empty");
         }
@@ -248,4 +245,3 @@ public class MozzHtmlConverter
         return document.DocumentElement;
     }
 }
-

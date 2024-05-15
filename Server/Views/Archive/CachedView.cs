@@ -1,11 +1,11 @@
-﻿using Gemini.Net;
+﻿using System;
+using System.Linq;
+using System.Web;
+using Gemini.Net;
 using Kennedy.Archive;
 using Kennedy.Archive.Db;
 using Microsoft.EntityFrameworkCore;
 using RocketForce;
-using System;
-using System.Linq;
-using System.Web;
 
 namespace Kennedy.Server.Views.Archive;
 
@@ -13,7 +13,6 @@ internal class CachedView : AbstractView
 {
     public CachedView(GeminiRequest request, Response response, GeminiServer app)
         : base(request, response, app) { }
-
 
     ArchiveDbContext archive = new ArchiveDbContext(Settings.Global.DataRoot + "archive.db");
     SnapshotReader reader = new SnapshotReader(Settings.Global.DataRoot + "Packs/");

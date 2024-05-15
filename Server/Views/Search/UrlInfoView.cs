@@ -1,13 +1,13 @@
-﻿using Gemini.Net;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Search;
 using Kennedy.SearchIndex.Web;
 using Microsoft.EntityFrameworkCore;
 using RocketForce;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Kennedy.Server.Views.Search;
 

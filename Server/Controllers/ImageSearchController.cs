@@ -7,7 +7,7 @@ public static class ImageSearchController
 {
     public static void Search(GeminiRequest request, Response response, GeminiServer app)
     {
-        if(!request.Url.HasQuery)
+        if (!request.Url.HasQuery)
         {
             response.Input("Enter image search query");
             return;

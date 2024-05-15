@@ -1,6 +1,6 @@
-﻿using Gemini.Net;
-using System;
+﻿using System;
 using System.Net;
+using Gemini.Net;
 
 namespace Kennedy.Server.Views.Search;
 

@@ -1,7 +1,7 @@
-﻿namespace Kennedy.WarcConverters.MozzPortalImport;
-
-using System.Net;
+﻿using System.Net;
 using Gemini.Net;
+
+namespace Kennedy.WarcConverters.MozzPortalImport;
 
 //Converts archive 
 public class ArchivedContentConverter

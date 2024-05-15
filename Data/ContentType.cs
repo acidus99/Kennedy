@@ -1,11 +1,10 @@
-﻿namespace Kennedy.Data
+﻿namespace Kennedy.Data;
+
+public enum ContentType : int
 {
-    public enum ContentType : int
-    {
-        Unknown = 0,
-        Gemtext = 1,
-        Image = 2,
-        Binary = 3,
-        PlainText = 4,
-    }
+    Unknown = 0,
+    Gemtext = 1,
+    Image = 2,
+    Binary = 3,
+    PlainText = 4,
 }

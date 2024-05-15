@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-
-using Gemini.Net;
+﻿using Gemini.Net;
 using Kennedy.Crawler.Protocols;
 using Kennedy.Data;
 

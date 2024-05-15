@@ -1,6 +1,6 @@
-﻿using Kennedy.Cache;
-using System.Linq;
+﻿using System.Linq;
 using System.Net;
+using Kennedy.Cache;
 
 namespace Kennedy.Gemipedia;
 
@@ -38,7 +38,7 @@ public class WikipediaApiClient
     {
         //first check the cache
         var contents = Cache.GetAsString(url);
-        if(contents != null)
+        if (contents != null)
         {
             return contents;
         }
@@ -49,7 +49,8 @@ public class WikipediaApiClient
             //cache it
             Cache.Set(url, contents);
             return contents;
-        } catch(WebException)
+        }
+        catch (WebException)
         {
         }
         return "";

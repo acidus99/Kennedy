@@ -1,103 +1,97 @@
-﻿using System;
+﻿using Gemini.Net;
 
-using Gemini.Net;
-using Kennedy.Data;
+namespace Kennedy.Crawler;
 
-
-namespace Kennedy.Crawler
+public class HostHealthTracker
 {
-	public class HostHealthTracker
-	{
-		const int DefaultWindowSize = 10;
+    const int DefaultWindowSize = 10;
 
-		Dictionary<string, HostHealthContainer> Hosts;
+    Dictionary<string, HostHealthContainer> Hosts;
 
-		int WindowSize;
+    int WindowSize;
 
-		public HostHealthTracker(int windowSize = DefaultWindowSize)
-		{
-			Hosts = new Dictionary<string, HostHealthContainer>();
-			WindowSize = windowSize;
-		}
+    public HostHealthTracker(int windowSize = DefaultWindowSize)
+    {
+        Hosts = new Dictionary<string, HostHealthContainer>();
+        WindowSize = windowSize;
+    }
 
-		public void AddResponse(GeminiResponse? response)
-		{
-			if(response == null)
-			{
-				return;
-			}
-
-			string key = GetKey(response.RequestUrl);
-			if(!Hosts.ContainsKey(key))
-			{
-				Hosts[key] = new HostHealthContainer(WindowSize);
-            }
-			Hosts[key].AddResponse(response);
+    public void AddResponse(GeminiResponse? response)
+    {
+        if (response == null)
+        {
+            return;
         }
 
-		public bool ShouldSendRequest(GeminiUrl url)
-		{
-			var key = GetKey(url);
+        string key = GetKey(response.RequestUrl);
+        if (!Hosts.ContainsKey(key))
+        {
+            Hosts[key] = new HostHealthContainer(WindowSize);
+        }
+        Hosts[key].AddResponse(response);
+    }
 
-			if (!Hosts.ContainsKey(key))
-			{
-				return true;
-			}
-			return Hosts[key].ShouldSendRequest(url);
-		}
+    public bool ShouldSendRequest(GeminiUrl url)
+    {
+        var key = GetKey(url);
 
-		private string GetKey(GeminiUrl url)
-			=> url.Authority;
+        if (!Hosts.ContainsKey(key))
+        {
+            return true;
+        }
+        return Hosts[key].ShouldSendRequest(url);
+    }
 
-		private class HostHealthContainer
-		{
-            Queue<GeminiResponse> RecentResponses;
-			float totalRequests;
-            float errorRequests;
+    private string GetKey(GeminiUrl url)
+        => url.Authority;
 
-            int WindowSize;
+    private class HostHealthContainer
+    {
+        Queue<GeminiResponse> RecentResponses;
+        float totalRequests;
+        float errorRequests;
 
-			public HostHealthContainer(int windowSize)
-			{
-				//TODO: I don't really need to store the entire response, just the status code
-				RecentResponses = new Queue<GeminiResponse>(); 
-				WindowSize = windowSize;
-				totalRequests = 0;
-				errorRequests = 0;
-			}
+        int WindowSize;
 
-            public void AddResponse(GeminiResponse response)
+        public HostHealthContainer(int windowSize)
+        {
+            //TODO: I don't really need to store the entire response, just the status code
+            RecentResponses = new Queue<GeminiResponse>();
+            WindowSize = windowSize;
+            totalRequests = 0;
+            errorRequests = 0;
+        }
+
+        public void AddResponse(GeminiResponse response)
+        {
+            totalRequests++;
+            if (response.IsConnectionError)
             {
-				totalRequests++;
-				if(response.IsConnectionError)
-				{
-					errorRequests++;
-				}
+                errorRequests++;
+            }
 
-                if (RecentResponses.Count == WindowSize)
+            if (RecentResponses.Count == WindowSize)
+            {
+                RecentResponses.Dequeue();
+            }
+            RecentResponses.Enqueue(response);
+        }
+
+        public bool ShouldSendRequest(GeminiUrl url)
+        {
+            if (totalRequests > WindowSize)
+            {
+                if (errorRequests / totalRequests > 0.8)
                 {
-                    RecentResponses.Dequeue();
+                    return false;
                 }
-                RecentResponses.Enqueue(response);
             }
 
-            public bool ShouldSendRequest(GeminiUrl url)
-            {
-				if(totalRequests > WindowSize)
-				{
-					if (errorRequests / totalRequests > 0.8)
-					{
-						return false;
-					}
-				}
+            var errors = RecentResponses
+                .Where(x => x.IsConnectionError)
+            .Count();
 
-                var errors = RecentResponses
-                    .Where(x => x.IsConnectionError)
-					.Count();
-
-                return errors != WindowSize;
-            }
+            return errors != WindowSize;
         }
     }
 }
-

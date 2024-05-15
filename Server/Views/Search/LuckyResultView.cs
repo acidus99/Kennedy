@@ -26,5 +26,4 @@ internal class LuckyResultsView : AbstractView
         Response.WriteLine();
         Response.WriteLine("## Oh Snap! No Results for your query.");
     }
-
 }

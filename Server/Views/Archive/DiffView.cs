@@ -1,28 +1,24 @@
-﻿using DiffPlex;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
-using DiffPlex.Model;
 using Gemini.Net;
 using Kennedy.Archive;
 using Kennedy.Archive.Db;
 using Microsoft.EntityFrameworkCore;
 using RocketForce;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace Kennedy.Server.Views.Archive;
 
 internal class DiffView : AbstractView
 {
-
     private class DiffPair
     {
         public Snapshot? Previous;
         public Snapshot? Current;
     }
-
 
     private bool ShowFullHistory = false;
     private DiffPair PreviousDiff = new DiffPair();
@@ -63,7 +59,7 @@ internal class DiffView : AbstractView
         var prevResponse = reader.ReadResponse(CurrentDiff.Previous);
         var currResponse = reader.ReadResponse(CurrentDiff.Current);
 
-        if(!prevResponse.IsSuccess || !currResponse.IsSuccess)
+        if (!prevResponse.IsSuccess || !currResponse.IsSuccess)
         {
             Response.WriteLine("Status codes differ between snapshots. Cannot show a Differences view.");
             RenderResponseLine(CurrentDiff.Previous, prevResponse);

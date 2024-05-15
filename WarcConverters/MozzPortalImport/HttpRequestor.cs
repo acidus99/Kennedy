@@ -1,10 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-
-namespace Kennedy.WarcConverters.MozzPortalImport;
+﻿namespace Kennedy.WarcConverters.MozzPortalImport;
 
 public class HttpRequestor
 {
@@ -44,5 +38,4 @@ public class HttpRequestor
             return ms.ToArray();
         }
     }
-
 }

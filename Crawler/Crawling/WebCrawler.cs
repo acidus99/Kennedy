@@ -1,12 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Collections.Generic;
-
-
+﻿using System.Diagnostics;
 using Gemini.Net;
 using Kennedy.Crawler.Frontiers;
 using Kennedy.Crawler.Logging;
@@ -154,7 +146,7 @@ public class WebCrawler : IWebCrawler
 
     private void CheckForFileQuit()
     {
-        if(File.Exists(StopFilePath))
+        if (File.Exists(StopFilePath))
         {
             UserQuit = true;
             File.Delete(StopFilePath);

@@ -1,9 +1,8 @@
-﻿using Kennedy.Archive.Db;
+﻿using System.Linq;
+using Kennedy.Archive.Db;
 using RocketForce;
-using System.Linq;
 
 namespace Kennedy.Server.Views.Archive;
-
 
 /// <summary>
 /// Shows the details about a 
@@ -51,5 +50,4 @@ internal class SearchResultsView : AbstractView
             counter++;
         }
     }
-
 }

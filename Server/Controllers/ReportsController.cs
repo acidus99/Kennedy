@@ -7,7 +7,7 @@ public static class ReportsController
 {
     public static void SiteHealth(GeminiRequest request, Response response, GeminiServer app)
     {
-        if(!request.Url.HasQuery)
+        if (!request.Url.HasQuery)
         {
             response.Input("Enter Domain");
             return;
@@ -26,5 +26,4 @@ public static class ReportsController
         var view = new DomainBacklinksView(request, response, app);
         view.Render();
     }
-
 }

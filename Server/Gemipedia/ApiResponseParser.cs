@@ -14,7 +14,7 @@ internal static class ApiResponseParser
         var response = JObject.Parse(json);
 
         var resultsArray = response["pages"] as JArray;
-        if(resultsArray == null)
+        if (resultsArray == null)
         {
             return ret;
         }
@@ -33,4 +33,3 @@ internal static class ApiResponseParser
     private static string Cleanse(JToken? token)
         => token?.ToString() ?? "";
 }
-

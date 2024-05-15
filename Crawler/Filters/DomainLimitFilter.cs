@@ -1,34 +1,29 @@
-﻿using System;
-using Gemini.Net;
-
-using Kennedy.Crawler.Utils;
+﻿using Kennedy.Crawler.Utils;
 using Kennedy.Data;
 
-namespace Kennedy.Crawler.Filters
+namespace Kennedy.Crawler.Filters;
+
+public class DomainLimitFilter : IUrlFilter
 {
-	public class DomainLimitFilter : IUrlFilter
-	{
-        int MaxHits;
-        Bag<String> DomainHits;
+    int MaxHits;
+    Bag<String> DomainHits;
 
-		public DomainLimitFilter(int maxHits = 15000)
-		{
-            DomainHits = new Bag<string>();
-            MaxHits = maxHits;
-		}
+    public DomainLimitFilter(int maxHits = 15000)
+    {
+        DomainHits = new Bag<string>();
+        MaxHits = maxHits;
+    }
 
-        public BlockResult IsUrlAllowed(UrlFrontierEntry entry)
+    public BlockResult IsUrlAllowed(UrlFrontierEntry entry)
+    {
+        int hits = DomainHits.Add(entry.Url.Authority);
+        if (hits <= MaxHits)
         {
-            int hits = DomainHits.Add(entry.Url.Authority);
-            if (hits <= MaxHits)
-            {
-                return BlockResult.Allowed;
-            }
-            else
-            {
-                return new BlockResult(false, $"Domain Limit Exceeded", $"Hits: {hits}");
-            }
+            return BlockResult.Allowed;
+        }
+        else
+        {
+            return new BlockResult(false, $"Domain Limit Exceeded", $"Hits: {hits}");
         }
     }
 }
-

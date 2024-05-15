@@ -1,10 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.IO;
-using System.Collections.Generic;
-using Gemini.Net;
-
-using Kennedy.Crawler.Dns;
+﻿using Gemini.Net;
 using Kennedy.Crawler.Utils;
 using Kennedy.Data;
 

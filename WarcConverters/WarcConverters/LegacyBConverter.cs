@@ -1,7 +1,7 @@
-﻿namespace Kennedy.WarcConverters;
-
-using Gemini.Net;
+﻿using Gemini.Net;
 using Kennedy.Warc;
+
+namespace Kennedy.WarcConverters;
 
 /// <summary>
 /// Converts the legacy-B crawl format into a WARC file
@@ -16,9 +16,9 @@ public class LegacyBConverter : AbstractConverter
     protected override string ConverterName => "Legacy-B";
 
     public LegacyBConverter(GeminiWarcCreator warcCreator, string crawlLocation)
-        :base(warcCreator, crawlLocation)
-		{
-			CrawlLocation = crawlLocation;
+        : base(warcCreator, crawlLocation)
+    {
+        CrawlLocation = crawlLocation;
 
         //The legacy log.tsv format did not store the capture time for individual requests/responses
         //however we can get the time the crawl stated via the filename. That will be stored here
@@ -83,7 +83,7 @@ public class LegacyBConverter : AbstractConverter
 
         //sanity check, are we trying to access a directory?
         //then adjust it to be the index
-        if(Directory.Exists(path))
+        if (Directory.Exists(path))
         {
             if (!path.EndsWith('/'))
             {
@@ -116,5 +116,5 @@ public class LegacyBConverter : AbstractConverter
     {
         var filename = url.Filename;
         return (filename.Length > 0) ? filename : "index.gmi";
-    }       
+    }
 }

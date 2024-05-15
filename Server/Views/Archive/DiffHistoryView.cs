@@ -1,8 +1,8 @@
-﻿using Gemini.Net;
+﻿using System.Linq;
+using Gemini.Net;
 using Kennedy.Archive.Db;
 using Microsoft.EntityFrameworkCore;
 using RocketForce;
-using System.Linq;
 
 namespace Kennedy.Server.Views.Archive;
 
@@ -49,7 +49,7 @@ internal class DiffHistoryView : AbstractView
         Response.Success();
         Response.WriteLine($"# 🏎 DeLorean Time Machine");
         Response.WriteLine();
-        Response.WriteLine($"=> {urlEntry.GeminiUrl.NormalizedUrl} { FormatUrl(urlEntry.GeminiUrl)}");
+        Response.WriteLine($"=> {urlEntry.GeminiUrl.NormalizedUrl} {FormatUrl(urlEntry.GeminiUrl)}");
         Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(urlEntry.GeminiUrl.NormalizedUrl)} More Information");
 
         var snapshots = urlEntry.Snapshots
@@ -66,7 +66,7 @@ internal class DiffHistoryView : AbstractView
         var first = snapshots.First();
         var last = snapshots.Last();
 
-        if (!snapshots.Where(x=>x.IsText).Any())
+        if (!snapshots.Where(x => x.IsText).Any())
         {
             Response.WriteLine("Can only view differences of Gemtext files");
             return;
@@ -76,7 +76,7 @@ internal class DiffHistoryView : AbstractView
 
         int currentYear = 0;
 
-        for (int i=1;i<snapshots.Length; i++)
+        for (int i = 1; i < snapshots.Length; i++)
         {
             if (currentYear < snapshots[i].Captured.Year)
             {

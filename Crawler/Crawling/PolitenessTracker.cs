@@ -1,4 +1,5 @@
 ﻿using Gemini.Net;
+
 namespace Kennedy.Crawler.Crawling;
 
 /// <summary>
@@ -44,7 +45,7 @@ public class PolitenessTracker
     {
         string authority = url.Authority;
 
-        if(!DelayForAuthority.ContainsKey(authority))
+        if (!DelayForAuthority.ContainsKey(authority))
         {
             return DefaultDelayMs;
         }

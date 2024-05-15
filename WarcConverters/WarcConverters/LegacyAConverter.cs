@@ -1,7 +1,7 @@
-﻿namespace Kennedy.WarcConverters;
-
-using Gemini.Net;
+﻿using Gemini.Net;
 using Kennedy.Warc;
+
+namespace Kennedy.WarcConverters;
 
 /// <summary>
 /// Converts the legacy-A crawl format into a WARC file
@@ -42,7 +42,7 @@ public class LegacyAConverter : AbstractConverter
 
             GeminiUrl url = new GeminiUrl(fields[1]);
             int statusCode = 20;
-            string meta = fields[2].Substring(3); 
+            string meta = fields[2].Substring(3);
 
             byte[]? data = GetContentData(url);
 

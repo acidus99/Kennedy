@@ -1,12 +1,12 @@
-﻿using Kennedy.Gemipedia;
-using Kennedy.SearchIndex.Models;
-using Kennedy.SearchIndex.Search;
-using RocketForce;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Kennedy.Gemipedia;
+using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex.Search;
+using RocketForce;
 
 namespace Kennedy.Server.Views.Search;
 

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-
-using Gemini.Net;
+﻿using Gemini.Net;
 using Kennedy.Data;
+
 namespace Kennedy.Crawler.Crawling;
 
 /// <summary>

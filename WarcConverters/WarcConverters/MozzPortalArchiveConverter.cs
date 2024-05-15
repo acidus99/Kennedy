@@ -1,8 +1,8 @@
-﻿namespace Kennedy.WarcConverters;
-
-using Gemini.Net;
+﻿using Gemini.Net;
 using Kennedy.Warc;
 using Kennedy.WarcConverters.MozzPortalImport;
+
+namespace Kennedy.WarcConverters;
 
 /// <summary>
 /// Converts the legacy-A crawl format into a WARC file
@@ -92,12 +92,12 @@ public class MozzPortalArchiveConverter : AbstractConverter
         DateTime captured = content.Url.Captured;
         GeminiUrl geminiUrl = content.Url.GetProxiedUrl();
 
-        if(content.Certificate != null)
+        if (content.Certificate != null)
         {
             WarcCreator.WriteLegacyCertificate(captured, geminiUrl, content.Certificate);
         }
 
-        if(content.GeminiResponse != null)
+        if (content.GeminiResponse != null)
         {
             WarcCreator.WriteSession(content.GeminiResponse);
         }
@@ -133,5 +133,4 @@ public class MozzPortalArchiveConverter : AbstractConverter
     //    }
     //    fout.Close();
     //}
-
 }

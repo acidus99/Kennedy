@@ -1,7 +1,5 @@
 ﻿namespace Kennedy.SearchIndex.Models;
 
-using System;
-
 public class UserQuery
 {
     public string? FileTypeScope { get; set; }
@@ -51,4 +49,3 @@ public class UserQuery
     public override string ToString()
         => RawQuery;
 }
-

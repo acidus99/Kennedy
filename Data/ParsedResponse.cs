@@ -1,40 +1,37 @@
-﻿using System;
+﻿using Gemini.Net;
 
-using Gemini.Net;
+namespace Kennedy.Data;
 
-namespace Kennedy.Data
+public class ParsedResponse : GeminiResponse
 {
-	public class ParsedResponse : GeminiResponse
-	{
-		public ContentType FormatType { get; set; } = ContentType.Unknown;
+    public ContentType FormatType { get; set; } = ContentType.Unknown;
 
-		public string? DetectedMimeType { get; set; }
+    public string? DetectedMimeType { get; set; }
 
-		public List<FoundLink> Links { get; set; }
+    public List<FoundLink> Links { get; set; }
 
-		public ParsedResponse(GeminiResponse baseResponse)
-			: base(baseResponse.RequestUrl)
-		{
-			Links = new List<FoundLink>();
+    public ParsedResponse(GeminiResponse baseResponse)
+        : base(baseResponse.RequestUrl)
+    {
+        Links = new List<FoundLink>();
 
-            StatusCode = baseResponse.StatusCode;
-            Meta = baseResponse.Meta;
-			RemoteAddress = baseResponse.RemoteAddress;
-			RequestSent = baseResponse.RequestSent;
-			ResponseReceived = baseResponse.ResponseReceived;
+        StatusCode = baseResponse.StatusCode;
+        Meta = baseResponse.Meta;
+        RemoteAddress = baseResponse.RemoteAddress;
+        RequestSent = baseResponse.RequestSent;
+        ResponseReceived = baseResponse.ResponseReceived;
 
-			//body properties
-            BodyBytes = baseResponse.BodyBytes;
-			IsBodyTruncated = baseResponse.IsBodyTruncated;
+        //body properties
+        BodyBytes = baseResponse.BodyBytes;
+        IsBodyTruncated = baseResponse.IsBodyTruncated;
 
-			//parsed items if there is a body
-			MimeType = baseResponse.MimeType;
-			Charset = baseResponse.Charset;
-			Language = baseResponse.Language;
+        //parsed items if there is a body
+        MimeType = baseResponse.MimeType;
+        Charset = baseResponse.Charset;
+        Language = baseResponse.Language;
 
-			//timers
-			ConnectTime = baseResponse.ConnectTime;
-			DownloadTime = baseResponse.DownloadTime;
-		}
-	}
+        //timers
+        ConnectTime = baseResponse.ConnectTime;
+        DownloadTime = baseResponse.DownloadTime;
+    }
 }

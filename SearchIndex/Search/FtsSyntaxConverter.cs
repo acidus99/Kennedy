@@ -1,6 +1,7 @@
-﻿namespace Kennedy.SearchIndex.Search;
-using System;
+﻿using System;
 using System.Text;
+
+namespace Kennedy.SearchIndex.Search;
 
 public static class FtsSyntaxConverter
 {
@@ -161,4 +162,3 @@ public static class FtsSyntaxConverter
         return output.ToString().Trim();
     }
 }
-

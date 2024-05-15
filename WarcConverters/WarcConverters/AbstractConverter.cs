@@ -1,9 +1,8 @@
-﻿namespace Kennedy.WarcConverters;
-
-using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Kennedy.Warc;
 using Kennedy.WarcConverters.Db;
+
+namespace Kennedy.WarcConverters;
 
 public abstract class AbstractConverter
 {
@@ -20,11 +19,11 @@ public abstract class AbstractConverter
     protected abstract string ConverterName { get; }
 
     public AbstractConverter(GeminiWarcCreator warcCreator, string crawlLocation)
-	{
+    {
         CrawlLocation = crawlLocation;
         WarcCreator = warcCreator;
         stopwatch = new Stopwatch();
-	}
+    }
 
     public void WriteToWarc()
     {
@@ -48,7 +47,7 @@ public abstract class AbstractConverter
             return "text/gemini";
         }
         int paramIndex = meta.IndexOf(";");
-        return  (paramIndex > 0) ?
+        return (paramIndex > 0) ?
                 meta.Substring(0, paramIndex) :
                 meta;
     }

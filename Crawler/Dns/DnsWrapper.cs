@@ -1,29 +1,28 @@
 ﻿using System.Net;
 using DnsClient;
 
-namespace Kennedy.Crawler.Dns
+namespace Kennedy.Crawler.Dns;
+
+public class DnsWrapper
 {
-    public class DnsWrapper
+    LookupClient client;
+
+    public DnsWrapper()
     {
-        LookupClient client;
+        client = new LookupClient(NameServer.GooglePublicDns);
+    }
 
-        public DnsWrapper()
+    public IPAddress? DoLookup(string hostname)
+    {
+        try
         {
-            client = new LookupClient(NameServer.GooglePublicDns);
+            var result = client.Query(hostname, QueryType.A);
+            var record = result.Answers.ARecords().FirstOrDefault();
+            return record?.Address;
         }
-
-        public IPAddress? DoLookup(string hostname)
+        catch (Exception)
         {
-            try
-            {
-                var result = client.Query(hostname, QueryType.A);
-                var record = result.Answers.ARecords().FirstOrDefault();
-                return record?.Address;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            return null;
         }
     }
 }

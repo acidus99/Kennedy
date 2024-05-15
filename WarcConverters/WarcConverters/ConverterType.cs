@@ -2,9 +2,9 @@
 
 public enum ConverterType
 {
-	LegacyA,
-	LegacyB,
-	LegacyC,
-	CrawlDb,
-	MozzPortalArchive,
+    LegacyA,
+    LegacyB,
+    LegacyC,
+    CrawlDb,
+    MozzPortalArchive,
 }

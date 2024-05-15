@@ -1,45 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Gemini.Net;
 
-using Gemini.Net;
+namespace Kennedy.Data;
 
-namespace Kennedy.Data
+public class PlainTextResponse : ParsedResponse, ITextResponse
 {
-    public class PlainTextResponse : ParsedResponse, ITextResponse
+    public required string? DetectedLanguage { get; set; }
+
+    public bool HasIndexableText => (BodyText.Length > 0);
+
+    /// <summary>
+    /// Plain text documents cannot be feeds
+    /// </summary>
+    public bool IsFeed => false;
+
+    public string? IndexableText => BodyText;
+
+    private int? _lineCount;
+
+    public int LineCount
     {
-        public required string? DetectedLanguage { get; set; }
-
-        public bool HasIndexableText => (BodyText.Length > 0);
-
-        /// <summary>
-        /// Plain text documents cannot be feeds
-        /// </summary>
-        public bool IsFeed => false;
-
-        public string? IndexableText => BodyText;
-
-        private int? _lineCount;
-
-        public int LineCount
+        get
         {
-            get
+            if (!_lineCount.HasValue)
             {
-                if (!_lineCount.HasValue)
-                {
-                    _lineCount = BodyText.Split('\n').Length;
-                }
-                return _lineCount.Value;
+                _lineCount = BodyText.Split('\n').Length;
             }
+            return _lineCount.Value;
         }
+    }
 
-        public string? Title => null;
+    public string? Title => null;
 
-        public PlainTextResponse(GeminiResponse resp)
-        : base(resp)
-        {
-            FormatType = ContentType.PlainText;
-            DetectedMimeType = "text/plain";
-        }
-
+    public PlainTextResponse(GeminiResponse resp)
+    : base(resp)
+    {
+        FormatType = ContentType.PlainText;
+        DetectedMimeType = "text/plain";
     }
 }

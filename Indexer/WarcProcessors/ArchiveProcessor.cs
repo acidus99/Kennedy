@@ -1,12 +1,9 @@
-﻿namespace Kennedy.Indexer.WarcProcessors;
-
-using System.Linq;
-using System.Text.Json;
-
+﻿using System.Text.Json;
 using Gemini.Net;
-
 using Kennedy.Archive;
 using Kennedy.Data.RobotsTxt;
+
+namespace Kennedy.Indexer.WarcProcessors;
 
 public class ArchiveProcessor : AbstractGeminiWarcProcessor
 {
@@ -16,7 +13,7 @@ public class ArchiveProcessor : AbstractGeminiWarcProcessor
 
     public ArchiveProcessor(string archiveDirectory, string configDirectory)
         : base(configDirectory)
-	{
+    {
         if (!archiveDirectory.EndsWith(Path.DirectorySeparatorChar))
         {
             archiveDirectory += Path.DirectorySeparatorChar;
@@ -27,7 +24,7 @@ public class ArchiveProcessor : AbstractGeminiWarcProcessor
     }
 
     public override void FinalizeProcessing()
-	{
+    {
         UpdateVisbility();
         WriteStatsFile();
     }
@@ -125,11 +122,11 @@ public class ArchiveProcessor : AbstractGeminiWarcProcessor
 
         GeminiResponse? geminiResponse = archiver.GetLatestResponse(robotsUrl.ID);
 
-        if(geminiResponse == null)
+        if (geminiResponse == null)
         {
             return null;
         }
-        if(!geminiResponse.IsSuccess || !geminiResponse.HasBody)
+        if (!geminiResponse.IsSuccess || !geminiResponse.HasBody)
         {
             return null;
         }

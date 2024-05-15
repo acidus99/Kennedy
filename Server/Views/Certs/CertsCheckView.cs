@@ -1,10 +1,9 @@
-﻿using Gemini.Net;
+﻿using System;
+using Gemini.Net;
 using Kennedy.Server.Helpers;
 using RocketForce;
-using System;
 
 namespace Kennedy.Server.Views.Certs;
-
 
 /// <summary>
 /// Shows the details about a 

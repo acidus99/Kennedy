@@ -1,11 +1,11 @@
-﻿using Gemini.Net;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Gemini.Net;
 using Kennedy.SearchIndex.Web;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using RocketForce;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Kennedy.Server.Views.Reports;
 

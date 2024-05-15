@@ -1,7 +1,7 @@
-﻿using Gemini.Net;
-using Kennedy.Archive.Db;
-using System;
+﻿using System;
 using System.Web;
+using Gemini.Net;
+using Kennedy.Archive.Db;
 
 namespace Kennedy.Server;
 
@@ -79,6 +79,4 @@ public static class RoutePaths
 
     public static string ViewUrlFullHistory(string url)
         => $"{ViewUrlFullHistoryRoute}?{HttpUtility.UrlEncode(url)}";
-
 }
-

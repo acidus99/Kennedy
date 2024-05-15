@@ -1,8 +1,8 @@
-﻿using Gemini.Net;
-using System;
+﻿using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using Gemini.Net;
 
 namespace Kennedy.Server.Helpers;
 

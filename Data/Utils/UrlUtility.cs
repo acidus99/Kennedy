@@ -35,4 +35,3 @@ public static class UrlUtility
         return url;
     }
 }
-

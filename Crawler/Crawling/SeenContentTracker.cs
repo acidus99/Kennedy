@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Gemini.Net;
+﻿using Gemini.Net;
 using Kennedy.Crawler.Utils;
 
 namespace Kennedy.Crawler.Crawling;

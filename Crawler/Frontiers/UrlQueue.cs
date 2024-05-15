@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using Gemini.Net;
-using Kennedy.Crawler.Utils;
+﻿using Kennedy.Crawler.Utils;
 using Kennedy.Data;
 
 namespace Kennedy.Crawler.Frontiers;

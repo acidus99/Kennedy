@@ -1,11 +1,11 @@
-﻿namespace Kennedy.Indexer.WarcProcessors;
-
-using Gemini.Net;
+﻿using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.Data.Parsers;
 using Kennedy.SearchIndex;
 using System.Text.Json;
 using Kennedy.Crawler.Filters;
+
+namespace Kennedy.Indexer.WarcProcessors;
 
 public class SearchProcessor : AbstractGeminiWarcProcessor
 {
@@ -15,8 +15,8 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
 
     BlockListFilter filter;
     public SearchProcessor(string storageDirectory, string configDirectory)
-        :base(configDirectory)
-	{
+        : base(configDirectory)
+    {
         StorageDirectory = storageDirectory;
 
         if (!StorageDirectory.EndsWith(Path.DirectorySeparatorChar))
@@ -31,7 +31,7 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
     }
 
     public override void FinalizeProcessing()
-	{
+    {
         wrapperDB.FinalizeDatabases();
         WriteStatsFile();
     }
@@ -40,7 +40,7 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
     {
         //check if the response is not on our block list
         var result = filter.IsUrlAllowed(geminiResponse.RequestUrl);
-        if(!result.IsAllowed)
+        if (!result.IsAllowed)
         {
             return;
         }

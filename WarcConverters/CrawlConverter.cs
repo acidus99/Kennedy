@@ -1,8 +1,7 @@
-﻿namespace Kennedy.WarcConverters;
-
-using System;
+﻿using Kennedy.Warc;
 using WarcDotNet;
-using Kennedy.Warc;
+
+namespace Kennedy.WarcConverters;
 
 /// <summary>
 /// Converts legacy crawls into WARCs
@@ -114,4 +113,3 @@ public static class CrawlConverter
     private static string ResolveDir(string dir)
         => dir.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + '/');
 }
-

@@ -21,7 +21,7 @@ class Program
         DisplaySummary(options);
         IEnumerable<IWarcProcessor> processors = CreateProcessors(options);
 
-        foreach(var inputWarc in options.InputWarcs)
+        foreach (var inputWarc in options.InputWarcs)
         {
             ProcessWarc(inputWarc, processors);
         }
@@ -38,11 +38,11 @@ class Program
         string configDir = ResolveDir("~/kennedy-capsule/config/");
 
         var ret = new List<IWarcProcessor>();
-        if(options.ShouldIndexArchive)
+        if (options.ShouldIndexArchive)
         {
             ret.Add(new ArchiveProcessor(options.OutputLocation, configDir));
         }
-        if(options.ShouldIndexCrawl)
+        if (options.ShouldIndexCrawl)
         {
             ret.Add(new SearchProcessor(options.OutputLocation, configDir));
         }
@@ -61,11 +61,11 @@ class Program
         Console.WriteLine($"Indexing {options.InputWarcs.Count} file(s)");
         Console.WriteLine($"Index location\t'{options.OutputLocation}'");
         Console.Write("Processors:\t");
-        if(options.ShouldIndexArchive)
+        if (options.ShouldIndexArchive)
         {
             Console.Write("archiver ");
         }
-        if(options.ShouldIndexCrawl)
+        if (options.ShouldIndexCrawl)
         {
             Console.Write("search ");
         }
@@ -131,12 +131,12 @@ class Program
 
     static void ValidateOptions(IndexerOptions options)
     {
-        if(!options.ShouldIndexArchive && !options.ShouldIndexCrawl)
+        if (!options.ShouldIndexArchive && !options.ShouldIndexCrawl)
         {
             DisplayError("Must include an option to index for search (-s or --search), for archive (-a or --archive), or for both.");
         }
 
-        if(string.IsNullOrEmpty(options.OutputLocation))
+        if (string.IsNullOrEmpty(options.OutputLocation))
         {
             DisplayError("Must include an option for the output location (-o DIRECTORY or --output DIRECTORY).");
         }
@@ -151,7 +151,7 @@ class Program
             DisplayError("Must include at least 1 WARC file to process. e.g. Indexer -s -o /some/directory/ some-file.warc");
         }
 
-        foreach(var inputWarc in options.InputWarcs)
+        foreach (var inputWarc in options.InputWarcs)
         {
             if (!File.Exists(inputWarc))
             {
@@ -159,5 +159,4 @@ class Program
             }
         }
     }
-
 }

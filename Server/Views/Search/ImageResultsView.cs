@@ -1,9 +1,9 @@
-﻿using Kennedy.SearchIndex.Models;
-using Kennedy.SearchIndex.Search;
-using RocketForce;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex.Search;
+using RocketForce;
 
 namespace Kennedy.Server.Views.Search;
 

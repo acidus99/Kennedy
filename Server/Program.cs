@@ -1,8 +1,8 @@
-﻿using Kennedy.Server.Controllers;
+﻿using System;
+using System.IO;
+using Kennedy.Server.Controllers;
 using Microsoft.Extensions.Configuration;
 using RocketForce;
-using System;
-using System.IO;
 
 namespace Kennedy.Server;
 

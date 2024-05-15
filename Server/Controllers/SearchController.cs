@@ -34,13 +34,13 @@ public static class SearchController
     {
         //pull out the capsule
         string? capsule = Helpers.SiteSearch.GetSite(request.Route);
-        if(capsule == null)
+        if (capsule == null)
         {
             response.Error("Invalid domain name");
             return;
         }
 
-        if(!request.Url.HasQuery)
+        if (!request.Url.HasQuery)
         {
             response.Input($"Search '{capsule}' for?");
             return;

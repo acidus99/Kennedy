@@ -1,16 +1,16 @@
-﻿namespace Kennedy.WarcConverters;
-
-using System.Text;
+﻿using System.Text;
 using Gemini.Net;
 using Kennedy.WarcConverters.Db;
 using Kennedy.WarcConverters.Storage;
 using Kennedy.Warc;
 
+namespace Kennedy.WarcConverters;
+
 /// <summary>
 /// Converts the "Documents" table from Kennedy Crawls into WARC files with a
 /// backing "page-store"
 /// </summary>
-public class CrawlDbConverter: AbstractConverter
+public class CrawlDbConverter : AbstractConverter
 {
     DocumentDbContext? docDB = null;
     DomainDbContext? domainDB = null;
@@ -52,7 +52,7 @@ public class CrawlDbConverter: AbstractConverter
 
     private void ConvertDocuments()
     {
-        if(docDB == null)
+        if (docDB == null)
         {
             return;
         }
@@ -75,7 +75,7 @@ public class CrawlDbConverter: AbstractConverter
                 continue;
             }
 
-            if(GeminiParser.IsSuccessStatus(doc.Status) && doc.Meta.Contains('\n'))
+            if (GeminiParser.IsSuccessStatus(doc.Status) && doc.Meta.Contains('\n'))
             {
                 //malformed meta, just skip it
                 continue;
@@ -138,7 +138,7 @@ public class CrawlDbConverter: AbstractConverter
                 return documentStore.GetDocument(urlID);
             }
         }
-        catch(Exception)
+        catch (Exception)
         {
         }
         return null;
@@ -146,7 +146,7 @@ public class CrawlDbConverter: AbstractConverter
 
     private void ConvertDomains()
     {
-        if(domainDB == null)
+        if (domainDB == null)
         {
             return;
         }
@@ -201,6 +201,4 @@ public class CrawlDbConverter: AbstractConverter
 
     private GeminiUrl MakeSpecialUrl(SimpleDomain domain, string specialFilename)
         => new GeminiUrl($"gemini://{domain.Domain}:{domain.Port}/{specialFilename}");
-
-
 }

@@ -1,61 +1,56 @@
-﻿using System;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-using Gemini.Net;
+namespace Kennedy.Data.Parsers.GemText;
 
-namespace Kennedy.Data.Parsers.GemText
+/// <summary>
+/// Attempts to determine a "title" for a gemtext page
+/// Rules:
+/// - Look for any header
+/// - Look the first preformatted text section for an alt text (used for
+///     ascii art logos)
+/// </summary>
+public static class TitleFinder
 {
+    static readonly Regex headingRegex = new Regex(@"^(#+)\s*(.+)", RegexOptions.Compiled);
+
+    public static string? FindTitle(IEnumerable<string> bodyLines)
+    { 
+        string? title = TryHeaders(bodyLines);
+        if(title != null)
+        {
+            return title;
+        }
+        return TryPreformatted(bodyLines);
+    }
+
     /// <summary>
-    /// Attempts to determine a "title" for a gemtext page
-    /// Rules:
-    /// - Look for any header
-    /// - Look the first preformatted text section for an alt text (used for
-    ///     ascii art logos)
+    /// extracts a title from the first non-empty H1, if present
     /// </summary>
-    public static class TitleFinder
+    /// <param name="bodyLines"></param>
+    /// <returns></returns>
+    private static string? TryHeaders(IEnumerable<string> bodyLines)
     {
-        static readonly Regex headingRegex = new Regex(@"^(#+)\s*(.+)", RegexOptions.Compiled);
+        return (from line in bodyLines
+                 let match = headingRegex.Match(line)
+                 where match.Success
+                 let headerText = match.Groups[2].Value.Trim()
+                 where headerText.Length > 0
+                 select headerText).FirstOrDefault();
+    }
 
-        public static string? FindTitle(IEnumerable<string> bodyLines)
-        { 
-            string? title = TryHeaders(bodyLines);
-            if(title != null)
-            {
-                return title;
-            }
-            return TryPreformatted(bodyLines);
-        }
+    /// <summary>
+    /// extracts a title from any caption on the first preformatted block
+    /// </summary>
+    /// <param name="bodyLines"></param>
+    /// <returns></returns>
+    private static string? TryPreformatted(IEnumerable<string> bodyLines)
+    {
+        var preLine = bodyLines
+               .Where(x => x.StartsWith("```"))
+               .FirstOrDefault();
 
-        /// <summary>
-        /// extracts a title from the first non-empty H1, if present
-        /// </summary>
-        /// <param name="bodyLines"></param>
-        /// <returns></returns>
-        private static string? TryHeaders(IEnumerable<string> bodyLines)
-        {
-            return (from line in bodyLines
-                     let match = headingRegex.Match(line)
-                     where match.Success
-                     let headerText = match.Groups[2].Value.Trim()
-                     where headerText.Length > 0
-                     select headerText).FirstOrDefault();
-        }
-
-        /// <summary>
-        /// extracts a title from any caption on the first preformatted block
-        /// </summary>
-        /// <param name="bodyLines"></param>
-        /// <returns></returns>
-        private static string? TryPreformatted(IEnumerable<string> bodyLines)
-        {
-            var preLine = bodyLines
-                   .Where(x => x.StartsWith("```"))
-                   .FirstOrDefault();
-
-            return (preLine?.Length > 3) ?
-                preLine.Substring(3).Trim() :
-                null;
-        }
+        return (preLine?.Length > 3) ?
+            preLine.Substring(3).Trim() :
+            null;
     }
 }

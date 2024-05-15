@@ -26,4 +26,3 @@ public static class SiteSearch
     public static bool IsValidCapsuleName(string capsule)
         => validCapsule.IsMatch(capsule) && capsule.Contains('.');
 }
-

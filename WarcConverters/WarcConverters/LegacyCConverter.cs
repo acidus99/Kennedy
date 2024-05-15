@@ -1,9 +1,8 @@
-﻿namespace Kennedy.WarcConverters;
-
-using Gemini.Net;
+﻿using Gemini.Net;
 using Kennedy.Warc;
-
 using Kennedy.WarcConverters.Storage;
+
+namespace Kennedy.WarcConverters;
 
 /// <summary>
 /// Converts the legacy-C crawl format into a WARC file
@@ -20,8 +19,8 @@ public class LegacyCConverter : AbstractConverter
     protected override string ConverterName => "Legacy-C";
 
     public LegacyCConverter(GeminiWarcCreator warcCreator, string crawlLocation)
-        :base(warcCreator, crawlLocation)
-		{
+        : base(warcCreator, crawlLocation)
+    {
         objectStore = new ObjectStore(crawlLocation + "page-store/");
 
         //The legacy log.tsv format did not store the capture time for individual requests/responses
@@ -65,7 +64,7 @@ public class LegacyCConverter : AbstractConverter
 
     private byte[]? GetContentData(string? hash)
     {
-        if(string.IsNullOrEmpty(hash))
+        if (string.IsNullOrEmpty(hash))
         {
             return null;
         }

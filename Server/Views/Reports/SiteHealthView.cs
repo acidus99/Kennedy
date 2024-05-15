@@ -1,8 +1,8 @@
-﻿using Kennedy.SearchIndex.Models;
+﻿using System;
+using System.Linq;
+using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Web;
 using RocketForce;
-using System;
-using System.Linq;
 
 namespace Kennedy.Server.Views.Reports;
 

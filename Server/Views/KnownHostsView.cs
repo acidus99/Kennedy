@@ -1,7 +1,7 @@
-﻿using Gemini.Net;
+﻿using System.Linq;
+using Gemini.Net;
 using Kennedy.SearchIndex.Web;
 using RocketForce;
-using System.Linq;
 
 namespace Kennedy.Server.Views;
 
@@ -14,7 +14,6 @@ internal class KnownHostsView : AbstractView
     public override void Render()
     {
         Response.Success();
-
 
         Response.WriteLine($"# 🔭 Known Gemini Caspules");
         Response.WriteLine();

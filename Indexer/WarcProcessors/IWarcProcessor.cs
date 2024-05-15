@@ -1,14 +1,10 @@
-﻿using System;
+﻿using WarcDotNet;
 
-using WarcDotNet;
+namespace Kennedy.Indexer.WarcProcessors;
 
-namespace Kennedy.Indexer.WarcProcessors
+public interface IWarcProcessor
 {
-	public interface IWarcProcessor
-	{
-		public void ProcessRecord(WarcRecord record);
+    public void ProcessRecord(WarcRecord record);
 
-		public void FinalizeProcessing();
-	}
+    public void FinalizeProcessing();
 }
-

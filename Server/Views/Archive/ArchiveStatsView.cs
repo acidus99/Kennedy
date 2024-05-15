@@ -6,13 +6,11 @@ using System.Text.Json;
 
 namespace Kennedy.Server.Views.Archive;
 
-
 /// <summary>
 /// Shows the details about a 
 /// </summary>
 internal class ArchiveStatsView : AbstractView
 {
-
     public ArchiveStatsView(GeminiRequest request, Response response, GeminiServer app)
         : base(request, response, app) { }
 

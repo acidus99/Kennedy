@@ -1,8 +1,8 @@
-﻿using Gemini.Net;
-using Kennedy.Archive.Db;
-using System;
+﻿using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using Gemini.Net;
+using Kennedy.Archive.Db;
 
 namespace Kennedy.Server.Views.Archive;
 
@@ -71,4 +71,3 @@ public class GemtextRewriter
         return $"=> {RoutePaths.ViewCached(geminiUrl, snapshot.Captured)} {linkText}";
     }
 }
-

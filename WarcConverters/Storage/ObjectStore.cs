@@ -22,7 +22,7 @@ internal class ObjectStore
 
     private string getPrefixDirectoryForKey(string key)
     {
-        if(key.Length < 4)
+        if (key.Length < 4)
         {
             return RootDir;
         }
@@ -36,14 +36,14 @@ internal class ObjectStore
     /// <returns></returns>
     private bool IsKeyIsValid(string key)
     {
-        for(int i=0, len = key.Length; i < len; i++)
+        for (int i = 0, len = key.Length; i < len; i++)
         {
             char c = key[i];
             if (i < 4 && InvalidPathChars.Contains(c))
             {
                 return false;
             }
-            if(InvalidFileChars.Contains(c))
+            if (InvalidFileChars.Contains(c))
             {
                 return false;
             }
@@ -51,7 +51,7 @@ internal class ObjectStore
         return true;
     }
 
-    public byte [] GetObject(string key)
+    public byte[] GetObject(string key)
     {
         if (!IsKeyIsValid(key))
         {

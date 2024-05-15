@@ -1,12 +1,11 @@
-﻿using Kennedy.SearchIndex.Web;
+﻿using System.Linq;
+using Kennedy.SearchIndex.Web;
 using RocketForce;
-using System.Linq;
 
 namespace Kennedy.Server.Views;
 
-internal class SecurityTxtView :AbstractView
+internal class SecurityTxtView : AbstractView
 {
-
     public SecurityTxtView(GeminiRequest request, Response response, GeminiServer app)
         : base(request, response, app) { }
 
@@ -29,7 +28,7 @@ internal class SecurityTxtView :AbstractView
         {
             count++;
             var label = $"{count}. {host.Domain}";
-            if(host.Port != 1965)
+            if (host.Port != 1965)
             {
                 label += ":" + host.Port;
             }
