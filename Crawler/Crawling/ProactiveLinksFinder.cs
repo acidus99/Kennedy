@@ -62,4 +62,3 @@ public class ProactiveLinksFinder : ILinksFinder
            LinkText = ""
        };
 }
-
