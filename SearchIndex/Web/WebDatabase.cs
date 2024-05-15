@@ -134,7 +134,8 @@ namespace Kennedy.SearchIndex.Web
                     entry.StatusCode = parsedResponse.StatusCode;
                     entry.Meta = parsedResponse.Meta;
 
-                    entry.IsBodyIndexed = (parsedResponse is ITextResponse && ((ITextResponse)parsedResponse).HasIndexableText);
+                    entry.IsBodyIndexed = false;
+                    entry.IsFeed = false;
 
                     entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
                     entry.BodySize = parsedResponse.BodySize;
@@ -155,13 +156,13 @@ namespace Kennedy.SearchIndex.Web
                     entry.Title = null;
 
                     //extra meta data
-                    if (parsedResponse is ITextResponse)
+                    if (parsedResponse is ITextResponse textResponse)
                     {
-                        var textResponse = (ITextResponse)parsedResponse;
-
+                        entry.IsBodyIndexed = textResponse.HasIndexableText;
                         entry.DetectedLanguage = textResponse.DetectedLanguage;
                         entry.LineCount = textResponse.LineCount;
                         entry.Title = textResponse.Title;
+                        entry.IsFeed = textResponse.IsFeed;
                     }
 
                     if (parsedResponse is ImageResponse)

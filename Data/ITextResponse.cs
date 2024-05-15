@@ -7,6 +7,11 @@ namespace Kennedy.Data
 
         public bool HasIndexableText { get; }
 
+        /// <summary>
+        /// Is this response a feed of items (e.g. RSS, Gemfeed, Atom, etc.)
+        /// </summary>
+        public bool IsFeed { get; }
+
         public string? IndexableText { get; }
 
         public int LineCount { get; }

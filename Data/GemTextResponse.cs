@@ -13,6 +13,8 @@ namespace Kennedy.Data
 
         public string? IndexableText { get; set; }
 
+        public bool IsFeed { get; set; }
+
         public required int LineCount { get; set; }
 
         public string? Title { get; set; }

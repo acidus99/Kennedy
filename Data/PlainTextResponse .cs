@@ -11,6 +11,11 @@ namespace Kennedy.Data
 
         public bool HasIndexableText => (BodyText.Length > 0);
 
+        /// <summary>
+        /// Plain text documents cannot be feeds
+        /// </summary>
+        public bool IsFeed => false;
+
         public string? IndexableText => BodyText;
 
         private int? _lineCount;

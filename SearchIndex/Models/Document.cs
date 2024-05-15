@@ -133,6 +133,11 @@ namespace Kennedy.SearchIndex.Models
 
         public string? DetectedMimeType { get; set; }
 
+        /// <summary>
+        /// Does this response represent a feed (Atom, RSS, Gemfeed, etc.)
+        /// </summary>
+        public bool IsFeed { get; set; }
+
         public Image? Image { get; set; }
 
         //public Favicon? Favicon {get; set;}
