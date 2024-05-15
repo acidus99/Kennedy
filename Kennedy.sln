@@ -30,8 +30,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Warc", "Warc\Kenned
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warc.Net", "..\Warc.Net\Warc.Net.csproj", "{A2A6B68E-2220-495E-BEA0-64F23B922481}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.WarcConverters", "WarcConverters\Kennedy.WarcConverters.csproj", "{9678E79D-7740-4D84-BBB0-6753C4E7FAAA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -82,10 +80,6 @@ Global
 		{A2A6B68E-2220-495E-BEA0-64F23B922481}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2A6B68E-2220-495E-BEA0-64F23B922481}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2A6B68E-2220-495E-BEA0-64F23B922481}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9678E79D-7740-4D84-BBB0-6753C4E7FAAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9678E79D-7740-4D84-BBB0-6753C4E7FAAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9678E79D-7740-4D84-BBB0-6753C4E7FAAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9678E79D-7740-4D84-BBB0-6753C4E7FAAA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
