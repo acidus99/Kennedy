@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.SearchIndex.Search;
@@ -15,8 +16,16 @@ public class SearchStorageWrapper
     ISearchDatabase SearchDB;
     IWebDatabase WebDB;
 
+    Stopwatch webWatch;
+    Stopwatch searchWatch;
+    Stopwatch finalWatch;
+
     public SearchStorageWrapper(string storageDirectory)
     {
+        webWatch = new Stopwatch();
+        searchWatch = new Stopwatch();
+        finalWatch = new Stopwatch();
+
         WebDB = new WebDatabase(storageDirectory);
         //searchDB has to be after WebDB, because the WebDB DB initialization creates the tables for the entities
         SearchDB = new SearchDatabase(storageDirectory);
@@ -24,9 +33,17 @@ public class SearchStorageWrapper
 
     public void FinalizeDatabases()
     {
+        WebDB.FinalizeStores();
+
+        finalWatch.Start();
         SearchDB.IndexFiles();
         PopularityCalculator popularityCalculator = new PopularityCalculator(WebDB.GetContext());
         popularityCalculator.Rank();
+        finalWatch.Stop();
+
+        System.Console.WriteLine($"WEB: {webWatch.Elapsed.TotalSeconds}");
+        System.Console.WriteLine($"Search: {searchWatch.Elapsed.TotalSeconds}");
+        System.Console.WriteLine($"Final: {finalWatch.Elapsed.TotalSeconds}");
     }
 
     public SearchStats GetSearchStats()
@@ -55,8 +72,12 @@ public class SearchStorageWrapper
 
     public bool StoreResponse(ParsedResponse response)
     {
+        webWatch.Start();
         bool contentUpdated = WebDB.StoreResponse(response);
+        webWatch.Stop();
+        searchWatch.Start();
         SearchDB.UpdateIndex(response);
+        searchWatch.Stop();
         return contentUpdated;
     }
 }

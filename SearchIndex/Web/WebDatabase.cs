@@ -44,6 +44,10 @@ public class WebDatabase : IWebDatabase
         return entryUpdated;
     }
 
+    public void FinalizeStores()
+    {
+        //no-op for now
+    }
 
     private bool UpdateDocument(ParsedResponse parsedResponse)
     {

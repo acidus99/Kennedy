@@ -12,4 +12,8 @@ public interface IWebDatabase
     /// <param name="parsedResponse"></param>
     /// <returns>true if the response's content changed</returns>
     bool StoreResponse(ParsedResponse parsedResponse);
+
+    void FinalizeStores();
+
+
 }
