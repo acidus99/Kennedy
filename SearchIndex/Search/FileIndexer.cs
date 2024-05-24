@@ -38,12 +38,6 @@ order by UrlID");
             StringBuilder sb = new StringBuilder(1000); //reasonable size for URL + link text
             foreach (var file in indexableFiles)
             {
-                counter++;
-                if (counter % 100 == 0)
-                {
-                    Console.WriteLine($"indexing files\t{counter} of {total}");
-                }
-
                 //is it a new url?
                 if (currUrl == null || file.UrlID != currUrl.ID)
                 {
