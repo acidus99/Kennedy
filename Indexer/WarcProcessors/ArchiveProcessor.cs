@@ -5,14 +5,13 @@ using Kennedy.Data.RobotsTxt;
 
 namespace Kennedy.Indexer.WarcProcessors;
 
-public class ArchiveProcessor : AbstractGeminiWarcProcessor
+public class ArchiveProcessor : IGeminiRecordProcessor
 {
     string ArchiveDirectory;
     Archiver archiver;
     Dictionary<Authority, bool> changedAuthorities = new Dictionary<Authority, bool>();
 
-    public ArchiveProcessor(string archiveDirectory, string configDirectory)
-        : base(configDirectory)
+    public ArchiveProcessor(string archiveDirectory)
     {
         if (!archiveDirectory.EndsWith(Path.DirectorySeparatorChar))
         {
@@ -23,13 +22,15 @@ public class ArchiveProcessor : AbstractGeminiWarcProcessor
         ArchiveDirectory = archiveDirectory;
     }
 
-    public override void FinalizeProcessing()
+    public void FinalizeProcessing()
     {
         UpdateVisbility();
         WriteStatsFile();
+        //need to clear the cache incase called multiples times
+        changedAuthorities.Clear();
     }
 
-    protected override void ProcessGeminiResponse(GeminiResponse geminiResponse)
+    public void ProcessGeminiResponse(GeminiResponse geminiResponse)
     {
         //only if we successfully archived it should we track that
         //the domain should be checked against Robots.txt

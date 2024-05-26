@@ -5,15 +5,16 @@ using WarcDotNet;
 
 namespace Kennedy.Indexer.WarcProcessors;
 
-public abstract class AbstractGeminiWarcProcessor : IWarcProcessor
+public class GeminiWarcProcessor
 {
-    System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+    public List<IGeminiRecordProcessor> RecordProcessors;
 
     BlockListFilter denyFilter;
 
-    public AbstractGeminiWarcProcessor(string configDirectory)
+    public GeminiWarcProcessor(string configDirectory)
     {
         denyFilter = new BlockListFilter(configDirectory);
+        RecordProcessors = new List<IGeminiRecordProcessor>();
     }
 
     public void ProcessRecord(WarcRecord record)
@@ -23,16 +24,25 @@ public abstract class AbstractGeminiWarcProcessor : IWarcProcessor
             var geminiResponse = GetGeminiResponse((record as ResponseRecord)!);
             if (geminiResponse != null)
             {
-                stopwatch.Restart();
-                ProcessGeminiResponse(geminiResponse);
-                stopwatch.Stop();
+                foreach(IGeminiRecordProcessor recordProcessor in RecordProcessors)
+                {
+                    recordProcessor.ProcessGeminiResponse(geminiResponse);
+                }
             }
+        }
+    }
+
+    public void FinalizeProcessing()
+    {
+        foreach (IGeminiRecordProcessor recordProcessor in RecordProcessors)
+        {
+            recordProcessor.FinalizeProcessing();
         }
     }
 
     private GeminiResponse? GetGeminiResponse(ResponseRecord responseRecord)
     {
-        if (responseRecord.TargetUri == null || responseRecord.ContentBlock == null)
+        if (responseRecord.TargetUri == null || responseRecord.ContentBlock == null || responseRecord.TargetUri.Scheme != "gemini")
         {
             return null;
         }
@@ -41,18 +51,15 @@ public abstract class AbstractGeminiWarcProcessor : IWarcProcessor
         {
             bool isProactive = UrlUtility.IsProactiveUrl(responseRecord.TargetUri);
             var url = new GeminiUrl(UrlUtility.RemoveCrawlerIdentifier(responseRecord.TargetUri));
-
             if (!isProactive)
             {
                 BlockResult result = denyFilter.IsUrlAllowed(url);
-
                 if (!result.IsAllowed)
                 {
                     //File.AppendAllText("/tmp/deny.txt", result.Reason + "\n");
                     return null;
                 }
             }
-
             var response = GeminiParser.ParseResponseBytes(url, responseRecord.ContentBlock);
             response.RequestSent = responseRecord.Date;
             response.ResponseReceived = responseRecord.Date;
@@ -65,8 +72,4 @@ public abstract class AbstractGeminiWarcProcessor : IWarcProcessor
             return null;
         }
     }
-
-    public abstract void FinalizeProcessing();
-
-    protected abstract void ProcessGeminiResponse(GeminiResponse geminiResponse);
 }

@@ -19,11 +19,12 @@ class Program
         IndexerOptions options = ParseOptions(args);
         ValidateOptions(options);
         DisplaySummary(options);
-        IEnumerable<IWarcProcessor> processors = CreateProcessors(options);
+
+        GeminiWarcProcessor processor = CreateProcessors(options);
 
         foreach (var inputWarc in options.InputWarcs)
         {
-            ProcessWarc(inputWarc, processors);
+            ProcessWarc(inputWarc, processor);
         }
 
     }
@@ -33,20 +34,19 @@ class Program
     /// </summary>
     /// <param name="options"></param>
     /// <returns></returns>
-    static IEnumerable<IWarcProcessor> CreateProcessors(IndexerOptions options)
+    static GeminiWarcProcessor CreateProcessors(IndexerOptions options)
     {
         string configDir = ResolveDir("~/kennedy-capsule/config/");
-
-        var ret = new List<IWarcProcessor>();
+        GeminiWarcProcessor processor = new GeminiWarcProcessor(configDir);
         if (options.ShouldIndexArchive)
         {
-            ret.Add(new ArchiveProcessor(options.OutputLocation, configDir));
+            processor.RecordProcessors.Add(new ArchiveProcessor(options.OutputLocation));
         }
         if (options.ShouldIndexCrawl)
         {
-            ret.Add(new SearchProcessor(options.OutputLocation, configDir));
+            processor.RecordProcessors.Add(new SearchProcessor(options.OutputLocation, configDir));
         }
-        return ret;
+        return processor;
     }
 
     static void DisplayError(string errorMsg)
@@ -96,7 +96,7 @@ class Program
         return ret;
     }
 
-    static void ProcessWarc(string inputWarc, IEnumerable<IWarcProcessor> processors)
+    static void ProcessWarc(string inputWarc, GeminiWarcProcessor processor)
     {
         using (WarcReader reader = new WarcReader(inputWarc))
         {
@@ -104,10 +104,7 @@ class Program
             DateTime prev = start;
             foreach (WarcRecord record in reader)
             {
-                foreach (var processor in processors)
-                {
-                    processor.ProcessRecord(record);
-                }
+                processor.ProcessRecord(record);
                 if (reader.RecordsRead % 100 == 0)
                 {
                     var elapsedSeconds = Math.Truncate(DateTime.Now.Subtract(start).TotalSeconds);
@@ -119,10 +116,7 @@ class Program
             }
             Console.WriteLine();
             Console.WriteLine("Post processing");
-            foreach (var processor in processors)
-            {
-                processor.FinalizeProcessing();
-            }
+            processor.FinalizeProcessing();
         }
     }
 

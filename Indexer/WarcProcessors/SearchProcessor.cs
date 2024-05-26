@@ -7,15 +7,13 @@ using Kennedy.Crawler.Filters;
 
 namespace Kennedy.Indexer.WarcProcessors;
 
-public class SearchProcessor : AbstractGeminiWarcProcessor
+public class SearchProcessor : IGeminiRecordProcessor
 {
     SearchStorageWrapper wrapperDB;
     ResponseParser responseParser;
     string StorageDirectory;
 
-    BlockListFilter filter;
     public SearchProcessor(string storageDirectory, string configDirectory)
-        : base(configDirectory)
     {
         StorageDirectory = storageDirectory;
 
@@ -25,26 +23,18 @@ public class SearchProcessor : AbstractGeminiWarcProcessor
         }
 
         LanguageDetector.ConfigFileDirectory = configDirectory;
-        filter = new BlockListFilter(configDirectory);
         wrapperDB = new SearchStorageWrapper(StorageDirectory);
         responseParser = new ResponseParser();
     }
 
-    public override void FinalizeProcessing()
+    public void FinalizeProcessing()
     {
         wrapperDB.FinalizeDatabases();
         WriteStatsFile();
     }
 
-    protected override void ProcessGeminiResponse(GeminiResponse geminiResponse)
+    public void ProcessGeminiResponse(GeminiResponse geminiResponse)
     {
-        //check if the response is not on our block list
-        var result = filter.IsUrlAllowed(geminiResponse.RequestUrl);
-        if (!result.IsAllowed)
-        {
-            return;
-        }
-
         // Fully parsed the response to get type-specific metadata.
         ParsedResponse parsedResponse = responseParser.Parse(geminiResponse);
         wrapperDB.StoreResponse(parsedResponse);

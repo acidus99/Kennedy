@@ -2,7 +2,7 @@
 
 namespace Kennedy.Indexer.WarcProcessors;
 
-public class StatsProcessor : AbstractGeminiWarcProcessor
+public class StatsProcessor : IGeminiRecordProcessor
 {
     Dictionary<string, long> AuthoritySizes;
 
@@ -12,8 +12,7 @@ public class StatsProcessor : AbstractGeminiWarcProcessor
 
     string OutputDir;
 
-    public StatsProcessor(string outDir, string configDirectory)
-        : base(configDirectory)
+    public StatsProcessor(string outDir)
     {
         AuthoritySizes = new Dictionary<string, long>(5000);
         AuthorityCounts = new Dictionary<string, long>(5000);
@@ -22,14 +21,14 @@ public class StatsProcessor : AbstractGeminiWarcProcessor
         OutputDir = outDir;
     }
 
-    public override void FinalizeProcessing()
+    public void FinalizeProcessing()
     {
         OutputStats(OutputDir + "domain-requests.tsv", AuthorityCounts);
         OutputStats(OutputDir + "domain-sizes.tsv", AuthoritySizes);
         OutputStats(OutputDir + "content-sizes.tsv", ContentTypeSizes);
     }
 
-    protected override void ProcessGeminiResponse(GeminiResponse geminiResponse)
+    public void ProcessGeminiResponse(GeminiResponse geminiResponse)
     {
         if (geminiResponse.IsSuccess && geminiResponse.MimeType != null)
         {
@@ -62,6 +61,5 @@ public class StatsProcessor : AbstractGeminiWarcProcessor
             fout.WriteLine($"{item.Value}\t{item.Key}");
         }
         fout.Close();
-
     }
 }
