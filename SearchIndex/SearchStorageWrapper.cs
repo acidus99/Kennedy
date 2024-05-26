@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Gemini.Net;
 using Kennedy.Data;
@@ -64,7 +65,14 @@ public class SearchStorageWrapper
                 .Where(x => (x.StatusCode == 20))
                 .LongCount();
 
-            ret.LastUpdated = db.Documents.Select(x => x.LastVisit).Max();
+            if (db.Documents.Any())
+            {
+                ret.LastUpdated = db.Documents.Select(x => x.LastVisit).Max();
+            }
+            else
+            {
+                ret.LastUpdated = DateTime.MinValue;
+            }
         }
 
         return ret;

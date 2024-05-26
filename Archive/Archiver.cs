@@ -142,8 +142,15 @@ public class Archiver
 
             var captures = db.Snapshots.Select(x => x.Captured);
 
-            ret.OldestSnapshot = captures.Min();
-            ret.NewestSnapshot = captures.Max();
+            if (captures.Any())
+            {
+                ret.OldestSnapshot = captures.Min();
+                ret.NewestSnapshot = captures.Max();
+            } else
+            {
+                ret.OldestSnapshot = DateTime.MinValue;
+                ret.NewestSnapshot = DateTime.MinValue;
+            }
         }
 
         return ret;
