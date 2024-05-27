@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.810.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gemini.Net", "..\Gemini.Net\Gemini.Net.csproj", "{524D863C-D4E0-4141-BF91-9CD3EEE73DA8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gemini.Net", "..\Gemini.Net\src\Gemini.Net.csproj", "{524D863C-D4E0-4141-BF91-9CD3EEE73DA8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.SearchIndex", "SearchIndex\Kennedy.SearchIndex.csproj", "{1FD8C514-93B8-455F-9FE4-2507F1CA3C13}"
 EndProject

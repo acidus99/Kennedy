@@ -16,7 +16,7 @@
     <Folder Include="Db\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
+    <ProjectReference Include="..\..\Gemini.Net\src\Gemini.Net.csproj" />
     <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
     <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
   </ItemGroup>

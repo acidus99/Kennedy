@@ -13,7 +13,7 @@
     <Folder Include="Parsers\GemText\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
+    <ProjectReference Include="..\..\Gemini.Net\src\Gemini.Net.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NTextCat" Version="0.3.65" />

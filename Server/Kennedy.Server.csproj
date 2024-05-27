@@ -10,7 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\RocketForce\RocketForce\RocketForce.csproj" />
     <ProjectReference Include="..\SearchIndex\Kennedy.SearchIndex.csproj" />
-    <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
+    <ProjectReference Include="..\..\Gemini.Net\src\Gemini.Net.csproj" />
     <ProjectReference Include="..\Archive\Kennedy.Archive.csproj" />
   </ItemGroup>
   <ItemGroup>

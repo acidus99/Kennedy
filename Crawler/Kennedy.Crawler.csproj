@@ -36,7 +36,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Gemini.Net\Gemini.Net.csproj" />
+    <ProjectReference Include="..\..\Gemini.Net\src\Gemini.Net.csproj" />
     <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
     <ProjectReference Include="..\Warc\Kennedy.Warc.csproj" />
   </ItemGroup>
