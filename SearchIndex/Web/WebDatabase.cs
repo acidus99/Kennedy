@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Kennedy.Data;
 using Kennedy.Data.RobotsTxt;
@@ -11,18 +12,34 @@ public class WebDatabase : IWebDatabase
 {
     private string StorageDirectory;
 
+    int contextOperations = 0;
+    const int BatchSize = 3000;
+    Dictionary<long, bool> seenUrls;
+    WebDatabaseContext bulkContext;
+
     public WebDatabase(string storageDir)
     {
         StorageDirectory = storageDir;
-        //create it once it ensure we have it
-        using (var context = GetContext())
-        {
-            context.EnsureExists();
-        }
+        bulkContext = GetContext();
+        bulkContext.EnsureExists();
+        seenUrls = new Dictionary<long, bool>();
     }
 
     public WebDatabaseContext GetContext()
         => new WebDatabaseContext(StorageDirectory);
+
+    public void FinalizeStores()
+    {
+        FlushContext();
+    }
+
+    private void FlushContext()
+    {
+        bulkContext.SaveChanges();
+        contextOperations = 0;
+        bulkContext = GetContext();
+        seenUrls.Clear();
+    }
 
     /// <summary>
     /// Stores a response in our web database. 
@@ -31,6 +48,7 @@ public class WebDatabase : IWebDatabase
     /// <returns>whether the document is new or not. "New" documents are URLs we have neer seen, or updated content for a known URL</returns>
     public bool StoreResponse(ParsedResponse parsedResponse)
     {
+        contextOperations++;
         //store in in the doc index (inserting or updating as appropriate)
         bool entryUpdated = UpdateDocument(parsedResponse);
 
@@ -41,12 +59,12 @@ public class WebDatabase : IWebDatabase
             StoreLinks(parsedResponse);
         }
 
-        return entryUpdated;
-    }
+        if (contextOperations > BatchSize)
+        {
+            FlushContext();
+        }
 
-    public void FinalizeStores()
-    {
-        //no-op for now
+        return entryUpdated;
     }
 
     private bool UpdateDocument(ParsedResponse parsedResponse)
@@ -56,143 +74,141 @@ public class WebDatabase : IWebDatabase
 
         bool hasContentChanged = false;
 
-        using (var db = GetContext())
+        //if it already exists in local, skip it
+        if (seenUrls.ContainsKey(parsedResponse.RequestUrl.ID))
         {
-            Document? entry = db.Documents.Include(x => x.Image)
-                .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
-                .FirstOrDefault();
+            return false;
+        }
+        seenUrls[parsedResponse.RequestUrl.ID] = true;
 
-            //do we already know about this URL?
-            if (entry == null)
+        Document? entry = bulkContext.Documents.Include(x => x.Image)
+            .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
+            .FirstOrDefault();
+
+        //do we already know about this URL?
+        if (entry == null)
+        {
+            hasContentChanged = true;
+            entry = new Document(parsedResponse.RequestUrl)
             {
-                hasContentChanged = true;
-                entry = new Document(parsedResponse.RequestUrl)
+                FirstSeen = parsedResponse.ResponseReceived.Value,
+                LastTimeUpdated = parsedResponse.ResponseReceived.Value,
+            };
+            bulkContext.Documents.Add(entry);
+        }
+        else
+        {
+            //is this a re-import of the same content? if so the timestamps will match
+            if (entry.LastVisit == parsedResponse.ResponseReceived)
+            {
+                //nothing to do, and nothing has changed
+                return false;
+            }
+            else if (parsedResponse.ResponseReceived < entry.LastVisit)
+            {
+                //updating with an older response,
+                //so just update the historical discovery times. No content has changed
+                if (entry.FirstSeen > parsedResponse.ResponseReceived)
                 {
-                    FirstSeen = parsedResponse.ResponseReceived.Value
-                };
-                db.Documents.Add(entry);
+                    entry.FirstSeen = parsedResponse.ResponseReceived.Value;
+                }
+                //if responses are the same, and this is an early visit, push back the last time updated
+                if(entry.ResponseHash == parsedResponse.Hash)
+                {
+                    entry.LastTimeUpdated = parsedResponse.ResponseReceived.Value;
+                }
+
+                return false;
             }
             else
             {
-                //is this a re-import of the same content? if so the timestamps will match
-                if (entry.LastVisit == parsedResponse.ResponseReceived)
+                //newer content so we need to update the document's entry
+                //how much needs to be updated depends on if the response is different
+                hasContentChanged = (parsedResponse.Hash != entry.ResponseHash);
+                if(hasContentChanged)
                 {
-                    //nothing to do, and nothing has changed
-                    return false;
+                    entry.LastTimeUpdated = parsedResponse.ResponseReceived.Value;
                 }
-                else if (parsedResponse.ResponseReceived < entry.LastVisit)
+            }
+        }
+
+        //ready to prepare oure DTOs
+
+        //Always update the most recent visit time
+        entry.LastVisit = parsedResponse.ResponseReceived.Value;
+
+        if (!parsedResponse.IsFail)
+        {
+            entry.LastSuccessfulVisit = parsedResponse.ResponseReceived;
+        }
+
+        //everything else is only updated if the content has changed
+        if (hasContentChanged)
+        {
+            entry.IsAvailable = parsedResponse.IsAvailable;
+            entry.StatusCode = parsedResponse.StatusCode;
+            entry.Meta = parsedResponse.Meta;
+
+            entry.IsBodyIndexed = false;
+            entry.IsFeed = false;
+
+            entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
+            entry.BodySize = parsedResponse.BodySize;
+            entry.BodyHash = parsedResponse.BodyHash;
+            entry.ResponseHash = parsedResponse.Hash;
+
+            entry.Charset = parsedResponse.Charset;
+            entry.MimeType = parsedResponse.MimeType;
+
+            entry.OutboundLinks = parsedResponse.Links.Count;
+
+            entry.ContentType = parsedResponse.FormatType;
+            entry.DetectedMimeType = parsedResponse.DetectedMimeType;
+
+            entry.Language = parsedResponse.Language;
+            entry.DetectedLanguage = null;
+            entry.LineCount = null;
+            entry.Title = null;
+
+            //extra meta data
+            if (parsedResponse is ITextResponse textResponse)
+            {
+                entry.IsBodyIndexed = textResponse.HasIndexableText;
+                entry.DetectedLanguage = textResponse.DetectedLanguage;
+                entry.LineCount = textResponse.LineCount;
+                entry.Title = textResponse.Title;
+                entry.IsFeed = textResponse.IsFeed;
+            }
+
+            if (parsedResponse is ImageResponse)
+            {
+                var image = (ImageResponse)parsedResponse;
+
+                if (entry.Image == null)
                 {
-                    //updating with an older response,
-                    //so just update the historical discovery times. No content has changed
-
-                    bool updatedTimes = false;
-
-                    if (entry.FirstSeen > parsedResponse.ResponseReceived)
+                    entry.Image = new Image()
                     {
-                        entry.FirstSeen = parsedResponse.ResponseReceived.Value;
-                        updatedTimes = true;
-                    }
-
-                    if (parsedResponse.IsFail &&
-                        entry.LastSuccessfulVisit < parsedResponse.ResponseReceived)
-                    {
-                        entry.LastSuccessfulVisit = parsedResponse.ResponseReceived;
-                        updatedTimes = true;
-                    }
-
-                    if (updatedTimes)
-                    {
-                        db.SaveChanges();
-                    }
-                    return false;
+                        UrlID = parsedResponse.RequestUrl.ID,
+                        IsTransparent = image.IsTransparent,
+                        Height = image.Height,
+                        Width = image.Width,
+                        ImageType = image.ImageType
+                    };
                 }
                 else
                 {
-                    //newer content so we need to update the document's entry
-                    //how much needs to be updated depends on if the response is different
-                    hasContentChanged = (parsedResponse.Hash != entry.ResponseHash);
+                    entry.Image.IsTransparent = image.IsTransparent;
+                    entry.Image.Height = image.Height;
+                    entry.Image.Width = image.Width;
+                    entry.Image.ImageType = image.ImageType;
                 }
             }
-
-            //ready to prepare oure DTOs
-
-            //Always update the most recent visit time
-            entry.LastVisit = parsedResponse.ResponseReceived.Value;
-
-            if (!parsedResponse.IsFail)
+            //not an image, but existing entry had image meta data, so explicitly remove it
+            else if (entry.Image != null)
             {
-                entry.LastSuccessfulVisit = parsedResponse.ResponseReceived;
+                bulkContext.Images.Remove(entry.Image);
+                entry.Image = null;
             }
-
-            //everything else is only updated if the content has changed
-            if (hasContentChanged)
-            {
-                entry.IsAvailable = parsedResponse.IsAvailable;
-                entry.StatusCode = parsedResponse.StatusCode;
-                entry.Meta = parsedResponse.Meta;
-
-                entry.IsBodyIndexed = false;
-                entry.IsFeed = false;
-
-                entry.IsBodyTruncated = parsedResponse.IsBodyTruncated;
-                entry.BodySize = parsedResponse.BodySize;
-                entry.BodyHash = parsedResponse.BodyHash;
-                entry.ResponseHash = parsedResponse.Hash;
-
-                entry.Charset = parsedResponse.Charset;
-                entry.MimeType = parsedResponse.MimeType;
-
-                entry.OutboundLinks = parsedResponse.Links.Count;
-
-                entry.ContentType = parsedResponse.FormatType;
-                entry.DetectedMimeType = parsedResponse.DetectedMimeType;
-
-                entry.Language = parsedResponse.Language;
-                entry.DetectedLanguage = null;
-                entry.LineCount = null;
-                entry.Title = null;
-
-                //extra meta data
-                if (parsedResponse is ITextResponse textResponse)
-                {
-                    entry.IsBodyIndexed = textResponse.HasIndexableText;
-                    entry.DetectedLanguage = textResponse.DetectedLanguage;
-                    entry.LineCount = textResponse.LineCount;
-                    entry.Title = textResponse.Title;
-                    entry.IsFeed = textResponse.IsFeed;
-                }
-
-                if (parsedResponse is ImageResponse)
-                {
-                    var image = (ImageResponse)parsedResponse;
-
-                    if (entry.Image == null)
-                    {
-                        entry.Image = new Image()
-                        {
-                            UrlID = parsedResponse.RequestUrl.ID,
-                            IsTransparent = image.IsTransparent,
-                            Height = image.Height,
-                            Width = image.Width,
-                            ImageType = image.ImageType
-                        };
-                    }
-                    else
-                    {
-                        entry.Image.IsTransparent = image.IsTransparent;
-                        entry.Image.Height = image.Height;
-                        entry.Image.Width = image.Width;
-                        entry.Image.ImageType = image.ImageType;
-                    }
-                }
-                //not an image, but existing entry had image meta data, so explicitly remove it
-                else if (entry.Image != null)
-                {
-                    db.Images.Remove(entry.Image);
-                    entry.Image = null;
-                }
-            }
-            db.SaveChanges();
         }
 
         //only need to update special files if the content has changed
@@ -229,40 +245,36 @@ public class WebDatabase : IWebDatabase
     {
         bool isRemove = !(response.IsSuccess && IsValidRobotsTxtFile(response?.BodyText));
 
-        using (var context = GetContext())
-        {
             //see if it already exists
-            var entry = context.RobotsTxts
-                .Where(x => (x.Protocol == response!.RequestUrl.Protocol &&
-                            x.Domain == response.RequestUrl.Hostname &&
-                            x.Port == response.RequestUrl.Port))
-                .FirstOrDefault();
+        var entry = bulkContext.RobotsTxts
+            .Where(x => (x.Protocol == response!.RequestUrl.Protocol &&
+                        x.Domain == response.RequestUrl.Hostname &&
+                        x.Port == response.RequestUrl.Port))
+            .FirstOrDefault();
 
-            if (isRemove)
+        if (isRemove)
+        {
+            if (entry != null)
             {
-                if (entry != null)
+                //remove it
+                bulkContext.RobotsTxts.Remove(entry);
+            }
+        }
+        else
+        {
+            //if not, create a stub
+            if (entry == null)
+            {
+                entry = new RobotsTxt(response!.RequestUrl)
                 {
-                    //remove it
-                    context.RobotsTxts.Remove(entry);
-                }
+                    Content = response.BodyText
+                };
+                bulkContext.RobotsTxts.Add(entry);
             }
             else
             {
-                //if not, create a stub
-                if (entry == null)
-                {
-                    entry = new RobotsTxt(response!.RequestUrl)
-                    {
-                        Content = response.BodyText
-                    };
-                    context.RobotsTxts.Add(entry);
-                }
-                else
-                {
-                    entry.Content = response!.BodyText;
-                }
+                entry.Content = response!.BodyText;
             }
-            context.SaveChanges();
         }
     }
 
@@ -307,39 +319,35 @@ public class WebDatabase : IWebDatabase
     {
         bool isRemove = !(response.IsSuccess && IsValidSecurity(response.BodyText));
 
-        using (var context = GetContext())
-        {
-            //see if it already exists
-            var entry = context.SecurityTxts
-                .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
-                            x.Domain == response.RequestUrl.Hostname &&
-                            x.Port == response.RequestUrl.Port))
-                .FirstOrDefault();
+        //see if it already exists
+        var entry = bulkContext.SecurityTxts
+            .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
+                        x.Domain == response.RequestUrl.Hostname &&
+                        x.Port == response.RequestUrl.Port))
+            .FirstOrDefault();
 
-            if (isRemove)
+        if (isRemove)
+        {
+            if (entry != null)
             {
-                if (entry != null)
+                bulkContext.SecurityTxts.Remove(entry);
+            }
+        }
+        else
+        {
+            //if not, create a stub
+            if (entry == null)
+            {
+                entry = new SecurityTxt(response.RequestUrl)
                 {
-                    context.SecurityTxts.Remove(entry);
-                }
+                    Content = response.BodyText
+                };
+                bulkContext.SecurityTxts.Add(entry);
             }
             else
             {
-                //if not, create a stub
-                if (entry == null)
-                {
-                    entry = new SecurityTxt(response.RequestUrl)
-                    {
-                        Content = response.BodyText
-                    };
-                    context.SecurityTxts.Add(entry);
-                }
-                else
-                {
-                    entry.Content = response.BodyText;
-                }
+                entry.Content = response.BodyText;
             }
-            context.SaveChanges();
         }
     }
 
@@ -362,21 +370,16 @@ public class WebDatabase : IWebDatabase
 
     private void StoreLinks(ParsedResponse response)
     {
-        using (var context = GetContext())
-        {
-            //first delete all source IDs
-            context.Links.RemoveRange(context.Links
-                .Where(x => (x.SourceUrlID == response.RequestUrl.ID)));
-            context.SaveChanges();
+        //first delete all source IDs
+        bulkContext.Links.RemoveRange(bulkContext.Links
+            .Where(x => (x.SourceUrlID == response.RequestUrl.ID)));
 
-            context.Links.AddRange(response.Links.Distinct().Select(link => new DocumentLink
-            {
-                SourceUrlID = response.RequestUrl.ID,
-                TargetUrlID = link.Url.ID,
-                IsExternal = link.IsExternal,
-                LinkText = link.LinkText
-            }).ToList());
-            context.SaveChanges();
-        }
+        bulkContext.Links.AddRange(response.Links.Distinct().Select(link => new DocumentLink
+        {
+            SourceUrlID = response.RequestUrl.ID,
+            TargetUrlID = link.Url.ID,
+            IsExternal = link.IsExternal,
+            LinkText = link.LinkText
+        }).ToList());
     }
 }

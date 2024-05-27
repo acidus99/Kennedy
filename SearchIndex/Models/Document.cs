@@ -38,6 +38,11 @@ public class Document
     /// </summary>
     public DateTime? LastSuccessfulVisit { get; set; }
 
+    /// <summary>
+    /// When we this response last updated?
+    /// </summary>
+    public DateTime LastTimeUpdated { get; set; }
+
     [MaxLength(1024)]
     [Required]
     public string Url { get; set; } = "";
