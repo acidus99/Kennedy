@@ -1,4 +1,5 @@
 ﻿using Gemini.Net;
+using Kennedy.Data.Utils;
 
 namespace Kennedy.Data;
 
@@ -9,6 +10,9 @@ public class ParsedResponse : GeminiResponse
     public string? DetectedMimeType { get; set; }
 
     public List<FoundLink> Links { get; set; }
+
+    public bool IsProactiveRequest
+        => UrlUtility.IsProactiveUrl(RequestUrl.Url);
 
     public ParsedResponse(GeminiResponse baseResponse)
         : base(baseResponse.RequestUrl)

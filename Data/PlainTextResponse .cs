@@ -6,7 +6,8 @@ public class PlainTextResponse : ParsedResponse, ITextResponse
 {
     public required string? DetectedLanguage { get; set; }
 
-    public bool HasIndexableText => (BodyText.Length > 0);
+    //text files that are not proactive requests can be indexed
+    public bool HasIndexableText => !IsProactiveRequest && (BodyText.Length > 0);
 
     /// <summary>
     /// Plain text documents cannot be feeds
