@@ -26,6 +26,8 @@ class Program
         {
             ProcessWarc(inputWarc, processor);
         }
+        Console.WriteLine("Global Processing");
+        processor.FinalizeAllProcessing();
 
     }
 
@@ -115,8 +117,8 @@ class Program
                 }
             }
             Console.WriteLine();
-            Console.WriteLine("Post processing");
-            processor.FinalizeProcessing();
+            Console.WriteLine("Post processing WARC");
+            processor.CompleteWarcProcessing();
         }
     }
 

@@ -6,5 +6,7 @@ public interface IGeminiRecordProcessor
 {
     public void ProcessGeminiResponse(GeminiResponse response);
 
-    public void FinalizeProcessing();
+    public void FinalizeStores();
+
+    public void DoFinalGlobalWork();
 }

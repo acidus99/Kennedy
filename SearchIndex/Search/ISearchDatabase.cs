@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Kennedy.Data;
 using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex.Web;
 
 namespace Kennedy.SearchIndex.Search;
 
@@ -10,15 +11,15 @@ public interface ISearchDatabase
     /// Updates the search index, if appropriate
     /// </summary>
     /// <param name="parsedResponse"></param>
-    void UpdateIndex(ParsedResponse parsedResponse);
+    void UpdateIndex(FtsIndexAction action, ParsedResponse parsedResponse);
 
     /// <summary>
-    /// Updates the search index for a specific URL
+    /// refreshes the FTS terms for a specific URL. This is only used by our File Indexer.
     /// </summary>
     /// <param name="urlID"></param>
     /// <param name="filteredBody"></param>
     /// <param name="title"></param>
-    void UpdateIndexForUrl(long urlID, string filteredBody, string? title = null);
+    void RefreshIndexForUrl(long urlID, string filteredBody);
 
     /// <summary>
     /// Removes a document from the search index, based on its URL ID

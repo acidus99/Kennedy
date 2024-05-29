@@ -27,9 +27,14 @@ public class SearchProcessor : IGeminiRecordProcessor
         responseParser = new ResponseParser();
     }
 
-    public void FinalizeProcessing()
+    public void FinalizeStores()
     {
-        wrapperDB.FinalizeDatabases();
+        wrapperDB.FinalizeStores();
+    }
+
+    public void DoFinalGlobalWork()
+    {
+        wrapperDB.DoGlobalWork();
         WriteStatsFile();
     }
 

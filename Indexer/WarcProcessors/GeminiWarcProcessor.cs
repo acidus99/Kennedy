@@ -32,11 +32,22 @@ public class GeminiWarcProcessor
         }
     }
 
-    public void FinalizeProcessing()
+    /// <summary>
+    /// Final things to do for a specific WARC
+    /// </summary>
+    public void CompleteWarcProcessing()
     {
         foreach (IGeminiRecordProcessor recordProcessor in RecordProcessors)
         {
-            recordProcessor.FinalizeProcessing();
+            recordProcessor.FinalizeStores();
+        }
+    }
+
+    public void FinalizeAllProcessing()
+    {
+        foreach (IGeminiRecordProcessor recordProcessor in RecordProcessors)
+        {
+            recordProcessor.DoFinalGlobalWork();
         }
     }
 

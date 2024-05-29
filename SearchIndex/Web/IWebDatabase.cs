@@ -11,9 +11,15 @@ public interface IWebDatabase
     /// </summary>
     /// <param name="parsedResponse"></param>
     /// <returns>true if the response's content changed</returns>
-    bool StoreResponse(ParsedResponse parsedResponse);
+    FtsIndexAction StoreResponse(ParsedResponse parsedResponse);
 
     void FinalizeStores();
+}
 
-
+public enum FtsIndexAction
+{
+    Nothing,
+    DeletePrevious,
+    RefreshWithCurrent,
+    AddCurrent
 }

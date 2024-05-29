@@ -22,12 +22,15 @@ public class ArchiveProcessor : IGeminiRecordProcessor
         ArchiveDirectory = archiveDirectory;
     }
 
-    public void FinalizeProcessing()
+    public void FinalizeStores()
+    {
+        //no finalizing of stores.
+    }
+
+    public void DoFinalGlobalWork()
     {
         UpdateVisbility();
         WriteStatsFile();
-        //need to clear the cache incase called multiples times
-        changedAuthorities.Clear();
     }
 
     public void ProcessGeminiResponse(GeminiResponse geminiResponse)

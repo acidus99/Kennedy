@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.Data.RobotsTxt;
 using Kennedy.SearchIndex.Models;
@@ -46,16 +47,15 @@ public class WebDatabase : IWebDatabase
     /// </summary>
     /// <param name="parsedResponse"></param>
     /// <returns>whether the document is new or not. "New" documents are URLs we have neer seen, or updated content for a known URL</returns>
-    public bool StoreResponse(ParsedResponse parsedResponse)
+    public FtsIndexAction StoreResponse(ParsedResponse parsedResponse)
     {
         contextOperations++;
         //store in in the doc index (inserting or updating as appropriate)
-        bool entryUpdated = UpdateDocument(parsedResponse);
+        (FtsIndexAction action, bool isContentNewOrChanged) = UpdateDocument(parsedResponse);
 
-        //if the content is the same, no need to update the links since those are still accurate
-        if (entryUpdated)
+        //if the content changed, we need to update the links table for this response
+        if (isContentNewOrChanged)
         {
-            //store the links
             StoreLinks(parsedResponse);
         }
 
@@ -64,20 +64,24 @@ public class WebDatabase : IWebDatabase
             FlushContext();
         }
 
-        return entryUpdated;
+        return action;
     }
 
-    private bool UpdateDocument(ParsedResponse parsedResponse)
+    private (FtsIndexAction action, bool isContentNewOrChanged) UpdateDocument(ParsedResponse parsedResponse)
     {
+        //assume no FTS updates, and that the content has not changed
+        //most Gemini content does not change
+        FtsIndexAction action = FtsIndexAction.Nothing;
+        bool isContentNewOrChanged = false;
+
         parsedResponse.ResponseReceived ??= DateTime.Now;
         parsedResponse.RequestSent ??= DateTime.Now;
 
-        bool hasContentChanged = false;
-
-        //if it already exists in local, skip it
+        //This is rare. Means we have seen the same URL, during the current bulk operation.
+        //flush and keep going
         if (seenUrls.ContainsKey(parsedResponse.RequestUrl.ID))
         {
-            return false;
+            FlushContext();
         }
         seenUrls[parsedResponse.RequestUrl.ID] = true;
 
@@ -88,7 +92,9 @@ public class WebDatabase : IWebDatabase
         //do we already know about this URL?
         if (entry == null)
         {
-            hasContentChanged = true;
+            //brand new
+            isContentNewOrChanged = true;
+            action = FtsIndexAction.AddCurrent;
             entry = new Document(parsedResponse.RequestUrl)
             {
                 FirstSeen = parsedResponse.ResponseReceived.Value,
@@ -101,8 +107,8 @@ public class WebDatabase : IWebDatabase
             //is this a re-import of the same content? if so the timestamps will match
             if (entry.LastVisit == parsedResponse.ResponseReceived)
             {
-                //nothing to do, and nothing has changed
-                return false;
+                //nothing has changed, so nothing to index, and no links to add
+                return (FtsIndexAction.Nothing, false);
             }
             else if (parsedResponse.ResponseReceived < entry.LastVisit)
             {
@@ -113,21 +119,49 @@ public class WebDatabase : IWebDatabase
                     entry.FirstSeen = parsedResponse.ResponseReceived.Value;
                 }
                 //if responses are the same, and this is an early visit, push back the last time updated
-                if(entry.ResponseHash == parsedResponse.Hash)
+                if (entry.ResponseHash == parsedResponse.Hash)
                 {
                     entry.LastTimeUpdated = parsedResponse.ResponseReceived.Value;
                 }
 
-                return false;
+                return (FtsIndexAction.Nothing, false);
             }
-            else
+
+            if (parsedResponse.Hash != entry.ResponseHash)
             {
-                //newer content so we need to update the document's entry
-                //how much needs to be updated depends on if the response is different
-                hasContentChanged = (parsedResponse.Hash != entry.ResponseHash);
-                if(hasContentChanged)
+                isContentNewOrChanged = true;
+                entry.LastTimeUpdated = parsedResponse.ResponseReceived.Value;
+
+                //what FTS action happens depends on what's changed from the previous
+                if (parsedResponse.IsSuccess)
                 {
-                    entry.LastTimeUpdated = parsedResponse.ResponseReceived.Value;
+                    //successful responses get indexed in the FTS, either the body contents, or the path and inbound links
+                    //figure out what to use here
+                    if ((parsedResponse is ITextResponse textResponse) && textResponse.HasIndexableText)
+                    {
+                        //has indexable text, so refresh the FTS with the current content
+                        action = FtsIndexAction.RefreshWithCurrent;
+                    }
+                    else
+                    {
+                        //nobody text to add to FTS. During post processing, we will use all incoming link text and the URL's path
+                        //to create text for the FTS index. for now, don't do anything
+                        action = FtsIndexAction.Nothing;
+                    }
+                }
+                else
+                {
+                    //not a success, so this should not be in the FTS index
+                    //IF the previous entry was a success, it will have an FTS entry which needs to be removed
+                    if (GeminiParser.IsSuccessStatus(entry.StatusCode))
+                    {
+                        action = FtsIndexAction.DeletePrevious;
+                    }
+                    else
+                    {
+                        //nothing to do
+                        action = FtsIndexAction.Nothing;
+                    }
                 }
             }
         }
@@ -143,7 +177,7 @@ public class WebDatabase : IWebDatabase
         }
 
         //everything else is only updated if the content has changed
-        if (hasContentChanged)
+        if (isContentNewOrChanged)
         {
             entry.IsAvailable = parsedResponse.IsAvailable;
             entry.StatusCode = parsedResponse.StatusCode;
@@ -212,13 +246,13 @@ public class WebDatabase : IWebDatabase
         }
 
         //only need to update special files if the content has changed
-        if (hasContentChanged)
+        if (isContentNewOrChanged)
         {
             UpdateSpecialFiles(parsedResponse);
         }
 
         //propogate our if the content has changed to control re-indexing FTS and other operations
-        return hasContentChanged;
+        return (action, isContentNewOrChanged);
     }
 
     /// <summary>
@@ -245,7 +279,7 @@ public class WebDatabase : IWebDatabase
     {
         bool isRemove = !(response.IsSuccess && IsValidRobotsTxtFile(response?.BodyText));
 
-            //see if it already exists
+        //see if it already exists
         var entry = bulkContext.RobotsTxts
             .Where(x => (x.Protocol == response!.RequestUrl.Protocol &&
                         x.Domain == response.RequestUrl.Hostname &&

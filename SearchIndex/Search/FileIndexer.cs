@@ -46,7 +46,7 @@ order by UrlID");
                         //the last thing to add is the indexable text from the url path
                         sb.Append(' ');
                         sb.Append(GetPathIndexText(currUrl));
-                        searchDatabase.UpdateIndexForUrl(currUrl.ID, sb.ToString());
+                        searchDatabase.RefreshIndexForUrl(currUrl.ID, sb.ToString());
                     }
                     sb.Clear();
                     currUrl = new GeminiUrl(file.Url);
@@ -68,7 +68,7 @@ order by UrlID");
                 sb.Append(' ');
                 sb.Append(GetPathIndexText(currUrl));
                 //full the buffer
-                searchDatabase.UpdateIndexForUrl(currUrl.ID, sb.ToString());
+                searchDatabase.RefreshIndexForUrl(currUrl.ID, sb.ToString());
             }
         }
     }

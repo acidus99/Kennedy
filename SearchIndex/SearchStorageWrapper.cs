@@ -19,32 +19,47 @@ public class SearchStorageWrapper
 
     Stopwatch webWatch;
     Stopwatch searchWatch;
-    Stopwatch finalWatch;
+    Stopwatch globalWatch;
 
     public SearchStorageWrapper(string storageDirectory)
     {
         webWatch = new Stopwatch();
         searchWatch = new Stopwatch();
-        finalWatch = new Stopwatch();
+        globalWatch = new Stopwatch();
 
         WebDB = new WebDatabase(storageDirectory);
         //searchDB has to be after WebDB, because the WebDB DB initialization creates the tables for the entities
         SearchDB = new SearchDatabase(storageDirectory);
     }
 
-    public void FinalizeDatabases()
+    /// <summary>
+    /// Called when we are done with all our StoreResponse() calls.
+    /// Right now all this does is flush any pending bulk updates to the webdb (document/metadata database)
+    /// </summary>
+    public void FinalizeStores()
     {
+        webWatch.Start();
         WebDB.FinalizeStores();
+        webWatch.Stop();
+    }
 
-        finalWatch.Start();
+    /// <summary>
+    /// Called when we want to do global-level analysis. This is usally after 1 or more WARC files have been added
+    /// * Index Images
+    /// * Indexing filepaths and link text
+    /// * Computing and storing populat
+    /// </summary>
+    public void DoGlobalWork()
+    {
+        globalWatch.Start();
         SearchDB.IndexFiles();
         PopularityCalculator popularityCalculator = new PopularityCalculator(WebDB.GetContext());
         popularityCalculator.Rank();
-        finalWatch.Stop();
+        globalWatch.Stop();
 
-        System.Console.WriteLine($"WEB: {webWatch.Elapsed.TotalSeconds}");
-        System.Console.WriteLine($"Search: {searchWatch.Elapsed.TotalSeconds}");
-        System.Console.WriteLine($"Final: {finalWatch.Elapsed.TotalSeconds}");
+        Console.WriteLine($"WebDB (doc meta data)\t{webWatch.Elapsed.TotalSeconds} sec");
+        Console.WriteLine($"FTS index updates:\t{searchWatch.Elapsed.TotalSeconds} sec");
+        Console.WriteLine($"Global:\t\t{globalWatch.Elapsed.TotalSeconds} sec");
     }
 
     public SearchStats GetSearchStats()
@@ -78,14 +93,13 @@ public class SearchStorageWrapper
         return ret;
     }
 
-    public bool StoreResponse(ParsedResponse response)
+    public void StoreResponse(ParsedResponse response)
     {
         webWatch.Start();
-        bool contentUpdated = WebDB.StoreResponse(response);
+        FtsIndexAction action = WebDB.StoreResponse(response);
         webWatch.Stop();
         searchWatch.Start();
-        SearchDB.UpdateIndex(response);
+        SearchDB.UpdateIndex(action, response);
         searchWatch.Stop();
-        return contentUpdated;
     }
 }

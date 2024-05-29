@@ -27,39 +27,60 @@ public class SearchDatabase : ISearchDatabase
 
     #region Add to Index
 
-    private bool ShouldIndexText(ParsedResponse parsedResponse)
+
+    public void UpdateIndex(FtsIndexAction action, ParsedResponse parsedResponse)
     {
-        if (parsedResponse is ITextResponse textDoc)
+        switch (action)
         {
-            //only index text responses, with indexable text, that are also not proactive requests
-            if (!UrlUtility.IsProactiveUrl(parsedResponse.RequestUrl.Url))
-            {
-                return textDoc.HasIndexableText;
-            }
+            case FtsIndexAction.Nothing:
+                return;
+
+            case FtsIndexAction.DeletePrevious:
+                using (var db = GetContext())
+                {
+                    //first delete all FTS entries for this
+                    db.Database.ExecuteSql($"DELETE From FTS as fts WHERE fts.ROWID = {parsedResponse.RequestUrl.ID}");
+                }
+                return;
+
+            case FtsIndexAction.AddCurrent:
+                {
+                    if (parsedResponse is ITextResponse textResponse && textResponse.HasIndexableText)
+                    {
+                        using (var db = GetContext())
+                        {
+                            db.Database.ExecuteSql($"INSERT INTO FTS(ROWID, Title, Body) VALUES ({parsedResponse.RequestUrl.ID}, {textResponse.Title}, {textResponse.IndexableText!})");
+                        }
+                    }
+                    return;
+                }
+
+            case FtsIndexAction.RefreshWithCurrent:
+                {
+                    if (parsedResponse is ITextResponse textResponse && textResponse.HasIndexableText)
+                    {
+                        using (var db = GetContext())
+                        {
+                            db.Database.ExecuteSql($"DELETE From FTS as fts WHERE fts.ROWID = {parsedResponse.RequestUrl.ID}");
+                            db.Database.ExecuteSql($"INSERT INTO FTS(ROWID, Title, Body) VALUES ({parsedResponse.RequestUrl.ID}, {textResponse.Title}, {textResponse.IndexableText!})");
+                        }
+                    }
+                    else
+                    {
+                        throw new ApplicationException("Attempted FTS action 'RefrestWithCurrent' for response that was not an indexable text response");
+                    }
+                    return;
+                }
         }
-        return false;
     }
 
-    public void UpdateIndex(ParsedResponse parsedResponse)
-    {
-        if (ShouldIndexText(parsedResponse) && parsedResponse is ITextResponse)
-        {
-            var textDoc = (ITextResponse)parsedResponse;
-
-            if (textDoc.HasIndexableText)
-            {
-                UpdateIndexForUrl(parsedResponse.RequestUrl.ID, textDoc.IndexableText!, textDoc.Title);
-            }
-        }
-    }
-
-    public void UpdateIndexForUrl(long urlID, string filteredBody, string? title = null)
+    public void RefreshIndexForUrl(long urlID, string filteredBody)
     {
         using (var db = GetContext())
         {
             //first delete all FTS entries for this
             db.Database.ExecuteSql($"DELETE From FTS as fts WHERE fts.ROWID = {urlID}");
-            db.Database.ExecuteSql($"INSERT INTO FTS(ROWID, Title, Body) VALUES ({urlID}, {title}, {filteredBody})");
+            db.Database.ExecuteSql($"INSERT INTO FTS(ROWID, Title, Body) VALUES ({urlID}, {null}, {filteredBody})");
         }
     }
 
