@@ -89,6 +89,8 @@ gemini://tilde.club/~filip/library/go/
 gemini://songs.zachdecook.com/chord.svg/
 gemini://songs.zachdecook.com/song.gmi.php/
 
+#number series
+gemini://jsreed5.org/oeis/$
 
 ## Gemini Radio, skip ogg files
 regex: gemini:\/\/kwiecien\.us\/gemcast\/.+?\.ogg
