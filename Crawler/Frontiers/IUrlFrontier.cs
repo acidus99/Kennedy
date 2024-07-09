@@ -21,6 +21,12 @@ public interface IUrlFrontier
     void AddUrl(UrlFrontierEntry entry);
 
     /// <summary>
+    /// used to frain remaining items in the frontier at the end of the crawl
+    /// </summary>
+    /// <returns></returns>
+    UrlFrontierEntry? DrainQueue();
+
+    /// <summary>
     /// Gets the next URL from the frontier
     /// </summary>
     /// <returns></returns>

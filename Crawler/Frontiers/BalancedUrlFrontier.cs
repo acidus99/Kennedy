@@ -78,4 +78,11 @@ public class BalancedUrlFrontier : IUrlFrontier
         int queueID = queueForUrl(entry.Url);
         queues[queueID].AddUrl(entry);
     }
+
+    public UrlFrontierEntry? DrainQueue()
+    {
+        var queue = queues.Where(q => q.Count > 0).FirstOrDefault();
+        return queue?.GetUrl();
+    }
+
 }

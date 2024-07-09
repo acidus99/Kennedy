@@ -8,11 +8,19 @@ class Program
     {
         HandleArgs(args);
 
-        var crawler = new WebCrawler(40, 600000);
+        var crawler = new WebCrawler(40, 2000000);
 
-        crawler.AddSeed("gemini://mozz.us/");
-        crawler.AddSeed("gemini://kennedy.gemi.dev/observatory/known-hosts");
-        crawler.AddSeed("gemini://spam.works/");
+        if (CrawlerOptions.SeedUrlsFile != "")
+        {
+            crawler.AddSeedsFromFile(CrawlerOptions.SeedUrlsFile);
+        }
+        else
+        {
+            crawler.AddSeed("gemini://mozz.us/");
+            crawler.AddSeed("gemini://kennedy.gemi.dev/observatory/known-hosts");
+            crawler.AddSeed("gemini://spam.works/");
+        }
+
         crawler.DoCrawl();
 
         return;
@@ -20,9 +28,18 @@ class Program
 
     static void HandleArgs(string[] args)
     {
-        if (args.Length == 1)
+        if (args.Length >= 1)
         {
             CrawlerOptions.OutputBase = args[0];
+        }
+
+        if (args.Length == 2)
+        {
+            if (!File.Exists(args[1]))
+            {
+                throw new FileNotFoundException("Could not locate seed url file", args[1]);
+            }
+            CrawlerOptions.SeedUrlsFile = args[1];
         }
 
         CrawlerOptions.OutputBase = CrawlerOptions.OutputBase.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + '/');

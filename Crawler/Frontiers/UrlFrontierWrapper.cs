@@ -16,6 +16,7 @@ public class UrlFrontierWrapper
     public bool LimitCrawlToSeeds { get; set; } = false;
 
     RejectedUrlLogger UrlLogger;
+    BlockListFilter BlockListFilter;
 
     public ThreadSafeCounter TotalUrls;
     public ThreadSafeCounter PassedUrls;
@@ -25,12 +26,14 @@ public class UrlFrontierWrapper
         UrlFrontier = frontier;
         UrlLogger = urlLogger;
         SeenUrlFilter = new SeenUrlFilter();
+        BlockListFilter = new BlockListFilter();
 
         UrlFilters = new List<IUrlFilter>
         {
             new DepthFilter(),
-            new BlockListFilter(),
-            new DomainLimitFilter(),
+            BlockListFilter,
+            //no more domain limiter
+            //new DomainLimitFilter(),
         };
 
         TotalUrls = new ThreadSafeCounter();
@@ -46,8 +49,12 @@ public class UrlFrontierWrapper
                 SeedAuthorities[seedUrl.Authority] = true;
             }
         }
-        UrlFrontier.AddSeed(seedUrl);
-        SeenUrlFilter.MarkAsSeen(seedUrl);
+
+        if (BlockListFilter.IsUrlAllowed(seedUrl).IsAllowed)
+        {
+            UrlFrontier.AddSeed(seedUrl);
+            SeenUrlFilter.MarkAsSeen(seedUrl);
+        }
     }
 
     private void AddUrl(UrlFrontierEntry entry)

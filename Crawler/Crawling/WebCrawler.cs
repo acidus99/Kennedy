@@ -18,7 +18,6 @@ public class WebCrawler : IWebCrawler
     ThreadSafeCounter TotalUrlsRequested;
     ThreadSafeCounter TotalUrlsProcessed;
 
-
     RejectedUrlLogger rejectionLogger;
     ResponseLogger responseLogger;
 
@@ -30,12 +29,14 @@ public class WebCrawler : IWebCrawler
     IUrlFrontier UrlFrontier;
     UrlFrontierWrapper FrontierWrapper;
 
+    ResponseParser responseParser;
+
     ILinksFinder ResponseLinkFinder;
     ILinksFinder ProactiveLinksFinder;
 
     SeenContentTracker seenContentTracker;
 
-    ResultsWriter ResultsWarc;
+    ResultsWriter ResultsWriter;
 
     Stopwatch CrawlerStopwatch;
 
@@ -68,7 +69,8 @@ public class WebCrawler : IWebCrawler
         ProactiveLinksFinder = new ProactiveLinksFinder();
         ResponseLinkFinder = new ResponseLinkFinder();
 
-        ResultsWarc = new ResultsWriter(CrawlerOptions.WarcDir);
+        responseParser = new ResponseParser();
+        ResultsWriter = new ResultsWriter(CrawlerOptions.WarcDir);
 
         CrawlerStopwatch = new Stopwatch();
 
@@ -82,6 +84,18 @@ public class WebCrawler : IWebCrawler
         return info.FullName + "/stop";
     }
 
+    private void DrainFrontierToDisk()
+    {
+        using (var fout = new StreamWriter(CrawlerOptions.RemainingUrlsLog, false))
+        {
+            UrlFrontierEntry? entry;
+            while ((entry = UrlFrontier.DrainQueue()) != null)
+            {
+                fout.WriteLine(entry.Url);
+            }
+        }
+    }
+
     private void ConfigureDirectories()
     {
         Directory.CreateDirectory(CrawlerOptions.WarcDir);
@@ -89,7 +103,29 @@ public class WebCrawler : IWebCrawler
     }
 
     public void AddSeed(string url)
-        => FrontierWrapper.AddSeed(new GeminiUrl(url));
+    {
+        try
+        {
+            FrontierWrapper.AddSeed(new GeminiUrl(url));
+        }
+        catch (UriFormatException)
+        {
+            //some entries in the seeds file might be invalid URLs, just ignore them
+            Console.WriteLine($"Skipping invalid seed URL {url}");
+        }
+    }
+
+    public void AddSeedsFromFile(string filename)
+    {
+        using (StreamReader fin = new StreamReader(filename))
+        {
+            string? line;
+            while ((line = fin.ReadLine()) != null)
+            {
+                AddSeed(line);
+            }
+        }
+    }
 
     public void DoCrawl()
     {
@@ -112,6 +148,7 @@ public class WebCrawler : IWebCrawler
 
         } while (KeepWorkersAlive);
 
+        CrawlerStopwatch.Stop();
         Console.WriteLine("COMPLETE!");
         Console.WriteLine($"Elapsed: {CrawlerStopwatch.Elapsed}\tTotal Requested: {TotalUrlsRequested.Count}\tTotal Processed: {TotalUrlsProcessed.Count}\tRemaining: {UrlFrontier.Count}");
         FinalizeCrawl();
@@ -161,16 +198,16 @@ public class WebCrawler : IWebCrawler
             Thread.Sleep(10000);
             if (KeepWorkersAlive)
             {
-                ResultsWarc.Flush();
+                ResultsWriter.Flush();
             }
         } while (KeepWorkersAlive);
     }
 
     private void FinalizeCrawl()
     {
-        CrawlerStopwatch.Stop();
+        DrainFrontierToDisk();
         rejectionLogger.Close();
-        ResultsWarc.Close();
+        ResultsWriter.Close();
     }
 
     private void SpawnCrawlThreads()
@@ -206,26 +243,49 @@ public class WebCrawler : IWebCrawler
     {
         TotalUrlsRequested.Increment();
         responseLogger.LogUrlResponse(response);
-        ResultsWarc.AddToQueue(response);
+
+        var parsedResponse = responseParser.Parse(response);
+        ResultsWriter.AddResponse(parsedResponse);
         TotalUrlsProcessed.Increment();
     }
 
-    public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response)
-    {
-        //null means it was ignored by robots
-        if (response != null)
-        {
-            responseLogger.LogUrlResponse(response);
-            ResultsWarc.AddToQueue(response);
+    public void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse response)
+       => ProcessRequestResponseHelper(entry, response, SkippedReason.NotSkipped);
 
-            //if we haven't seen this content before, parse it for links and add them to the frontier
-            if (!seenContentTracker.CheckAndRecord(response))
+    public void ProcessSkippedRequest(UrlFrontierEntry entry, SkippedReason reason)
+        => ProcessRequestResponseHelper(entry, null, reason);
+
+    private void ProcessRequestResponseHelper(UrlFrontierEntry entry, GeminiResponse? response, SkippedReason reason)
+    {
+        if (reason == SkippedReason.NotSkipped)
+        {
+            if (response == null)
             {
-                FrontierWrapper.AddUrls(entry.DepthFromSeed, ResponseLinkFinder.FindLinks(response));
+                throw new ArgumentNullException(nameof(response), "response was null while skip reason was not skipped!");
+            }
+
+            ParsedResponse parsedResponse = responseParser.Parse(response);
+
+            responseLogger.LogUrlResponse(response);
+            ResultsWriter.AddResponse(parsedResponse);
+
+            //record this url as now seen, and see if we have seen it before
+            bool seenBefore = seenContentTracker.CheckAndRecord(response);
+
+            //Don't parse proactive links for URLs. This can lead to bugs
+            //e.g. a broken security.txt file that returns a gemtext doc, with relative links, creating a spider trap
+            if (!seenBefore && !entry.IsProactive)
+            {
+                FrontierWrapper.AddUrls(entry.DepthFromSeed, parsedResponse.Links);
             }
             //add proactive URLs
             FrontierWrapper.AddUrls(entry.DepthFromSeed, ProactiveLinksFinder.FindLinks(response), false);
         }
+        else
+        {
+            ResultsWriter.AddSkippedUrlResponse(entry.Url, reason);
+        }
+
         TotalUrlsProcessed.Increment();
     }
 
@@ -267,5 +327,4 @@ public class WebCrawler : IWebCrawler
 
     public bool KeepWorkersAlive
         => (HasUrlsToFetch || (WorkInFlight > 0));
-
 }

@@ -14,7 +14,9 @@ public interface IWebCrawler
 
     void LogUrlRejection(GeminiUrl url, string rejectionType, string specificRule = "");
 
-    void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse? response);
+    void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse response);
+
+    void ProcessSkippedRequest(UrlFrontierEntry entry, SkippedReason reason);
 
     void ProcessRobotsResponse(GeminiResponse response);
 }

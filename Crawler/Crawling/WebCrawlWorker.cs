@@ -24,8 +24,9 @@ internal class WebCrawlWorker
     public void DoWork()
     {
         var requestor = new GeminiProtocolHandler();
-        var hostTracker = new HostHealthTracker();
         var politeTracker = new PolitenessTracker();
+
+        var connectivityTracker = new ConnectivityTracker();
 
         bool shouldRetryUrl = false;
 
@@ -45,26 +46,44 @@ internal class WebCrawlWorker
                 continue;
             }
 
-            GeminiResponse? response = null;
+            GeminiResponse? response;
 
-            if (!hostTracker.ShouldSendRequest(entry.Url))
+            ConnectivityInfo connectivity = connectivityTracker.GetConnectivityInfo(entry.Url);
+
+            //do we have permanent connectivity issues?
+            if(connectivity.HasTerminalIssue)
             {
-                Crawler.LogUrlRejection(entry.Url, "Host Health check failed");
-                //if we got a URL entry, even if it was rejected for robots or health reasons,
+                response = new GeminiResponse(entry.Url)
+                {
+                    StatusCode = GeminiParser.ConnectionErrorStatusCode,
+                    Meta = connectivity.ErrorMessage
+                };
+                //if we got a URL entry, even if it was discarded for connectivity issues,
                 //we always have to call process on it, so th inflight/being processed counts work out
                 Crawler.ProcessRequestResponse(entry, response);
+                continue;
+            }
+
+            //do we have temporary connectivity issues?
+            if(connectivity.HasTemporaryIssues())
+            {
+                Crawler.LogUrlRejection(entry.Url, "Connectivity check failed");
+                //if we got a URL entry, even if it was connectivity issues
+                //we always have to call process on it, so th inflight/being processed counts work out
+                Crawler.ProcessSkippedRequest(entry, SkippedReason.SkippedForConnectivity);
                 continue;
             }
 
             shouldRetryUrl = false;
             response = requestor.Request(entry);
 
+            //rejected by robots?
             if (response == null)
             {
                 Crawler.LogUrlRejection(entry.Url, "Excluded by Robots.txt");
-                //if we got a URL entry, even if it was rejected for robots or health reasons,
+                //if we got a URL entry, even if it was rejected for robots reasons,
                 //we always have to call process on it, so th inflight/being processed counts work out
-                Crawler.ProcessRequestResponse(entry, response);
+                Crawler.ProcessSkippedRequest(entry, SkippedReason.SkippedForRobots);
                 continue;
             }
 
@@ -81,8 +100,8 @@ internal class WebCrawlWorker
 
             if (!shouldRetryUrl)
             {
-                //if we aren't retrying it, add it to our host tracker
-                hostTracker.AddResponse(response);
+                //if we aren't retrying it, record response for the connectivity info
+                connectivity.RecordResponse(response);
                 //and process it
                 Crawler.ProcessRequestResponse(entry, response);
             }
