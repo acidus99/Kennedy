@@ -205,8 +205,14 @@ public class WebCrawler : IWebCrawler
 
     private void FinalizeCrawl()
     {
+        //write out work to still be done
         DrainFrontierToDisk();
+
+        //flush and close our logs
         rejectionLogger.Close();
+        responseLogger.Close();
+
+        //flush and close our results
         ResultsWriter.Close();
     }
 
