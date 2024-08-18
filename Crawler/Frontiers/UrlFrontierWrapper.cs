@@ -40,7 +40,7 @@ public class UrlFrontierWrapper
         PassedUrls = new ThreadSafeCounter();
     }
 
-    public void AddSeed(GeminiUrl seedUrl)
+    public bool AddSeed(GeminiUrl seedUrl)
     {
         if (LimitCrawlToSeeds)
         {
@@ -54,7 +54,9 @@ public class UrlFrontierWrapper
         {
             UrlFrontier.AddSeed(seedUrl);
             SeenUrlFilter.MarkAsSeen(seedUrl);
+            return true;
         }
+        return false;
     }
 
     private void AddUrl(UrlFrontierEntry entry)

@@ -8,6 +8,7 @@ public static class CrawlerOptions
     public static string RejectionsLog => Logs + "rejected-urls.tsv";
     public static string RemainingUrlsLog => Logs + "remaining-urls.txt";
     public static string ResponsesLog => Logs + "response.tsv";
+    public static string SeedLog => Logs + "seed-log.tsv";
 
     public static string SeedUrlsFile = "";
 

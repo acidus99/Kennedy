@@ -102,27 +102,38 @@ public class WebCrawler : IWebCrawler
         Directory.CreateDirectory(CrawlerOptions.Logs);
     }
 
-    public void AddSeed(string url)
+    public bool AddSeed(string url)
     {
         try
         {
-            FrontierWrapper.AddSeed(new GeminiUrl(url));
+            return FrontierWrapper.AddSeed(new GeminiUrl(url));
         }
         catch (UriFormatException)
         {
             //some entries in the seeds file might be invalid URLs, just ignore them
             Console.WriteLine($"Skipping invalid seed URL {url}");
         }
+        return false;
     }
 
     public void AddSeedsFromFile(string filename)
     {
-        using (StreamReader fin = new StreamReader(filename))
+        using (StreamWriter fout = new StreamWriter(CrawlerOptions.SeedLog))
         {
-            string? line;
-            while ((line = fin.ReadLine()) != null)
+            using (StreamReader fin = new StreamReader(filename))
             {
-                AddSeed(line);
+                string? line;
+                while ((line = fin.ReadLine()) != null)
+                {
+                    bool result = AddSeed(line);
+                    if(result)
+                    {
+                        fout.WriteLine($"ALLOWED\t{line}");
+                    } else
+                    {
+                        fout.WriteLine($"DENIED\t{line}");
+                    }
+                }
             }
         }
     }
