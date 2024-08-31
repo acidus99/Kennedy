@@ -50,13 +50,19 @@ public class UrlFrontierWrapper
             }
         }
 
-        if (BlockListFilter.IsUrlAllowed(seedUrl).IsAllowed)
+        if (!BlockListFilter.IsUrlAllowed(seedUrl).IsAllowed)
         {
-            UrlFrontier.AddSeed(seedUrl);
-            SeenUrlFilter.MarkAsSeen(seedUrl);
-            return true;
+            return false;
         }
-        return false;
+
+        if(SeenUrlFilter.IsAlreadySeen(seedUrl))
+        {
+            return false;
+        }
+
+        UrlFrontier.AddSeed(seedUrl);
+        SeenUrlFilter.MarkAsSeen(seedUrl);
+        return true;
     }
 
     private void AddUrl(UrlFrontierEntry entry)
