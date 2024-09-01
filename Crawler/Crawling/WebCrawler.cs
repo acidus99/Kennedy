@@ -19,6 +19,7 @@ public class WebCrawler : IWebCrawler
     ThreadSafeCounter TotalUrlsProcessed;
 
     RejectedUrlLogger rejectionLogger;
+    RemainingUrlLogger remainingUrlLogger;
     ResponseLogger responseLogger;
 
     int UrlLimit;
@@ -56,7 +57,9 @@ public class WebCrawler : IWebCrawler
 
         ConfigureDirectories();
         LanguageDetector.ConfigFileDirectory = CrawlerOptions.ConfigDir;
+
         rejectionLogger = new RejectedUrlLogger(CrawlerOptions.RejectionsLog);
+        remainingUrlLogger = new RemainingUrlLogger(CrawlerOptions.RemainingUrlsLog);
         responseLogger = new ResponseLogger(CrawlerOptions.ResponsesLog);
 
         TotalUrlsRequested = new ThreadSafeCounter();
@@ -82,18 +85,6 @@ public class WebCrawler : IWebCrawler
     {
         var info = new DirectoryInfo(".");
         return info.FullName + "/stop";
-    }
-
-    private void DrainFrontierToDisk()
-    {
-        using (var fout = new StreamWriter(CrawlerOptions.RemainingUrlsLog, false))
-        {
-            UrlFrontierEntry? entry;
-            while ((entry = UrlFrontier.DrainQueue()) != null)
-            {
-                fout.WriteLine(entry.Url);
-            }
-        }
     }
 
     private void ConfigureDirectories()
@@ -216,11 +207,9 @@ public class WebCrawler : IWebCrawler
 
     private void FinalizeCrawl()
     {
-        //write out work to still be done
-        DrainFrontierToDisk();
-
         //flush and close our logs
         rejectionLogger.Close();
+        remainingUrlLogger.Close();
         responseLogger.Close();
 
         //flush and close our results
@@ -253,7 +242,7 @@ public class WebCrawler : IWebCrawler
         return $"{requestSec.ToString("F1")} req / sec";
     }
 
-    public void LogUrlRejection(GeminiUrl url, string rejectionType, string specificRule = "")
+    public void LogRejectedUrl(GeminiUrl url, string rejectionType, string specificRule = "")
         => rejectionLogger.LogRejection(url, rejectionType, specificRule);
 
     public void ProcessRobotsResponse(GeminiResponse response)
@@ -320,6 +309,9 @@ public class WebCrawler : IWebCrawler
         }
         return url;
     }
+
+    public void LogRemainingUrl(UrlFrontierEntry entry)
+        => remainingUrlLogger.LogRemainingUrl(entry);
 
     /// <summary>
     /// Is there pending work in our queue?
