@@ -48,6 +48,25 @@ public class RobotsChecker
         return true;
     }
 
+    /// <summary>
+    /// Checks if a URL is a allowed, without fetching Robots.txt if need be
+    /// </summary>
+    /// <param name="url"></param>
+    /// <returns></returns>
+    public bool IsAllowedOffline(GeminiUrl url)
+    {
+        var key = GetCacheKey(url);
+
+        RobotsTxtFile? robots;
+        if (Cache.TryGetValue(key, out robots))
+        {
+            return robots != null && robots.IsPathAllowed("indexer", url.Path);
+        }
+
+        //nothing explicitly telling me no, so allow it
+        return true;
+    }
+
     private string GetCacheKey(GeminiUrl url)
         => url.Authority;
 
