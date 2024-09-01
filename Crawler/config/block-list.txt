@@ -89,6 +89,9 @@ gemini://tilde.club/~filip/library/go/
 gemini://songs.zachdecook.com/chord.svg/
 gemini://songs.zachdecook.com/song.gmi.php/
 
+#Stack Overflow mirror
+gemini://gmi.noulin.net/stackoverflow/$
+
 #number series
 gemini://jsreed5.org/oeis/$
 
@@ -111,6 +114,10 @@ gemini://matrix.kiwifarms.net/
 gemini://tictactoe.lanterne.chilliet.eu/$
 #choose your own adventure stories
 gemini://futagoza.gamiri.com/gmninkle/?
+
+
+## Gopher
+gemini://gemini.quux.org/0/
 
 ## LEGACY RULES
 # These rules were inherited from older block lists use by other crawlers. Many of these don't exist any longer. These exist for filter when importing only the oldest of archives
