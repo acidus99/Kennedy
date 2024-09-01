@@ -21,7 +21,6 @@ public class ConnectivityTracker
         }
         return hostConnectivity[url.Authority];
     }
-
 }
 
 public class ConnectivityInfo
@@ -34,7 +33,6 @@ public class ConnectivityInfo
     public string Authority { get; private set; }
     public bool HasTerminalIssue { get; private set; }
     public string ErrorMessage { get; private set; } = "";
-
 
     /// <summary>
     /// tracks whether recent requests were successful or not
