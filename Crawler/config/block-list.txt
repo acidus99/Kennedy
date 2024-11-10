@@ -92,6 +92,14 @@ gemini://songs.zachdecook.com/song.gmi.php/
 #Stack Overflow mirror
 gemini://gmi.noulin.net/stackoverflow/$
 
+#MusicBrainz
+gemini://musicbrainz.uploadedlobster.com/recording$
+gemini://musicbrainz.uploadedlobster.com/release$
+gemini://musicbrainz.uploadedlobster.com/release-group$
+gemini://musicbrainz.uploadedlobster.com/work$
+gemini://musicbrainz.uploadedlobster.com/artist$
+gemini://musicbrainz.uploadedlobster.com/label$
+
 #number series
 gemini://jsreed5.org/oeis/$
 
