@@ -15,7 +15,7 @@ class Program
         Console.WriteLine($"settings '{Settings.Global.DataRoot}'");
 
         X509Certificate2? serverCertificate;
-        if (CertificateUtils.TryLoadCertificate(Settings.Global.CertificateFile, Settings.Global.KeyFile,
+        if (!CertificateUtils.TryLoadCertificate(Settings.Global.CertificateFile, Settings.Global.KeyFile,
                 out serverCertificate) || serverCertificate == null)
         {
             Console.WriteLine("Could not load certificate");
@@ -56,7 +56,7 @@ class Program
         server.OnRequest(RoutePaths.SiteHealthRoute, ReportsController.SiteHealth);
         server.OnRequest(RoutePaths.DomainBacklinksRoute, ReportsController.DomainBacklinks);
         server.OnRequest(RoutePaths.CertCheckRoute, CertsController.Check);
-        server.OnRequest("/page-info", SearchController.UrlInfo);
+        server.OnRequest(RoutePaths.UrlInfoRoute, SearchController.UrlInfo);
 
         server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
         server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
