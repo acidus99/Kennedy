@@ -57,6 +57,7 @@ class Program
         server.OnRequest(RoutePaths.DomainBacklinksRoute, ReportsController.DomainBacklinks);
         server.OnRequest(RoutePaths.CertCheckRoute, CertsController.Check);
         server.OnRequest(RoutePaths.UrlInfoRoute, SearchController.UrlInfo);
+        server.OnRequest(RoutePaths.UrlTesterRoute, ToolsController.UrlTester);
 
         server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
         server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);

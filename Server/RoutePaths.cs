@@ -7,6 +7,7 @@ namespace Kennedy.Server;
 
 public static class RoutePaths
 {
+    //Image Search Routes
     public const string ImageSearchRoute = "/image-search";
     public const string SearchRoute = "/search";
     public const string SearchStatsRoute = "/stats";
@@ -16,6 +17,7 @@ public static class RoutePaths
     public const string SiteSearchCreateRoute = "/site-search/create";
     public const string SiteSearchRunRoute = "/site-search/s/";
 
+    //Delorean routes
     public const string ViewCachedRoute = "/archive/cached";
     public const string ViewDiffRoute = "/archive/diff";
     public const string ViewDiffHistoryRoute = "/archive/diff-history";
@@ -24,10 +26,12 @@ public static class RoutePaths
     public const string SearchArchiveRoute = "/archive/search";
     public const string ArchiveStatsRoute = "/archive/stats";
 
+    //Tool routes
     public const string CertCheckRoute = "/certs/validator/check";
-
-    public const string SiteHealthRoute = "/reports/site-health";
     public const string DomainBacklinksRoute = "/reports/domain-backlinks";
+    public const string SiteHealthRoute = "/reports/site-health";
+    public const string UrlTesterRoute = "/tools/url-tester";
+
 
     public static string ImageSearch(string query)
         => $"{ImageSearchRoute}?{HttpUtility.UrlEncode(query)}";
