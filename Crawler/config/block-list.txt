@@ -90,6 +90,7 @@ gemini://songs.zachdecook.com/chord.svg/
 gemini://songs.zachdecook.com/song.gmi.php/
 
 #Stack Overflow mirror
+gemini://gmi.noulin.net/dontDownloadThis/
 gemini://gmi.noulin.net/stackoverflow/$
 
 #MusicBrainz
@@ -122,7 +123,6 @@ gemini://matrix.kiwifarms.net/
 gemini://tictactoe.lanterne.chilliet.eu/$
 #choose your own adventure stories
 gemini://futagoza.gamiri.com/gmninkle/?
-
 
 ## Gopher
 gemini://gemini.quux.org/0/
