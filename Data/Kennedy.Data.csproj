@@ -17,8 +17,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NTextCat" Version="0.3.65" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
-    <PackageReference Include="FileSignatures" Version="4.4.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+    <PackageReference Include="FileSignatures" Version="5.1.1" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Magick.NET-Q8-AnyCPU" />
