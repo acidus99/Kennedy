@@ -81,8 +81,9 @@ public class RobotsChecker
         try
         {
             var contents = FetchRobots(hostname, port);
-            RobotsTxtFile robots = new RobotsTxtFile(contents);
-            if (!robots.IsMalformed)
+            RobotsTxtParser parser = new RobotsTxtParser();
+            RobotsTxtFile robots = parser.Parse(contents);
+            if (robots.HasValidRules)
             {
                 Cache[key] = robots;
                 return robots;
@@ -90,7 +91,6 @@ public class RobotsChecker
         }
         catch (Exception)
         {
-
         }
         Cache[key] = null;
         return null;
@@ -104,9 +104,9 @@ public class RobotsChecker
     /// <returns></returns>
     private string FetchRobots(string hostname, int port)
     {
-        var robotsUrl = RobotsTxtFile.CreateRobotsUrl("gemini", hostname, port);
+        var robotsUrl = RobotsTxtParser.CreateRobotsUrl("gemini", hostname, port);
 
-        Gemini.Net.GeminiRequestor requestor = new Gemini.Net.GeminiRequestor();
+        GeminiRequestor requestor = new GeminiRequestor();
 
         var ipAddress = DnsCache.Global.GetLookup(hostname);
         string ret = "";
