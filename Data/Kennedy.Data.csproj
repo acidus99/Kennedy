@@ -8,7 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Utils\" />
-    <Folder Include="RobotsTxt\" />
     <Folder Include="Parsers\" />
     <Folder Include="Parsers\GemText\" />
   </ItemGroup>

@@ -29,6 +29,7 @@ public static class RoutePaths
     //Tool routes
     public const string CertCheckRoute = "/certs/validator/check";
     public const string DomainBacklinksRoute = "/reports/domain-backlinks";
+    public const string RobotsTesterRoute = "/tools/robots-tester";
     public const string SiteHealthRoute = "/reports/site-health";
     public const string UrlTesterRoute = "/tools/url-tester";
 

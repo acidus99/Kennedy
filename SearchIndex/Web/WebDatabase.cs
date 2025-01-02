@@ -43,7 +43,7 @@ public class WebDatabase : IWebDatabase
     }
 
     /// <summary>
-    /// Stores a response in our web database. 
+    /// Stores a response in our web database.
     /// </summary>
     /// <param name="parsedResponse"></param>
     /// <returns>whether the document is new or not. "New" documents are URLs we have neer seen, or updated content for a known URL</returns>
@@ -396,8 +396,9 @@ public class WebDatabase : IWebDatabase
     {
         if (contents != null)
         {
-            RobotsTxtFile robotsTxt = new RobotsTxtFile(contents);
-            return !robotsTxt.IsMalformed;
+            var parser = new RobotsTxtParser();
+            var robotsTxt = parser.Parse(contents);
+            return robotsTxt.HasValidRules;
         }
         return false;
     }
