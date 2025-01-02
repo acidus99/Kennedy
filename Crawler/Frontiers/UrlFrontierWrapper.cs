@@ -41,7 +41,7 @@ public class UrlFrontierWrapper
         PassedUrls = new ThreadSafeCounter();
     }
 
-    public void AddSeed(GeminiUrl seedUrl)
+    public bool AddSeed(GeminiUrl seedUrl)
     {
         if (LimitCrawlToSeeds)
         {
@@ -51,11 +51,19 @@ public class UrlFrontierWrapper
             }
         }
 
-        if (BlockListFilter.IsUrlAllowed(seedUrl).IsAllowed)
+        if (!BlockListFilter.IsUrlAllowed(seedUrl).IsAllowed)
         {
-            UrlFrontier.AddSeed(seedUrl);
-            SeenUrlFilter.MarkAsSeen(seedUrl);
+            return false;
         }
+
+        if(SeenUrlFilter.IsAlreadySeen(seedUrl))
+        {
+            return false;
+        }
+
+        UrlFrontier.AddSeed(seedUrl);
+        SeenUrlFilter.MarkAsSeen(seedUrl);
+        return true;
     }
 
     public void AddInitialUrl(InitialUrl initialUrl)

@@ -122,7 +122,7 @@ public class ArchiveProcessor : IGeminiRecordProcessor
 
     private RobotsTxtFile? GetRobots(Authority authority)
     {
-        var robotsUrl = new GeminiUrl(RobotsTxtFile.CreateRobotsUrl(authority.Protocol, authority.Domain, authority.Port));
+        var robotsUrl = new GeminiUrl(RobotsTxtParser.CreateRobotsUrl(authority.Protocol, authority.Domain, authority.Port));
 
         GeminiResponse? geminiResponse = archiver.GetLatestResponse(robotsUrl.ID);
 
@@ -135,11 +135,12 @@ public class ArchiveProcessor : IGeminiRecordProcessor
             return null;
         }
 
-        RobotsTxtFile robots = new RobotsTxtFile(geminiResponse.BodyText);
+        RobotsTxtParser robotsTxtParser = new RobotsTxtParser();
+        RobotsTxtFile robots = robotsTxtParser.Parse(geminiResponse.BodyText);
 
         //we want all valid robots, since a later robots might have disallow rules against
         //all user agents, not just archiver, and we don't want to miss those
-        return !robots.IsMalformed ?
+        return robots.HasValidRules ?
             robots :
             null;
     }

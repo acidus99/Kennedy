@@ -56,7 +56,8 @@ public class BalancedUrlFrontier : IUrlFrontier
         => AddUrl(new UrlFrontierEntry
         {
             Url = url,
-            DepthFromSeed = 0
+            DepthFromSeed = 0,
+            IsRobotsLimited = true,
         });
 
     private int GetCount()

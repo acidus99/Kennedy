@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using Kennedy.Server.Controllers;
 using Microsoft.Extensions.Configuration;
 using RocketForce;
@@ -13,10 +14,18 @@ class Program
         LoadSettings(args);
         Console.WriteLine($"settings '{Settings.Global.DataRoot}'");
 
+        X509Certificate2? serverCertificate;
+        if (!CertificateUtils.TryLoadCertificate(Settings.Global.CertificateFile, Settings.Global.KeyFile,
+                out serverCertificate) || serverCertificate == null)
+        {
+            Console.WriteLine("Could not load certificate");
+            return;
+        }
+
         GeminiServer server = new GeminiServer(
             Settings.Global.Host,
             Settings.Global.Port,
-            CertificateUtils.LoadCertificate(Settings.Global.CertificateFile, Settings.Global.KeyFile),
+            serverCertificate,
             Settings.Global.PublicRoot)
         {
             IsMaskingRemoteIPs = false
@@ -44,10 +53,12 @@ class Program
         server.OnRequest(RoutePaths.ArchiveStatsRoute, ArchiveController.Stats);
 
         //tool routes
-        server.OnRequest(RoutePaths.SiteHealthRoute, ReportsController.SiteHealth);
-        server.OnRequest(RoutePaths.DomainBacklinksRoute, ReportsController.DomainBacklinks);
         server.OnRequest(RoutePaths.CertCheckRoute, CertsController.Check);
-        server.OnRequest("/page-info", SearchController.UrlInfo);
+        server.OnRequest(RoutePaths.DomainBacklinksRoute, ReportsController.DomainBacklinks);
+        server.OnRequest(RoutePaths.RobotsTesterRoute, ToolsController.RobotsTester);
+        server.OnRequest(RoutePaths.SiteHealthRoute, ReportsController.SiteHealth);
+        server.OnRequest(RoutePaths.UrlInfoRoute, SearchController.UrlInfo);
+        server.OnRequest(RoutePaths.UrlTesterRoute, ToolsController.UrlTester);
 
         server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
         server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);

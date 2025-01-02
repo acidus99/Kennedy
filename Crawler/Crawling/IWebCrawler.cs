@@ -12,7 +12,9 @@ public interface IWebCrawler
 
     UrlFrontierEntry? GetUrl(int crawlerID = 0);
 
-    void LogUrlRejection(GeminiUrl url, string rejectionType, string specificRule = "");
+    void LogRemainingUrl(UrlFrontierEntry entry);
+
+    void LogRejectedUrl(GeminiUrl url, string rejectionType, string specificRule = "");
 
     void ProcessRequestResponse(UrlFrontierEntry entry, GeminiResponse response);
 

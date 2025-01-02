@@ -168,21 +168,15 @@ internal class DiffView : AbstractView
     private (GeminiUrl? url, DateTime? previous, DateTime? current, bool showFull) ParseArgs()
     {
         var args = HttpUtility.ParseQueryString(Request.Url.RawQuery);
+        //The NameValueCollection isn't like a Dictionary.
+        //getting a key that doesn't exist returns null instead of throwing an exception
+        //Worse.. Convert.* methods will return a default if given a null so you get 0 used
+        //to create the DateTime. Check for explicit nulls instead
 
-        GeminiUrl? url = null;
-        DateTime? previous = null;
-        DateTime? current = null;
-        bool showFull = false;
-        try
-        {
-            url = GeminiUrl.MakeUrl(args["url"]);
-            previous = new DateTime(Convert.ToInt64(args["pt"]));
-            current = new DateTime(Convert.ToInt64(args["t"]));
-            showFull = Convert.ToBoolean(args["full"]);
-        }
-        catch (Exception)
-        {
-        }
+        GeminiUrl? url = GeminiUrl.MakeUrl(args["url"]!);
+        DateTime? previous = (args["t"] != null) ? new DateTime(Convert.ToInt64(args["pt"]!)) : null;
+        DateTime? current = (args["t"] != null) ? new DateTime(Convert.ToInt64(args["t"]!)) : null;
+        bool showFull = (args["full"] != null) && Convert.ToBoolean(args["full"]);
 
         return (url, previous, current, showFull);
     }

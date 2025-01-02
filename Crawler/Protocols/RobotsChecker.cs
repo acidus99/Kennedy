@@ -48,6 +48,25 @@ public class RobotsChecker
         return true;
     }
 
+    /// <summary>
+    /// Checks if a URL is a allowed, without fetching Robots.txt if need be
+    /// </summary>
+    /// <param name="url"></param>
+    /// <returns></returns>
+    public bool IsAllowedOffline(GeminiUrl url)
+    {
+        var key = GetCacheKey(url);
+
+        RobotsTxtFile? robots;
+        if (Cache.TryGetValue(key, out robots))
+        {
+            return robots != null && robots.IsPathAllowed("indexer", url.Path);
+        }
+
+        //nothing explicitly telling me no, so allow it
+        return true;
+    }
+
     private string GetCacheKey(GeminiUrl url)
         => url.Authority;
 
@@ -62,8 +81,9 @@ public class RobotsChecker
         try
         {
             var contents = FetchRobots(hostname, port);
-            RobotsTxtFile robots = new RobotsTxtFile(contents);
-            if (!robots.IsMalformed)
+            RobotsTxtParser parser = new RobotsTxtParser();
+            RobotsTxtFile robots = parser.Parse(contents);
+            if (robots.HasValidRules)
             {
                 Cache[key] = robots;
                 return robots;
@@ -71,7 +91,6 @@ public class RobotsChecker
         }
         catch (Exception)
         {
-
         }
         Cache[key] = null;
         return null;
@@ -85,9 +104,9 @@ public class RobotsChecker
     /// <returns></returns>
     private string FetchRobots(string hostname, int port)
     {
-        var robotsUrl = RobotsTxtFile.CreateRobotsUrl("gemini", hostname, port);
+        var robotsUrl = RobotsTxtParser.CreateRobotsUrl("gemini", hostname, port);
 
-        Gemini.Net.GeminiRequestor requestor = new Gemini.Net.GeminiRequestor();
+        GeminiRequestor requestor = new GeminiRequestor();
 
         var ipAddress = DnsCache.Global.GetLookup(hostname);
         string ret = "";
