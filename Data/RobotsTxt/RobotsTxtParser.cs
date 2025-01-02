@@ -76,7 +76,7 @@ public class RobotsTxtParser
                         continue;
 
                     }
-                    ret.AddDenyRule(currentUserAgents, new DenyRule(value));
+                    ret.AddDenyRule(currentUserAgents, new DenyRule(value, line, lineNumber));
                     //TODO add to robots
                     break;
                 case "allow":

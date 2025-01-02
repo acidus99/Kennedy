@@ -32,19 +32,16 @@ internal class RobotsTesterView : AbstractView
     public override void Render()
     {
         Response.Success();
-        Response.WriteLine($"# 🤖 Robots.txt Tester");
+        Response.WriteLine($"# 🤖 Robots.txt Validator");
 
-        // string Domain = SanitizedQuery;
-        // if (!IsValidDomain(Domain))
-        // {
-        //     Response.WriteLine("Invalid Gemini URL");
-        //     return;
-        // }
+        string Domain = SanitizedQuery;
+        if (!IsValidDomain(Domain))
+        {
+            Response.WriteLine("Invalid Gemini URL");
+            return;
+        }
 
-        //GeminiUrl url = new($"gemini://{Domain}/robots.txt");
-        GeminiUrl url =
-            new(
-                "gemini://kennedy.gemi.dev/archive/cached?url=gemini%3a%2f%2fgmi.noulin.net%2frobots.txt&t=638631632130000000&raw=True");
+        GeminiUrl url = new($"gemini://{Domain}/robots.txt");
 
         Response.WriteLine($"=> {url} Testing: {url}");
         Response.WriteLine($"Requested at {DateTime.UtcNow} UTC");
@@ -98,23 +95,39 @@ internal class RobotsTesterView : AbstractView
         else
         {
             Response.WriteLine(($"* Has response body?: ✅"));
-        }
+            RobotsTxtParser parser = new RobotsTxtParser();
 
-        RobotsTxtParser parser = new RobotsTxtParser();
+            RobotsTxtFile robotsTxtFile = parser.Parse(response.BodyText);
 
-        RobotsTxtFile robotsTxtFile = parser.Parse(response.BodyText);
-
-        if (parser.Warnings.Count() > 0)
-        {
-            foreach (var warning in parser.Warnings)
+            if (parser.Warnings.Any())
             {
-                Response.WriteLine($"* {warning}");
+                Console.WriteLine($"* {parser.Warnings.Count()} Parsing Warnings/Errors");
+                int i = 1;
+                foreach (var warning in parser.Warnings)
+                {
+                    Console.WriteLine($"* {i}. {warning}");
+                    i++;
+                }
+            }
+
+            if (robotsTxtFile.HasValidRules)
+            {
+                Response.WriteLine($"* Has valid Rules!: ✅");
+                PrintRules(robotsTxtFile);
             }
         }
+    }
 
-        if (robotsTxtFile.HasValidRules)
+    private void PrintRules(RobotsTxtFile robotsTxtFile)
+    {
+        Response.WriteLine("## Robots.txt Rules");
+        foreach (string ua in robotsTxtFile.Rules.Keys)
         {
-            Response.WriteLine($"* Has valid Rules!: ✅");
+            Response.WriteLine($"### User-Agent: {ua}");
+            foreach (DenyRule rule in robotsTxtFile.Rules[ua])
+            {
+                Response.WriteLine($"* {rule.Line} (Line #{rule.LineNumber})");
+            }
         }
     }
 }

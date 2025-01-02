@@ -7,36 +7,36 @@ public class RobotsTxtFile
     /// <summary>
     /// Rules that apply to a specific user-agent
     /// </summary>
-    private readonly Dictionary<string, List<DenyRule>> _rules;
+    public readonly Dictionary<string, List<DenyRule>> Rules;
 
-    public bool HasValidRules => (_rules.Values.Sum(x=>x.Count) > 0);
+    public bool HasValidRules => (Rules.Values.Sum(x=>x.Count) > 0);
 
     internal RobotsTxtFile()
     {
-        _rules = new Dictionary<string, List<DenyRule>>();
+        Rules = new Dictionary<string, List<DenyRule>>();
     }
 
     public void AddDenyRule(List<string> userAgents, DenyRule denyRule)
     {
         foreach (var userAgent in userAgents)
         {
-                if (!_rules.ContainsKey(userAgent))
+                if (!Rules.ContainsKey(userAgent))
                 {
-                    _rules[userAgent] = new List<DenyRule>();
+                    Rules[userAgent] = new List<DenyRule>();
                 }
-                _rules[userAgent].Add(denyRule);
+                Rules[userAgent].Add(denyRule);
         }
     }
 
     public bool IsPathAllowed(string userAgent, string path)
     {
-        if (!_rules.ContainsKey(userAgent))
+        if (!Rules.ContainsKey(userAgent))
         {
             //unknown user agent
             return true;
         }
 
-        foreach (var rule in _rules[userAgent])
+        foreach (var rule in Rules[userAgent])
         {
             if (rule.IsAllowAll)
             {
