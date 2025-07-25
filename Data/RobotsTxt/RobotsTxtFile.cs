@@ -30,6 +30,22 @@ public class RobotsTxtFile
 
     public bool IsPathAllowed(string userAgent, string path)
     {
+
+        if (Rules.ContainsKey("*"))
+        {
+            //do global rules
+            foreach (var rule in Rules["*"])
+            {
+                if (rule.IsAllowAll)
+                {
+                    //ignore it
+                } else if (path.StartsWith(rule.Path))
+                {
+                    return false;
+                }
+            }
+        }
+
         if (!Rules.ContainsKey(userAgent))
         {
             //unknown user agent
