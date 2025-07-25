@@ -110,11 +110,29 @@ internal class RobotsTesterView : AbstractView
                 }
             }
 
+            if (parser.Warnings.Any())
+            {
+                Response.WriteLine($"* Compiles with Gemini's subset of Robots.txt?: ❌");
+                Response.WriteLine($"## Unsupported Rules/directives - {parser.Warnings.Count()}");
+                foreach (var warning in parser.Warnings)
+                {
+                    Response.WriteLine("* " + warning);
+                }
+            }
+            else
+            {
+                Response.WriteLine($"* Compiles with Gemini's subset of Robots.txt?: ✅");
+            }
+
             if (robotsTxtFile.HasValidRules)
             {
-                Response.WriteLine($"* Has valid Rules!: ✅");
+                Response.WriteLine($"* Has any valid Rules!: ✅");
                 PrintRules(robotsTxtFile);
             }
+
+            var wwww = parser.Warnings.ToList();
+
+
         }
     }
 
