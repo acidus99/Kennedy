@@ -12,18 +12,21 @@ regex: \/commits?\/[a-fA-F0-9]{40,}
 regex: \/tree\/[a-zA-Z0-9]{40,}
 gemini://git.*
 regex: \/git\/
+regex: \/\.git\/
+regex: \/gitRepositories\/
 
 ## Social media proxy
 #lots of churn and low value content, often poorly formatted for Gemini
 gemini://mastogem.remorse.us/$
 gemini://mastogem.picasoft.net/$
-gemini://vps01.rdelaage.ovh/$
+gemini://vps01.rdelaage.ovh/$".
 
 ## New sites / Proxies
 # In general news sites are good to index/archive, since they content is coming from other sources, and it changes rapidly
 gemini://acidic.website/cgi-bin/npr/$
 # Poorly formatted for Gemini news site
 gemini://gemini.techrights.org/
+gemini://techrights.org/
 gemini://guardian.shit.cx/$
 # RSS feeds to various sites
 gemini://jpfox.fr/rss/
@@ -32,6 +35,10 @@ gemini://rawtext.club/~sloum/geminews/$
 gemini://taz.de/$
 gemini://teapot.styx.org/yesterday/
 gemini://tobykurien.com/maverick/$
+
+#jerks not welcome
+gemini://auragem.ddns.net/
+gemini://aurasearch.ddns.net/
 
 
 ## Personally clips library someone's Firefox clips library. all HTTP stuff
@@ -79,12 +86,18 @@ gemini://localhost/
 
 ## Giant mirrors
 # I try to make all mirrors available. However some mirrors are incredibly large, or contain lower value info
+
+gemini://gemini.omarpolo.com/cgi/gempkg/$
+
 #ietf drafts,
-gemini://hellomouse.net/user-pages/handicraftsman/ietf/
+gemini://hellomouse.net/user-pages/handicraftsman/ietf/$
+
 #archive of dress patterns
-gemini://tweek.zyxxyz.eu/valentina/
+gemini://tweek.zyxxyz.eu/valentina/$
+
 # go games, odd notation
 gemini://tilde.club/~filip/library/go/
+
 #Song archives
 gemini://songs.zachdecook.com/chord.svg/
 gemini://songs.zachdecook.com/song.gmi.php/
