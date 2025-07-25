@@ -8,7 +8,7 @@ class Program
     {
         HandleArgs(args);
 
-        var crawler = new WebCrawler(40, 2000000);
+        var crawler = new WebCrawler(40, 5000000);
 
         if (CrawlerOptions.SeedUrlsFile != "")
         {
@@ -18,7 +18,6 @@ class Program
         {
             crawler.AddSeed("gemini://mozz.us/");
             crawler.AddSeed("gemini://kennedy.gemi.dev/observatory/known-hosts");
-            crawler.AddSeed("gemini://spam.works/");
         }
 
         crawler.DoCrawl();
@@ -28,21 +27,39 @@ class Program
 
     static void HandleArgs(string[] args)
     {
-        if (args.Length >= 1)
+
+        if (args.Length != 2)
         {
-            CrawlerOptions.OutputBase = args[0];
+            Console.WriteLine("Usage: crawler [path to config] [path to output]");
+            System.Environment.Exit(1);
         }
 
-        if (args.Length == 2)
+        string configPath = args[0];
+        string outputPath = args[1];
+
+        CrawlerOptions.ConfigDir = configPath;
+        CrawlerOptions.OutputBase = outputPath;
+
+        if (!CrawlerOptions.ConfigDir.EndsWith(Path.DirectorySeparatorChar))
         {
-            if (!File.Exists(args[1]))
-            {
-                throw new FileNotFoundException("Could not locate seed url file", args[1]);
-            }
-            CrawlerOptions.SeedUrlsFile = args[1];
+            CrawlerOptions.ConfigDir += Path.DirectorySeparatorChar;
         }
 
-        CrawlerOptions.OutputBase = CrawlerOptions.OutputBase.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + '/');
+        // if (args.Length >= 1)
+        // {
+        //     CrawlerOptions.OutputBase = args[0];
+        // }
+        //
+        // if (args.Length == 2)
+        // {
+        //     if (!File.Exists(args[1]))
+        //     {
+        //         throw new FileNotFoundException("Could not locate seed url file", args[1]);
+        //     }
+        //     CrawlerOptions.SeedUrlsFile = args[1];
+        // }
+        //
+        // CrawlerOptions.OutputBase = CrawlerOptions.OutputBase.Replace("~/", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + '/');
         if (!CrawlerOptions.OutputBase.EndsWith(Path.DirectorySeparatorChar))
         {
             CrawlerOptions.OutputBase += Path.DirectorySeparatorChar;
@@ -51,5 +68,8 @@ class Program
         {
             Directory.CreateDirectory(CrawlerOptions.OutputBase);
         }
+
+        Console.WriteLine($"Using '{CrawlerOptions.ConfigDir}' as config directory.");
+        Console.WriteLine($"Using '{CrawlerOptions.OutputBase}' as output directory.");
     }
 }

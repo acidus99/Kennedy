@@ -40,6 +40,12 @@ public class UrlFrontierWrapper
         PassedUrls = new ThreadSafeCounter();
     }
 
+    public void IgnoreUrl(GeminiUrl url)
+    {
+        SeenUrlFilter.MarkAsSeen(url);
+    }
+
+
     public bool AddSeed(GeminiUrl seedUrl)
     {
         if (LimitCrawlToSeeds)

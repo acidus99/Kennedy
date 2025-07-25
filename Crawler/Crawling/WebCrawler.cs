@@ -79,6 +79,9 @@ public class WebCrawler : IWebCrawler
 
         UserQuit = false;
         StopFilePath = GetStopFilePath();
+        Console.WriteLine($"Stop path is '{StopFilePath}'");
+
+        AddIgnoredUrls();
     }
 
     private string GetStopFilePath()
@@ -91,6 +94,24 @@ public class WebCrawler : IWebCrawler
     {
         Directory.CreateDirectory(CrawlerOptions.WarcDir);
         Directory.CreateDirectory(CrawlerOptions.Logs);
+    }
+    public void AddIgnoredUrls()
+    {
+        string ignoredFile = CrawlerOptions.ConfigDir + "ignore.txt";
+        if (!File.Exists(ignoredFile))
+        {
+            return;
+        }
+        Console.WriteLine("Processing ignored urls file");
+
+        foreach (string line in File.ReadAllLines(ignoredFile))
+        {
+            GeminiUrl? url = GeminiUrl.MakeUrl(line);
+            if (url == null)
+                continue;
+
+            FrontierWrapper.IgnoreUrl(url);
+        }
     }
 
     public bool AddSeed(string url)
