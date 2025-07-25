@@ -104,19 +104,29 @@ class Program
         {
             DateTime start = DateTime.Now;
             DateTime prev = start;
-            foreach (WarcRecord record in reader)
+            try
             {
-                processor.ProcessRecord(record);
-                if (reader.RecordsRead % 100 == 0)
+                foreach (WarcRecord record in reader)
                 {
-                    var elapsedSeconds = Math.Truncate(DateTime.Now.Subtract(start).TotalSeconds);
-                    var ratePerSecond = Math.Truncate(reader.RecordsRead / elapsedSeconds);
-                    Console.Write($"{reader.Filename}\t{reader.RecordsRead}\t {elapsedSeconds} s ({ratePerSecond} / s)    ");
-                    Console.Write('\r');
-                    prev = DateTime.Now;
+                    processor.ProcessRecord(record);
+                    if (reader.RecordsRead % 100 == 0)
+                    {
+                        var elapsedSeconds = Math.Truncate(DateTime.Now.Subtract(start).TotalSeconds);
+                        var ratePerSecond = Math.Truncate(reader.RecordsRead / elapsedSeconds);
+                        Console.Write(
+                            $"{reader.Filename}\t{reader.RecordsRead}\t {elapsedSeconds} s ({ratePerSecond} / s)    ");
+                        Console.Write('\r');
+                        prev = DateTime.Now;
+                    }
                 }
+                Console.WriteLine();
             }
-            Console.WriteLine();
+            catch (WarcFormatException ex)
+            {
+                Console.Error.WriteLine("Malformed WARC!");
+                Console.Error.WriteLine(ex.Message);
+                Console.Error.WriteLine("Assuming the rest of the WARC is bad and skipping to post processing!");
+            }
             Console.WriteLine("Post processing WARC");
             processor.CompleteWarcProcessing();
         }
