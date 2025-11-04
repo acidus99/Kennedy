@@ -35,7 +35,8 @@ internal class KnownHostsView : AbstractView
                     g.Key.Domain,
                     g.Key.Port,
                     //g.First().Favicon,
-                    Pages = g.Count()
+                    Pages = g.Count(),
+                    LastDate = g.Max(d => d.LastTimeUpdated)
                 });
 
             Response.WriteLine($"## Known Capsules ({servers.Count()})");
@@ -49,7 +50,7 @@ internal class KnownHostsView : AbstractView
                 {
                     label += ":" + server.Port;
                 }
-                label += $" ({server.Pages} URLs)";
+                label += $" ({server.Pages} URLs. Updated: {server.LastDate})";
                 Response.WriteLine($"=> {server.Protocol}://{server.Domain}:{server.Port}/ {label}");
             }
         }
