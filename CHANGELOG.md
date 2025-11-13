@@ -6,6 +6,21 @@ Keeping track of the work I do on Kennedy.
 * Added reader mode to Delorean archive to make reading old content more seamless. Redirects are automatically followed and archive-related content at the top is kept to a minimum. Inspired by @mozz's SmolNet Portal's reader mode.
 => https://portal.mozz.us/changes @mozz's SmolNet Portal Changelog
 
+## 2025-07-25
+* Actually show failing rules in Robots.txt Validator tool.
+* Added ignore rules input text file option to crawler.
+* Fixed Bug: Indexer will recovery from truncated WARC files and keep going.
+
+## 2025-01-02
+* Added 🤖 Robots.txt Validator tool. Lints a robots.txt file for Gemini's specific robots.txt subset.
+=> gemini://geminiprotocol.net/docs/companion/robots.gmi Robots.txt subset for Gemini
+
+## 2024-12-14
+* Added 🐛 Gemini URL Tester tool. Displays troubleshooting information about DNS, TLS, and Gemini responses for a given URL.
+
+## 2024-07-09
+* Added Connectivity tracker allowing for faster-fail on capsules that are down or blocked, loading seeds from file, writing remaining URLs to a file, Seeds are filtered with block list
+
 ## 2024-05-12
 * Added exponential backoff support to the crawler for "44 SLOW DOWN"
 
@@ -22,7 +37,7 @@ Keeping track of the work I do on Kennedy.
 * Minor tweaks to URL History view, and Page Info view
 
 ## 2023-12-28
-* Added Certificate and Key Validator tool. Now users can check if a certificate/key change is innocuous or malicious.
+* Added 🔏Certificate and Key Validator tool. Now users can check if a certificate/key change is innocuous or malicious.
 
 ## 2023-11-24
 * Added secret inurl: modifier. This is super inefficient so not talking about it too publicly. If you find this, use it!
