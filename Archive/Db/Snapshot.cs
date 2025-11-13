@@ -50,6 +50,9 @@ public class Snapshot
     public bool IsSuccess
         => GeminiParser.IsSuccessStatus(StatusCode);
 
+    public bool IsRedirect
+        => GeminiParser.IsRedirectStatus(StatusCode);
+
     public bool IsGemtext
         => Mimetype?.StartsWith("text/gemini") ?? false;
 

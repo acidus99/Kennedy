@@ -17,7 +17,10 @@ class Program
         else
         {
             crawler.AddSeed("gemini://mozz.us/");
+            crawler.AddSeed("gemini://scarletthistle.farm");
+            crawler.AddSeed("gemini://bbs.geminispace.org/");
             crawler.AddSeed("gemini://kennedy.gemi.dev/observatory/known-hosts");
+            crawler.AddSeed("gemini://gemi.dev/");
         }
 
         crawler.DoCrawl();

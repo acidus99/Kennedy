@@ -36,22 +36,61 @@ internal class CachedView : AbstractView
         }
         else if (snapshot.IsSuccess)
         {
-            RenderSuccessSnapshot(snapshot, args.IsRaw);
+            //if in raw mode or its not next, just send the bytes of the snaphost, which includes the status line and meta
+            if (args.IsRaw || !snapshot.IsText)
+            {
+                Response.Write(reader.ReadBytes(snapshot));
+                return;
+            }
+
+            if (args.IsReader)
+            {
+                RenderSuccessReaderMode(snapshot);
+            }
+            else
+            {
+                RenderSuccessFullMode(snapshot);
+            }
         }
         else
         {
-            RenderOtherStatusSnapshot(snapshot);
+            RenderOtherStatusSnapshot(snapshot, args.IsReader);
         }
     }
 
-    private void RenderSuccessSnapshot(Snapshot snapshot, bool isRawMode)
+    /// <summary>
+    /// Renders the snapshot with minimal chrome, not mentioning the archive, the time captured, other versions, etc.
+    /// </summary>
+    /// <param name="snapshot"></param>
+    private void RenderSuccessReaderMode(Snapshot snapshot)
     {
-        if (isRawMode || !snapshot.IsText)
-        {
-            Response.Write(reader.ReadBytes(snapshot));
-            return;
-        }
+        GeminiResponse response = reader.ReadResponse(snapshot);
 
+        Response.Success();
+        Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot)} Captured {snapshot.Captured.ToString("yyyy-MM-dd")}. 📖 Exit Reader Mode?");
+
+        var text = response.BodyText;
+
+        if (snapshot.IsGemtext)
+        {
+            GemtextRewriter gemtextRewriter = new GemtextRewriter(true);
+            text = gemtextRewriter.Rewrite(snapshot, text);
+            Response.Write(text);
+        }
+        else
+        {
+            Response.WriteLine("```");
+            Response.WriteLine(text);
+            Response.WriteLine("```");
+        }
+    }
+
+    /// <summary>
+    /// Renders the snapshot with full chrome, including the time captured, other versions, etc.
+    /// </summary>
+    /// <param name="snapshot"></param>
+    private void RenderSuccessFullMode(Snapshot snapshot)
+    {
         GeminiResponse response = reader.ReadResponse(snapshot);
 
         Response.Success();
@@ -63,7 +102,8 @@ internal class CachedView : AbstractView
             Response.Write(" Gemini links have been rewritten to link to archived content");
         }
         Response.WriteLine();
-        Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot, true)} View Raw");
+        Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot, useReader:true)} 📖 View in Reader Mode");
+        Response.WriteLine($"=> {RoutePaths.ViewCached(snapshot, true)} View Raw ");
         Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(snapshot.Url.GeminiUrl)} More Information");
         var others = GetNextPreviousSnapshots(snapshot);
 
@@ -123,8 +163,22 @@ internal class CachedView : AbstractView
         return;
     }
 
-    private void RenderOtherStatusSnapshot(Snapshot snapshot)
+    private void RenderOtherStatusSnapshot(Snapshot snapshot, bool isReader)
     {
+        if (isReader && snapshot.IsRedirect)
+        {
+            //if we are in reader mode, we follow the redirect automatically
+            GeminiResponse redirectResponse = reader.ReadResponse(snapshot);
+            var redirectUrl = redirectResponse.GetRedirectUrl();
+            if (redirectUrl != null)
+            {
+                Response.Redirect(RoutePaths.ViewCached(redirectUrl, snapshot.Captured, useReader: true));
+                return;
+            }
+            //any errors or oddness, just fall through and handle this normally
+        }
+
+
         Response.Success();
         Response.WriteLine($"> This an archived version of {snapshot.Url!.FullUrl} captured on {snapshot.Captured.ToString("yyyy-MM-dd")}. ");
         Response.WriteLine();
@@ -141,20 +195,21 @@ internal class CachedView : AbstractView
             var redirectUrl = response.GetRedirectUrl();
             if (redirectUrl != null)
             {
-                Response.WriteLine($"=> {RoutePaths.ViewCached(redirectUrl, snapshot.Captured)} Follow this Redirect");
+                Response.WriteLine($"=> {RoutePaths.ViewCached(redirectUrl, snapshot.Captured, useReader: isReader)} Follow this Redirect");
             }
         }
     }
 
-    private (GeminiUrl? Url, DateTime Timestamp, bool IsRaw) ParseArgs()
+    private (GeminiUrl? Url, DateTime Timestamp, bool IsRaw, bool IsReader) ParseArgs()
     {
         var args = HttpUtility.ParseQueryString(Request.Url.RawQuery);
 
         var url = GeminiUrl.MakeUrl(args["url"]);
         var time = ParseTime(args["t"]);
         var isRaw = ((args["raw"]?.ToLower() ?? "") == "true");
+        var IsReader = ((args["reader"]?.ToLower() ?? "") == "true");
 
-        return (url, time, isRaw);
+        return (url, time, isRaw, IsReader);
     }
 
     /// <summary>

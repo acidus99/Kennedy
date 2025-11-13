@@ -49,17 +49,17 @@ public static class RoutePaths
     public static string ViewCached(string url, DateTime snapshotTime)
         => ViewCached(new GeminiUrl(url), snapshotTime);
 
-    public static string ViewCached(Snapshot snapshot, bool useRaw = false)
+    public static string ViewCached(Snapshot snapshot, bool useRaw = false, bool useReader = false)
     {
         if (snapshot.Url == null)
         {
             throw new ArgumentNullException(nameof(snapshot), "Snapshot URL cannot be null.");
         }
-        return ViewCached(snapshot.Url.GeminiUrl, snapshot.Captured, useRaw);
+        return ViewCached(snapshot.Url.GeminiUrl, snapshot.Captured, useRaw, useReader);
     }
 
-    public static string ViewCached(GeminiUrl url, DateTime snapshotTime, bool useRaw = false)
-        => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={snapshotTime.Ticks}&raw={useRaw}";
+    public static string ViewCached(GeminiUrl url, DateTime snapshotTime, bool useRaw = false, bool useReader = false)
+        => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={snapshotTime.Ticks}&raw={useRaw}&reader={useReader}";
 
     public static string ViewDiffHistory(GeminiUrl url)
         => $"{ViewDiffHistoryRoute}?{HttpUtility.UrlEncode(url.NormalizedUrl)}";

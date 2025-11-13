@@ -1,6 +1,10 @@
-# Kennedy Development Changelog 
+# Kennedy Development Changelog
 
 Keeping track of the work I do on Kennedy.
+
+## 2025-11-12
+* Added reader mode to Delorean archive to make reading old content more seamless. Redirects are automatically followed and archive-related content at the top is kept to a minimum. Inspired by @mozz's SmolNet Portal's reader mode.
+=> https://portal.mozz.us/changes @mozz's SmolNet Portal Changelog
 
 ## 2024-05-12
 * Added exponential backoff support to the crawler for "44 SLOW DOWN"
@@ -57,7 +61,7 @@ Keeping track of the work I do on Kennedy.
 * Improved search results page and image search results page with a less-cluttered view, based on feedback (Thanks Buckeye Lady!).
 * Improved and better organized "Page Info" view.
 * Removed Hashtag and @mentions indexes.
-* Fixed showing results even if Wikipedia/Gemipedia unavailable. 
+* Fixed showing results even if Wikipedia/Gemipedia unavailable.
 
 ## 2023-05-01
 * Rebuild entire system to work off Web Archive (WARC) files. Kennedy crawler nows produces WARC files. Search indexer and Archiver ingest WARC files. Additional information like IP address of remote capsules stored in WARC files.
@@ -74,7 +78,7 @@ Keeping track of the work I do on Kennedy.
 * Redesign of crawler code which improved speed of the crawler. Robots.txt files are downloaded ondemand instead of requiring a pre-flight step, ensuring that all capsules with Robots.txt are respected
 
 ## 2022-08-06
-* Updated "Page Info" view to support image meta data (dimensions, format, text used in index) 
+* Updated "Page Info" view to support image meta data (dimensions, format, text used in index)
 * Updated Delorean to work show cached images and other cached, non-text content
 
 ## 2022-07-26

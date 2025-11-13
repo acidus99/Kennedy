@@ -11,6 +11,14 @@ namespace Kennedy.Server.Views.Archive;
 /// </summary>
 public class GemtextRewriter
 {
+    //should links be rewritten to use reader mode?
+    private readonly bool UseReader;
+
+    public GemtextRewriter(bool useReaderMode = false)
+    {
+        UseReader = useReaderMode;
+    }
+
     static readonly Regex linkLine = new Regex(@"^=>\s*([^\s]+)\s*(.*)", RegexOptions.Compiled);
 
     public string Rewrite(Snapshot snapshot, string bodyText)
@@ -68,6 +76,6 @@ public class GemtextRewriter
             linkText = match.Groups[1].Value;
         }
 
-        return $"=> {RoutePaths.ViewCached(geminiUrl, snapshot.Captured)} {linkText}";
+        return $"=> {RoutePaths.ViewCached(geminiUrl, snapshot.Captured, useReader: UseReader)} {linkText}";
     }
 }
