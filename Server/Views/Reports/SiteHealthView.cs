@@ -132,7 +132,7 @@ internal class SiteHealthView : AbstractView
                 {
                     statusCode = doc.StatusCode;
                     Response.WriteLine();
-                    Response.WriteLine($"### Statue Code {doc.StatusCode}");
+                    Response.WriteLine($"### Status Code {doc.StatusCode}");
                 }
                 Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(doc.GeminiUrl)} {doc.GeminiUrl}");
             }
