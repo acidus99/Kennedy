@@ -14,15 +14,10 @@
     <None Remove="Web\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Search\" />
-    <Folder Include="Web\" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Data\Kennedy.Data.csproj" />
     <ProjectReference Include="..\..\Gemini.Net\src\Gemini.Net.csproj" />
   </ItemGroup>
 </Project>
