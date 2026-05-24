@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Gemini.Net;
@@ -13,11 +12,11 @@ namespace Kennedy.Indexer
     /// </summary>
     public sealed class WarcIndexer
     {
-        private readonly UrlRegistryStore _store;
+        private readonly ResponseStore _responseStore;
 
-        public WarcIndexer(UrlRegistryStore store)
+        public WarcIndexer(ResponseStore responseStore)
         {
-            _store = store;
+            _responseStore = responseStore;
         }
 
         public async Task IndexFileAsync(string warcPath, CancellationToken ct)
@@ -51,13 +50,7 @@ namespace Kennedy.Indexer
                                 continue;
                             }
 
-                            await _store.AddOrUpdateAsync(
-                                normalizedUrl: response.RequestUrl.NormalizedUrl,
-                                lastStatusCode: response.StatusCode,
-                                contentHash: response.Hash,
-                                visitTimeUtc: response.RequestSent ?? DateTime.MinValue,
-                                meta: response.Meta,
-                                ct: ct);
+                            await _responseStore.StoreResponseAsync(response, ct);
                         }
                     }
                 }
@@ -87,31 +80,5 @@ namespace Kennedy.Indexer
             return response;
         }
 
-        private static string? NormalizeUrl(string raw)
-        {
-            raw = raw.Trim();
-            if (raw.Length == 0)
-                return null;
-
-            // Placeholder normalization.
-            // Swap this out for your real GeminiUrl / normalization logic.
-            return raw;
-        }
-
-        private static async IAsyncEnumerable<string> ReadUrlsAsLinesAsync(
-            string path,
-            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
-        {
-            using var stream = File.OpenRead(path);
-            using var reader = new StreamReader(stream);
-
-            while (!reader.EndOfStream)
-            {
-                ct.ThrowIfCancellationRequested();
-                var line = await reader.ReadLineAsync();
-                if (line != null)
-                    yield return line;
-            }
-        }
     }
 }

@@ -9,6 +9,9 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.11" />
+      <PackageReference Include="NTextCat" Version="0.3.65" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+      <PackageReference Include="FileSignatures" Version="5.2.0" />
     </ItemGroup>
 
     <ItemGroup>
