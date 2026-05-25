@@ -8,9 +8,10 @@ using Kennedy.Search.Query;
 using Kennedy.Search.Services;
 using Microsoft.Data.Sqlite;
 
-var searchDbPath = "/Users/billy/kennedy-capsule/crawl-data/kennedy2.db";
-var archiveDbPath = "/Users/billy/kennedy-capsule/crawl-data/archive.db";
-var serverDllPath = "/Users/billy/Code/Kennedy/Server/bin/Debug/net8.0/Kennedy.Server.dll";
+var positional = args.Where(a => !a.StartsWith("--")).ToArray();
+var searchDbPath  = positional.ElementAtOrDefault(0) ?? "/Users/billy/kennedy-capsule/crawl-data/kennedy2.db";
+var archiveDbPath = positional.ElementAtOrDefault(1) ?? "/Users/billy/kennedy-capsule/crawl-data/archive.db";
+var serverDllPath = positional.ElementAtOrDefault(2) ?? "/Users/billy/Code/Kennedy/Server/bin/Debug/net8.0/Kennedy.Server.dll";
 
 // Probe mode is used to validate remote old-Kennedy behavior without requiring local DB files.
 if (args.Any(x => string.Equals(x, "--probe-old", StringComparison.OrdinalIgnoreCase)))
@@ -46,6 +47,8 @@ if (!File.Exists(serverDllPath))
 
 try
 {
+    ValidateSchema(searchDbPath);
+
     var parser = new QueryParser();
     var search = new SqliteSearchService(searchDbPath);
 
@@ -88,10 +91,14 @@ static void RunDirectSearchChecks(QueryParser parser, SqliteSearchService search
     var textQuery = parser.Parse(sample.TextQuery);
     var textCount = search.GetTextResultsCount(textQuery);
     AssertTrue(textCount == sample.TextCount, $"Text count mismatch. Expected {sample.TextCount}, got {textCount}.");
-    var textTop = search.SearchText(textQuery, 0, 1);
-    AssertTrue(textTop.Count == 1, "Expected at least one text result.");
-    AssertTrue(textTop[0].Url == sample.TextTopUrl, "Top text result mismatch.");
-    Console.WriteLine($"PASS direct text search: '{sample.TextQuery}' -> {sample.TextCount}");
+    var textTop = search.SearchText(textQuery, 0, 10);
+    AssertTrue(textTop.Count >= 1, "Expected at least one text result.");
+    AssertTrue(textTop[0].Url == sample.TextTopUrl, $"Top text result mismatch. Expected {sample.TextTopUrl}, got {textTop[0].Url}.");
+    AssertTrue(textTop.Any(r => !string.IsNullOrEmpty(r.Snippet)),
+        $"Expected at least one text result for '{sample.TextQuery}' to have a non-empty snippet.");
+    AssertTrue(textTop.Any(r => !string.IsNullOrEmpty(r.MimeType)),
+        $"Expected at least one text result for '{sample.TextQuery}' to have a non-null MimeType (Host/LastMimeType denormalization may be broken).");
+    Console.WriteLine($"PASS direct text search: '{sample.TextQuery}' -> {sample.TextCount} (snippet + MimeType OK)");
 
     var imageQuery = parser.Parse(sample.ImageQuery);
     var imageCount = search.GetImageResultsCount(imageQuery);
@@ -105,6 +112,24 @@ static void RunDirectSearchChecks(QueryParser parser, SqliteSearchService search
     AssertTrue(luckyTop.Count == 1, "Expected at least one lucky result.");
     AssertTrue(luckyTop[0].Url == sample.LuckyTopUrl, "Lucky top URL mismatch.");
     Console.WriteLine($"PASS direct lucky search source: '{sample.LuckyQuery}' -> {sample.LuckyTopUrl}");
+
+    if (!string.IsNullOrEmpty(sample.InurlQuery))
+    {
+        var inurlQuery = parser.Parse(sample.InurlQuery);
+        var inurlCount = search.GetTextResultsCount(inurlQuery);
+        AssertTrue(inurlCount == sample.InurlCount, $"inurl count mismatch. Expected {sample.InurlCount}, got {inurlCount}.");
+        AssertTrue(inurlCount > 0, $"Expected inurl query '{sample.InurlQuery}' to return at least one result.");
+        Console.WriteLine($"PASS direct inurl search: '{sample.InurlQuery}' -> {inurlCount}");
+    }
+
+    if (!string.IsNullOrEmpty(sample.TitleQuery))
+    {
+        var titleQuery = parser.Parse(sample.TitleQuery);
+        var titleCount = search.GetTextResultsCount(titleQuery);
+        AssertTrue(titleCount == sample.TitleCount, $"intitle count mismatch. Expected {sample.TitleCount}, got {titleCount}.");
+        AssertTrue(titleCount > 0, $"Expected intitle query '{sample.TitleQuery}' to return at least one result.");
+        Console.WriteLine($"PASS direct intitle search: '{sample.TitleQuery}' -> {titleCount}");
+    }
 }
 
 static void RunServerRouteTests(int port, SampleData sample)
@@ -284,6 +309,60 @@ static void RunServerRouteTests(int port, SampleData sample)
     AssertRedirect("legacy hashtags redirect", "/hashtags/", "/mentions-and-hashtags.gmi");
 }
 
+static void ValidateSchema(string searchDbPath)
+{
+    using var conn = new SqliteConnection($"Data Source={searchDbPath}");
+    conn.Open();
+
+    // Verify Documents columns: Host + LastMimeType present; Content + IsSearchable absent.
+    var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    using (var cmd = conn.CreateCommand())
+    {
+        cmd.CommandText = "PRAGMA table_info(Documents);";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            columns.Add(reader.GetString(1));
+        }
+    }
+    AssertTrue(columns.Contains("Host"),
+        "Documents is missing 'Host' column — denormalization from UrlRegistry not applied.");
+    AssertTrue(columns.Contains("LastMimeType"),
+        "Documents is missing 'LastMimeType' column — denormalization from UrlRegistry not applied.");
+    AssertTrue(!columns.Contains("Content"),
+        "Documents still has 'Content' column — it should have been removed when switching to standalone FTS5.");
+    AssertTrue(!columns.Contains("IsSearchable"),
+        "Documents still has 'IsSearchable' column — it was always-true and should have been dropped.");
+    Console.WriteLine("PASS schema: Documents columns (Host, LastMimeType present; Content, IsSearchable absent)");
+
+    // Verify no old content-table triggers on Documents.
+    var triggers = new List<string>();
+    using (var cmd = conn.CreateCommand())
+    {
+        cmd.CommandText =
+            "SELECT name FROM sqlite_master WHERE type='trigger' AND name IN ('Documents_ai','Documents_au','Documents_ad');";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            triggers.Add(reader.GetString(0));
+        }
+    }
+    AssertTrue(triggers.Count == 0,
+        $"Found unexpected Documents FTS triggers (leftover from content-table setup): {string.Join(", ", triggers)}");
+    Console.WriteLine("PASS schema: No Documents_ai/au/ad triggers");
+
+    // Verify DocumentsFts is standalone (no content= option).
+    using (var cmd = conn.CreateCommand())
+    {
+        cmd.CommandText = "SELECT sql FROM sqlite_master WHERE type='table' AND name='DocumentsFts';";
+        var sql = cmd.ExecuteScalar()?.ToString() ?? "";
+        AssertTrue(!string.IsNullOrEmpty(sql), "DocumentsFts not found in sqlite_master — EnsureFtsAsync may not have run.");
+        AssertTrue(!sql.Contains("content=", StringComparison.OrdinalIgnoreCase),
+            $"DocumentsFts is still a content-table (found 'content=' in CREATE): {sql}");
+    }
+    Console.WriteLine("PASS schema: DocumentsFts is standalone (no content= option)");
+}
+
 static SampleData BuildSampleData(
     string searchDbPath,
     string archiveDbPath,
@@ -338,17 +417,37 @@ static SampleData BuildSampleData(
 
         sample.UrlInfoUrl = ExecuteStringScalar(
             searchConn,
-            "SELECT CanonicalUrl FROM Documents WHERE IsSearchable = 1 ORDER BY LastIndexedUtc DESC LIMIT 1;")
+            "SELECT CanonicalUrl FROM Documents ORDER BY LastIndexedUtc DESC LIMIT 1;")
             ?? throw new ApplicationException("Could not find searchable URL for page-info.");
 
         sample.SiteSearchDomain = new GeminiUrl(sample.UrlInfoUrl).Hostname;
 
         var fileTypeFragment = ExecuteStringScalar(
             searchConn,
-            "SELECT lower(substr(MimeType, 1, instr(MimeType || '/', '/') - 1)) FROM Documents WHERE MimeType IS NOT NULL AND MimeType <> '' LIMIT 1;")
+            "SELECT lower(substr(LastMimeType, 1, instr(LastMimeType || '/', '/') - 1)) FROM Documents WHERE LastMimeType IS NOT NULL AND LastMimeType <> '' LIMIT 1;")
             ?? "text";
         sample.FileTypeQuery = $"filetype:{fileTypeFragment} cat";
         sample.FileTypeCount = search.GetTextResultsCount(parser.Parse(sample.FileTypeQuery));
+
+        // inurl: filter — use the hostname of the most-recently-indexed document (same as SiteSearchDomain).
+        sample.InurlQuery = $"inurl:{sample.SiteSearchDomain}";
+        sample.InurlCount = search.GetTextResultsCount(parser.Parse(sample.InurlQuery));
+
+        // intitle: filter — find a 5+ char all-alpha word from any document title.
+        var titleText = ExecuteStringScalar(
+            searchConn,
+            "SELECT Title FROM Documents WHERE Title IS NOT NULL AND Title != '' AND length(Title) >= 5 ORDER BY rowid LIMIT 1;");
+        if (titleText != null)
+        {
+            var titleWord = titleText
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault(w => w.Length >= 5 && w.All(char.IsLetter));
+            if (titleWord != null)
+            {
+                sample.TitleQuery = $"intitle:{titleWord}";
+                sample.TitleCount = search.GetTextResultsCount(parser.Parse(sample.TitleQuery));
+            }
+        }
     }
 
     using (var archiveConn = new SqliteConnection($"Data Source={archiveDbPath}"))
@@ -940,6 +1039,12 @@ internal sealed class SampleData
 
     public string FileTypeQuery { get; set; } = "";
     public int FileTypeCount { get; set; }
+
+    public string InurlQuery { get; set; } = "";
+    public int InurlCount { get; set; }
+
+    public string TitleQuery { get; set; } = "";
+    public int TitleCount { get; set; }
 
     public long ActiveCapsules { get; set; }
     public long TotalUrls { get; set; }
