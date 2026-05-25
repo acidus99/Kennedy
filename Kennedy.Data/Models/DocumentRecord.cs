@@ -12,7 +12,6 @@ namespace Kennedy.Data.Models;
 /// The FTS5 index (<c>DocumentsFts</c>) is kept in sync by SQLite triggers on this table.
 /// </summary>
 [Table("Documents")]
-[Index(nameof(NormalizedUrl), IsUnique = true)]
 [Index(nameof(IsSearchable))]
 [Index(nameof(StatusCode))]
 public class DocumentRecord
@@ -21,17 +20,13 @@ public class DocumentRecord
     public long Id { get; set; }
 
     /// <summary>
-    /// Best-effort pointer to UrlRegistry when available.
-    /// This may be null during batch ingestion before UrlRegistry rows are flushed.
+    /// FK into UrlRegistry. Nullable only because SQLite's ON DELETE SET NULL behaviour
+    /// prevents orphan Documents when a UrlRegistry row is removed.
+    /// In practice every Document has a valid UrlRegistryId.
     /// </summary>
     public long? UrlRegistryId { get; set; }
 
-    /// <summary>Canonical normalized URL string. Unique across the table.</summary>
-    [MaxLength(1024)]
-    [Required]
-    public string NormalizedUrl { get; set; } = "";
-
-    /// <summary>The URL as it should appear in search results (currently same as NormalizedUrl).</summary>
+    /// <summary>The URL as it should appear in search results. Also used as the FTS5 content-table column.</summary>
     [MaxLength(1024)]
     [Required]
     public string CanonicalUrl { get; set; } = "";
@@ -43,14 +38,6 @@ public class DocumentRecord
     /// <summary>Full searchable text fed into DocumentsFts. Empty for non-indexable responses.</summary>
     [Required]
     public string Content { get; set; } = "";
-
-    /// <summary>MIME type as reported by the Gemini response header (e.g. "text/gemini").</summary>
-    [MaxLength(256)]
-    public string? MimeType { get; set; }
-
-    /// <summary>MIME type as detected by <see cref="Kennedy.Data.Parsers.BinaryParser"/> via file magic bytes.</summary>
-    [MaxLength(256)]
-    public string? DetectedMimeType { get; set; }
 
     /// <summary>Gemini protocol status code from the response (e.g. 20, 51).</summary>
     public int StatusCode { get; set; }

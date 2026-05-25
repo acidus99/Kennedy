@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Kennedy.Gemipedia;
 using Kennedy.Search.Models;
@@ -14,6 +15,7 @@ namespace Kennedy.Server.Views.Search;
 internal class ResultsView : AbstractView
 {
     const int resultsInPage = 15;
+    private static readonly TimeSpan GemipediaTimeout = TimeSpan.FromMilliseconds(200);
 
     public ResultsView(GeminiRequest request, Response response, GeminiServer app)
         : base(request, response, app) { }
@@ -213,9 +215,18 @@ internal class ResultsView : AbstractView
 
     private void DoFullQuery(UserQuery query)
     {
-        Parallel.Invoke(() => QueryGemipedia(query),
-                        () => QueryFullText(query),
-                        () => QueryImageSearch(query));
+        // Do not let external Gemipedia latency block the core search path.
+        using var cts = new CancellationTokenSource();
+        var gemipediaTask = Task.Run(() => QueryGemipedia(query), cts.Token);
+
+        Parallel.Invoke(
+            () => QueryFullText(query),
+            () => QueryImageSearch(query));
+
+        if (!gemipediaTask.Wait(GemipediaTimeout))
+        {
+            cts.Cancel();
+        }
     }
 
     private string PageLink(string linkText, int page)

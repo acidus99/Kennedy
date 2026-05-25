@@ -56,7 +56,7 @@ public sealed class ResponseStore
 
         var existingDoc = await db.Documents
             .Include(d => d.Image)
-            .SingleOrDefaultAsync(d => d.NormalizedUrl == url.NormalizedUrl, ct);
+            .SingleOrDefaultAsync(d => d.UrlRegistryId == url.Id, ct);
 
         ApplyDocumentToContext(db, url, parsedResponse, visitTimeUtc, existingDoc);
         await db.SaveChangesAsync(ct);
@@ -130,10 +130,11 @@ public sealed class ResponseStore
         // New link targets that don't exist yet are inserted here so their IDs are
         // available when building UrlLink rows in Phase 3.
 
+        var sourceUrlIds = urlMap.Values.Select(u => (long?)u.Id).ToList();
         var existingDocMap = await db.Documents
             .Include(d => d.Image)
-            .Where(d => sourceUrls.Contains(d.NormalizedUrl))
-            .ToDictionaryAsync(d => d.NormalizedUrl, ct);
+            .Where(d => sourceUrlIds.Contains(d.UrlRegistryId))
+            .ToDictionaryAsync(d => d.UrlRegistryId!.Value, ct);
 
         // Collect every unique link target URL across the whole batch.
         var allLinkTargets = new Dictionary<string, FoundLink>();
@@ -149,7 +150,7 @@ public sealed class ResponseStore
         foreach (var (response, parsedResponse, visitTime) in parsed)
         {
             var url = urlMap[response.RequestUrl.NormalizedUrl];
-            existingDocMap.TryGetValue(url.NormalizedUrl, out var existingDoc);
+            existingDocMap.TryGetValue(url.Id, out var existingDoc);
             ApplyDocumentToContext(db, url, parsedResponse, visitTime, existingDoc);
         }
 
@@ -366,7 +367,6 @@ public sealed class ResponseStore
             existing = new DocumentRecord
             {
                 UrlRegistryId = url.Id,
-                NormalizedUrl = url.NormalizedUrl,
                 CanonicalUrl = url.NormalizedUrl,
                 LastIndexedUtc = indexedUtc
             };
@@ -388,8 +388,6 @@ public sealed class ResponseStore
         existing.LastIndexedUtc = indexedUtc;
         existing.StatusCode = parsedResponse.StatusCode;
         existing.ContentType = parsedResponse.FormatType;
-        existing.MimeType = parsedResponse.MimeType;
-        existing.DetectedMimeType = parsedResponse.DetectedMimeType;
         existing.IsBodyTruncated = parsedResponse.IsBodyTruncated;
         existing.BodySize = parsedResponse.BodySize;
         existing.BodyHash = parsedResponse.BodyHash;

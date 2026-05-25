@@ -22,4 +22,7 @@ public sealed class UserQuery
     public bool IsValidTextQuery => HasFtsQuery || HasSiteScope || HasFileTypeScope || HasTitleScope || HasUrlScope;
     public bool IsValidImageQuery => (HasFtsQuery || HasSiteScope || HasFileTypeScope || HasUrlScope) && !HasTitleScope;
     public bool IsSimpleQuery => HasFtsQuery && !(HasSiteScope || HasFileTypeScope || HasTitleScope || HasUrlScope);
+
+    public override string ToString()
+        => RawQuery;
 }

@@ -35,6 +35,7 @@ public sealed class SqliteSearchService : ISearchService
             SELECT COUNT(*)
             FROM Documents d
             {textJoin}
+            INNER JOIN UrlRegistry u ON u.Id = d.UrlRegistryId
             WHERE d.IsSearchable = 1
             """ + BuildTextFilters(query, cmd);
 
@@ -55,11 +56,14 @@ public sealed class SqliteSearchService : ISearchService
         var textJoin = query.HasFtsQuery
             ? "INNER JOIN DocumentsFts ON DocumentsFts.rowid = d.Id"
             : "LEFT JOIN DocumentsFts ON DocumentsFts.rowid = d.Id";
+        var orderBy = query.HasFtsQuery
+            ? " ORDER BY bm25(DocumentsFts), d.LastIndexedUtc DESC"
+            : " ORDER BY d.LastIndexedUtc DESC";
         cmd.CommandText =
             $"""
             SELECT d.CanonicalUrl,
                    d.Title,
-                   d.MimeType,
+                   u.LastMimeType,
                    d.DetectedLanguage,
                    d.LineCount,
                    d.BodySize,
@@ -70,8 +74,9 @@ public sealed class SqliteSearchService : ISearchService
                    END AS Snippet
             FROM Documents d
             {textJoin}
+            INNER JOIN UrlRegistry u ON u.Id = d.UrlRegistryId
             WHERE d.IsSearchable = 1
-            """ + BuildTextFilters(query, cmd) + " ORDER BY d.LastIndexedUtc DESC LIMIT @limit OFFSET @offset;";
+            """ + BuildTextFilters(query, cmd) + orderBy + " LIMIT @limit OFFSET @offset;";
 
         cmd.Parameters.AddWithValue("@limit", limit);
         cmd.Parameters.AddWithValue("@offset", offset);
@@ -229,21 +234,30 @@ public sealed class SqliteSearchService : ISearchService
     {
         if (query.HasSiteScope)
         {
-            filters.Add("d.CanonicalUrl LIKE @site_scope");
-            cmd.Parameters.AddWithValue("@site_scope", $"gemini://{query.SiteScope}/%");
+            filters.Add("u.Host = @site_host");
+            cmd.Parameters.AddWithValue("@site_host", query.SiteScope!);
         }
 
         if (query.HasFileTypeScope)
         {
-            // Map filetype scope to mime fragments in current schema.
-            filters.Add("COALESCE(d.MimeType, '') LIKE @filetype_scope");
-            cmd.Parameters.AddWithValue("@filetype_scope", $"%{query.FileTypeScope}%");
+            var normalized = query.FileTypeScope!.Trim().ToLowerInvariant();
+            if (normalized.Contains('/'))
+            {
+                filters.Add("LOWER(COALESCE(u.LastMimeType, '')) = @filetype_exact");
+                cmd.Parameters.AddWithValue("@filetype_exact", normalized);
+            }
+            else
+            {
+                filters.Add("LOWER(COALESCE(u.LastMimeType, '')) LIKE @filetype_major");
+                cmd.Parameters.AddWithValue("@filetype_major", normalized + "/%");
+            }
         }
 
         if (query.HasUrlScope)
         {
-            filters.Add("d.CanonicalUrl LIKE @url_scope");
-            cmd.Parameters.AddWithValue("@url_scope", $"%{query.UrlScope}%");
+            filters.Add("u.Id IN (SELECT rowid FROM UrlIndex WHERE UrlIndex MATCH @url_scope)");
+            var escaped = query.UrlScope!.Replace("\"", "\"\"");
+            cmd.Parameters.AddWithValue("@url_scope", $"\"{escaped}\"");
         }
     }
 
@@ -257,14 +271,24 @@ public sealed class SqliteSearchService : ISearchService
 
         if (query.HasFileTypeScope)
         {
-            filters.Add("COALESCE(u.LastMimeType, '') LIKE @filetype_scope");
-            cmd.Parameters.AddWithValue("@filetype_scope", $"%{query.FileTypeScope}%");
+            var normalized = query.FileTypeScope!.Trim().ToLowerInvariant();
+            if (normalized.Contains('/'))
+            {
+                filters.Add("LOWER(COALESCE(u.LastMimeType, '')) = @filetype_exact");
+                cmd.Parameters.AddWithValue("@filetype_exact", normalized);
+            }
+            else
+            {
+                filters.Add("LOWER(COALESCE(u.LastMimeType, '')) LIKE @filetype_major");
+                cmd.Parameters.AddWithValue("@filetype_major", normalized + "/%");
+            }
         }
 
         if (query.HasUrlScope)
         {
-            filters.Add("u.NormalizedUrl LIKE @url_scope");
-            cmd.Parameters.AddWithValue("@url_scope", $"%{query.UrlScope}%");
+            filters.Add("u.Id IN (SELECT rowid FROM UrlIndex WHERE UrlIndex MATCH @url_scope)");
+            var escaped = query.UrlScope!.Replace("\"", "\"\"");
+            cmd.Parameters.AddWithValue("@url_scope", $"\"{escaped}\"");
         }
     }
 }

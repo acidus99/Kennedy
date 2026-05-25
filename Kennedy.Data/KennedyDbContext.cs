@@ -131,6 +131,43 @@ namespace Kennedy.Data
                 );
                 """,
                 ct);
+
+            // UrlIndex enables fast inurl substring search. The trigram tokenizer indexes every
+            // 3-char sequence so arbitrary substrings (including '/', '.', ':') can be matched
+            // without a leading-wildcard LIKE scan.
+            await Database.ExecuteSqlRawAsync(
+                """
+                CREATE VIRTUAL TABLE IF NOT EXISTS UrlIndex USING fts5(
+                    Url,
+                    tokenize='trigram'
+                );
+                """,
+                ct);
+
+            await Database.ExecuteSqlRawAsync(
+                """
+                CREATE TRIGGER IF NOT EXISTS UrlRegistry_ai AFTER INSERT ON UrlRegistry BEGIN
+                    INSERT INTO UrlIndex(rowid, Url) VALUES (new.Id, new.NormalizedUrl);
+                END;
+                """,
+                ct);
+
+            await Database.ExecuteSqlRawAsync(
+                """
+                CREATE TRIGGER IF NOT EXISTS UrlRegistry_ad AFTER DELETE ON UrlRegistry BEGIN
+                    INSERT INTO UrlIndex(UrlIndex, rowid, Url) VALUES ('delete', old.Id, old.NormalizedUrl);
+                END;
+                """,
+                ct);
+
+            // Backfill rows that existed before the trigger was installed.
+            await Database.ExecuteSqlRawAsync(
+                """
+                INSERT INTO UrlIndex(rowid, Url)
+                SELECT Id, NormalizedUrl FROM UrlRegistry
+                WHERE Id NOT IN (SELECT rowid FROM UrlIndex);
+                """,
+                ct);
         }
     }
 }

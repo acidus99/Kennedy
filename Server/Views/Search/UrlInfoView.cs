@@ -33,7 +33,9 @@ internal class UrlInfoView : AbstractView
 
         using var db = new KennedyDbContext(options);
         _urlEntry = db.UrlRegistry.FirstOrDefault(x => x.NormalizedUrl == url.NormalizedUrl);
-        _docEntry = db.Documents.FirstOrDefault(x => x.NormalizedUrl == url.NormalizedUrl);
+        _docEntry = _urlEntry != null
+            ? db.Documents.FirstOrDefault(x => x.UrlRegistryId == _urlEntry.Id)
+            : null;
 
         if (_urlEntry == null && _docEntry == null)
         {
@@ -85,7 +87,7 @@ internal class UrlInfoView : AbstractView
 
         if (GeminiParser.IsSuccessStatus(statusCode) && _docEntry != null)
         {
-            Response.WriteLine($"* Mimetype: {_docEntry.MimeType}");
+            Response.WriteLine($"* Mimetype: {_urlEntry!.LastMimeType}");
 
             if (_docEntry.Language != null)
             {
@@ -176,7 +178,7 @@ internal class UrlInfoView : AbstractView
 
         var inboundInternal = (from links in db.UrlLinks
                                join sourceUrl in db.UrlRegistry on links.SourceUrlId equals sourceUrl.Id
-                               join sourceDoc in db.Documents on sourceUrl.NormalizedUrl equals sourceDoc.NormalizedUrl into docs
+                               join sourceDoc in db.Documents on (long?)sourceUrl.Id equals sourceDoc.UrlRegistryId into docs
                                from sourceDoc in docs.DefaultIfEmpty()
                                where links.TargetUrlId == _urlEntry.Id && !links.IsExternal
                                orderby sourceUrl.NormalizedUrl
@@ -197,7 +199,7 @@ internal class UrlInfoView : AbstractView
 
         var inboundExternal = (from links in db.UrlLinks
                                join sourceUrl in db.UrlRegistry on links.SourceUrlId equals sourceUrl.Id
-                               join sourceDoc in db.Documents on sourceUrl.NormalizedUrl equals sourceDoc.NormalizedUrl into docs
+                               join sourceDoc in db.Documents on (long?)sourceUrl.Id equals sourceDoc.UrlRegistryId into docs
                                from sourceDoc in docs.DefaultIfEmpty()
                                where links.TargetUrlId == _urlEntry.Id && links.IsExternal
                                orderby sourceUrl.NormalizedUrl
@@ -218,7 +220,7 @@ internal class UrlInfoView : AbstractView
 
         var outbound = (from links in db.UrlLinks
                         join targetUrl in db.UrlRegistry on links.TargetUrlId equals targetUrl.Id
-                        join targetDoc in db.Documents on targetUrl.NormalizedUrl equals targetDoc.NormalizedUrl into docs
+                        join targetDoc in db.Documents on (long?)targetUrl.Id equals targetDoc.UrlRegistryId into docs
                         from targetDoc in docs.DefaultIfEmpty()
                         where links.SourceUrlId == _urlEntry.Id
                         orderby targetUrl.NormalizedUrl
