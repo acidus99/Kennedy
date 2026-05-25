@@ -58,8 +58,21 @@ public sealed class ResponseStore
             .Include(d => d.Image)
             .SingleOrDefaultAsync(d => d.UrlRegistryId == url.Id, ct);
 
-        ApplyDocumentToContext(db, url, parsedResponse, visitTimeUtc, existingDoc);
+        var (doc, ftsText) = ApplyDocumentToContext(db, url, parsedResponse, visitTimeUtc, existingDoc);
+        long? ftsDeleteId = doc != null && db.Entry(doc).State == EntityState.Deleted ? doc.Id : null;
+
         await db.SaveChangesAsync(ct);
+
+        if (ftsDeleteId.HasValue)
+        {
+            await db.Database.ExecuteSqlRawAsync($"DELETE FROM DocumentsFts WHERE rowid = {ftsDeleteId.Value}", ct);
+        }
+        else if (doc != null && ftsText != null)
+        {
+            await db.Database.ExecuteSqlRawAsync($"DELETE FROM DocumentsFts WHERE rowid = {doc.Id}", ct);
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"INSERT INTO DocumentsFts(rowid, Title, Content, CanonicalUrl) VALUES ({doc.Id}, {doc.Title}, {ftsText}, {doc.CanonicalUrl})", ct);
+        }
 
         await UpdateLinksAsync(db, url, parsedResponse, ct);
 
@@ -147,11 +160,19 @@ public sealed class ResponseStore
         }
 
         // Apply document changes to the change tracker (no SaveChanges yet).
+        var ftsDeletes = new List<long>();
+        var ftsUpserts = new List<(DocumentRecord doc, string text)>();
+
         foreach (var (response, parsedResponse, visitTime) in parsed)
         {
             var url = urlMap[response.RequestUrl.NormalizedUrl];
             existingDocMap.TryGetValue(url.Id, out var existingDoc);
-            ApplyDocumentToContext(db, url, parsedResponse, visitTime, existingDoc);
+            var (doc, ftsText) = ApplyDocumentToContext(db, url, parsedResponse, visitTime, existingDoc);
+            if (doc == null) continue;
+            if (db.Entry(doc).State == EntityState.Deleted)
+                ftsDeletes.Add(doc.Id);
+            else if (ftsText != null)
+                ftsUpserts.Add((doc, ftsText));
         }
 
         // One IN query to find which link targets are already in the registry.
@@ -180,6 +201,19 @@ public sealed class ResponseStore
 
         // Flush Documents + new target UrlRegistry rows — IDs populated after this call.
         await db.SaveChangesAsync(ct);
+
+        // FTS management — after SaveChanges so new Documents have their IDs populated.
+        if (ftsDeletes.Count > 0)
+        {
+            var idList = string.Join(",", ftsDeletes);
+            await db.Database.ExecuteSqlRawAsync($"DELETE FROM DocumentsFts WHERE rowid IN ({idList})", ct);
+        }
+        foreach (var (doc, text) in ftsUpserts)
+        {
+            await db.Database.ExecuteSqlRawAsync($"DELETE FROM DocumentsFts WHERE rowid = {doc.Id}", ct);
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"INSERT INTO DocumentsFts(rowid, Title, Content, CanonicalUrl) VALUES ({doc.Id}, {doc.Title}, {text}, {doc.CanonicalUrl})", ct);
+        }
 
         // ── Phase 3: UrlLinks ──────────────────────────────────────────────────
         //
@@ -337,8 +371,10 @@ public sealed class ResponseStore
     /// <summary>
     /// Applies document changes to the EF change tracker without calling SaveChanges.
     /// Used by both the single-record and batch paths so that callers control when the flush happens.
+    /// Returns the affected DocumentRecord and the FTS text to index (null = no FTS action needed).
+    /// A non-null doc whose EF state is Deleted signals the caller to remove it from DocumentsFts.
     /// </summary>
-    private static void ApplyDocumentToContext(
+    private static (DocumentRecord? doc, string? ftsText) ApplyDocumentToContext(
         KennedyDbContext db,
         UrlRecord url,
         ParsedResponse parsedResponse,
@@ -349,8 +385,6 @@ public sealed class ResponseStore
 
         if (!isIndexableText)
         {
-            // If a previous text document exists for this URL, remove it now that the
-            // response is non-indexable (e.g. URL returned binary where it previously returned Gemtext).
             if (existing != null)
             {
                 if (existing.Image != null)
@@ -358,8 +392,9 @@ public sealed class ResponseStore
                     db.DocumentImages.Remove(existing.Image);
                 }
                 db.Documents.Remove(existing);
+                return (existing, null);
             }
-            return;
+            return (null, null);
         }
 
         if (existing == null)
@@ -380,11 +415,15 @@ public sealed class ResponseStore
             existing.UrlRegistryId = url.Id;
             existing.LastIndexedUtc = indexedUtc;
             existing.StatusCode = parsedResponse.StatusCode;
-            return;
+            existing.Host = url.Host;
+            existing.LastMimeType = url.LastMimeType;
+            return (existing, null);
         }
 
         existing.UrlRegistryId = url.Id;
         existing.CanonicalUrl = url.NormalizedUrl;
+        existing.Host = url.Host;
+        existing.LastMimeType = url.LastMimeType;
         existing.LastIndexedUtc = indexedUtc;
         existing.StatusCode = parsedResponse.StatusCode;
         existing.ContentType = parsedResponse.FormatType;
@@ -399,20 +438,18 @@ public sealed class ResponseStore
         existing.Title = null;
         existing.IsFeed = false;
 
+        string ftsContent = string.Empty;
+
         if (parsedResponse is ITextResponse textResponse2)
         {
-            existing.IsSearchable = textResponse2.HasIndexableText;
-            existing.Content = textResponse2.IndexableText ?? string.Empty;
             existing.Title = textResponse2.Title;
             existing.DetectedLanguage = textResponse2.DetectedLanguage;
             existing.LineCount = textResponse2.LineCount;
             existing.IsFeed = textResponse2.IsFeed;
+            ftsContent = textResponse2.IndexableText ?? string.Empty;
         }
-        else
-        {
-            existing.IsSearchable = false;
-            existing.Content = string.Empty;
-        }
+
+        return (existing, ftsContent);
     }
 
     /// <summary>

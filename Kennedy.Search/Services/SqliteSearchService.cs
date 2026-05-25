@@ -27,17 +27,28 @@ public sealed class SqliteSearchService : ISearchService
         connection.Open();
 
         using var cmd = connection.CreateCommand();
-        var textJoin = query.HasFtsQuery
-            ? "INNER JOIN DocumentsFts ON DocumentsFts.rowid = d.Id"
-            : "LEFT JOIN DocumentsFts ON DocumentsFts.rowid = d.Id";
-        cmd.CommandText =
-            $"""
-            SELECT COUNT(*)
-            FROM Documents d
-            {textJoin}
-            INNER JOIN UrlRegistry u ON u.Id = d.UrlRegistryId
-            WHERE d.IsSearchable = 1
-            """ + BuildTextFilters(query, cmd);
+
+        // Only join Documents + UrlRegistry when a filter actually needs those tables.
+        // A pure FTS (or FTS + title) count can go straight to DocumentsFts.
+        bool needsDocJoin = query.HasSiteScope || query.HasFileTypeScope || query.HasUrlScope;
+
+        if (needsDocJoin)
+        {
+            var textJoin = query.HasFtsQuery
+                ? "INNER JOIN DocumentsFts ON DocumentsFts.rowid = d.Id"
+                : "LEFT JOIN DocumentsFts ON DocumentsFts.rowid = d.Id";
+            cmd.CommandText =
+                $"""
+                SELECT COUNT(*)
+                FROM Documents d
+                {textJoin}
+                WHERE 1=1
+                """ + BuildTextFilters(query, cmd);
+        }
+        else
+        {
+            cmd.CommandText = BuildFtsDirectCountQuery(query, cmd);
+        }
 
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
@@ -63,19 +74,18 @@ public sealed class SqliteSearchService : ISearchService
             $"""
             SELECT d.CanonicalUrl,
                    d.Title,
-                   u.LastMimeType,
+                   d.LastMimeType,
                    d.DetectedLanguage,
                    d.LineCount,
                    d.BodySize,
                    d.IsBodyTruncated,
                    CASE
                        WHEN @fts_has = 1 THEN snippet(DocumentsFts, 1, '[',']','…',20)
-                       ELSE substr(d.Content, 1, 180)
+                       ELSE ''
                    END AS Snippet
             FROM Documents d
             {textJoin}
-            INNER JOIN UrlRegistry u ON u.Id = d.UrlRegistryId
-            WHERE d.IsSearchable = 1
+            WHERE 1=1
             """ + BuildTextFilters(query, cmd) + orderBy + " LIMIT @limit OFFSET @offset;";
 
         cmd.Parameters.AddWithValue("@limit", limit);
@@ -190,6 +200,32 @@ public sealed class SqliteSearchService : ISearchService
         return results;
     }
 
+    // Count query that avoids joining Documents/UrlRegistry when only FTS/title filters are active.
+    // Mirrors old Kennedy's approach: start from the FTS table and only join when filters require it.
+    private static string BuildFtsDirectCountQuery(UserQuery query, SqliteCommand cmd)
+    {
+        var filters = new List<string>();
+
+        if (query.HasFtsQuery)
+        {
+            filters.Add("DocumentsFts MATCH @fts_query");
+            cmd.Parameters.AddWithValue("@fts_query", query.FtsQuery!);
+        }
+
+        if (query.HasTitleScope)
+        {
+            // Title is a stored column in the standalone FTS table, accessible without a join.
+            filters.Add("COALESCE(Title, '') LIKE @title_scope");
+            cmd.Parameters.AddWithValue("@title_scope", $"%{query.TitleScope}%");
+        }
+
+        var where = filters.Count > 0 ? " WHERE " + string.Join(" AND ", filters) : string.Empty;
+
+        return query.HasFtsQuery
+            ? $"SELECT COUNT(*) FROM DocumentsFts{where}"
+            : $"SELECT COUNT(*) FROM Documents{where}";
+    }
+
     private static string BuildTextFilters(UserQuery query, SqliteCommand cmd)
     {
         cmd.Parameters.AddWithValue("@fts_has", query.HasFtsQuery ? 1 : 0);
@@ -234,7 +270,7 @@ public sealed class SqliteSearchService : ISearchService
     {
         if (query.HasSiteScope)
         {
-            filters.Add("u.Host = @site_host");
+            filters.Add("d.Host = @site_host");
             cmd.Parameters.AddWithValue("@site_host", query.SiteScope!);
         }
 
@@ -243,19 +279,19 @@ public sealed class SqliteSearchService : ISearchService
             var normalized = query.FileTypeScope!.Trim().ToLowerInvariant();
             if (normalized.Contains('/'))
             {
-                filters.Add("LOWER(COALESCE(u.LastMimeType, '')) = @filetype_exact");
+                filters.Add("LOWER(COALESCE(d.LastMimeType, '')) = @filetype_exact");
                 cmd.Parameters.AddWithValue("@filetype_exact", normalized);
             }
             else
             {
-                filters.Add("LOWER(COALESCE(u.LastMimeType, '')) LIKE @filetype_major");
+                filters.Add("LOWER(COALESCE(d.LastMimeType, '')) LIKE @filetype_major");
                 cmd.Parameters.AddWithValue("@filetype_major", normalized + "/%");
             }
         }
 
         if (query.HasUrlScope)
         {
-            filters.Add("u.Id IN (SELECT rowid FROM UrlIndex WHERE UrlIndex MATCH @url_scope)");
+            filters.Add("d.UrlRegistryId IN (SELECT rowid FROM UrlIndex WHERE UrlIndex MATCH @url_scope)");
             var escaped = query.UrlScope!.Replace("\"", "\"\"");
             cmd.Parameters.AddWithValue("@url_scope", $"\"{escaped}\"");
         }

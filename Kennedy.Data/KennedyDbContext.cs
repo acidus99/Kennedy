@@ -51,10 +51,10 @@ namespace Kennedy.Data
         }
 
         /// <summary>
-        /// Creates the FTS5 virtual tables and their synchronization triggers if they don't already exist.
+        /// Creates the FTS5 virtual tables if they don't already exist.
         /// Must be called manually after <c>Database.EnsureCreated()</c> because EF Core cannot manage virtual tables.
         /// <list type="bullet">
-        ///   <item><term>DocumentsFts</term><description>Full-text index over Documents (Title, Content, CanonicalUrl); kept current by INSERT/UPDATE/DELETE triggers.</description></item>
+        ///   <item><term>DocumentsFts</term><description>Standalone full-text index over Documents (Title, Content, CanonicalUrl); managed explicitly by <see cref="Kennedy.Data.Services.ResponseStore"/>.</description></item>
         ///   <item><term>FilesFts</term><description>Index for non-text file search; rebuilt externally by <see cref="Kennedy.Data.Services.FileSearchFtsRebuilder"/>.</description></item>
         /// </list>
         /// </summary>
@@ -81,45 +81,14 @@ namespace Kennedy.Data
         public async Task EnsureFtsAsync(CancellationToken ct)
         {
             // Keep FTS schema setup explicit because EnsureCreated does not create virtual tables.
+            // Standalone (not content=) so FTS rows are self-contained; ResponseStore manages inserts/deletes.
             await Database.ExecuteSqlRawAsync(
                 """
                 CREATE VIRTUAL TABLE IF NOT EXISTS DocumentsFts USING fts5(
                     Title,
                     Content,
-                    CanonicalUrl,
-                    content='Documents',
-                    content_rowid='Id'
+                    CanonicalUrl
                 );
-                """,
-                ct);
-
-            // Trigger set keeps the FTS index synchronized with row-level document writes.
-            await Database.ExecuteSqlRawAsync(
-                """
-                CREATE TRIGGER IF NOT EXISTS Documents_ai AFTER INSERT ON Documents BEGIN
-                    INSERT INTO DocumentsFts(rowid, Title, Content, CanonicalUrl)
-                    VALUES (new.Id, new.Title, new.Content, new.CanonicalUrl);
-                END;
-                """,
-                ct);
-
-            await Database.ExecuteSqlRawAsync(
-                """
-                CREATE TRIGGER IF NOT EXISTS Documents_ad AFTER DELETE ON Documents BEGIN
-                    INSERT INTO DocumentsFts(DocumentsFts, rowid, Title, Content, CanonicalUrl)
-                    VALUES ('delete', old.Id, old.Title, old.Content, old.CanonicalUrl);
-                END;
-                """,
-                ct);
-
-            await Database.ExecuteSqlRawAsync(
-                """
-                CREATE TRIGGER IF NOT EXISTS Documents_au AFTER UPDATE ON Documents BEGIN
-                    INSERT INTO DocumentsFts(DocumentsFts, rowid, Title, Content, CanonicalUrl)
-                    VALUES ('delete', old.Id, old.Title, old.Content, old.CanonicalUrl);
-                    INSERT INTO DocumentsFts(rowid, Title, Content, CanonicalUrl)
-                    VALUES (new.Id, new.Title, new.Content, new.CanonicalUrl);
-                END;
                 """,
                 ct);
 

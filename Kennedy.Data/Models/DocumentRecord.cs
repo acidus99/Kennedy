@@ -9,11 +9,10 @@ namespace Kennedy.Data.Models;
 /// <summary>
 /// Current searchable representation for a normalized Gemini URL.
 /// One row per normalized URL; updated in-place on re-ingestion.
-/// The FTS5 index (<c>DocumentsFts</c>) is kept in sync by SQLite triggers on this table.
 /// </summary>
 [Table("Documents")]
-[Index(nameof(IsSearchable))]
 [Index(nameof(StatusCode))]
+[Index(nameof(Host))]
 public class DocumentRecord
 {
     [Key]
@@ -31,13 +30,17 @@ public class DocumentRecord
     [Required]
     public string CanonicalUrl { get; set; } = "";
 
+    /// <summary>Hostname component of CanonicalUrl, denormalized from UrlRegistry for site: filter performance.</summary>
+    [MaxLength(255)]
+    public string Host { get; set; } = "";
+
+    /// <summary>MIME type from the last successful fetch, denormalized from UrlRegistry for filetype: filter performance.</summary>
+    [MaxLength(256)]
+    public string? LastMimeType { get; set; }
+
     /// <summary>Page title extracted by <see cref="Kennedy.Data.Parsers.GemText.TitleFinder"/>. Null for non-Gemtext or untitled pages.</summary>
     [MaxLength(512)]
     public string? Title { get; set; }
-
-    /// <summary>Full searchable text fed into DocumentsFts. Empty for non-indexable responses.</summary>
-    [Required]
-    public string Content { get; set; } = "";
 
     /// <summary>Gemini protocol status code from the response (e.g. 20, 51).</summary>
     public int StatusCode { get; set; }
@@ -56,9 +59,6 @@ public class DocumentRecord
 
     /// <summary>UTC timestamp of the most recent indexing pass that touched this row.</summary>
     public DateTime LastIndexedUtc { get; set; }
-
-    /// <summary>True when this document should appear in full-text search results.</summary>
-    public bool IsSearchable { get; set; }
 
     /// <summary>True when the crawler received a truncated body (response was cut off at the size limit).</summary>
     public bool IsBodyTruncated { get; set; }
