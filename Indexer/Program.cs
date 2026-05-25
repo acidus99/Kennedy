@@ -93,6 +93,7 @@ namespace Kennedy.Indexer
             await using var db = await dbFactory.CreateDbContextAsync(ct);
             await db.Database.EnsureCreatedAsync(ct);
             await db.EnsureFtsAsync(ct);
+            await db.ApplyPerformancePragmasAsync(ct);
         }
 
         private static async Task RunSmokeQueryAsync(string sqlitePath, string query, CancellationToken ct)

@@ -58,6 +58,26 @@ namespace Kennedy.Data
         ///   <item><term>FilesFts</term><description>Index for non-text file search; rebuilt externally by <see cref="Kennedy.Data.Services.FileSearchFtsRebuilder"/>.</description></item>
         /// </list>
         /// </summary>
+        /// <summary>
+        /// Sets SQLite pragmas that significantly improve bulk-write performance.
+        /// Call once after opening a connection that will be used for large imports.
+        /// <list type="bullet">
+        ///   <item><term>journal_mode=WAL</term><description>Allows concurrent readers during writes; reduces fsync pressure.</description></item>
+        ///   <item><term>synchronous=NORMAL</term><description>Skips per-commit fsync while remaining crash-safe at the WAL checkpoint level.</description></item>
+        ///   <item><term>cache_size=-65536</term><description>64 MB page cache; reduces read I/O on repeated lookups.</description></item>
+        ///   <item><term>temp_store=MEMORY</term><description>Keeps SQLite temporary tables in RAM.</description></item>
+        ///   <item><term>mmap_size=268435456</term><description>256 MB memory-mapped I/O window for faster sequential reads.</description></item>
+        /// </list>
+        /// </summary>
+        public async Task ApplyPerformancePragmasAsync(CancellationToken ct = default)
+        {
+            await Database.ExecuteSqlRawAsync("PRAGMA journal_mode = WAL;", ct);
+            await Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL;", ct);
+            await Database.ExecuteSqlRawAsync("PRAGMA cache_size = -65536;", ct);
+            await Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY;", ct);
+            await Database.ExecuteSqlRawAsync("PRAGMA mmap_size = 268435456;", ct);
+        }
+
         public async Task EnsureFtsAsync(CancellationToken ct)
         {
             // Keep FTS schema setup explicit because EnsureCreated does not create virtual tables.
