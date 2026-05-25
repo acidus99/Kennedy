@@ -82,12 +82,16 @@ namespace Kennedy.Data
         {
             // Keep FTS schema setup explicit because EnsureCreated does not create virtual tables.
             // Standalone (not content=) so FTS rows are self-contained; ResponseStore manages inserts/deletes.
+            // Both tables use porter unicode61 tokenization so that "cats" matches "cat" (stemming parity
+            // with old Kennedy, which also used porter on its FTS and ImageSearch tables).
+
             await Database.ExecuteSqlRawAsync(
                 """
                 CREATE VIRTUAL TABLE IF NOT EXISTS DocumentsFts USING fts5(
                     Title,
                     Content,
-                    CanonicalUrl
+                    CanonicalUrl,
+                    tokenize='porter unicode61'
                 );
                 """,
                 ct);
@@ -96,7 +100,8 @@ namespace Kennedy.Data
                 """
                 CREATE VIRTUAL TABLE IF NOT EXISTS FilesFts USING fts5(
                     UrlRegistryId UNINDEXED,
-                    SearchText
+                    SearchText,
+                    tokenize='porter unicode61'
                 );
                 """,
                 ct);
@@ -138,5 +143,6 @@ namespace Kennedy.Data
                 """,
                 ct);
         }
+
     }
 }
