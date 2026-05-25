@@ -20,7 +20,7 @@ public interface ITextResponse
     public bool IsFeed { get; }
 
     /// <summary>
-    /// The text to store in the Documents.Content column and index in FTS5.
+    /// The text to index in DocumentsFts.
     /// For Gemtext: non-preformatted lines with link text extracted from link lines.
     /// For plain text: the raw body.
     /// </summary>

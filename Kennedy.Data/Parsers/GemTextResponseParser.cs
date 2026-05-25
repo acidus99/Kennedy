@@ -55,7 +55,7 @@ public class GemTextResponseParser : AbstractTextParser
     }
 
     /// <summary>
-    /// Builds the string that will be stored in Documents.Content and indexed by FTS5.
+    /// Builds the string to be indexed in DocumentsFts.
     /// For link lines, only the human-readable label is included (not the raw URL),
     /// which keeps search results relevant to the actual text a human would read.
     /// </summary>
