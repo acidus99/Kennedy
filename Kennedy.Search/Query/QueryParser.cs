@@ -3,6 +3,17 @@ using Kennedy.Search.Models;
 
 namespace Kennedy.Search.Query;
 
+/// <summary>
+/// Parses a raw user search string into a structured <see cref="UserQuery"/>.
+/// Recognizes Google-style scope modifiers and strips them from the FTS term string:
+/// <list type="bullet">
+///   <item><c>site:hostname</c> — restrict results to a specific host</item>
+///   <item><c>filetype:ext</c> — filter by MIME type substring</item>
+///   <item><c>intitle:word</c> or <c>intitle:"phrase"</c> — match within the document title</item>
+///   <item><c>inurl:pattern</c> — match within the canonical URL</item>
+/// </list>
+/// Remaining terms are passed to <see cref="FtsSyntaxConverter"/> for FTS5 syntax translation.
+/// </summary>
 public sealed class QueryParser
 {
     private static readonly Regex WhitespaceRuns = new(@"\s+", RegexOptions.Compiled);
@@ -15,6 +26,11 @@ public sealed class QueryParser
     };
     private static readonly Regex UrlScopeRegex = new(@"\binurl:\s*\""?([^\s\""]+)\""?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    /// <summary>
+    /// Parses <paramref name="inputQuery"/> into a <see cref="UserQuery"/>.
+    /// Each recognized scope modifier is extracted and removed from the term string.
+    /// The remaining terms become the FTS query (after FTS5 syntax conversion).
+    /// </summary>
     public UserQuery Parse(string inputQuery)
     {
         string normalized = Normalize(inputQuery);

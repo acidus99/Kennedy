@@ -19,6 +19,13 @@ namespace Kennedy.Indexer
             _responseStore = responseStore;
         }
 
+        /// <summary>
+        /// Iterates every WARC record in <paramref name="warcPath"/>, converts Gemini response records
+        /// to <see cref="GeminiResponse"/> objects, and passes each one to <see cref="ResponseStore.StoreResponseAsync"/>.
+        /// Non-Gemini records and records without a body are silently skipped.
+        /// A malformed WARC record logs a warning and halts processing of that file.
+        /// Prints a progress line to stdout every 100 records.
+        /// </summary>
         public async Task IndexFileAsync(string warcPath, CancellationToken ct)
         {
             using (WarcReader reader = new WarcReader(warcPath))
@@ -65,6 +72,11 @@ namespace Kennedy.Indexer
             }
         }
 
+        /// <summary>
+        /// Converts a <see cref="ResponseRecord"/> from the WARC file into a <see cref="GeminiResponse"/>.
+        /// Returns null when the record target URI is missing, lacks a body, or is not a gemini:// URL.
+        /// Sets <c>RequestSent</c>/<c>ResponseReceived</c> from the WARC date and preserves the truncation flag.
+        /// </summary>
         private GeminiResponse? GetGeminiResponse(ResponseRecord responseRecord)
         {
             if (responseRecord.TargetUri == null || responseRecord.ContentBlock == null || responseRecord.TargetUri.Scheme != "gemini")

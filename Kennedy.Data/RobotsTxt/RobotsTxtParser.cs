@@ -1,14 +1,25 @@
 namespace Kennedy.Data.RobotsTxt;
 
+/// <summary>
+/// Parses robots.txt content according to the Gemini subset of the exclusion standard.
+/// Gemini supports only <c>User-agent</c> and <c>Disallow</c> directives with prefix matching.
+/// Unsupported directives (<c>Allow</c>, <c>Crawl-Delay</c>, <c>Sitemap</c>, mid-string wildcards)
+/// are logged as warnings and ignored rather than causing a parse failure.
+/// </summary>
 public class RobotsTxtParser
 {
     List<string> _warnings = new List<string>();
 
+    /// <summary>Non-fatal parse warnings (unsupported directives, malformed lines, etc.).</summary>
     public IEnumerable<string> Warnings => _warnings;
 
     private void LogWarning(int lineNumber, string message)
         =>_warnings.Add($"Line {lineNumber}: {message}");
 
+    /// <summary>
+    /// Parses the full text of a robots.txt file and returns a <see cref="RobotsTxtFile"/>
+    /// containing all recognized <c>Disallow</c> rules grouped by user-agent.
+    /// </summary>
     public RobotsTxtFile Parse(string content)
     {
         RobotsTxtFile ret = new RobotsTxtFile();

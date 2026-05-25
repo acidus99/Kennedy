@@ -5,6 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Kennedy.Archive.Db;
 
+/// <summary>
+/// A single archived capture of a Gemini URL's response at a specific point in time.
+/// The actual response bytes are stored in a pack file on disk; this row carries the
+/// <see cref="Offset"/> needed to read them back via <see cref="Kennedy.Archive.SnapshotReader"/>.
+/// Multiple snapshots can exist for the same URL (one per crawl that produced new content).
+/// </summary>
 [Table("Snapshots")]
 [Index(nameof(DataHash))]
 [Index(nameof(UrlId))]

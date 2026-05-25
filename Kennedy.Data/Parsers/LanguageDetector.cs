@@ -3,13 +3,23 @@ using NTextCat;
 
 namespace Kennedy.Data.Parsers;
 
+/// <summary>
+/// Detects the natural language of a text string using NTextCat's ranked n-gram classifier.
+/// Loaded from a language profile file (<c>Core14.profile.xml</c>) that covers 14 common languages.
+/// Set <see cref="ConfigFileDirectory"/> before constructing any instance.
+/// </summary>
 public class LanguageDetector
 {
+    /// <summary>
+    /// Directory containing the NTextCat profile XML file.
+    /// Must be set before the first <see cref="LanguageDetector"/> is instantiated (e.g. in Program.cs).
+    /// </summary>
     public static string ConfigFileDirectory { get; set; } = "";
 
-    //minimum size we require the content to be to find out the language
+    // Content shorter than this threshold doesn't have enough n-gram diversity for reliable detection.
     const int MinSize = 150;
 
+    // Scanning very large texts provides no accuracy gain; cap to keep detection fast.
     const int MaxSize = 4096;
 
     RankedLanguageIdentifier langClassifier;
@@ -20,6 +30,10 @@ public class LanguageDetector
         langClassifier = factory.Load(ConfigFileDirectory + "Core14.profile.xml");
     }
 
+    /// <summary>
+    /// Returns the ISO 639-1 two-letter language code for <paramref name="s"/>,
+    /// or null when the text is too short to classify reliably.
+    /// </summary>
     public string? DetectLanguage(string s)
     {
         if (s.Length < MinSize)

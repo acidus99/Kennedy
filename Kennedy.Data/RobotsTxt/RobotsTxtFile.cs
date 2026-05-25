@@ -2,13 +2,20 @@
 
 namespace Kennedy.Data.RobotsTxt;
 
+/// <summary>
+/// Parsed result of a robots.txt file, organized as a dictionary of user-agent → deny rules.
+/// The special user-agent key <c>"*"</c> holds wildcard rules that apply to all crawlers.
+/// Use <see cref="IsPathAllowed"/> to check whether a crawler may fetch a given path.
+/// </summary>
 public class RobotsTxtFile
 {
     /// <summary>
-    /// Rules that apply to a specific user-agent
+    /// Deny rules grouped by lower-cased user-agent string.
+    /// Key <c>"*"</c> represents the wildcard user-agent (applies to everyone).
     /// </summary>
     public readonly Dictionary<string, List<DenyRule>> Rules;
 
+    /// <summary>True when at least one <see cref="DenyRule"/> with a non-empty path was parsed.</summary>
     public bool HasValidRules => (Rules.Values.Sum(x=>x.Count) > 0);
 
     internal RobotsTxtFile()
@@ -16,6 +23,7 @@ public class RobotsTxtFile
         Rules = new Dictionary<string, List<DenyRule>>();
     }
 
+    /// <summary>Registers <paramref name="denyRule"/> for each user-agent in <paramref name="userAgents"/>.</summary>
     public void AddDenyRule(List<string> userAgents, DenyRule denyRule)
     {
         foreach (var userAgent in userAgents)
@@ -28,6 +36,11 @@ public class RobotsTxtFile
         }
     }
 
+    /// <summary>
+    /// Returns true if <paramref name="userAgent"/> is permitted to fetch <paramref name="path"/>.
+    /// Wildcard (<c>"*"</c>) rules are checked first; if any deny rule's path is a prefix of
+    /// <paramref name="path"/>, access is denied. Then specific user-agent rules are checked the same way.
+    /// </summary>
     public bool IsPathAllowed(string userAgent, string path)
     {
 

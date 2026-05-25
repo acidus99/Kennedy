@@ -4,6 +4,12 @@ using Kennedy.Data.Utils;
 
 namespace Kennedy.Data.Parsers.GemText;
 
+/// <summary>
+/// Extracts #hashtags from Gemtext lines.
+/// Only searches within the human-readable portion of each line:
+/// heading text for heading lines, link label for link lines, and the full line otherwise.
+/// Filters out numeric ranges, CSS hex colors, and other false positives.
+/// </summary>
 public static class HashtagsFinder
 {
     private static readonly Regex HashtagFormat = new Regex(@"[\,\s]#([a-zA-Z0-9][a-zA-Z0-9_\-]+)", RegexOptions.Compiled);
@@ -18,6 +24,7 @@ public static class HashtagsFinder
     };
 
 
+    /// <summary>Returns the unique set of normalized hashtag strings found across all lines.</summary>
     public static IEnumerable<string> GetHashtags(List<string> lines)
     {
         var hashtags = new Bag<string>();
@@ -25,6 +32,7 @@ public static class HashtagsFinder
         return hashtags.GetValues();
     }
 
+    /// <summary>Returns all valid hashtags found on a single line, after narrowing to the searchable portion.</summary>
     public static IEnumerable<string> GetTagsForLine(string line)
     {
         line = FilterLine(line);

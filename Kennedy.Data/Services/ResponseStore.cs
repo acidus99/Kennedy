@@ -248,22 +248,32 @@ public sealed class ResponseStore
         }
     }
 
+    /// <summary>
+    /// Replaces the complete set of outbound links for <paramref name="sourceUrl"/> with the links
+    /// discovered in this response. Creates new UrlRegistry entries for any undiscovered target URLs.
+    /// </summary>
     private static async Task UpdateLinksAsync(
         KennedyDbContext db,
         UrlRecord sourceUrl,
         ParsedResponse parsedResponse,
         CancellationToken ct)
     {
+        // Full replacement: delete all existing links from this source, then re-insert.
+        // This handles the case where previously linked pages are no longer linked.
         var previousLinks = db.UrlLinks.Where(x => x.SourceUrlId == sourceUrl.Id);
         db.UrlLinks.RemoveRange(previousLinks);
 
         var distinctLinks = parsedResponse.Links.Distinct().ToList();
         var targetUrls = distinctLinks.Select(l => l.Url.NormalizedUrl).Distinct().ToList();
 
+        // Load all already-known target URLs in one batch query.
         var existingTargets = await db.UrlRegistry
             .Where(u => targetUrls.Contains(u.NormalizedUrl))
             .ToDictionaryAsync(u => u.NormalizedUrl, ct);
 
+        // Also check EF's change tracker: another link on the same page may have already staged
+        // an Insert for a URL not yet in the database. Without this check we'd try to insert it twice,
+        // causing a unique constraint violation on NormalizedUrl.
         var trackedTargets = db.ChangeTracker
             .Entries<UrlRecord>()
             .Where(e => e.State != EntityState.Deleted)
@@ -271,6 +281,8 @@ public sealed class ResponseStore
             .GroupBy(e => e.NormalizedUrl)
             .ToDictionary(g => g.Key, g => g.First());
 
+        // First pass: create UrlRegistry entries for newly discovered URLs (no SaveChanges yet,
+        // so we accumulate all inserts and flush in one round-trip below).
         foreach (var foundLink in distinctLinks)
         {
             if (existingTargets.ContainsKey(foundLink.Url.NormalizedUrl) || trackedTargets.ContainsKey(foundLink.Url.NormalizedUrl))
@@ -284,11 +296,14 @@ public sealed class ResponseStore
             };
             ApplyUrlComponents(target);
             db.UrlRegistry.Add(target);
+            // Register in trackedTargets so subsequent links on this page don't try to re-insert the same URL.
             trackedTargets[target.NormalizedUrl] = target;
         }
 
+        // Flush new UrlRegistry rows; EF will populate their auto-generated IDs.
         await db.SaveChangesAsync(ct);
 
+        // Second pass: now that all target IDs are known, insert the UrlLink rows.
         foreach (var foundLink in distinctLinks)
         {
             if (!existingTargets.TryGetValue(foundLink.Url.NormalizedUrl, out var target) &&

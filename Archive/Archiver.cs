@@ -5,8 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Kennedy.Archive;
 
+/// <summary>
+/// Stores and retrieves raw Gemini responses in a content-addressed archive.
+/// The archive consists of two parts:
+/// <list type="bullet">
+///   <item><term>SQLite database</term><description>Metadata: URL registry, per-URL snapshot records with timestamps and content hashes.</description></item>
+///   <item><term>Pack files</term><description>Binary files on disk storing the actual response bytes (optionally gzip-compressed), organized by content hash prefix.</description></item>
+/// </list>
+/// Deduplication is built in: if two fetches produce identical bytes, only one copy is written to disk.
+/// </summary>
 public class Archiver
 {
+    // Non-text bodies larger than this are skipped; text bodies are truncated to this size.
     const int FileSizeLimit = 5 * 1024 * 1024;
 
     SnapshotReader snapshotReader;
@@ -24,6 +34,7 @@ public class Archiver
         snapshotReader = new SnapshotReader(packManager);
     }
 
+    /// <summary>Creates a fresh <see cref="ArchiveDbContext"/> connected to the archive SQLite database.</summary>
     public ArchiveDbContext GetContext()
         => new ArchiveDbContext(ArchiveDBPath);
 
@@ -36,6 +47,13 @@ public class Archiver
     /// <param name="meta"></param>
     /// <param name="isPublic"></param>
     /// <returns></returns>
+    /// <summary>
+    /// Archives a response, writing bytes to disk and recording a Snapshot row.
+    /// Returns true when the response was stored; false when it was filtered out or already present.
+    /// <para>Deduplication: if the exact same bytes were previously stored (for any URL), the existing
+    /// pack file offset is reused. The snapshot is marked IsDuplicate (same URL) or IsGlobalDuplicate
+    /// (different URL) for reporting purposes.</para>
+    /// </summary>
     public bool ArchiveResponse(GeminiResponse response, bool isPublic = true)
     {
         if (!ShouldBeArchived(response))
@@ -63,6 +81,7 @@ public class Archiver
                 db.SaveChanges();
             }
 
+            // Serialize the full Gemini response (status line + body) to bytes for hashing and storage.
             var respBytes = GeminiParser.CreateResponseBytes(response);
 
             var dataHash = GeminiParser.GetStrongHash(respBytes);
@@ -95,7 +114,7 @@ public class Archiver
             }
             else
             {
-                //use the same offset as previous on
+                // Reuse the existing offset — no disk write needed.
                 snapshot.Offset = first.Offset;
 
                 //does this hash exist for this URL id?
@@ -108,6 +127,10 @@ public class Archiver
         }
     }
 
+    /// <summary>
+    /// Returns aggregate statistics about the archive: domain count, URL counts, capture totals,
+    /// storage size with and without deduplication, and oldest/newest snapshot timestamps.
+    /// </summary>
     public ArchiveStats GetArchiveStats()
     {
         var ret = new ArchiveStats();
@@ -156,6 +179,10 @@ public class Archiver
         return ret;
     }
 
+    /// <summary>
+    /// Retrieves and deserializes the most recently captured response for <paramref name="urlID"/>.
+    /// Returns null when no snapshots exist for that URL.
+    /// </summary>
     public GeminiResponse? GetLatestResponse(long urlID)
     {
         Snapshot? snapshot = null;

@@ -2,10 +2,21 @@ using System.Text;
 
 namespace Kennedy.Search.Query;
 
+/// <summary>
+/// Converts a plain-language user query into valid SQLite FTS5 query syntax.
+/// Key transformations:
+/// <list type="bullet">
+///   <item>Bare words are wrapped in implicit double-quotes so FTS5 treats them as exact token matches.</item>
+///   <item>The boolean operators AND, OR, NOT (all-caps) are passed through as FTS5 operators.</item>
+///   <item>User-supplied double-quoted phrases are preserved as FTS5 phrase queries.</item>
+///   <item>Single quotes are escaped as <c>''</c> to prevent FTS5 syntax errors.</item>
+/// </list>
+/// </summary>
 public static class FtsSyntaxConverter
 {
     /// <summary>
-    /// Converts a user-oriented query into SQLite FTS syntax while preserving quoted sections.
+    /// Converts a user-oriented query into SQLite FTS5 syntax while preserving quoted sections.
+    /// The converter is a character-by-character state machine to handle quote nesting and operator detection.
     /// </summary>
     public static string Convert(string inputQuery)
     {
@@ -13,6 +24,7 @@ public static class FtsSyntaxConverter
         bool implicitQuote = false;
 
         const char None = '\x00';
+        // Sentinel: we saw the start of a potential keyword (AND/OR/NOT), waiting for whitespace/paren to confirm.
         const char WordSeparator = '\x01';
         const string WordEnders = " \t\n(\"";
 

@@ -3,11 +3,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Kennedy.Data
 {
+    /// <summary>
+    /// EF Core DbContext for the Kennedy search database.
+    /// Contains the URL registry, indexed documents, image metadata, and link graph.
+    /// FTS5 virtual tables (DocumentsFts, FilesFts) and their triggers are NOT managed by
+    /// EF migrations — call <see cref="EnsureFtsAsync"/> once after <c>EnsureCreated</c>.
+    /// </summary>
     public class KennedyDbContext : DbContext
     {
+        /// <summary>Registry of every URL the crawler has ever seen.</summary>
         public DbSet<UrlRecord> UrlRegistry => Set<UrlRecord>();
+
+        /// <summary>Current searchable document representation for each URL.</summary>
         public DbSet<DocumentRecord> Documents => Set<DocumentRecord>();
+
+        /// <summary>Image dimension/type metadata for image URLs.</summary>
         public DbSet<DocumentImageRecord> DocumentImages => Set<DocumentImageRecord>();
+
+        /// <summary>Directed link graph: source URL → target URL.</summary>
         public DbSet<UrlLinkRecord> UrlLinks => Set<UrlLinkRecord>();
 
         public KennedyDbContext(DbContextOptions<KennedyDbContext> options)
@@ -15,6 +28,11 @@ namespace Kennedy.Data
         {
         }
 
+        /// <summary>
+        /// Configures relationships not inferable from conventions:
+        /// Document→UrlRegistry (nullable FK, SetNull on delete) and
+        /// Document→DocumentImage (one-to-one, cascade delete).
+        /// </summary>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -32,6 +50,14 @@ namespace Kennedy.Data
                 .OnDelete(DeleteBehavior.Cascade);
         }
 
+        /// <summary>
+        /// Creates the FTS5 virtual tables and their synchronization triggers if they don't already exist.
+        /// Must be called manually after <c>Database.EnsureCreated()</c> because EF Core cannot manage virtual tables.
+        /// <list type="bullet">
+        ///   <item><term>DocumentsFts</term><description>Full-text index over Documents (Title, Content, CanonicalUrl); kept current by INSERT/UPDATE/DELETE triggers.</description></item>
+        ///   <item><term>FilesFts</term><description>Index for non-text file search; rebuilt externally by <see cref="Kennedy.Data.Services.FileSearchFtsRebuilder"/>.</description></item>
+        /// </list>
+        /// </summary>
         public async Task EnsureFtsAsync(CancellationToken ct)
         {
             // Keep FTS schema setup explicit because EnsureCreated does not create virtual tables.

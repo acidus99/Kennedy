@@ -1,7 +1,11 @@
 ﻿namespace Kennedy.Archive.Pack;
 
 /// <summary>
-/// Stores a group of packs on disk and an efficient way
+/// Routes content hashes to the correct <see cref="PackFile"/> on disk.
+/// Pack files are organized in a two-level directory tree based on the first 4 hex characters of the hash:
+/// <c>&lt;root&gt;/&lt;ab&gt;/&lt;cd&gt;/abcd</c> where <c>abcd</c> are the first 4 hex chars.
+/// This distributes files evenly across 65,536 possible directories, preventing any single
+/// directory from growing too large.
 /// </summary>
 public class PackManager
 {
@@ -48,6 +52,11 @@ public class PackManager
             packName[2] + packName[3] + Path.DirectorySeparatorChar;
     }
 
+    /// <summary>
+    /// Returns the <see cref="PackFile"/> for a given content hash.
+    /// <paramref name="dataHash"/> must be in the form <c>hash_type:hexstring</c> (e.g. <c>sha-256:abcdef…</c>).
+    /// The part before the colon is stripped; the hex string determines the directory path.
+    /// </summary>
     public PackFile GetPack(string dataHash)
     {
         var index = dataHash.IndexOf(':');

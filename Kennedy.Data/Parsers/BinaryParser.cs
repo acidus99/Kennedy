@@ -6,12 +6,19 @@ using SixLabors.ImageSharp.PixelFormats;
 namespace Kennedy.Data.Parsers;
 
 /// <summary>
-/// Parses known Binary Formats
+/// Detects known binary formats using file magic bytes (via the FileSignatures library).
+/// Returns an <see cref="ImageResponse"/> for recognized image formats (using ImageSharp for metadata),
+/// or a generic binary <see cref="ParsedResponse"/> for other detected binary types.
+/// Returns null when no binary format is recognized, allowing the caller to fall through to text parsing.
 /// </summary>
 public class BinaryParser
 {
     FileFormatInspector inspector = new FileFormatInspector();
 
+    /// <summary>
+    /// Attempts to identify the response body as a known binary format.
+    /// Returns null if the body bytes do not match any known binary signature.
+    /// </summary>
     public ParsedResponse? Parse(GeminiResponse resp)
     {
         if (resp.BodyBytes == null)
@@ -46,6 +53,10 @@ public class BinaryParser
         };
     }
 
+    /// <summary>
+    /// Uses ImageSharp to decode image dimensions and alpha channel presence.
+    /// Falls back to a generic binary ParsedResponse if ImageSharp cannot process the bytes.
+    /// </summary>
     private ParsedResponse ParseImage(GeminiResponse resp, FileFormat format)
     {
         try
@@ -67,7 +78,7 @@ public class BinaryParser
         {
         }
 
-        //error parsing the image, so use a generic binary 
+        //error parsing the image, so use a generic binary
         return new ParsedResponse(resp)
         {
             FormatType = ContentType.Binary,

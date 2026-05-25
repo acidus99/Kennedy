@@ -3,6 +3,11 @@ using Kennedy.Data.Utils;
 
 namespace Kennedy.Data.Parsers.GemText;
 
+/// <summary>
+/// Extracts @-style and ~-style username mentions from Gemtext lines.
+/// Operates on the readable portion of each line (heading text, link label, or full line).
+/// A trailing space is appended before matching to handle end-of-line mentions correctly.
+/// </summary>
 public static class MentionsFinder
 {
     private static readonly Regex[] AllowedFormats = new Regex[]
@@ -13,6 +18,7 @@ public static class MentionsFinder
        new Regex(@"^[\@\~]([a-zA-Z_][a-zA-Z\d_\-]{2,})\s", RegexOptions.Compiled),
    };
 
+    /// <summary>Returns the unique set of normalized mentions found across all lines.</summary>
     public static IEnumerable<string> GetMentions(List<string> lines)
     {
         var mentions = new Bag<string>();

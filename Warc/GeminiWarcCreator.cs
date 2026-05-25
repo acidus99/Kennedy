@@ -6,19 +6,27 @@ using WarcDotNet;
 
 namespace Kennedy.Warc;
 
+/// <summary>
+/// Writes Gemini crawl sessions to a WARC file using the WarcDotNet library.
+/// Each <see cref="WriteSession"/> call produces two linked WARC records (request + response)
+/// and optionally a third metadata record containing the server's TLS certificate (once per authority).
+/// Custom WARC header fields <c>WARC-Protocol</c> and <c>WARC-Cipher-Suite</c> carry TLS metadata.
+/// </summary>
 public class GeminiWarcCreator : WarcWriter
 {
+    /// <summary>Custom WARC field name for the TLS protocol version (e.g. "tls/1.3").</summary>
     public const string WarcProtocolField = "WARC-Protocol";
+
+    /// <summary>Custom WARC field name for the TLS cipher suite (IETF enum name).</summary>
     public const string WarcCipherSuiteField = "WARC-Cipher-Suite";
 
     const string RequestContentType = "application/gemini; msgtype=request";
     const string ResponseContentType = "application/gemini; msgtype=response";
 
+    /// <summary>The warcinfo record ID that links all records in this WARC file.</summary>
     public Uri WarcInfoID { get; private set; }
 
-    /// <summary>
-    /// Tracks what authorities we have written metadata records about their certificates
-    /// </summary>
+    /// <summary>Tracks which host authorities have already had a certificate record written.</summary>
     private Dictionary<string, bool> WrittenCertificates;
 
     public GeminiWarcCreator(string outputFile)
@@ -28,6 +36,7 @@ public class GeminiWarcCreator : WarcWriter
         WrittenCertificates = new Dictionary<string, bool>();
     }
 
+    /// <summary>Writes the warcinfo record that must appear at the start of every WARC file.</summary>
     public void WriteWarcInfo(WarcInfoFields fields)
     {
         Write(new WarcInfoRecord
@@ -38,6 +47,12 @@ public class GeminiWarcCreator : WarcWriter
         });
     }
 
+    /// <summary>
+    /// Writes a complete crawl session for <paramref name="response"/>:
+    /// a request record, a response record (with block and payload digests), and —
+    /// if the server presented a certificate not yet recorded for this authority —
+    /// a metadata record containing the PEM-encoded certificate.
+    /// </summary>
     public void WriteSession(GeminiResponse response)
     {
         var requestRecord = CreateRequestRecord(response.RequestUrl);
@@ -92,6 +107,10 @@ public class GeminiWarcCreator : WarcWriter
         }
     }
 
+    /// <summary>
+    /// Writes a session from pre-parsed legacy crawl data (when a full <see cref="GeminiResponse"/> is not available).
+    /// Used when importing data from older crawl storage formats.
+    /// </summary>
     public void WriteLegacySession(GeminiUrl url, DateTime sent, int statusCode, string meta, string mime, byte[]? bytes, bool isTruncated = false)
     {
         var requestRecord = CreateRequestRecord(url);
@@ -128,6 +147,10 @@ public class GeminiWarcCreator : WarcWriter
         Write(responseRecord);
     }
 
+    /// <summary>
+    /// Writes a standalone TLS certificate metadata record for a legacy import.
+    /// Use when certificates were stored separately from the original crawl sessions.
+    /// </summary>
     public void WriteLegacyCertificate(DateTime captured, GeminiUrl url, X509Certificate2 certificate)
     {
         var metadataRecord = new MetadataRecord
