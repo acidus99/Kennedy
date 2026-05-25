@@ -8,6 +8,7 @@ namespace Kennedy.Data
         public DbSet<UrlRecord> UrlRegistry => Set<UrlRecord>();
         public DbSet<DocumentRecord> Documents => Set<DocumentRecord>();
         public DbSet<DocumentImageRecord> DocumentImages => Set<DocumentImageRecord>();
+        public DbSet<UrlLinkRecord> UrlLinks => Set<UrlLinkRecord>();
 
         public KennedyDbContext(DbContextOptions<KennedyDbContext> options)
             : base(options)
@@ -73,6 +74,15 @@ namespace Kennedy.Data
                     INSERT INTO DocumentsFts(rowid, Title, Content, CanonicalUrl)
                     VALUES (new.Id, new.Title, new.Content, new.CanonicalUrl);
                 END;
+                """,
+                ct);
+
+            await Database.ExecuteSqlRawAsync(
+                """
+                CREATE VIRTUAL TABLE IF NOT EXISTS FilesFts USING fts5(
+                    UrlRegistryId UNINDEXED,
+                    SearchText
+                );
                 """,
                 ct);
         }

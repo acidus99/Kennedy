@@ -51,6 +51,7 @@ namespace Kennedy.Indexer
             });
 
             services.AddScoped<ResponseStore>();
+            services.AddScoped<FileSearchFtsRebuilder>();
 
 
             using var sp = services.BuildServiceProvider();
@@ -70,9 +71,13 @@ namespace Kennedy.Indexer
                 await indexer.IndexFileAsync(warcFile, CancellationToken.None);
             }
 
+            Console.WriteLine("Rebuilding file-search FTS...");
+            var filesFtsRebuilder = scope.ServiceProvider.GetRequiredService<FileSearchFtsRebuilder>();
+            await filesFtsRebuilder.RebuildAsync(CancellationToken.None);
+
             watch.Stop();
 
-            Console.WriteLine($"Done. Elapsed {watch.Elapsed.Seconds} seconds");
+            Console.WriteLine($"Done. Elapsed {watch.Elapsed.TotalSeconds} seconds");
 
             if (args.Length >= 2 && args[0] == "--smoke-query")
             {

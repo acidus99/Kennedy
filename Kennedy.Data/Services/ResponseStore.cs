@@ -40,11 +40,27 @@ public sealed class ResponseStore
         }
 
         ApplyUrlLifecycle(url, response, visitTimeUtc);
+        ApplyUrlComponents(url);
         await db.SaveChangesAsync(ct);
 
         await UpsertDocumentAsync(db, url, parsedResponse, visitTimeUtc, ct);
+        await UpdateLinksAsync(db, url, parsedResponse, ct);
 
         await tx.CommitAsync(ct);
+    }
+
+    private static void ApplyUrlComponents(UrlRecord url)
+    {
+        if (!Uri.TryCreate(url.NormalizedUrl, UriKind.Absolute, out var parsed))
+        {
+            return;
+        }
+
+        url.Scheme = parsed.Scheme.ToLowerInvariant();
+        url.Host = parsed.Host.ToLowerInvariant();
+        url.Port = parsed.IsDefaultPort ? 1965 : parsed.Port;
+        url.PathAndQuery = string.IsNullOrWhiteSpace(parsed.PathAndQuery) ? "/" : parsed.PathAndQuery;
+        url.FileName = Path.GetFileName(parsed.AbsolutePath);
     }
 
     private static void ApplyUrlLifecycle(UrlRecord url, GeminiResponse response, DateTime visitTimeUtc)
@@ -114,6 +130,42 @@ public sealed class ResponseStore
         DateTime indexedUtc,
         CancellationToken ct)
     {
+        var isIndexableText = parsedResponse is ITextResponse textResponse && textResponse.HasIndexableText;
+        if (!isIndexableText)
+        {
+            var nonTextExisting = await db.Documents
+                .Include(d => d.Image)
+                .SingleOrDefaultAsync(d => d.NormalizedUrl == url.NormalizedUrl, ct);
+            if (nonTextExisting != null)
+            {
+                if (nonTextExisting.Image != null)
+                {
+                    db.DocumentImages.Remove(nonTextExisting.Image);
+                }
+
+                db.Documents.Remove(nonTextExisting);
+                await db.SaveChangesAsync(ct);
+            }
+
+            url.IsTextDocument = false;
+            url.IsImage = parsedResponse is ImageResponse;
+            url.LastMimeType = parsedResponse.MimeType;
+            url.LastDetectedMimeType = parsedResponse.DetectedMimeType;
+            if (parsedResponse is ImageResponse nonTextImage)
+            {
+                url.ImageWidth = nonTextImage.Width;
+                url.ImageHeight = nonTextImage.Height;
+                url.ImageType = nonTextImage.ImageType;
+            }
+            else
+            {
+                url.ImageWidth = null;
+                url.ImageHeight = null;
+                url.ImageType = null;
+            }
+            return;
+        }
+
         var existing = await db.Documents
             .Include(d => d.Image)
             .SingleOrDefaultAsync(d => d.NormalizedUrl == url.NormalizedUrl, ct);
@@ -161,14 +213,14 @@ public sealed class ResponseStore
         existing.Title = null;
         existing.IsFeed = false;
 
-        if (parsedResponse is ITextResponse textResponse)
+        if (parsedResponse is ITextResponse textResponse2)
         {
-            existing.IsSearchable = textResponse.HasIndexableText;
-            existing.Content = textResponse.IndexableText ?? string.Empty;
-            existing.Title = textResponse.Title;
-            existing.DetectedLanguage = textResponse.DetectedLanguage;
-            existing.LineCount = textResponse.LineCount;
-            existing.IsFeed = textResponse.IsFeed;
+            existing.IsSearchable = textResponse2.HasIndexableText;
+            existing.Content = textResponse2.IndexableText ?? string.Empty;
+            existing.Title = textResponse2.Title;
+            existing.DetectedLanguage = textResponse2.DetectedLanguage;
+            existing.LineCount = textResponse2.LineCount;
+            existing.IsFeed = textResponse2.IsFeed;
         }
         else
         {
@@ -176,31 +228,82 @@ public sealed class ResponseStore
             existing.Content = string.Empty;
         }
 
+        await db.SaveChangesAsync(ct);
+
+        url.IsTextDocument = true;
+        url.IsImage = parsedResponse is ImageResponse;
+        url.LastMimeType = parsedResponse.MimeType;
+        url.LastDetectedMimeType = parsedResponse.DetectedMimeType;
         if (parsedResponse is ImageResponse image)
         {
-            if (existing.Image == null)
-            {
-                existing.Image = new DocumentImageRecord
-                {
-                    Document = existing,
-                    Width = image.Width,
-                    Height = image.Height,
-                    ImageType = image.ImageType,
-                    IsTransparent = image.IsTransparent
-                };
-            }
-            else
-            {
-                existing.Image.Width = image.Width;
-                existing.Image.Height = image.Height;
-                existing.Image.ImageType = image.ImageType;
-                existing.Image.IsTransparent = image.IsTransparent;
-            }
+            url.ImageWidth = image.Width;
+            url.ImageHeight = image.Height;
+            url.ImageType = image.ImageType;
         }
-        else if (existing.Image != null)
+        else
         {
-            db.DocumentImages.Remove(existing.Image);
-            existing.Image = null;
+            url.ImageWidth = null;
+            url.ImageHeight = null;
+            url.ImageType = null;
+        }
+    }
+
+    private static async Task UpdateLinksAsync(
+        KennedyDbContext db,
+        UrlRecord sourceUrl,
+        ParsedResponse parsedResponse,
+        CancellationToken ct)
+    {
+        var previousLinks = db.UrlLinks.Where(x => x.SourceUrlId == sourceUrl.Id);
+        db.UrlLinks.RemoveRange(previousLinks);
+
+        var distinctLinks = parsedResponse.Links.Distinct().ToList();
+        var targetUrls = distinctLinks.Select(l => l.Url.NormalizedUrl).Distinct().ToList();
+
+        var existingTargets = await db.UrlRegistry
+            .Where(u => targetUrls.Contains(u.NormalizedUrl))
+            .ToDictionaryAsync(u => u.NormalizedUrl, ct);
+
+        var trackedTargets = db.ChangeTracker
+            .Entries<UrlRecord>()
+            .Where(e => e.State != EntityState.Deleted)
+            .Select(e => e.Entity)
+            .GroupBy(e => e.NormalizedUrl)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        foreach (var foundLink in distinctLinks)
+        {
+            if (existingTargets.ContainsKey(foundLink.Url.NormalizedUrl) || trackedTargets.ContainsKey(foundLink.Url.NormalizedUrl))
+            {
+                continue;
+            }
+
+            var target = new UrlRecord(foundLink.Url.NormalizedUrl)
+            {
+                FirstSeen = parsedResponse.RequestSent ?? DateTime.UtcNow
+            };
+            ApplyUrlComponents(target);
+            db.UrlRegistry.Add(target);
+            trackedTargets[target.NormalizedUrl] = target;
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        foreach (var foundLink in distinctLinks)
+        {
+            if (!existingTargets.TryGetValue(foundLink.Url.NormalizedUrl, out var target) &&
+                !trackedTargets.TryGetValue(foundLink.Url.NormalizedUrl, out target))
+            {
+                continue;
+            }
+
+            db.UrlLinks.Add(new UrlLinkRecord
+            {
+                SourceUrlId = sourceUrl.Id,
+                TargetUrlId = target.Id,
+                IsExternal = foundLink.IsExternal,
+                LinkText = (foundLink.LinkText ?? string.Empty).Trim()
+            });
         }
 
         await db.SaveChangesAsync(ct);

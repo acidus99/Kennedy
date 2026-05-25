@@ -27,11 +27,14 @@ public sealed class SqliteSearchService : ISearchService
         connection.Open();
 
         using var cmd = connection.CreateCommand();
+        var textJoin = query.HasFtsQuery
+            ? "INNER JOIN DocumentsFts ON DocumentsFts.rowid = d.Id"
+            : "LEFT JOIN DocumentsFts ON DocumentsFts.rowid = d.Id";
         cmd.CommandText =
-            """
+            $"""
             SELECT COUNT(*)
             FROM Documents d
-            LEFT JOIN DocumentsFts f ON f.rowid = d.Id
+            {textJoin}
             WHERE d.IsSearchable = 1
             """ + BuildTextFilters(query, cmd);
 
@@ -49,8 +52,11 @@ public sealed class SqliteSearchService : ISearchService
         connection.Open();
 
         using var cmd = connection.CreateCommand();
+        var textJoin = query.HasFtsQuery
+            ? "INNER JOIN DocumentsFts ON DocumentsFts.rowid = d.Id"
+            : "LEFT JOIN DocumentsFts ON DocumentsFts.rowid = d.Id";
         cmd.CommandText =
-            """
+            $"""
             SELECT d.CanonicalUrl,
                    d.Title,
                    d.MimeType,
@@ -63,7 +69,7 @@ public sealed class SqliteSearchService : ISearchService
                        ELSE substr(d.Content, 1, 180)
                    END AS Snippet
             FROM Documents d
-            LEFT JOIN DocumentsFts ON DocumentsFts.rowid = d.Id
+            {textJoin}
             WHERE d.IsSearchable = 1
             """ + BuildTextFilters(query, cmd) + " ORDER BY d.LastIndexedUtc DESC LIMIT @limit OFFSET @offset;";
 
@@ -71,20 +77,31 @@ public sealed class SqliteSearchService : ISearchService
         cmd.Parameters.AddWithValue("@offset", offset);
 
         var results = new List<TextSearchResult>();
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+        SqliteDataReader reader;
+        try
         {
-            results.Add(new TextSearchResult
+            reader = cmd.ExecuteReader();
+        }
+        catch (SqliteException ex)
+        {
+            throw new SqliteException($"{ex.Message}\nSQL:\n{cmd.CommandText}", ex.SqliteErrorCode, ex.SqliteExtendedErrorCode);
+        }
+        using (reader)
+        {
+            while (reader.Read())
             {
-                Url = reader.GetString(0),
-                Title = reader.IsDBNull(1) ? null : reader.GetString(1),
-                MimeType = reader.IsDBNull(2) ? null : reader.GetString(2),
-                DetectedLanguage = reader.IsDBNull(3) ? null : reader.GetString(3),
-                LineCount = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                BodySize = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
-                IsBodyTruncated = !reader.IsDBNull(6) && reader.GetBoolean(6),
-                Snippet = reader.IsDBNull(7) ? string.Empty : reader.GetString(7)
-            });
+                results.Add(new TextSearchResult
+                {
+                    Url = reader.GetString(0),
+                    Title = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    MimeType = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    DetectedLanguage = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    LineCount = reader.IsDBNull(4) ? null : reader.GetInt32(4),
+                    BodySize = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
+                    IsBodyTruncated = !reader.IsDBNull(6) && reader.GetBoolean(6),
+                    Snippet = reader.IsDBNull(7) ? string.Empty : reader.GetString(7)
+                });
+            }
         }
 
         return results;
@@ -101,12 +118,14 @@ public sealed class SqliteSearchService : ISearchService
         connection.Open();
 
         using var cmd = connection.CreateCommand();
+        var filesJoin = query.HasFtsQuery
+            ? "INNER JOIN FilesFts ON FilesFts.rowid = u.Id"
+            : "LEFT JOIN FilesFts ON FilesFts.rowid = u.Id";
         cmd.CommandText =
-            """
+            $"""
             SELECT COUNT(*)
-            FROM DocumentImages i
-            INNER JOIN Documents d ON d.Id = i.DocumentId
-            LEFT JOIN DocumentsFts f ON f.rowid = d.Id
+            FROM UrlRegistry u
+            {filesJoin}
             WHERE 1=1
             """ + BuildImageFilters(query, cmd);
 
@@ -124,23 +143,25 @@ public sealed class SqliteSearchService : ISearchService
         connection.Open();
 
         using var cmd = connection.CreateCommand();
+        var filesJoin = query.HasFtsQuery
+            ? "INNER JOIN FilesFts ON FilesFts.rowid = u.Id"
+            : "LEFT JOIN FilesFts ON FilesFts.rowid = u.Id";
         cmd.CommandText =
-            """
-            SELECT d.CanonicalUrl,
-                   i.ImageType,
-                   i.Width,
-                   i.Height,
-                   d.BodySize,
-                   d.IsBodyTruncated,
+            $"""
+            SELECT u.NormalizedUrl,
+                   u.ImageType,
+                   COALESCE(u.ImageWidth, 0),
+                   COALESCE(u.ImageHeight, 0),
+                   0,
+                   0,
                    CASE
-                       WHEN @fts_has = 1 THEN snippet(DocumentsFts, 1, '[',']','…',20)
-                       ELSE substr(d.Content, 1, 180)
+                       WHEN @fts_has = 1 THEN snippet(FilesFts, 1, '[',']','…',20)
+                       ELSE COALESCE(substr(FilesFts.SearchText, 1, 180), '')
                    END AS Snippet
-            FROM DocumentImages i
-            INNER JOIN Documents d ON d.Id = i.DocumentId
-            LEFT JOIN DocumentsFts ON DocumentsFts.rowid = d.Id
+            FROM UrlRegistry u
+            {filesJoin}
             WHERE 1=1
-            """ + BuildImageFilters(query, cmd) + " ORDER BY d.LastIndexedUtc DESC LIMIT @limit OFFSET @offset;";
+            """ + BuildImageFilters(query, cmd) + " ORDER BY u.LastVisit DESC LIMIT @limit OFFSET @offset;";
 
         cmd.Parameters.AddWithValue("@limit", limit);
         cmd.Parameters.AddWithValue("@offset", offset);
@@ -191,14 +212,15 @@ public sealed class SqliteSearchService : ISearchService
     {
         cmd.Parameters.AddWithValue("@fts_has", query.HasFtsQuery ? 1 : 0);
         var filters = new List<string>();
+        filters.Add("u.IsImage = 1");
 
         if (query.HasFtsQuery)
         {
-            filters.Add("DocumentsFts MATCH @fts_query");
+            filters.Add("FilesFts MATCH @fts_query");
             cmd.Parameters.AddWithValue("@fts_query", query.FtsQuery!);
         }
 
-        AppendCommonDocumentFilters(query, cmd, filters);
+        AppendCommonUrlFilters(query, cmd, filters);
 
         return filters.Count == 0 ? string.Empty : " AND " + string.Join(" AND ", filters);
     }
@@ -221,6 +243,27 @@ public sealed class SqliteSearchService : ISearchService
         if (query.HasUrlScope)
         {
             filters.Add("d.CanonicalUrl LIKE @url_scope");
+            cmd.Parameters.AddWithValue("@url_scope", $"%{query.UrlScope}%");
+        }
+    }
+
+    private static void AppendCommonUrlFilters(UserQuery query, SqliteCommand cmd, List<string> filters)
+    {
+        if (query.HasSiteScope)
+        {
+            filters.Add("u.NormalizedUrl LIKE @site_scope");
+            cmd.Parameters.AddWithValue("@site_scope", $"gemini://{query.SiteScope}/%");
+        }
+
+        if (query.HasFileTypeScope)
+        {
+            filters.Add("COALESCE(u.LastMimeType, '') LIKE @filetype_scope");
+            cmd.Parameters.AddWithValue("@filetype_scope", $"%{query.FileTypeScope}%");
+        }
+
+        if (query.HasUrlScope)
+        {
+            filters.Add("u.NormalizedUrl LIKE @url_scope");
             cmd.Parameters.AddWithValue("@url_scope", $"%{query.UrlScope}%");
         }
     }

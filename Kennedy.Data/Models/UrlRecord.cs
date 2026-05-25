@@ -12,6 +12,7 @@ namespace Kennedy.Data.Models;
     [Table("UrlRegistry")]
     [Index(nameof(NormalizedUrl), IsUnique = true)]
     [Index(nameof(Status), nameof(PriorityScore))]
+    [Index(nameof(Host))]
     public class UrlRecord
     {
         public UrlRecord()
@@ -38,6 +39,20 @@ namespace Kennedy.Data.Models;
         [MaxLength(1024)]
         [Required]
         public string NormalizedUrl { get; set; } = "";
+
+        [MaxLength(16)]
+        public string Scheme { get; set; } = "gemini";
+
+        [MaxLength(255)]
+        public string Host { get; set; } = "";
+
+        public int Port { get; set; } = 1965;
+
+        [MaxLength(1024)]
+        public string PathAndQuery { get; set; } = "/";
+
+        [MaxLength(256)]
+        public string? FileName { get; set; }
 
         /// <summary>
         /// When we first learned this URL existed (UTC).
@@ -101,5 +116,22 @@ namespace Kennedy.Data.Models;
         /// Used for redirects and interactive prompts
         /// </summary>
         public string Meta { get; set; } = "";
+
+        [MaxLength(256)]
+        public string? LastMimeType { get; set; }
+
+        [MaxLength(256)]
+        public string? LastDetectedMimeType { get; set; }
+
+        public bool IsTextDocument { get; set; }
+
+        public bool IsImage { get; set; }
+
+        public int? ImageWidth { get; set; }
+
+        public int? ImageHeight { get; set; }
+
+        [MaxLength(64)]
+        public string? ImageType { get; set; }
 
     }
