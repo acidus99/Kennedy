@@ -17,6 +17,7 @@ internal class UrlInfoView : AbstractView
 
     private UrlRecord? _urlEntry;
     private DocumentRecord? _docEntry;
+    private DocumentImageRecord? _imageEntry;
 
     public override void Render()
     {
@@ -35,6 +36,9 @@ internal class UrlInfoView : AbstractView
         _urlEntry = db.UrlRegistry.FirstOrDefault(x => x.NormalizedUrl == url.NormalizedUrl);
         _docEntry = _urlEntry != null
             ? db.Documents.FirstOrDefault(x => x.UrlRegistryId == _urlEntry.Id)
+            : null;
+        _imageEntry = _urlEntry != null
+            ? db.Images.FirstOrDefault(x => x.UrlRegistryId == _urlEntry.Id)
             : null;
 
         if (_urlEntry == null && _docEntry == null)
@@ -132,17 +136,17 @@ internal class UrlInfoView : AbstractView
             }
         }
 
-        if (_urlEntry.IsImage)
+        if (_imageEntry != null)
         {
             Response.WriteLine("### Image Metadata");
-            if (_urlEntry.ImageWidth != null && _urlEntry.ImageHeight != null)
+            if (_imageEntry.Width > 0 && _imageEntry.Height > 0)
             {
-                Response.WriteLine($"* Dimensions: {_urlEntry.ImageWidth} x {_urlEntry.ImageHeight}");
+                Response.WriteLine($"* Dimensions: {_imageEntry.Width} x {_imageEntry.Height}");
             }
 
-            if (!string.IsNullOrWhiteSpace(_urlEntry.ImageType))
+            if (!string.IsNullOrWhiteSpace(_imageEntry.ImageType))
             {
-                Response.WriteLine($"* Format: {_urlEntry.ImageType!.ToUpperInvariant()}");
+                Response.WriteLine($"* Format: {_imageEntry.ImageType.ToUpperInvariant()}");
             }
 
             var indexText = ReadFileIndexText(db, _urlEntry.Id);

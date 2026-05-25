@@ -55,7 +55,6 @@ public sealed class ResponseStore
         await db.SaveChangesAsync(ct);
 
         var existingDoc = await db.Documents
-            .Include(d => d.Image)
             .SingleOrDefaultAsync(d => d.UrlRegistryId == url.Id, ct);
 
         var (doc, ftsText) = ApplyDocumentToContext(db, url, parsedResponse, visitTimeUtc, existingDoc);
@@ -145,7 +144,6 @@ public sealed class ResponseStore
 
         var sourceUrlIds = urlMap.Values.Select(u => (long?)u.Id).ToList();
         var existingDocMap = await db.Documents
-            .Include(d => d.Image)
             .Where(d => sourceUrlIds.Contains(d.UrlRegistryId))
             .ToDictionaryAsync(d => d.UrlRegistryId!.Value, ct);
 
@@ -268,8 +266,6 @@ public sealed class ResponseStore
         url.Scheme = parsed.Scheme.ToLowerInvariant();
         url.Host = parsed.Host.ToLowerInvariant();
         url.Port = parsed.IsDefaultPort ? 1965 : parsed.Port;
-        url.PathAndQuery = string.IsNullOrWhiteSpace(parsed.PathAndQuery) ? "/" : parsed.PathAndQuery;
-        url.FileName = Path.GetFileName(parsed.AbsolutePath);
     }
 
     private static void ApplyUrlLifecycle(UrlRecord url, GeminiResponse response, DateTime visitTimeUtc)
@@ -342,30 +338,7 @@ public sealed class ResponseStore
         url.LastMimeType = parsedResponse.MimeType;
         url.LastDetectedMimeType = parsedResponse.DetectedMimeType;
 
-        if (parsedResponse is ImageResponse image)
-        {
-            url.IsImage = true;
-            url.IsTextDocument = false;
-            url.ImageWidth = image.Width;
-            url.ImageHeight = image.Height;
-            url.ImageType = image.ImageType;
-        }
-        else if (parsedResponse is ITextResponse textResponse && textResponse.HasIndexableText)
-        {
-            url.IsTextDocument = true;
-            url.IsImage = false;
-            url.ImageWidth = null;
-            url.ImageHeight = null;
-            url.ImageType = null;
-        }
-        else
-        {
-            url.IsTextDocument = false;
-            url.IsImage = false;
-            url.ImageWidth = null;
-            url.ImageHeight = null;
-            url.ImageType = null;
-        }
+        // UrlRegistry intentionally stores URL lifecycle and protocol metadata only.
     }
 
     /// <summary>
@@ -387,13 +360,32 @@ public sealed class ResponseStore
         {
             if (existing != null)
             {
-                if (existing.Image != null)
-                {
-                    db.DocumentImages.Remove(existing.Image);
-                }
+                var existingImage = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
+                if (existingImage != null) db.Images.Remove(existingImage);
                 db.Documents.Remove(existing);
                 return (existing, null);
             }
+
+            if (parsedResponse is ImageResponse imageResponse)
+            {
+                var image = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
+                if (image == null)
+                {
+                    image = new DocumentImageRecord { UrlRegistryId = url.Id };
+                    db.Images.Add(image);
+                }
+
+                image.Width = imageResponse.Width;
+                image.Height = imageResponse.Height;
+                image.ImageType = imageResponse.ImageType;
+                image.IsTransparent = imageResponse.IsTransparent;
+            }
+            else
+            {
+                var existingImage = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
+                if (existingImage != null) db.Images.Remove(existingImage);
+            }
+
             return (null, null);
         }
 

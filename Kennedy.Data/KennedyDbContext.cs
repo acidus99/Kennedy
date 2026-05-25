@@ -18,7 +18,7 @@ namespace Kennedy.Data
         public DbSet<DocumentRecord> Documents => Set<DocumentRecord>();
 
         /// <summary>Image dimension/type metadata for image URLs.</summary>
-        public DbSet<DocumentImageRecord> DocumentImages => Set<DocumentImageRecord>();
+        public DbSet<DocumentImageRecord> Images => Set<DocumentImageRecord>();
 
         /// <summary>Directed link graph: source URL → target URL.</summary>
         public DbSet<UrlLinkRecord> UrlLinks => Set<UrlLinkRecord>();
@@ -43,10 +43,10 @@ namespace Kennedy.Data
                 .HasForeignKey(d => d.UrlRegistryId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<DocumentRecord>()
-                .HasOne(d => d.Image)
-                .WithOne(i => i.Document)
-                .HasForeignKey<DocumentImageRecord>(i => i.DocumentId)
+            modelBuilder.Entity<DocumentImageRecord>()
+                .HasOne(i => i.Url)
+                .WithOne()
+                .HasForeignKey<DocumentImageRecord>(i => i.UrlRegistryId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
 
@@ -106,13 +106,13 @@ namespace Kennedy.Data
                 """,
                 ct);
 
-            // UrlIndex enables fast inurl substring search. The trigram tokenizer indexes every
-            // 3-char sequence so arbitrary substrings (including '/', '.', ':') can be matched
-            // without a leading-wildcard LIKE scan.
+            // UrlSearch enables fast inurl substring search over URL path+query only.
+            // The trigram tokenizer indexes 3-char sequences so patterns like "/cgi-bin/"
+            // can be matched efficiently.
             await Database.ExecuteSqlRawAsync(
                 """
-                CREATE VIRTUAL TABLE IF NOT EXISTS UrlIndex USING fts5(
-                    Url,
+                CREATE VIRTUAL TABLE IF NOT EXISTS UrlSearch USING fts5(
+                    PathAndQuery,
                     tokenize='trigram'
                 );
                 """,
@@ -121,7 +121,17 @@ namespace Kennedy.Data
             await Database.ExecuteSqlRawAsync(
                 """
                 CREATE TRIGGER IF NOT EXISTS UrlRegistry_ai AFTER INSERT ON UrlRegistry BEGIN
-                    INSERT INTO UrlIndex(rowid, Url) VALUES (new.Id, new.NormalizedUrl);
+                    INSERT INTO UrlSearch(rowid, PathAndQuery) VALUES (
+                        new.Id,
+                        CASE
+                            WHEN instr(new.NormalizedUrl, '://') = 0 THEN new.NormalizedUrl
+                            WHEN instr(substr(new.NormalizedUrl, instr(new.NormalizedUrl, '://') + 3), '/') = 0 THEN '/'
+                            ELSE substr(
+                                new.NormalizedUrl,
+                                instr(new.NormalizedUrl, '://') + 2 + instr(substr(new.NormalizedUrl, instr(new.NormalizedUrl, '://') + 3), '/')
+                            )
+                        END
+                    );
                 END;
                 """,
                 ct);
@@ -129,7 +139,18 @@ namespace Kennedy.Data
             await Database.ExecuteSqlRawAsync(
                 """
                 CREATE TRIGGER IF NOT EXISTS UrlRegistry_ad AFTER DELETE ON UrlRegistry BEGIN
-                    INSERT INTO UrlIndex(UrlIndex, rowid, Url) VALUES ('delete', old.Id, old.NormalizedUrl);
+                    INSERT INTO UrlSearch(UrlSearch, rowid, PathAndQuery) VALUES (
+                        'delete',
+                        old.Id,
+                        CASE
+                            WHEN instr(old.NormalizedUrl, '://') = 0 THEN old.NormalizedUrl
+                            WHEN instr(substr(old.NormalizedUrl, instr(old.NormalizedUrl, '://') + 3), '/') = 0 THEN '/'
+                            ELSE substr(
+                                old.NormalizedUrl,
+                                instr(old.NormalizedUrl, '://') + 2 + instr(substr(old.NormalizedUrl, instr(old.NormalizedUrl, '://') + 3), '/')
+                            )
+                        END
+                    );
                 END;
                 """,
                 ct);
@@ -137,9 +158,19 @@ namespace Kennedy.Data
             // Backfill rows that existed before the trigger was installed.
             await Database.ExecuteSqlRawAsync(
                 """
-                INSERT INTO UrlIndex(rowid, Url)
-                SELECT Id, NormalizedUrl FROM UrlRegistry
-                WHERE Id NOT IN (SELECT rowid FROM UrlIndex);
+                INSERT INTO UrlSearch(rowid, PathAndQuery)
+                SELECT
+                    Id,
+                    CASE
+                        WHEN instr(NormalizedUrl, '://') = 0 THEN NormalizedUrl
+                        WHEN instr(substr(NormalizedUrl, instr(NormalizedUrl, '://') + 3), '/') = 0 THEN '/'
+                        ELSE substr(
+                            NormalizedUrl,
+                            instr(NormalizedUrl, '://') + 2 + instr(substr(NormalizedUrl, instr(NormalizedUrl, '://') + 3), '/')
+                        )
+                    END
+                FROM UrlRegistry
+                WHERE Id NOT IN (SELECT rowid FROM UrlSearch);
                 """,
                 ct);
         }

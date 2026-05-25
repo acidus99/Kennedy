@@ -86,6 +86,4 @@ public class DocumentRecord
     /// <summary>High-level content category (Gemtext, PlainText, Image, Binary, Unknown).</summary>
     public ContentType ContentType { get; set; } = ContentType.Unknown;
 
-    /// <summary>Navigation property to image metadata. Non-null only when ContentType is Image.</summary>
-    public DocumentImageRecord? Image { get; set; }
 }

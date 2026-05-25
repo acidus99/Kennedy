@@ -23,16 +23,24 @@ public sealed class FileSearchFtsRebuilder
         await using var db = await _dbFactory.CreateDbContextAsync(ct);
         await using var tx = await db.Database.BeginTransactionAsync(ct);
 
+        var textUrlIds = await db.Documents
+            .Select(d => d.UrlRegistryId)
+            .Where(id => id != null)
+            .Select(id => id!.Value)
+            .ToListAsync(ct);
+
+        var textUrlSet = textUrlIds.ToHashSet();
+
         var candidates = await db.UrlRegistry
-            .Where(u => u.LastStatusCode >= 20 && u.LastStatusCode < 30 && !u.IsTextDocument)
+            .Where(u => u.LastStatusCode >= 20 && u.LastStatusCode < 30)
             .Select(u => new CandidateRow
             {
                 Id = u.Id,
-                FileName = u.FileName,
-                PathAndQuery = u.PathAndQuery
+                NormalizedUrl = u.NormalizedUrl
             })
             .OrderBy(u => u.Id)
             .ToListAsync(ct);
+        candidates = candidates.Where(c => !textUrlSet.Contains(c.Id)).ToList();
 
         var candidateMap = candidates.ToDictionary(c => c.Id, c => c);
         var indexedTargets = new HashSet<long>();
@@ -59,7 +67,6 @@ JOIN UrlRegistry AS targets ON targets.Id = links.TargetUrlId
 WHERE links.LinkText <> ''
   AND targets.LastStatusCode >= 20
   AND targets.LastStatusCode < 30
-  AND targets.IsTextDocument = 0
 ORDER BY links.TargetUrlId ASC;";
 
         await using var reader = await command.ExecuteReaderAsync(ct);
@@ -107,7 +114,7 @@ ORDER BY links.TargetUrlId ASC;";
                 continue;
             }
 
-            var baseText = BuildBaseTerms(candidate.FileName, candidate.PathAndQuery);
+            var baseText = BuildBaseTerms(candidate.NormalizedUrl);
             if (baseText.Length == 0)
             {
                 continue;
@@ -138,7 +145,7 @@ ORDER BY links.TargetUrlId ASC;";
             return;
         }
 
-        var baseText = BuildBaseTerms(candidate.FileName, candidate.PathAndQuery);
+        var baseText = BuildBaseTerms(candidate.NormalizedUrl);
         var merged = string.IsNullOrWhiteSpace(baseText) ? linkText : $"{baseText} {linkText}";
         merged = TokenCleaner.Replace(merged, " ").Trim().ToLowerInvariant();
 
@@ -154,23 +161,19 @@ ORDER BY links.TargetUrlId ASC;";
         indexedTargets.Add(targetId);
     }
 
-    private static string BuildBaseTerms(string? fileName, string? pathAndQuery)
+    private static string BuildBaseTerms(string? normalizedUrl)
     {
+        if (string.IsNullOrWhiteSpace(normalizedUrl) || !Uri.TryCreate(normalizedUrl, UriKind.Absolute, out var uri))
+        {
+            return string.Empty;
+        }
+
         var builder = new StringBuilder();
-
-        if (!string.IsNullOrWhiteSpace(fileName))
-        {
-            builder.Append(fileName);
-        }
-
-        if (!string.IsNullOrWhiteSpace(pathAndQuery))
-        {
-            if (builder.Length > 0)
-            {
-                builder.Append(' ');
-            }
-            builder.Append(pathAndQuery);
-        }
+        var fileName = Path.GetFileName(uri.AbsolutePath);
+        var pathAndQuery = string.IsNullOrWhiteSpace(uri.PathAndQuery) ? "/" : uri.PathAndQuery;
+        if (!string.IsNullOrWhiteSpace(fileName)) builder.Append(fileName);
+        if (builder.Length > 0) builder.Append(' ');
+        builder.Append(pathAndQuery);
 
         return TokenCleaner.Replace(builder.ToString(), " ").Trim().ToLowerInvariant();
     }
@@ -178,7 +181,6 @@ ORDER BY links.TargetUrlId ASC;";
     private sealed class CandidateRow
     {
         public long Id { get; init; }
-        public string? FileName { get; init; }
-        public string? PathAndQuery { get; init; }
+        public string? NormalizedUrl { get; init; }
     }
 }

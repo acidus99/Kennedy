@@ -401,7 +401,7 @@ static SampleData BuildSampleData(
 
         sample.SecurityTxtCount = ExecuteLongScalar(
             searchConn,
-            "SELECT COUNT(*) FROM (SELECT 1 FROM UrlRegistry WHERE PathAndQuery LIKE '/.well-known/security.txt%' AND LastStatusCode >= 20 AND LastStatusCode < 30 GROUP BY Host, Port);");
+            "SELECT COUNT(*) FROM (SELECT 1 FROM UrlRegistry WHERE NormalizedUrl LIKE '%/.well-known/security.txt%' AND LastStatusCode >= 20 AND LastStatusCode < 30 GROUP BY Host, Port);");
 
         sample.SiteHealthDomain = ExecuteStringScalar(
             searchConn,
@@ -429,8 +429,14 @@ static SampleData BuildSampleData(
         sample.FileTypeQuery = $"filetype:{fileTypeFragment} cat";
         sample.FileTypeCount = search.GetTextResultsCount(parser.Parse(sample.FileTypeQuery));
 
-        // inurl: filter — use the hostname of the most-recently-indexed document (same as SiteSearchDomain).
-        sample.InurlQuery = $"inurl:{sample.SiteSearchDomain}";
+        // inurl: filter now targets path/query only (scheme/host/port are excluded from UrlSearch).
+        var inurlSource = new GeminiUrl(sample.TextTopUrl);
+        var pathTokens = (inurlSource.Path ?? string.Empty)
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .Where(x => x.Length >= 3)
+            .ToList();
+        var inurlToken = pathTokens.FirstOrDefault() ?? "cat";
+        sample.InurlQuery = $"inurl:{inurlToken}";
         sample.InurlCount = search.GetTextResultsCount(parser.Parse(sample.InurlQuery));
 
         // intitle: filter — find a 5+ char all-alpha word from any document title.

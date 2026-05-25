@@ -140,6 +140,7 @@ public sealed class SqliteSearchService : ISearchService
             $"""
             SELECT COUNT(*)
             FROM UrlRegistry u
+            LEFT JOIN Images i ON i.UrlRegistryId = u.Id
             {filesJoin}
             WHERE 1=1
             """ + BuildImageFilters(query, cmd);
@@ -164,9 +165,9 @@ public sealed class SqliteSearchService : ISearchService
         cmd.CommandText =
             $"""
             SELECT u.NormalizedUrl,
-                   u.ImageType,
-                   COALESCE(u.ImageWidth, 0),
-                   COALESCE(u.ImageHeight, 0),
+                   i.ImageType,
+                   COALESCE(i.Width, 0),
+                   COALESCE(i.Height, 0),
                    0,
                    0,
                    CASE
@@ -174,6 +175,7 @@ public sealed class SqliteSearchService : ISearchService
                        ELSE COALESCE(substr(FilesFts.SearchText, 1, 180), '')
                    END AS Snippet
             FROM UrlRegistry u
+            LEFT JOIN Images i ON i.UrlRegistryId = u.Id
             {filesJoin}
             WHERE 1=1
             """ + BuildImageFilters(query, cmd) + " ORDER BY u.LastVisit DESC LIMIT @limit OFFSET @offset;";
@@ -253,7 +255,7 @@ public sealed class SqliteSearchService : ISearchService
     {
         cmd.Parameters.AddWithValue("@fts_has", query.HasFtsQuery ? 1 : 0);
         var filters = new List<string>();
-        filters.Add("u.IsImage = 1");
+        filters.Add("LOWER(COALESCE(u.LastMimeType, COALESCE(u.LastDetectedMimeType, ''))) LIKE 'image/%'");
 
         if (query.HasFtsQuery)
         {
@@ -291,7 +293,7 @@ public sealed class SqliteSearchService : ISearchService
 
         if (query.HasUrlScope)
         {
-            filters.Add("d.UrlRegistryId IN (SELECT rowid FROM UrlIndex WHERE UrlIndex MATCH @url_scope)");
+            filters.Add("d.UrlRegistryId IN (SELECT rowid FROM UrlSearch WHERE UrlSearch MATCH @url_scope)");
             var escaped = query.UrlScope!.Replace("\"", "\"\"");
             cmd.Parameters.AddWithValue("@url_scope", $"\"{escaped}\"");
         }
@@ -322,7 +324,7 @@ public sealed class SqliteSearchService : ISearchService
 
         if (query.HasUrlScope)
         {
-            filters.Add("u.Id IN (SELECT rowid FROM UrlIndex WHERE UrlIndex MATCH @url_scope)");
+            filters.Add("u.Id IN (SELECT rowid FROM UrlSearch WHERE UrlSearch MATCH @url_scope)");
             var escaped = query.UrlScope!.Replace("\"", "\"\"");
             cmd.Parameters.AddWithValue("@url_scope", $"\"{escaped}\"");
         }

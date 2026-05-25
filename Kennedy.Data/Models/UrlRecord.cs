@@ -48,12 +48,6 @@ namespace Kennedy.Data.Models;
 
         public int Port { get; set; } = 1965;
 
-        [MaxLength(1024)]
-        public string PathAndQuery { get; set; } = "/";
-
-        [MaxLength(256)]
-        public string? FileName { get; set; }
-
         /// <summary>
         /// When we first learned this URL existed (UTC).
         /// </summary>
@@ -122,16 +116,5 @@ namespace Kennedy.Data.Models;
 
         [MaxLength(256)]
         public string? LastDetectedMimeType { get; set; }
-
-        public bool IsTextDocument { get; set; }
-
-        public bool IsImage { get; set; }
-
-        public int? ImageWidth { get; set; }
-
-        public int? ImageHeight { get; set; }
-
-        [MaxLength(64)]
-        public string? ImageType { get; set; }
 
     }

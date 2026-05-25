@@ -5,16 +5,16 @@ namespace Kennedy.Data.Models;
 
 /// <summary>
 /// Stores decoded image metadata for a URL whose response body is an image.
-/// One-to-one with <see cref="DocumentRecord"/>; the PK is also the FK.
+/// One-to-one with <see cref="UrlRecord"/>; the PK is also the FK.
 /// Populated by <see cref="Kennedy.Data.Parsers.BinaryParser"/> via ImageSharp.
 /// </summary>
-[Table("DocumentImages")]
+[Table("Images")]
 public class DocumentImageRecord
 {
-    /// <summary>Shared PK/FK — matches the owning DocumentRecord.Id.</summary>
+    /// <summary>Shared PK/FK — matches the owning UrlRecord.Id.</summary>
     [Key]
-    [ForeignKey(nameof(Document))]
-    public long DocumentId { get; set; }
+    [ForeignKey(nameof(Url))]
+    public long UrlRegistryId { get; set; }
 
     /// <summary>Image width in pixels.</summary>
     public int Width { get; set; }
@@ -30,5 +30,5 @@ public class DocumentImageRecord
     /// <summary>True when the image has an alpha channel (non-None PixelAlphaRepresentation).</summary>
     public bool IsTransparent { get; set; }
 
-    public DocumentRecord? Document { get; set; }
+    public UrlRecord? Url { get; set; }
 }

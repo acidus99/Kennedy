@@ -25,7 +25,7 @@ internal class SecurityTxtView : AbstractView
         Response.WriteLine();
 
         var servers = db.UrlRegistry
-            .Where(x => x.PathAndQuery.StartsWith("/.well-known/security.txt") && x.LastStatusCode >= 20 && x.LastStatusCode < 30)
+            .Where(x => x.NormalizedUrl.Contains("/.well-known/security.txt") && x.LastStatusCode >= 20 && x.LastStatusCode < 30)
             .Select(x => new { x.Host, x.Port })
             .Distinct()
             .OrderBy(x => x.Host)
