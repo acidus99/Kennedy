@@ -9,6 +9,7 @@ Decisions and design notes from reviewing Mercator, Cho & Garcia-Molina, WebFoun
 Replace the static hash-bucket frontier with a heap-based design that decouples politeness enforcement from worker assignment.
 
 **Structure:**
+
 ```
 CrawlFrontier
 ├── Heap<ip, NextContactTime>       — when can I contact this IP next?
