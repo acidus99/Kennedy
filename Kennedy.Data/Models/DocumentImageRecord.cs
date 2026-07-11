@@ -30,5 +30,8 @@ public class DocumentImageRecord
     /// <summary>True when the image has an alpha channel (non-None PixelAlphaRepresentation).</summary>
     public bool IsTransparent { get; set; }
 
+    /// <summary>UTC timestamp of the WARC record that last wrote this image row. Used for out-of-order WARC guard.</summary>
+    public DateTime LastIndexedUtc { get; set; }
+
     public UrlRecord? Url { get; set; }
 }

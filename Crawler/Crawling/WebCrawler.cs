@@ -153,6 +153,7 @@ public class WebCrawler : IWebCrawler
     public void DoCrawl()
     {
         RobotsChecker.Global.Crawler = this;
+        Console.CancelKeyPress += HandleCancelKeyPress;
         CrawlerStopwatch.Start();
 
         SpawnCrawlThreads();
@@ -175,6 +176,14 @@ public class WebCrawler : IWebCrawler
         Console.WriteLine("COMPLETE!");
         Console.WriteLine($"Elapsed: {CrawlerStopwatch.Elapsed}\tTotal Requested: {TotalUrlsRequested.Count}\tTotal Processed: {TotalUrlsProcessed.Count}\tRemaining: {UrlFrontier.Count}");
         FinalizeCrawl();
+        Console.CancelKeyPress -= HandleCancelKeyPress;
+    }
+
+    private void HandleCancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+    {
+        e.Cancel = true;
+        UserQuit = true;
+        Console.WriteLine("Ctrl+C detected. Stopping crawl gracefully.");
     }
 
     private void CheckForQuit()
@@ -205,8 +214,19 @@ public class WebCrawler : IWebCrawler
         } while (KeepWorkersAlive);
     }
 
+    private void DrainFrontierToRemainingLog()
+    {
+        UrlFrontierEntry? entry;
+        while ((entry = UrlFrontier.DrainQueue()) != null)
+        {
+            remainingUrlLogger.LogRemainingUrl(entry);
+        }
+    }
+
     private void FinalizeCrawl()
     {
+        DrainFrontierToRemainingLog();
+
         //flush and close our logs
         rejectionLogger.Close();
         remainingUrlLogger.Close();

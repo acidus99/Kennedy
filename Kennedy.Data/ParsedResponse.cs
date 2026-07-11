@@ -34,6 +34,7 @@ public class ParsedResponse : GeminiResponse
         StatusCode = baseResponse.StatusCode;
         Meta = baseResponse.Meta;
         RemoteAddress = baseResponse.RemoteAddress;
+        TlsInfo = baseResponse.TlsInfo;
         RequestSent = baseResponse.RequestSent;
         ResponseReceived = baseResponse.ResponseReceived;
 

@@ -254,6 +254,52 @@ public sealed class ResponseStore
         await tx.CommitAsync(ct);
     }
 
+    /// <summary>
+    /// Stores a batch of responses into UrlRegistry only — no Documents, Images, FTS, or Links.
+    /// Uses "latest wins" semantics: a URL record is only updated when the WARC's visit time is
+    /// strictly newer than the existing <see cref="UrlRecord.LastVisit"/>, making this safe to
+    /// call with WARCs in any order.  Used by the Phase-1 bootstrap pass.
+    /// </summary>
+    public async Task StoreRegistryOnlyBatchAsync(IReadOnlyList<GeminiResponse> responses, CancellationToken ct)
+    {
+        if (responses.Count == 0) return;
+
+        var parsed = responses
+            .Select(r => (response: r, parsed: _responseParser.Parse(r), visitTime: r.RequestSent ?? DateTime.UtcNow))
+            .ToList();
+
+        await using var db = await _dbFactory.CreateDbContextAsync(ct);
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+
+        var sourceUrls = parsed.Select(p => p.response.RequestUrl.NormalizedUrl).ToList();
+
+        var existingUrlMap = await db.UrlRegistry
+            .Where(u => sourceUrls.Contains(u.NormalizedUrl))
+            .ToDictionaryAsync(u => u.NormalizedUrl, ct);
+
+        foreach (var (response, parsedResponse, visitTime) in parsed)
+        {
+            var normalizedUrl = response.RequestUrl.NormalizedUrl;
+
+            if (!existingUrlMap.TryGetValue(normalizedUrl, out var url))
+            {
+                url = new UrlRecord(normalizedUrl) { FirstSeen = visitTime };
+                db.UrlRegistry.Add(url);
+            }
+            else if (url.LastVisit.HasValue && visitTime <= url.LastVisit.Value)
+            {
+                continue; // already have newer data from a later WARC
+            }
+
+            ApplyUrlLifecycle(url, response, visitTime);
+            ApplyUrlComponents(url);
+            ApplyUrlMetadata(url, parsedResponse);
+        }
+
+        await db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+    }
+
     // ── Shared helpers ────────────────────────────────────────────────────────
 
     private static void ApplyUrlComponents(UrlRecord url)
@@ -351,7 +397,7 @@ public sealed class ResponseStore
         KennedyDbContext db,
         UrlRecord url,
         ParsedResponse parsedResponse,
-        DateTime indexedUtc,
+        DateTime visitTimeUtc,
         DocumentRecord? existing)
     {
         var isIndexableText = parsedResponse is ITextResponse textResponse && textResponse.HasIndexableText;
@@ -360,6 +406,10 @@ public sealed class ResponseStore
         {
             if (existing != null)
             {
+                // Older WARC: don't remove a more recently indexed Document.
+                if (visitTimeUtc <= existing.LastIndexedUtc)
+                    return (null, null);
+
                 var existingImage = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
                 if (existingImage != null) db.Images.Remove(existingImage);
                 db.Documents.Remove(existing);
@@ -374,30 +424,42 @@ public sealed class ResponseStore
                     image = new DocumentImageRecord { UrlRegistryId = url.Id };
                     db.Images.Add(image);
                 }
+                else if (visitTimeUtc <= image.LastIndexedUtc)
+                {
+                    return (null, null); // older WARC, don't overwrite image metadata
+                }
 
                 image.Width = imageResponse.Width;
                 image.Height = imageResponse.Height;
                 image.ImageType = imageResponse.ImageType;
                 image.IsTransparent = imageResponse.IsTransparent;
+                image.LastIndexedUtc = visitTimeUtc;
             }
             else
             {
                 var existingImage = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
-                if (existingImage != null) db.Images.Remove(existingImage);
+                if (existingImage != null && visitTimeUtc > existingImage.LastIndexedUtc)
+                    db.Images.Remove(existingImage);
             }
 
             return (null, null);
         }
 
+        // Indexable text path.
         if (existing == null)
         {
             existing = new DocumentRecord
             {
                 UrlRegistryId = url.Id,
                 CanonicalUrl = url.NormalizedUrl,
-                LastIndexedUtc = indexedUtc
+                LastIndexedUtc = visitTimeUtc
             };
             db.Documents.Add(existing);
+        }
+        else if (visitTimeUtc <= existing.LastIndexedUtc)
+        {
+            // Older WARC: don't overwrite a more recently indexed Document.
+            return (null, null);
         }
 
         // Skip rewriting unchanged payloads to avoid unnecessary FTS churn.
@@ -405,7 +467,7 @@ public sealed class ResponseStore
         if (existing.ResponseHash == parsedResponse.Hash)
         {
             existing.UrlRegistryId = url.Id;
-            existing.LastIndexedUtc = indexedUtc;
+            existing.LastIndexedUtc = visitTimeUtc;
             existing.StatusCode = parsedResponse.StatusCode;
             existing.Host = url.Host;
             existing.LastMimeType = url.LastMimeType;
@@ -416,7 +478,7 @@ public sealed class ResponseStore
         existing.CanonicalUrl = url.NormalizedUrl;
         existing.Host = url.Host;
         existing.LastMimeType = url.LastMimeType;
-        existing.LastIndexedUtc = indexedUtc;
+        existing.LastIndexedUtc = visitTimeUtc;
         existing.StatusCode = parsedResponse.StatusCode;
         existing.ContentType = parsedResponse.FormatType;
         existing.IsBodyTruncated = parsedResponse.IsBodyTruncated;

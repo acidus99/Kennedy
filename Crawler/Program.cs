@@ -8,7 +8,7 @@ class Program
     {
         HandleArgs(args);
 
-        var crawler = new WebCrawler(40, 5000000);
+        var crawler = new WebCrawler(40, 900000);
 
         if (CrawlerOptions.SeedUrlsFile != "")
         {

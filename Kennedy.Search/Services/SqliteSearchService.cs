@@ -1,3 +1,4 @@
+using Kennedy.Data.Models;
 using Kennedy.Search.Models;
 using Microsoft.Data.Sqlite;
 
@@ -324,9 +325,10 @@ public sealed class SqliteSearchService : ISearchService
 
         if (query.HasUrlScope)
         {
-            filters.Add("u.Id IN (SELECT rowid FROM UrlSearch WHERE UrlSearch MATCH @url_scope)");
+            filters.Add("u.Id IN (SELECT rowid FROM UrlSearch WHERE UrlSearch MATCH @url_scope) AND u.Status = @active_status");
             var escaped = query.UrlScope!.Replace("\"", "\"\"");
             cmd.Parameters.AddWithValue("@url_scope", $"\"{escaped}\"");
+            cmd.Parameters.AddWithValue("@active_status", (int)UrlStatus.Active);
         }
     }
 }

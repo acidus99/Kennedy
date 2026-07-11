@@ -10,7 +10,16 @@ public class RemainingUrlLogger
     public RemainingUrlLogger(string outputFile)
     {
         locker = new object();
-        fout = new StreamWriter(outputFile);
+        var outputDir = Path.GetDirectoryName(outputFile);
+        if (!string.IsNullOrEmpty(outputDir))
+        {
+            Directory.CreateDirectory(outputDir);
+        }
+
+        fout = new StreamWriter(outputFile)
+        {
+            AutoFlush = true
+        };
     }
 
     public void Close()
