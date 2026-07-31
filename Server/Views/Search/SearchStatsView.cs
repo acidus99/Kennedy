@@ -51,7 +51,7 @@ internal class SearchStatsView : AbstractView
             return "Unavailable";
         }
 
-        return $"{FormatCount(databaseFile.Length / 1024)} KiB";
+        return FormatSize(databaseFile.Length);
     }
 
     private SearchStats? GetStats()

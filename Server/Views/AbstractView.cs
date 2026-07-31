@@ -38,13 +38,34 @@ internal abstract class AbstractView
 
     protected string FormatSize(long bodySize)
     {
-        if (bodySize < 1024)
+        const decimal kb = 1024m;
+        const decimal mb = kb * 1024m;
+        const decimal gb = mb * 1024m;
+
+        var absoluteSize = Math.Abs((decimal)bodySize);
+
+        if (absoluteSize >= gb)
         {
-            return $"{bodySize.ToString("N0")} B";
+            return $"{FormatSizeValue(bodySize / gb)} GB";
         }
 
-        return $"{Math.Round(((double)bodySize) / ((double)1024)).ToString("N0")} KiB";
+        if (absoluteSize >= mb)
+        {
+            return $"{FormatSizeValue(bodySize / mb)} MB";
+        }
+
+        if (absoluteSize >= kb)
+        {
+            return $"{FormatSizeValue(bodySize / kb)} KB";
+        }
+
+        return $"{FormatCount(bodySize)} bytes";
     }
+
+    private string FormatSizeValue(decimal size)
+        => decimal.Truncate(size) == size ?
+            size.ToString("N0") :
+            size.ToString("N2");
 
     protected string FormatUrl(GeminiUrl url)
     {
