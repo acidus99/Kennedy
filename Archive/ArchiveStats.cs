@@ -43,9 +43,13 @@ public class ArchiveStats
     /// </summary>
     public long SizeWithoutDeDuplication { get; set; }
 
+    /// <summary>
+    /// Total size of the Packs directory on disk
+    /// </summary>
+    public long? PacksSizeOnDisk { get; set; }
+
 
     public DateTime OldestSnapshot { get; set; }
 
     public DateTime NewestSnapshot { get; set; }
 }
-

@@ -140,6 +140,8 @@ public class Archiver
             ret.SizeWithoutDeDuplication = db.Snapshots
                 .Sum(x => x.Size);
 
+            ret.PacksSizeOnDisk = packManager.GetSizeOnDisk();
+
             var captures = db.Snapshots.Select(x => x.Captured);
 
             if (captures.Any())

@@ -42,14 +42,15 @@ internal class ArchiveStatsView : AbstractView
         Response.WriteLine($"Uncompressed size (All content): {FormatSize(stats.SizeWithoutDeDuplication)}");
         Response.WriteLine($"Uncompressed size (Deduplicated): {FormatSize(stats.Size)}");
         Response.WriteLine($"Savings from Deduplication: {FormatSavings(stats.Size, stats.SizeWithoutDeDuplication)}");
-        Response.WriteLine($"Actual size on disk (captures deduplicated, compressed where possible): {FormatSize(EstimatedSizeOnDisk(stats.Size))}");
+        Response.WriteLine($"Actual size on disk (captures deduplicated, compressed where possible): {FormatPacksSizeOnDisk(stats)}");
 
         return;
     }
 
-    //current average savings of Pack files is ~22%
-    private long EstimatedSizeOnDisk(long size)
-        => Convert.ToInt64(Math.Truncate(Convert.ToDouble(size) * (1d - 0.095d)));
+    private string FormatPacksSizeOnDisk(ArchiveStats stats)
+        => stats.PacksSizeOnDisk.HasValue ?
+            FormatSize(stats.PacksSizeOnDisk.Value) :
+            "Unavailable until archive-stats.json is refreshed by the indexer";
 
     private string FormatSavings(long optimized, long unoptimized)
     {

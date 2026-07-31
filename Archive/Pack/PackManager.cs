@@ -1,4 +1,7 @@
-﻿namespace Kennedy.Archive.Pack;
+﻿using System.Diagnostics;
+using System.Globalization;
+
+namespace Kennedy.Archive.Pack;
 
 /// <summary>
 /// Stores a group of packs on disk and an efficient way
@@ -102,5 +105,62 @@ public class PackManager
             return true;
         }
         return false;
+    }
+
+    public long GetSizeOnDisk()
+    {
+        if (!Directory.Exists(ArchiveRoot))
+        {
+            return 0;
+        }
+
+        return TryGetDuSize() ?? GetFileLengthTotal();
+    }
+
+    private long? TryGetDuSize()
+    {
+        try
+        {
+            using var process = new Process();
+            process.StartInfo.FileName = "du";
+            process.StartInfo.ArgumentList.Add("-sk");
+            process.StartInfo.ArgumentList.Add(ArchiveRoot);
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.UseShellExecute = false;
+
+            process.Start();
+            if (!process.WaitForExit(5 * 60 * 1000))
+            {
+                process.Kill();
+                return null;
+            }
+            string output = process.StandardOutput.ReadToEnd();
+
+            if (process.ExitCode != 0)
+            {
+                return null;
+            }
+
+            var firstColumn = output.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            if (long.TryParse(firstColumn, NumberStyles.Integer, CultureInfo.InvariantCulture, out var sizeInKiB))
+            {
+                return sizeInKiB * 1024;
+            }
+        }
+        catch
+        {
+        }
+
+        return null;
+    }
+
+    private long GetFileLengthTotal()
+    {
+        long total = 0;
+        foreach (var file in Directory.EnumerateFiles(ArchiveRoot, "*", SearchOption.AllDirectories))
+        {
+            total += new FileInfo(file).Length;
+        }
+        return total;
     }
 }
