@@ -19,9 +19,6 @@ namespace Kennedy.Indexer
 
         public static async Task<int> Main(string[] args)
         {
-            string sqlitePath = "/Users/billy/kennedy-capsule/crawl-data/kennedy2.db";
-            string languageConfigDir = "/Users/billy/Code/Kennedy/config-files/";
-
             bool certListMode = args.Length >= 3 && args[0] == "--cert-list";
             string? certListWarcPath = certListMode ? args[1] : null;
             string? certListOutputPath = certListMode ? args[2] : null;
@@ -41,34 +38,49 @@ namespace Kennedy.Indexer
                 return 0;
             }
 
+            IndexerOptions options;
+            try
+            {
+                options = ParseOptions(args);
+            }
+            catch (ArgumentException ex)
+            {
+                Console.Error.WriteLine(ex.Message);
+                DisplayUsage();
+                return 2;
+            }
+            if (options.ShowHelp)
+            {
+                DisplayUsage();
+                return 0;
+            }
+
             // Bootstrap mode: two-phase over a directory of WARCs.
             //   indexer --bootstrap /Volumes/WARC-BACKUP/WARCs/
-            bool bootstrapMode = args.Length >= 2 && args[0] == "--bootstrap";
-            string? bootstrapDir = bootstrapMode ? args[1] : null;
-
-            // Single-WARC mode (default). Edit the list below as needed.
-            string[] singleWarcFiles = bootstrapMode ? [] :
-            [
-                "/Users/billy/HDD Inside/Kennedy-Work/WARCs/2026-02-25.warc.gz",
-            ];
-
+            bool bootstrapMode = !string.IsNullOrWhiteSpace(options.BootstrapDir);
+            IReadOnlyList<string> warcFiles = [];
             if (!bootstrapMode)
             {
-                foreach (var warc in singleWarcFiles)
+                warcFiles = ResolveWarcInputs(options);
+                if (warcFiles.Count == 0)
                 {
-                    if (!File.Exists(warc))
-                    {
-                        Console.Error.WriteLine($"WARC file not found: {warc}");
-                        return 2;
-                    }
+                    Console.Error.WriteLine("No WARC files provided.");
+                    DisplayUsage();
+                    return 2;
                 }
             }
 
-            var services = new ServiceCollection();
-            LanguageDetector.ConfigFileDirectory = languageConfigDir;
+            if (bootstrapMode && options.WarcFiles.Count > 0)
+            {
+                Console.Error.WriteLine("Do not combine --bootstrap with positional WARC files.");
+                return 2;
+            }
 
-            services.AddDbContextFactory<KennedyDbContext>(options =>
-                options.UseSqlite($"Data Source={sqlitePath}"));
+            var services = new ServiceCollection();
+            LanguageDetector.ConfigFileDirectory = options.LanguageConfigDir;
+
+            services.AddDbContextFactory<KennedyDbContext>(dbOptions =>
+                dbOptions.UseSqlite($"Data Source={options.SqlitePath}"));
 
             services.AddScoped<ResponseStore>();
             services.AddScoped<FileSearchFtsRebuilder>();
@@ -84,11 +96,12 @@ namespace Kennedy.Indexer
 
             if (bootstrapMode)
             {
-                await RunBootstrapAsync(indexer, bootstrapDir!, CancellationToken.None);
+                await RunBootstrapAsync(indexer, options.BootstrapDir!, CancellationToken.None);
             }
             else
             {
-                foreach (var warcFile in singleWarcFiles)
+                Console.WriteLine($"Indexing {warcFiles.Count} WARC file(s).");
+                foreach (var warcFile in warcFiles)
                 {
                     Console.WriteLine($"Indexing: {warcFile}");
                     await indexer.IndexFileAsync(warcFile, CancellationToken.None);
@@ -102,9 +115,9 @@ namespace Kennedy.Indexer
             stopwatch.Stop();
             Console.WriteLine($"Done. Elapsed {stopwatch.Elapsed.TotalSeconds:F1} seconds");
 
-            if (args.Length >= 2 && args[0] == "--smoke-query")
+            if (!string.IsNullOrWhiteSpace(options.SmokeQuery))
             {
-                await RunSmokeQueryAsync(sqlitePath, args[1], CancellationToken.None);
+                await RunSmokeQueryAsync(options.SqlitePath, options.SmokeQuery, CancellationToken.None);
             }
 
             return 0;
@@ -158,19 +171,66 @@ namespace Kennedy.Indexer
             return Directory.EnumerateFiles(dir, "*.warc.gz", SearchOption.TopDirectoryOnly)
                 .Select(p =>
                 {
-                    // Strip both extensions: "2025-04-16.warc.gz" → "2025-04-16"
-                    var stem = Path.GetFileNameWithoutExtension(
-                                   Path.GetFileNameWithoutExtension(p));
-                    DateTime.TryParseExact(
-                        stem, "yyyy-MM-dd",
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        System.Globalization.DateTimeStyles.None,
-                        out var date);
+                    var date = TryParseWarcDate(p) ?? default;
                     return (path: p, date);
                 })
                 .Where(x => x.date != default)
                 .OrderBy(x => x.date)
+                .ThenBy(x => x.path, StringComparer.OrdinalIgnoreCase)
                 .ToList();
+        }
+
+        private static IReadOnlyList<string> ResolveWarcInputs(IndexerOptions options)
+        {
+            var files = new List<string>();
+            files.AddRange(options.WarcFiles);
+
+            foreach (var dir in options.WarcDirs)
+            {
+                if (!Directory.Exists(dir))
+                {
+                    Console.Error.WriteLine($"WARC directory not found: {dir}");
+                    return [];
+                }
+
+                files.AddRange(Directory.EnumerateFiles(dir, "*.warc", SearchOption.TopDirectoryOnly));
+                files.AddRange(Directory.EnumerateFiles(dir, "*.warc.gz", SearchOption.TopDirectoryOnly));
+            }
+
+            var missing = files.Where(f => !File.Exists(f)).ToList();
+            if (missing.Count > 0)
+            {
+                foreach (var file in missing)
+                {
+                    Console.Error.WriteLine($"WARC file not found: {file}");
+                }
+                return [];
+            }
+
+            return files
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(f => TryParseWarcDate(f) ?? DateTime.MaxValue)
+                .ThenBy(f => f, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private static DateTime? TryParseWarcDate(string path)
+        {
+            var fileName = Path.GetFileName(path);
+            if (fileName.Length < 10)
+            {
+                return null;
+            }
+
+            var dateText = fileName[..10];
+            return DateTime.TryParseExact(
+                dateText,
+                "yyyy-MM-dd",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None,
+                out var date)
+                    ? date
+                    : null;
         }
 
         private static async Task EnsureDatabaseCreatedAsync(IServiceProvider sp, CancellationToken ct)
@@ -178,6 +238,7 @@ namespace Kennedy.Indexer
             var dbFactory = sp.GetRequiredService<IDbContextFactory<KennedyDbContext>>();
             await using var db = await dbFactory.CreateDbContextAsync(ct);
             await db.Database.EnsureCreatedAsync(ct);
+            await db.EnsureSchemaCompatibilityAsync(ct);
             await db.EnsureFtsAsync(ct);
             await db.ApplyPerformancePragmasAsync(ct);
         }
@@ -193,9 +254,9 @@ namespace Kennedy.Indexer
             cmd.CommandText =
                 """
                 SELECT d.CanonicalUrl, d.Title
-                FROM DocumentsFts f
-                JOIN Documents d ON d.Id = f.rowid
-                WHERE f MATCH $query
+                FROM DocumentsFts
+                JOIN Documents d ON d.Id = DocumentsFts.rowid
+                WHERE DocumentsFts MATCH $query
                 LIMIT 5;
                 """;
             cmd.Parameters.AddWithValue("$query", query);
@@ -207,6 +268,84 @@ namespace Kennedy.Indexer
                 var title = reader.IsDBNull(1) ? "" : reader.GetString(1);
                 Console.WriteLine($"- {title} [{url}]");
             }
+        }
+
+        private static IndexerOptions ParseOptions(string[] args)
+        {
+            var options = new IndexerOptions();
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                var arg = args[i];
+                switch (arg)
+                {
+                    case "-h":
+                    case "--help":
+                        options.ShowHelp = true;
+                        break;
+                    case "--bootstrap":
+                        options.BootstrapDir = RequireValue(args, ref i, arg);
+                        break;
+                    case "--warc-dir":
+                        options.WarcDirs.Add(RequireValue(args, ref i, arg));
+                        break;
+                    case "--db":
+                        options.SqlitePath = RequireValue(args, ref i, arg);
+                        break;
+                    case "--config-dir":
+                        options.LanguageConfigDir = RequireValue(args, ref i, arg);
+                        break;
+                    case "--smoke-query":
+                        options.SmokeQuery = RequireValue(args, ref i, arg);
+                        break;
+                    default:
+                        if (arg.StartsWith("--", StringComparison.Ordinal))
+                        {
+                            throw new ArgumentException($"Unknown option: {arg}");
+                        }
+                        options.WarcFiles.Add(arg);
+                        break;
+                }
+            }
+
+            return options;
+        }
+
+        private static string RequireValue(string[] args, ref int index, string optionName)
+        {
+            if (index + 1 >= args.Length)
+            {
+                throw new ArgumentException($"{optionName} requires a value.");
+            }
+
+            return args[++index];
+        }
+
+        private static void DisplayUsage()
+        {
+            Console.WriteLine("Usage:");
+            Console.WriteLine("  dotnet run --project Indexer -- [options] <warc-file> [warc-file...]");
+            Console.WriteLine("  dotnet run --project Indexer -- --warc-dir <directory>");
+            Console.WriteLine("  dotnet run --project Indexer -- --bootstrap <directory>");
+            Console.WriteLine();
+            Console.WriteLine("Options:");
+            Console.WriteLine("  --warc-dir <dir>       Add all .warc and .warc.gz files in a directory.");
+            Console.WriteLine("  --bootstrap <dir>      Two-phase import: all WARCs into UrlRegistry, recent WARCs into search.");
+            Console.WriteLine("  --db <path>            SQLite database path.");
+            Console.WriteLine("  --config-dir <dir>     Language profile config directory.");
+            Console.WriteLine("  --smoke-query <query>  Run a smoke FTS query after indexing.");
+            Console.WriteLine("  --cert-list <warc> <csv> remains available as a separate mode.");
+        }
+
+        private sealed class IndexerOptions
+        {
+            public string SqlitePath { get; set; } = "/Users/billy/kennedy-capsule/crawl-data/kennedy2.db";
+            public string LanguageConfigDir { get; set; } = "/Users/billy/Code/Kennedy/config-files/";
+            public string? BootstrapDir { get; set; }
+            public string? SmokeQuery { get; set; }
+            public bool ShowHelp { get; set; }
+            public List<string> WarcDirs { get; } = [];
+            public List<string> WarcFiles { get; } = [];
         }
     }
 }

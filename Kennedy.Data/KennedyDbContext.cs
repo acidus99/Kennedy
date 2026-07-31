@@ -1,4 +1,5 @@
 using Kennedy.Data.Models;
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kennedy.Data
@@ -76,6 +77,39 @@ namespace Kennedy.Data
             await Database.ExecuteSqlRawAsync("PRAGMA cache_size = -65536;", ct);
             await Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY;", ct);
             await Database.ExecuteSqlRawAsync("PRAGMA mmap_size = 268435456;", ct);
+        }
+
+        public async Task EnsureSchemaCompatibilityAsync(CancellationToken ct)
+        {
+            var connection = Database.GetDbConnection();
+            if (connection.State != ConnectionState.Open)
+            {
+                await connection.OpenAsync(ct);
+            }
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA table_info(Images);";
+
+            var hasImagesTable = false;
+            var hasLastIndexedUtc = false;
+            await using (var reader = await command.ExecuteReaderAsync(ct))
+            {
+                while (await reader.ReadAsync(ct))
+                {
+                    hasImagesTable = true;
+                    if (string.Equals(reader.GetString(1), "LastIndexedUtc", StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasLastIndexedUtc = true;
+                    }
+                }
+            }
+
+            if (hasImagesTable && !hasLastIndexedUtc)
+            {
+                await Database.ExecuteSqlRawAsync(
+                    "ALTER TABLE Images ADD COLUMN LastIndexedUtc TEXT NOT NULL DEFAULT '0001-01-01 00:00:00';",
+                    ct);
+            }
         }
 
         public async Task EnsureFtsAsync(CancellationToken ct)
