@@ -7,7 +7,7 @@ using RocketForce;
 namespace Kennedy.Server.Views.Archive;
 
 /// <summary>
-/// Shows the details about a 
+/// Shows the details about the Delorean Archive, the content it covers, and its size
 /// </summary>
 internal class ArchiveStatsView : AbstractView
 {
@@ -39,12 +39,26 @@ internal class ArchiveStatsView : AbstractView
         Response.WriteLine($"Latest Capture: {stats.NewestSnapshot}");
 
         Response.WriteLine("## Archive Size");
+
         Response.WriteLine($"Uncompressed size (All content): {FormatSize(stats.SizeWithoutDeDuplication)}");
-        Response.WriteLine($"Uncompressed size (Deduplicated): {FormatSize(stats.Size)}");
+        Response.WriteLine($"Uncompressed size (With deduplication): {FormatSize(stats.Size)}");
         Response.WriteLine($"Savings from Deduplication: {FormatSavings(stats.Size, stats.SizeWithoutDeDuplication)}");
-        Response.WriteLine($"Actual size on disk (captures deduplicated, compressed where possible): {FormatPacksSizeOnDisk(stats)}");
+        Response.WriteLine($"Actual size of archived content on disk (deduplicated, compressed where possible): {FormatPacksSizeOnDisk(stats)}");
+        Response.WriteLine($"Database File Size: {FormatArchiveDatabaseSize()}");
 
         return;
+    }
+
+    private string FormatArchiveDatabaseSize()
+    {
+        var databaseFile = new FileInfo(Settings.Global.ArchiveDatabaseFile);
+
+        if (!databaseFile.Exists)
+        {
+            return "Unavailable";
+        }
+
+        return FormatSize(databaseFile.Length);
     }
 
     private string FormatPacksSizeOnDisk(ArchiveStats stats)

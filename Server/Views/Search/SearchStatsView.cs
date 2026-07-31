@@ -23,7 +23,7 @@ internal class SearchStatsView : AbstractView
         var stats = GetStats();
 
         Response.WriteLine($"## Search Index");
-        Response.WriteLine($"Database Size: {FormatSearchIndexDatabaseSize()}");
+        Response.WriteLine($"Database File Size: {FormatSearchIndexDatabaseSize()}");
         if (stats == null)
         {
             Response.WriteLine("Sorry, stats are unavailable right now. Please try again later.");

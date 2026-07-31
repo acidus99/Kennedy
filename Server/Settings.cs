@@ -16,6 +16,9 @@ public class Settings
     public string ArchiveStatsFile
         => DataRoot + "archive-stats.json";
 
+    public string ArchiveDatabaseFile
+        => Path.Combine(DataRoot, "archive.db");
+
     public string SearchStatsFile
         => DataRoot + "search-stats.json";
 
