@@ -42,9 +42,22 @@ internal class ArchiveStatsView : AbstractView
         Response.WriteLine($"Uncompressed size (All content): {FormatSize(stats.SizeWithoutDeDuplication)}");
         Response.WriteLine($"Uncompressed size (Deduplicated): {FormatSize(stats.Size)}");
         Response.WriteLine($"Savings from Deduplication: {FormatSavings(stats.Size, stats.SizeWithoutDeDuplication)}");
+        Response.WriteLine($"Database size: {FormatArchiveDatabaseSize()}");
         Response.WriteLine($"Actual size on disk (captures deduplicated, compressed where possible): {FormatSize(EstimatedSizeOnDisk(stats.Size))}");
 
         return;
+    }
+
+    private string FormatArchiveDatabaseSize()
+    {
+        var databaseFile = new FileInfo(Settings.Global.ArchiveDatabaseFile);
+
+        if (!databaseFile.Exists)
+        {
+            return "Unavailable";
+        }
+
+        return FormatSize(databaseFile.Length);
     }
 
     //current average savings of Pack files is ~22%

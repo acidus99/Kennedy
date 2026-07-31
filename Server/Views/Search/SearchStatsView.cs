@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Kennedy.Data;
 using Microsoft.EntityFrameworkCore;
@@ -23,10 +24,27 @@ internal class SearchStatsView : AbstractView
 
         var stats = GetStats();
 
+        Response.WriteLine("## Search Index");
+        Response.WriteLine($"Database Size: {FormatSearchDatabaseSize()}");
         Response.WriteLine($"Active Capsules: {FormatCount(stats.Domains)}");
         Response.WriteLine($"Total Urls: {FormatCount(stats.TotalUrls)}");
         Response.WriteLine($"Documents: {FormatCount(stats.Documents)}");
         Response.WriteLine($"Last Updated: {stats.LastUpdated}");
+
+        Response.WriteLine("## Software info");
+        Response.WriteLine($"Server version: {BuildInfo.Version}");
+    }
+
+    private string FormatSearchDatabaseSize()
+    {
+        var databaseFile = new FileInfo(Settings.Global.SearchDbFile);
+
+        if (!databaseFile.Exists)
+        {
+            return "Unavailable";
+        }
+
+        return FormatSize(databaseFile.Length);
     }
 
     private static CachedStats GetStats()

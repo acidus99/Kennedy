@@ -1,4 +1,6 @@
-﻿namespace Kennedy.Server;
+﻿using System.IO;
+
+namespace Kennedy.Server;
 
 public class Settings
 {
@@ -14,9 +16,12 @@ public class Settings
     public string ArchiveStatsFile
         => DataRoot + "archive-stats.json";
 
+    public string ArchiveDatabaseFile
+        => Path.Combine(DataRoot, "archive.db");
+
     public string SearchStatsFile
         => DataRoot + "search-stats.json";
 
     public string SearchDbFile
-        => DataRoot + "kennedy2.db";
+        => Path.Combine(DataRoot, "kennedy2.db");
 }
