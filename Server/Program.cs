@@ -62,6 +62,7 @@ class Program
 
         server.OnRequest("/observatory/known-hosts", SearchController.KnownHosts);
         server.OnRequest("/observatory/security.txt", SearchController.SecurityTxt);
+        server.OnRequest("/observatory/favicon.txt", SearchController.Favicon);
 
         //deprecate old hashtags/mentions
         server.AddRedirect(new Redirect

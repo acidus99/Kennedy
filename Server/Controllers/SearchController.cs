@@ -88,4 +88,10 @@ public static class SearchController
         var view = new SecurityTxtView(request, response, app);
         view.Render();
     }
+
+    public static void Favicon(GeminiRequest request, Response response, GeminiServer app)
+    {
+        var view = new FaviconView(request, response, app);
+        view.Render();
+    }
 }
