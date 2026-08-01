@@ -24,10 +24,19 @@ internal class SecurityTxtView : AbstractView
         Response.WriteLine("=> https://securitytxt.org About Security.txt");
         Response.WriteLine();
 
-        var servers = db.UrlRegistry
-            .Where(x => x.NormalizedUrl.Contains("/.well-known/security.txt") && x.LastStatusCode >= 20 && x.LastStatusCode < 30)
-            .Select(x => new { x.Host, x.Port })
-            .Distinct()
+        var servers = (
+            from securityTxt in db.SecurityTxts
+            join favicon in db.Favicons
+                on new { securityTxt.Scheme, securityTxt.Host, securityTxt.Port }
+                equals new { favicon.Scheme, favicon.Host, favicon.Port } into matchingFavicons
+            from favicon in matchingFavicons.DefaultIfEmpty()
+            select new
+            {
+                securityTxt.Scheme,
+                securityTxt.Host,
+                securityTxt.Port,
+                Favicon = favicon == null ? null : favicon.Emoji
+            })
             .OrderBy(x => x.Host)
             .ThenBy(x => x.Port)
             .ToList();
@@ -38,13 +47,13 @@ internal class SecurityTxtView : AbstractView
         foreach (var host in servers)
         {
             count++;
-            var label = $"{count}. {host.Host}";
+            var label = $"{count}. {FormatDomain(host.Host, host.Favicon)}";
             if (host.Port != 1965)
             {
                 label += ":" + host.Port;
             }
 
-            Response.WriteLine($"=> gemini://{host.Host}:{host.Port}/.well-known/security.txt {label}");
+            Response.WriteLine($"=> {host.Scheme}://{host.Host}:{host.Port}/.well-known/security.txt {label}");
         }
     }
 }

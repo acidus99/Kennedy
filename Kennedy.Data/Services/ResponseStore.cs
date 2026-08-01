@@ -1,6 +1,8 @@
 using Gemini.Net;
 using Kennedy.Data.Models;
 using Kennedy.Data.Parsers;
+using Kennedy.Data.RobotsTxt;
+using Kennedy.Data.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kennedy.Data.Services;
@@ -49,10 +51,16 @@ public sealed class ResponseStore
             db.UrlRegistry.Add(url);
         }
 
+        bool shouldUpdateSpecialFiles = !url.LastVisit.HasValue || visitTimeUtc > url.LastVisit.Value;
+
         ApplyUrlLifecycle(url, response, visitTimeUtc);
         ApplyUrlComponents(url);
         ApplyUrlMetadata(url, parsedResponse);
         await db.SaveChangesAsync(ct);
+        if (shouldUpdateSpecialFiles)
+        {
+            UpdateSpecialFiles(db, url, parsedResponse);
+        }
 
         var existingDoc = await db.Documents
             .SingleOrDefaultAsync(d => d.UrlRegistryId == url.Id, ct);
@@ -116,6 +124,8 @@ public sealed class ResponseStore
             .ToDictionaryAsync(u => u.NormalizedUrl, ct);
 
         var urlMap = new Dictionary<string, UrlRecord>(parsed.Count);
+        var sourceChanged = new Dictionary<string, bool>(parsed.Count);
+        var specialFileUpdates = new Dictionary<string, bool>(parsed.Count);
 
         foreach (var (response, parsedResponse, visitTime) in parsed)
         {
@@ -127,6 +137,10 @@ public sealed class ResponseStore
                 db.UrlRegistry.Add(url);
             }
 
+            sourceChanged[normalizedUrl] = url.LastStatusCode != response.StatusCode ||
+                !string.Equals(url.LastContentHash, response.Hash, StringComparison.Ordinal);
+            specialFileUpdates[normalizedUrl] = !url.LastVisit.HasValue || visitTime > url.LastVisit.Value;
+
             ApplyUrlLifecycle(url, response, visitTime);
             ApplyUrlComponents(url);
             ApplyUrlMetadata(url, parsedResponse);
@@ -135,6 +149,24 @@ public sealed class ResponseStore
 
         // Flush all UrlRegistry rows — EF populates auto-generated IDs after this call.
         await db.SaveChangesAsync(ct);
+
+        foreach (var (_, parsedResponse, _) in parsed)
+        {
+            if (specialFileUpdates[parsedResponse.RequestUrl.NormalizedUrl])
+            {
+                UpdateSpecialFiles(db, urlMap[parsedResponse.RequestUrl.NormalizedUrl], parsedResponse);
+            }
+        }
+
+        var dirtyFileUrls = new HashSet<long>();
+        foreach (var (_, parsedResponse, _) in parsed)
+        {
+            var normalizedUrl = parsedResponse.RequestUrl.NormalizedUrl;
+            if (sourceChanged[normalizedUrl] && !parsedResponse.IsProactiveRequest)
+            {
+                dirtyFileUrls.Add(urlMap[normalizedUrl].Id);
+            }
+        }
 
         // ── Phase 2: Documents + UrlRegistry for new link-target URLs ─────────
         //
@@ -213,15 +245,6 @@ public sealed class ResponseStore
                 $"INSERT INTO DocumentsFts(rowid, Title, Content, CanonicalUrl) VALUES ({doc.Id}, {doc.Title}, {text}, {doc.CanonicalUrl})", ct);
         }
 
-        // ── Phase 3: UrlLinks ──────────────────────────────────────────────────
-        //
-        // Delete all stale outbound links for every source URL in one raw SQL statement,
-        // then insert fresh link rows. IDs for all targets are now available.
-
-        var sourceIdsCsv = string.Join(",", urlMap.Values.Select(u => u.Id));
-        await db.Database.ExecuteSqlRawAsync(
-            $"DELETE FROM UrlLinks WHERE SourceUrlId IN ({sourceIdsCsv})", ct);
-
         // Build a unified lookup: source URLs + existing targets + newly created targets.
         // A source URL can also appear as a link target, so urlMap is included.
         var combinedTargetMap = new Dictionary<string, UrlRecord>(
@@ -230,26 +253,82 @@ public sealed class ResponseStore
         foreach (var kv in newTargetMap)      combinedTargetMap.TryAdd(kv.Key, kv.Value);
         foreach (var kv in urlMap)            combinedTargetMap.TryAdd(kv.Key, kv.Value);
 
+        var sourceIds = urlMap.Values.Select(u => u.Id).Distinct().ToList();
+        var oldLinksBySource = await db.UrlLinks
+            .AsNoTracking()
+            .Where(link => sourceIds.Contains(link.SourceUrlId))
+            .ToListAsync(ct);
+        var oldLinkMaps = oldLinksBySource
+            .GroupBy(link => link.SourceUrlId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.GroupBy(link => link.TargetUrlId)
+                    .ToDictionary(linkGroup => linkGroup.Key, linkGroup =>
+                        (linkGroup.First().IsExternal, linkGroup.First().LinkText)));
+        var changedLinkSources = new List<long>();
+        var replacementLinks = new List<UrlLinkRecord>();
+
         foreach (var (response, parsedResponse, _) in parsed)
         {
             var sourceUrl = urlMap[response.RequestUrl.NormalizedUrl];
-            foreach (var link in parsedResponse.Links.Distinct())
+            var newLinks = new Dictionary<long, (bool IsExternal, string LinkText)>();
+            foreach (var link in parsedResponse.Links)
             {
                 if (!combinedTargetMap.TryGetValue(link.Url.NormalizedUrl, out var target))
                 {
                     continue;
                 }
 
-                db.UrlLinks.Add(new UrlLinkRecord
+                newLinks.TryAdd(target.Id, (link.IsExternal, (link.LinkText ?? string.Empty).Trim()));
+            }
+
+            oldLinkMaps.TryGetValue(sourceUrl.Id, out var oldLinks);
+            oldLinks ??= new Dictionary<long, (bool IsExternal, string LinkText)>();
+            bool linksChanged = false;
+            foreach (var targetId in oldLinks.Keys.Union(newLinks.Keys))
+            {
+                bool hadOldLink = oldLinks.TryGetValue(targetId, out var oldLink);
+                bool hasNewLink = newLinks.TryGetValue(targetId, out var newLink);
+                if (hadOldLink != hasNewLink ||
+                    (hadOldLink && (oldLink.IsExternal != newLink.IsExternal || oldLink.LinkText != newLink.LinkText)))
+                {
+                    linksChanged = true;
+                }
+
+                if (hadOldLink != hasNewLink ||
+                    (hadOldLink && oldLink.LinkText != newLink.LinkText))
+                {
+                    dirtyFileUrls.Add(targetId);
+                }
+            }
+
+            if (!linksChanged)
+            {
+                continue;
+            }
+
+            changedLinkSources.Add(sourceUrl.Id);
+            foreach (var (targetId, link) in newLinks)
+            {
+                replacementLinks.Add(new UrlLinkRecord
                 {
                     SourceUrlId = sourceUrl.Id,
-                    TargetUrlId = target.Id,
+                    TargetUrlId = targetId,
                     IsExternal = link.IsExternal,
-                    LinkText = (link.LinkText ?? string.Empty).Trim()
+                    LinkText = link.LinkText
                 });
             }
         }
 
+        if (changedLinkSources.Count > 0)
+        {
+            var sourceIdsCsv = string.Join(",", changedLinkSources);
+            await db.Database.ExecuteSqlRawAsync(
+                $"DELETE FROM UrlLinks WHERE SourceUrlId IN ({sourceIdsCsv})", ct);
+            db.UrlLinks.AddRange(replacementLinks);
+        }
+
+        await QueueFileIndexWorkAsync(db, dirtyFileUrls, ct);
         await db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
     }
@@ -276,6 +355,7 @@ public sealed class ResponseStore
         var existingUrlMap = await db.UrlRegistry
             .Where(u => sourceUrls.Contains(u.NormalizedUrl))
             .ToDictionaryAsync(u => u.NormalizedUrl, ct);
+        var specialFileUpdates = new HashSet<string>();
 
         foreach (var (response, parsedResponse, visitTime) in parsed)
         {
@@ -285,6 +365,7 @@ public sealed class ResponseStore
             {
                 url = new UrlRecord(normalizedUrl) { FirstSeen = visitTime };
                 db.UrlRegistry.Add(url);
+                existingUrlMap[normalizedUrl] = url;
             }
             else if (url.LastVisit.HasValue && visitTime <= url.LastVisit.Value)
             {
@@ -294,8 +375,19 @@ public sealed class ResponseStore
             ApplyUrlLifecycle(url, response, visitTime);
             ApplyUrlComponents(url);
             ApplyUrlMetadata(url, parsedResponse);
+            specialFileUpdates.Add(normalizedUrl);
         }
 
+        await db.SaveChangesAsync(ct);
+
+        foreach (var (_, parsedResponse, _) in parsed)
+        {
+            if (specialFileUpdates.Contains(parsedResponse.RequestUrl.NormalizedUrl) &&
+                existingUrlMap.TryGetValue(parsedResponse.RequestUrl.NormalizedUrl, out var url))
+            {
+                UpdateSpecialFiles(db, url, parsedResponse);
+            }
+        }
         await db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
     }
@@ -385,6 +477,132 @@ public sealed class ResponseStore
         url.LastDetectedMimeType = parsedResponse.DetectedMimeType;
 
         // UrlRegistry intentionally stores URL lifecycle and protocol metadata only.
+    }
+
+    private static async Task QueueFileIndexWorkAsync(
+        KennedyDbContext db,
+        IEnumerable<long> urlIds,
+        CancellationToken ct)
+    {
+        foreach (var batch in urlIds.Distinct().Chunk(900))
+        {
+            var existingItems = await db.IndexWorkItems
+                .Where(item => batch.Contains(item.UrlRegistryId))
+                .ToDictionaryAsync(item => item.UrlRegistryId, ct);
+
+            foreach (var urlId in batch)
+            {
+                if (existingItems.TryGetValue(urlId, out var item))
+                {
+                    item.WorkTypes |= IndexWorkType.FileSearch;
+                }
+                else
+                {
+                    db.IndexWorkItems.Add(new IndexWorkItem
+                    {
+                        UrlRegistryId = urlId,
+                        WorkTypes = IndexWorkType.FileSearch
+                    });
+                }
+            }
+        }
+    }
+
+    private static void UpdateSpecialFiles(KennedyDbContext db, UrlRecord url, ParsedResponse response)
+    {
+        if (UrlUtility.IsFaviconUrl(response.RequestUrl.Url))
+        {
+            UpdateFavicon(db, url, response);
+        }
+        else if (UrlUtility.IsRobotsUrl(response.RequestUrl.Url))
+        {
+            UpdateRobotsTxt(db, url, response);
+        }
+        else if (UrlUtility.IsSecurityUrl(response.RequestUrl.Url))
+        {
+            UpdateSecurityTxt(db, url, response);
+        }
+    }
+
+    private static void UpdateFavicon(KennedyDbContext db, UrlRecord url, ParsedResponse response)
+    {
+        if (!UrlUtility.IsFaviconUrl(response.RequestUrl.Url))
+        {
+            return;
+        }
+
+        string emoji = response.BodyText?.Trim() ?? string.Empty;
+        var favicon = db.Favicons.SingleOrDefault(x =>
+            x.Scheme == url.Scheme && x.Host == url.Host && x.Port == url.Port);
+
+        if (!GeminiParser.IsSuccessStatus(response.StatusCode) || !FaviconValidator.IsValidEmoji(emoji))
+        {
+            if (favicon != null)
+            {
+                db.Favicons.Remove(favicon);
+            }
+            return;
+        }
+
+        if (favicon == null)
+        {
+            favicon = new FaviconRecord
+            {
+                Scheme = url.Scheme,
+                Host = url.Host,
+                Port = url.Port
+            };
+            db.Favicons.Add(favicon);
+        }
+
+        favicon.Emoji = emoji;
+        favicon.SourceUrlRegistryId = url.Id;
+    }
+
+    private static void UpdateRobotsTxt(KennedyDbContext db, UrlRecord url, ParsedResponse response)
+    {
+        string content = response.BodyText ?? string.Empty;
+        bool isValid = GeminiParser.IsSuccessStatus(response.StatusCode) &&
+            new RobotsTxtParser().Parse(content).HasValidRules;
+        var record = db.RobotsTxts.SingleOrDefault(x =>
+            x.Scheme == url.Scheme && x.Host == url.Host && x.Port == url.Port);
+
+        if (!isValid)
+        {
+            if (record != null) db.RobotsTxts.Remove(record);
+            return;
+        }
+
+        if (record == null)
+        {
+            record = new RobotsTxtRecord { Scheme = url.Scheme, Host = url.Host, Port = url.Port };
+            db.RobotsTxts.Add(record);
+        }
+        record.Content = content;
+        record.SourceUrlRegistryId = url.Id;
+    }
+
+    private static void UpdateSecurityTxt(KennedyDbContext db, UrlRecord url, ParsedResponse response)
+    {
+        string content = response.BodyText ?? string.Empty;
+        bool isValid = GeminiParser.IsSuccessStatus(response.StatusCode) &&
+            content.Contains("contact:", StringComparison.OrdinalIgnoreCase);
+        var record = db.SecurityTxts.SingleOrDefault(x =>
+            x.Scheme == url.Scheme && x.Host == url.Host && x.Port == url.Port);
+
+        if (!isValid)
+        {
+            if (record != null) db.SecurityTxts.Remove(record);
+            return;
+        }
+
+        if (record == null)
+        {
+            record = new SecurityTxtRecord { Scheme = url.Scheme, Host = url.Host, Port = url.Port };
+            db.SecurityTxts.Add(record);
+        }
+        record.Content = content;
+        record.SourceUrlRegistryId = url.Id;
     }
 
     /// <summary>

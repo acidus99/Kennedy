@@ -30,6 +30,9 @@ public sealed class ImageSearchResult
     /// <summary>True when the crawler received a truncated body for this image.</summary>
     public bool IsBodyTruncated { get; init; }
 
+    /// <summary>Validated capsule emoji from favicon.txt, when present.</summary>
+    public string? Favicon { get; init; }
+
     /// <summary>Convenience accessor that wraps <see cref="Url"/> in a <see cref="GeminiUrl"/>.</summary>
     public GeminiUrl GeminiUrl => new(Url);
 }

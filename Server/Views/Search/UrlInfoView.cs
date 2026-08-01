@@ -18,6 +18,7 @@ internal class UrlInfoView : AbstractView
     private UrlRecord? _urlEntry;
     private DocumentRecord? _docEntry;
     private DocumentImageRecord? _imageEntry;
+    private string? _favicon;
 
     public override void Render()
     {
@@ -40,6 +41,12 @@ internal class UrlInfoView : AbstractView
         _imageEntry = _urlEntry != null
             ? db.Images.FirstOrDefault(x => x.UrlRegistryId == _urlEntry.Id)
             : null;
+        _favicon = _urlEntry != null
+            ? db.Favicons
+                .Where(x => x.Scheme == _urlEntry.Scheme && x.Host == _urlEntry.Host && x.Port == _urlEntry.Port)
+                .Select(x => x.Emoji)
+                .FirstOrDefault()
+            : null;
 
         if (_urlEntry == null && _docEntry == null)
         {
@@ -55,7 +62,8 @@ internal class UrlInfoView : AbstractView
         Response.WriteLine($"=> {canonicalUrl} Visit Current Url");
         Response.WriteLine($"=> {RoutePaths.ViewMostRecentCached(canonicalGeminiUrl)} View most recent cached version");
         Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(canonicalGeminiUrl)} View all archived copies and history with 🏎 DeLorean Time Machine");
-        Response.WriteLine($"=> {canonicalGeminiUrl.RootUrl} Capsule: {canonicalGeminiUrl.Hostname}");
+        var emoji = _favicon == null ? "" : _favicon + " ";
+        Response.WriteLine($"=> {canonicalGeminiUrl.RootUrl} Capsule: {emoji}{canonicalGeminiUrl.Hostname}");
         Response.WriteLine();
 
         RenderMetadata(canonicalGeminiUrl);

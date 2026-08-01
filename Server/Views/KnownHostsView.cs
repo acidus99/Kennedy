@@ -28,16 +28,28 @@ internal class KnownHostsView : AbstractView
 
         using var db = new KennedyDbContext(options);
 
-        var servers = db.UrlRegistry
-            .Where(x => x.LastStatusCode != Gemini.Net.GeminiParser.ConnectionErrorStatusCode)
-            .GroupBy(x => new { x.Scheme, x.Host, x.Port })
-            .Select(g => new
+        var servers = (
+            from url in db.UrlRegistry
+            join favicon in db.Favicons
+                on new { url.Scheme, url.Host, url.Port }
+                equals new { favicon.Scheme, favicon.Host, favicon.Port } into matchingFavicons
+            from favicon in matchingFavicons.DefaultIfEmpty()
+            where url.LastStatusCode != Gemini.Net.GeminiParser.ConnectionErrorStatusCode
+            group url by new
             {
-                g.Key.Scheme,
-                g.Key.Host,
-                g.Key.Port,
-                Pages = g.Count(),
-                LastDate = g.Max(d => d.LastVisit)
+                url.Scheme,
+                url.Host,
+                url.Port,
+                Favicon = favicon == null ? null : favicon.Emoji
+            } into capsuleGroup
+            select new
+            {
+                capsuleGroup.Key.Scheme,
+                capsuleGroup.Key.Host,
+                capsuleGroup.Key.Port,
+                capsuleGroup.Key.Favicon,
+                Pages = capsuleGroup.Count(),
+                LastDate = capsuleGroup.Max(d => d.LastVisit)
             })
             .OrderBy(x => x.Host)
             .ThenBy(x => x.Port)
@@ -49,7 +61,7 @@ internal class KnownHostsView : AbstractView
         foreach (var server in servers)
         {
             counter++;
-            var label = $"{counter}. {FormatDomain(server.Host, null)}";
+            var label = $"{counter}. {FormatDomain(server.Host, server.Favicon)}";
             if (server.Port != 1965)
             {
                 label += ":" + server.Port;

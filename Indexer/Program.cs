@@ -108,7 +108,7 @@ namespace Kennedy.Indexer
                 }
             }
 
-            Console.WriteLine("Rebuilding file-search FTS...");
+            Console.WriteLine("Global: rebuilding dirty file-search entries...");
             var filesFtsRebuilder = scope.ServiceProvider.GetRequiredService<FileSearchFtsRebuilder>();
             await filesFtsRebuilder.RebuildAsync(CancellationToken.None);
 

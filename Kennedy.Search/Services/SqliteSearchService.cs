@@ -80,12 +80,15 @@ public sealed class SqliteSearchService : ISearchService
                    d.LineCount,
                    d.BodySize,
                    d.IsBodyTruncated,
+                   favicon.Emoji,
                    CASE
                        WHEN @fts_has = 1 THEN snippet(DocumentsFts, 1, '[',']','…',20)
                        ELSE ''
                    END AS Snippet
             FROM Documents d
             {textJoin}
+            INNER JOIN UrlRegistry u ON u.Id = d.UrlRegistryId
+            LEFT JOIN Favicons favicon ON favicon.Scheme = u.Scheme AND favicon.Host = u.Host AND favicon.Port = u.Port
             WHERE 1=1
             """ + BuildTextFilters(query, cmd) + orderBy + " LIMIT @limit OFFSET @offset;";
 
@@ -115,7 +118,8 @@ public sealed class SqliteSearchService : ISearchService
                     LineCount = reader.IsDBNull(4) ? null : reader.GetInt32(4),
                     BodySize = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
                     IsBodyTruncated = !reader.IsDBNull(6) && reader.GetBoolean(6),
-                    Snippet = reader.IsDBNull(7) ? string.Empty : reader.GetString(7)
+                    Favicon = reader.IsDBNull(7) ? null : reader.GetString(7),
+                    Snippet = reader.IsDBNull(8) ? string.Empty : reader.GetString(8)
                 });
             }
         }
@@ -171,12 +175,14 @@ public sealed class SqliteSearchService : ISearchService
                    COALESCE(i.Height, 0),
                    0,
                    0,
+                   favicon.Emoji,
                    CASE
                        WHEN @fts_has = 1 THEN snippet(FilesFts, 1, '[',']','…',20)
                        ELSE COALESCE(substr(FilesFts.SearchText, 1, 180), '')
                    END AS Snippet
             FROM UrlRegistry u
             LEFT JOIN Images i ON i.UrlRegistryId = u.Id
+            LEFT JOIN Favicons favicon ON favicon.Scheme = u.Scheme AND favicon.Host = u.Host AND favicon.Port = u.Port
             {filesJoin}
             WHERE 1=1
             """ + BuildImageFilters(query, cmd) + " ORDER BY u.LastVisit DESC LIMIT @limit OFFSET @offset;";
@@ -196,7 +202,8 @@ public sealed class SqliteSearchService : ISearchService
                 Height = reader.GetInt32(3),
                 BodySize = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
                 IsBodyTruncated = !reader.IsDBNull(5) && reader.GetBoolean(5),
-                Snippet = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
+                Favicon = reader.IsDBNull(6) ? null : reader.GetString(6),
+                Snippet = reader.IsDBNull(7) ? string.Empty : reader.GetString(7)
             });
         }
 

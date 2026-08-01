@@ -13,6 +13,11 @@ public class DepthFilter : IUrlFilter
 
     public BlockResult IsUrlAllowed(UrlFrontierEntry entry)
     {
+        if (entry.IsProactive)
+        {
+            return BlockResult.Allowed;
+        }
+
         if (entry.DepthFromSeed < DepthLimit)
         {
             return BlockResult.Allowed;

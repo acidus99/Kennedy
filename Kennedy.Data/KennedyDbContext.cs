@@ -24,6 +24,13 @@ namespace Kennedy.Data
         /// <summary>Directed link graph: source URL → target URL.</summary>
         public DbSet<UrlLinkRecord> UrlLinks => Set<UrlLinkRecord>();
 
+        /// <summary>Validated emoji favicons, one per capsule authority.</summary>
+        public DbSet<FaviconRecord> Favicons => Set<FaviconRecord>();
+
+        public DbSet<RobotsTxtRecord> RobotsTxts => Set<RobotsTxtRecord>();
+        public DbSet<SecurityTxtRecord> SecurityTxts => Set<SecurityTxtRecord>();
+        public DbSet<IndexWorkItem> IndexWorkItems => Set<IndexWorkItem>();
+
         public KennedyDbContext(DbContextOptions<KennedyDbContext> options)
             : base(options)
         {
@@ -81,6 +88,53 @@ namespace Kennedy.Data
 
         public async Task EnsureSchemaCompatibilityAsync(CancellationToken ct)
         {
+            await Database.ExecuteSqlRawAsync(
+                """
+                CREATE TABLE IF NOT EXISTS Favicons (
+                    Id INTEGER NOT NULL CONSTRAINT PK_Favicons PRIMARY KEY AUTOINCREMENT,
+                    Scheme TEXT NOT NULL,
+                    Host TEXT NOT NULL,
+                    Port INTEGER NOT NULL,
+                    Emoji TEXT NOT NULL,
+                    SourceUrlRegistryId INTEGER NOT NULL
+                );
+                """, ct);
+            await Database.ExecuteSqlRawAsync(
+                "CREATE UNIQUE INDEX IF NOT EXISTS IX_Favicons_Scheme_Host_Port ON Favicons (Scheme, Host, Port);", ct);
+            await Database.ExecuteSqlRawAsync(
+                """
+                CREATE TABLE IF NOT EXISTS RobotsTxts (
+                    Id INTEGER NOT NULL CONSTRAINT PK_RobotsTxts PRIMARY KEY AUTOINCREMENT,
+                    Scheme TEXT NOT NULL,
+                    Host TEXT NOT NULL,
+                    Port INTEGER NOT NULL,
+                    Content TEXT NOT NULL,
+                    SourceUrlRegistryId INTEGER NOT NULL
+                );
+                """, ct);
+            await Database.ExecuteSqlRawAsync(
+                "CREATE UNIQUE INDEX IF NOT EXISTS IX_RobotsTxts_Scheme_Host_Port ON RobotsTxts (Scheme, Host, Port);", ct);
+            await Database.ExecuteSqlRawAsync(
+                """
+                CREATE TABLE IF NOT EXISTS SecurityTxts (
+                    Id INTEGER NOT NULL CONSTRAINT PK_SecurityTxts PRIMARY KEY AUTOINCREMENT,
+                    Scheme TEXT NOT NULL,
+                    Host TEXT NOT NULL,
+                    Port INTEGER NOT NULL,
+                    Content TEXT NOT NULL,
+                    SourceUrlRegistryId INTEGER NOT NULL
+                );
+                """, ct);
+            await Database.ExecuteSqlRawAsync(
+                "CREATE UNIQUE INDEX IF NOT EXISTS IX_SecurityTxts_Scheme_Host_Port ON SecurityTxts (Scheme, Host, Port);", ct);
+            await Database.ExecuteSqlRawAsync(
+                """
+                CREATE TABLE IF NOT EXISTS IndexWorkItems (
+                    UrlRegistryId INTEGER NOT NULL CONSTRAINT PK_IndexWorkItems PRIMARY KEY,
+                    WorkTypes INTEGER NOT NULL
+                );
+                """, ct);
+
             var connection = Database.GetDbConnection();
             if (connection.State != ConnectionState.Open)
             {
