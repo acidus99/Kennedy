@@ -52,9 +52,14 @@ public class SearchStorageWrapper
     public void DoGlobalWork()
     {
         globalWatch.Start();
+
+        Console.WriteLine("Global: rebuilding file and image search indexes");
         SearchDB.IndexFiles();
+
+        Console.WriteLine("Global: recalculating popularity ranks");
         PopularityCalculator popularityCalculator = new PopularityCalculator(WebDB.GetContext());
         popularityCalculator.Rank();
+
         globalWatch.Stop();
 
         Console.WriteLine($"WebDB (doc meta data)\t{webWatch.Elapsed.TotalSeconds} sec");

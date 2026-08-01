@@ -1,85 +1,69 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
+using Kennedy.SearchIndex.Models;
 
 namespace Kennedy.SearchIndex.Web;
 
 public class PopularityCalculator
 {
-    WebDatabaseContext db;
+    const int BatchSize = 500;
+
+    readonly WebDatabaseContext db;
 
     public PopularityCalculator(WebDatabaseContext context)
     {
         db = context;
     }
 
-    Dictionary<long, int> OutboundCount = new Dictionary<long, int>();
-
-    Dictionary<long, List<long>> LinksToPage = new Dictionary<long, List<long>>();
-
     public void Rank()
     {
+        int processed = 0;
 
-        var reachableEntries = db.Documents.Where(x => (x.IsAvailable)).ToList();
-
-        var totalPages = reachableEntries.Count;
-
-        Console.WriteLine("Building caches");
-        BuildOutlinkCache();
-        BuildLinkToPageCache();
-
-        Console.WriteLine("computing popularity");
-
-        foreach (var entry in reachableEntries)
+        while (true)
         {
-            //every page has a rank of 1
-            entry.PopularityRank = 1;
-            entry.ExternalInboundLinks = 0;
+            var workItems = db.IndexWorkItems
+                .Where(x => (x.WorkTypes & IndexWorkType.Popularity) != 0)
+                .OrderBy(x => x.UrlID)
+                .Take(BatchSize)
+                .ToList();
 
-            if (LinksToPage.ContainsKey(entry.UrlID))
+            if (workItems.Count == 0)
             {
-                foreach (var sourceID in LinksToPage[entry.UrlID])
+                break;
+            }
+
+            var urlIDs = workItems.Select(x => x.UrlID).ToList();
+            var documents = db.Documents
+                .Where(x => urlIDs.Contains(x.UrlID))
+                .ToDictionary(x => x.UrlID);
+            var inboundCounts = db.Links
+                .Where(x => urlIDs.Contains(x.TargetUrlID) && x.IsExternal)
+                .GroupBy(x => x.TargetUrlID)
+                .Select(x => new { UrlID = x.Key, Count = x.Count() })
+                .ToDictionary(x => x.UrlID, x => x.Count);
+
+            foreach (var workItem in workItems)
+            {
+                processed++;
+                if (documents.TryGetValue(workItem.UrlID, out var document))
                 {
-                    //they get 1 more for each cross domain link
-                    //var voteValue = (1 / OutboundCount[sourceID]);
-                    var voteValue = 1;
-                    entry.ExternalInboundLinks++;
-                    entry.PopularityRank += voteValue;
+                    inboundCounts.TryGetValue(document.UrlID, out int inboundLinks);
+                    document.ExternalInboundLinks = inboundLinks;
+                    document.PopularityRank = document.IsAvailable ? CalculateRank(inboundLinks) : 0;
+                }
+
+                workItem.WorkTypes &= ~IndexWorkType.Popularity;
+                if (workItem.WorkTypes == IndexWorkType.None)
+                {
+                    db.IndexWorkItems.Remove(workItem);
                 }
             }
-        }
-        Console.WriteLine("computing percentages");
-        foreach (var entry in reachableEntries)
-        {
-            //clip to 100
-            entry.PopularityRank = (entry.PopularityRank > 100) ? 100 : entry.PopularityRank;
-            //log distribution over the score
-            entry.PopularityRank = Math.Log(entry.PopularityRank, 100);
-        }
-        db.SaveChanges();
-    }
 
-    private void BuildOutlinkCache()
-    {
-        var outLinks = (from links in db.Links
-                        where links.IsExternal
-                        group links by links.SourceUrlID into grp
-                        select new { DBDocID = grp.Key, Count = grp.Count() });
-        foreach (var page in outLinks)
-        {
-            OutboundCount[page.DBDocID] = page.Count;
+            db.SaveChanges();
+            Console.WriteLine($"Popularity: recalculated {processed:N0} dirty URLs");
         }
     }
 
-    private void BuildLinkToPageCache()
-    {
-        foreach (var link in db.Links.Where(x => (x.IsExternal)))
-        {
-            if (!LinksToPage.ContainsKey(link.TargetUrlID))
-            {
-                LinksToPage[link.TargetUrlID] = new List<long>();
-            }
-            LinksToPage[link.TargetUrlID].Add(link.SourceUrlID);
-        }
-    }
+    private static double CalculateRank(int inboundLinks)
+        => Math.Log(Math.Min(1 + inboundLinks, 100), 100);
 }

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Gemini.Net;
 using Kennedy.Data;
+using Kennedy.SearchIndex.Models;
 using Kennedy.SearchIndex.Web;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,9 +10,11 @@ namespace Kennedy.SearchIndex.Search;
 
 public class FileIndexer
 {
-    string storageDirectory;
-    ISearchDatabase searchDatabase;
-    PathTokenizer pathTokenizer;
+    const int BatchSize = 500;
+
+    readonly string storageDirectory;
+    readonly ISearchDatabase searchDatabase;
+    readonly PathTokenizer pathTokenizer;
 
     public FileIndexer(string storageDirectory, ISearchDatabase searchDatabase)
     {
@@ -23,60 +25,76 @@ public class FileIndexer
 
     public void IndexFiles()
     {
+        int indexed = 0;
+        int processed = 0;
+
         using (var db = GetContext())
         {
-            var indexableFiles = db.IndexableFiles.FromSql(@$"select UrlID, url, LinkText From Documents 
-left join Links
-on Links.TargetUrlID = Documents.UrlID
-where IsBodyIndexed = false and StatusCode = 20 and ContentType != {ContentType.Image}
-order by UrlID");
-
-            int total = indexableFiles.Count();
-            int counter = 0;
-
-            GeminiUrl? currUrl = null;
-            StringBuilder sb = new StringBuilder(1000); //reasonable size for URL + link text
-            foreach (var file in indexableFiles)
+            while (true)
             {
-                //is it a new url?
-                if (currUrl == null || file.UrlID != currUrl.ID)
+                var workItems = db.IndexWorkItems
+                    .Where(x => (x.WorkTypes & IndexWorkType.File) != 0)
+                    .OrderBy(x => x.UrlID)
+                    .Take(BatchSize)
+                    .ToList();
+
+                if (workItems.Count == 0)
                 {
-                    if (currUrl != null)
-                    {
-                        //the last thing to add is the indexable text from the url path
-                        sb.Append(' ');
-                        sb.Append(GetPathIndexText(currUrl));
-                        searchDatabase.RefreshIndexForUrl(currUrl.ID, sb.ToString());
-                    }
-                    sb.Clear();
-                    currUrl = new GeminiUrl(file.Url);
+                    break;
                 }
 
-                if (file.LinkText?.Length > 0)
+                var urlIDs = workItems.Select(x => x.UrlID).ToList();
+                var documents = db.Documents
+                    .Where(x => urlIDs.Contains(x.UrlID))
+                    .ToDictionary(x => x.UrlID);
+                var linkText = db.Links
+                    .Where(x => urlIDs.Contains(x.TargetUrlID) && x.LinkText != null && x.LinkText != "")
+                    .ToList()
+                    .GroupBy(x => x.TargetUrlID)
+                    .ToDictionary(x => x.Key, x => x.Select(link => link.LinkText!).Distinct().ToList());
+
+                foreach (var workItem in workItems)
                 {
-                    if (!sb.ToString().Contains(file.LinkText))
+                    processed++;
+                    if (documents.TryGetValue(workItem.UrlID, out var document) &&
+                        !document.IsBodyIndexed &&
+                        document.StatusCode == 20 &&
+                        document.ContentType != ContentType.Image)
                     {
-                        sb.Append(' ');
-                        sb.Append(file.LinkText);
+                        var terms = linkText.TryGetValue(document.UrlID, out var incomingText) ?
+                            string.Join(' ', incomingText) + " " :
+                            "";
+                        terms += GetPathIndexText(document.GeminiUrl);
+                        searchDatabase.RefreshIndexForUrl(document.UrlID, terms);
+                        indexed++;
                     }
+                    else if (!documents.TryGetValue(workItem.UrlID, out document) || !document.IsBodyIndexed)
+                    {
+                        searchDatabase.RemoveFileIndexEntry(workItem.UrlID);
+                    }
+
+                    CompleteWork(db, workItem, IndexWorkType.File);
                 }
-            }
-            //handle the remaining buffer
-            if (currUrl != null)
-            {
-                //the last thing to add is the indexable text from the url path
-                sb.Append(' ');
-                sb.Append(GetPathIndexText(currUrl));
-                //full the buffer
-                searchDatabase.RefreshIndexForUrl(currUrl.ID, sb.ToString());
+
+                db.SaveChanges();
+                Console.WriteLine($"File index: processed {processed:N0} dirty URLs ({indexed:N0} refreshed)");
             }
         }
     }
 
-    private string GetPathIndexText(GeminiUrl url)
+    private static void CompleteWork(WebDatabaseContext db, IndexWorkItem workItem, IndexWorkType workType)
+    {
+        workItem.WorkTypes &= ~workType;
+        if (workItem.WorkTypes == IndexWorkType.None)
+        {
+            db.IndexWorkItems.Remove(workItem);
+        }
+    }
+
+    private string GetPathIndexText(Gemini.Net.GeminiUrl url)
     {
         string[] tokens = pathTokenizer.GetTokens(url);
-        return (tokens != null) ? string.Join(' ', tokens) + " " : "";
+        return tokens != null ? string.Join(' ', tokens) + " " : "";
     }
 
     private WebDatabaseContext GetContext()

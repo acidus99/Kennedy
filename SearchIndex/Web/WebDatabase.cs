@@ -5,6 +5,7 @@ using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.Data.RobotsTxt;
 using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kennedy.SearchIndex.Web;
@@ -50,6 +51,7 @@ public class WebDatabase : IWebDatabase
     public FtsIndexAction StoreResponse(ParsedResponse parsedResponse)
     {
         contextOperations++;
+
         //store in in the doc index (inserting or updating as appropriate)
         (FtsIndexAction action, bool isContentNewOrChanged) = UpdateDocument(parsedResponse);
 
@@ -88,6 +90,8 @@ public class WebDatabase : IWebDatabase
         Document? entry = bulkContext.Documents.Include(x => x.Image)
             .Where(x => (x.UrlID == parsedResponse.RequestUrl.ID))
             .FirstOrDefault();
+        bool isNewDocument = entry == null;
+        bool wasAvailable = entry?.IsAvailable ?? false;
 
         //do we already know about this URL?
         if (entry == null)
@@ -243,10 +247,28 @@ public class WebDatabase : IWebDatabase
                 bulkContext.Images.Remove(entry.Image);
                 entry.Image = null;
             }
+
+            // A newly reachable ordinary URL may already have inbound links. Its
+            // path/image index and popularity therefore need one initial refresh.
+            // Proactive metadata has its own tables and does not need FTS/ranking.
+            if (!parsedResponse.IsProactiveRequest && (isNewDocument || (!wasAvailable && entry.IsAvailable)))
+            {
+                IndexWorkType workTypes = IndexWorkType.Popularity;
+                if (!entry.IsBodyIndexed)
+                {
+                    workTypes |= IndexWorkType.File;
+                }
+                if (entry.Image != null)
+                {
+                    workTypes |= IndexWorkType.Image;
+                }
+                QueueIndexWork(parsedResponse.RequestUrl.ID, workTypes);
+            }
         }
 
-        //only need to update special files if the content has changed
-        if (isContentNewOrChanged)
+        //Special-file tables are derived state. Keep them synchronized even when
+        //a reimport sees a document body that was already indexed.
+        if (parsedResponse.IsProactiveRequest)
         {
             UpdateSpecialFiles(parsedResponse);
         }
@@ -314,39 +336,31 @@ public class WebDatabase : IWebDatabase
 
     private void UpdateFavicon(ParsedResponse response)
     {
+        string emoji = response.BodyText.Trim();
+        bool isRemove = !(response.IsSuccess && IsValidFavicon(emoji));
 
-        //bool isRemove = !(response.IsSuccess && IsValidFavicon(response.BodyText.Trim()));
+        var entry = bulkContext.Favicons
+            .FirstOrDefault(x => x.Protocol == response.RequestUrl.Protocol &&
+                                 x.Domain == response.RequestUrl.Hostname &&
+                                 x.Port == response.RequestUrl.Port);
 
-        //using (var context = GetContext())
-        //{
-        //    //see if it already exists
-        //    var entry = context.Favicons
-        //        .Where(x => (x.Protocol == response.RequestUrl.Protocol &&
-        //                    x.Domain == response.RequestUrl.Hostname &&
-        //                    x.Port == response.RequestUrl.Port))
-        //        .FirstOrDefault();
+        if (isRemove)
+        {
+            if (entry != null)
+            {
+                bulkContext.Favicons.Remove(entry);
+            }
+            return;
+        }
 
-        //    if (isRemove)
-        //    {
-        //        if(entry != null)
-        //        {
-        //            context.Favicons.Remove(entry);
-        //        }
-        //    }
-        //    else
-        //    {
+        if (entry == null)
+        {
+            entry = new Favicon(response.RequestUrl);
+            bulkContext.Favicons.Add(entry);
+        }
 
-        //        //if not, create a stub
-        //        if (entry == null)
-        //        {
-        //            entry = new Favicon(response.RequestUrl);
-        //            context.Favicons.Add(entry);
-        //        }
-
-        //        entry.Emoji = response.BodyText.Trim();
-        //    }
-        //    context.SaveChanges();
-        //}
+        entry.Emoji = emoji;
+        entry.SourceUrlID = response.RequestUrl.ID;
     }
 
     private void UpdateSecurity(ParsedResponse response)
@@ -386,7 +400,7 @@ public class WebDatabase : IWebDatabase
     }
 
     private bool IsValidFavicon(string contents)
-        => (contents != null && !contents.Contains(" ") && !contents.Contains("\n") && contents.Length < 20);
+        => FaviconValidator.IsValidEmoji(contents);
 
     private bool IsValidSecurity(string contents)
         => (contents != null && contents.ToLower().Contains("contact:"));
@@ -405,16 +419,67 @@ public class WebDatabase : IWebDatabase
 
     private void StoreLinks(ParsedResponse response)
     {
-        //first delete all source IDs
-        bulkContext.Links.RemoveRange(bulkContext.Links
-            .Where(x => (x.SourceUrlID == response.RequestUrl.ID)));
+        var oldLinks = bulkContext.Links
+            .Where(x => x.SourceUrlID == response.RequestUrl.ID)
+            .ToDictionary(x => x.TargetUrlID);
+        var newLinks = response.Links
+            .GroupBy(link => link.Url.ID)
+            .ToDictionary(group => group.Key, group => group.First());
 
-        bulkContext.Links.AddRange(response.Links.Distinct().Select(link => new DocumentLink
+        foreach (var targetUrlID in oldLinks.Keys.Union(newLinks.Keys))
         {
-            SourceUrlID = response.RequestUrl.ID,
-            TargetUrlID = link.Url.ID,
-            IsExternal = link.IsExternal,
-            LinkText = link.LinkText
-        }).ToList());
+            bool hadOldLink = oldLinks.TryGetValue(targetUrlID, out var oldLink);
+            bool hasNewLink = newLinks.TryGetValue(targetUrlID, out var newLink);
+            bool linkTextChanged = hadOldLink != hasNewLink ||
+                (hadOldLink && !string.Equals(oldLink!.LinkText, newLink!.LinkText, StringComparison.Ordinal));
+            bool externalChanged = hadOldLink != hasNewLink
+                ? (hadOldLink ? oldLink!.IsExternal : newLink!.IsExternal)
+                : oldLink!.IsExternal != newLink!.IsExternal;
+
+            if (!hadOldLink)
+            {
+                bulkContext.Links.Add(new DocumentLink
+                {
+                    SourceUrlID = response.RequestUrl.ID,
+                    TargetUrlID = targetUrlID,
+                    IsExternal = newLink!.IsExternal,
+                    LinkText = newLink.LinkText
+                });
+            }
+            else if (!hasNewLink)
+            {
+                bulkContext.Links.Remove(oldLink!);
+            }
+            else if (linkTextChanged || externalChanged)
+            {
+                oldLink!.IsExternal = newLink!.IsExternal;
+                oldLink.LinkText = newLink.LinkText;
+            }
+
+            if (linkTextChanged)
+            {
+                QueueIndexWork(targetUrlID, IndexWorkType.File | IndexWorkType.Image);
+            }
+            if (externalChanged)
+            {
+                QueueIndexWork(targetUrlID, IndexWorkType.Popularity);
+            }
+        }
+    }
+
+    private void QueueIndexWork(long urlID, IndexWorkType workTypes)
+    {
+        var workItem = bulkContext.IndexWorkItems.Find(urlID);
+        if (workItem == null)
+        {
+            bulkContext.IndexWorkItems.Add(new IndexWorkItem
+            {
+                UrlID = urlID,
+                WorkTypes = workTypes
+            });
+            return;
+        }
+
+        workItem.WorkTypes |= workTypes;
     }
 }

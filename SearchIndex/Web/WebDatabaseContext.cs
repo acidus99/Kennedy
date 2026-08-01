@@ -12,11 +12,12 @@ public class WebDatabaseContext : DbContext
     public DbSet<Image> Images { get; set; }
 
     //aux entitites
-    //public DbSet<Favicon> Favicons { get; set; }
+    public DbSet<Favicon> Favicons { get; set; }
     public DbSet<RobotsTxt> RobotsTxts { get; set; }
     public DbSet<SecurityTxt> SecurityTxts { get; set; }
 
     public DbSet<DocumentLink> Links { get; set; }
+    public DbSet<IndexWorkItem> IndexWorkItems { get; set; }
 
     public DbSet<FullTextSearchResult> FtsResults { get; set; }
 
@@ -30,7 +31,32 @@ public class WebDatabaseContext : DbContext
     }
 
     public void EnsureExists()
-        => Database.EnsureCreated();
+    {
+        Database.EnsureCreated();
+
+        // EnsureCreated does not evolve an existing SQLite database. The indexer
+        // must also be able to add this table to an already-populated index.
+        Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS "Favicons" (
+                "Protocol" TEXT NOT NULL,
+                "Domain" TEXT NOT NULL,
+                "Port" INTEGER NOT NULL,
+                "Emoji" TEXT NOT NULL,
+                "SourceUrlID" INTEGER NOT NULL,
+                CONSTRAINT "PK_Favicons" PRIMARY KEY ("Domain", "Port", "Protocol")
+            );
+            """);
+        Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS "IndexWorkItems" (
+                "UrlID" INTEGER NOT NULL CONSTRAINT "PK_IndexWorkItems" PRIMARY KEY,
+                "WorkTypes" INTEGER NOT NULL
+            );
+            """);
+        Database.ExecuteSqlRaw("""
+            CREATE INDEX IF NOT EXISTS "IX_Links_TargetUrlID_IsExternal"
+            ON "Links" ("TargetUrlID", "IsExternal");
+            """);
+    }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
@@ -46,11 +72,5 @@ public class WebDatabaseContext : DbContext
             .HasOne(i => i.Document)
             .WithOne(d => d.Image)
             .HasForeignKey<Image>(i => i.UrlID);
-
-        //modelBuilder.Entity<Document>()
-        //    .HasOne(d => d.Favicon)
-        //    .WithMany(f => f.Documents)
-        //    .HasForeignKey(x => new { x.Protocol, x.Domain, x.Port })
-        //    .IsRequired(false);
     }
 }

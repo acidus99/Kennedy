@@ -1,47 +1,39 @@
-﻿//using System;
-//using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
+using Gemini.Net;
+using Microsoft.EntityFrameworkCore;
 
-//using System.ComponentModel.DataAnnotations;
-//using System.ComponentModel.DataAnnotations.Schema;
-//using Microsoft.EntityFrameworkCore;
+namespace Kennedy.SearchIndex.Models;
 
-//using Gemini.Net;
-//using System.Diagnostics.CodeAnalysis;
+[Table("Favicons")]
+[PrimaryKey(nameof(Domain), nameof(Port), nameof(Protocol))]
+public class Favicon
+{
+    [Required]
+    public required string Protocol { get; set; }
 
-//namespace Kennedy.SearchIndex.Models
-//{
-//    [Table("Favicons")]
-//    [PrimaryKey(nameof(Protocol), nameof(Domain), nameof(Port))]
-    
-//    public class Favicon
-//    {
-//        [Required]
-//        public required string Protocol { get; init; }
+    [Required]
+    public required string Domain { get; set; }
 
-//        [Required]
-//        public required string Domain { get; init; }
+    [Required]
+    public required int Port { get; set; }
 
-//        [Required]
-//        public required int Port { get; init; }
+    [Required]
+    public string Emoji { get; set; } = "";
 
-//        public string Emoji { get; set; } = "";
-        
-//        public required long SourceUrlID { get; init; }
+    [Required]
+    public required long SourceUrlID { get; set; }
 
-//        public IEnumerable<Document>? Documents{ get; set; }
+    public Favicon()
+    { }
 
-//        public Favicon()
-//        { }
-
-//        [SetsRequiredMembersAttribute]
-//        public Favicon(GeminiUrl url)
-//        {
-//            Protocol = url.Protocol;
-//            Domain = url.Hostname;
-//            Port = url.Port;
-//            SourceUrlID = url.ID;
-//            Emoji = "";
-//        }
-
-//    }
-//}
+    [SetsRequiredMembers]
+    public Favicon(GeminiUrl url)
+    {
+        Protocol = url.Protocol;
+        Domain = url.Hostname;
+        Port = url.Port;
+        SourceUrlID = url.ID;
+    }
+}

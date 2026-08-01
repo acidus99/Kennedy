@@ -21,6 +21,12 @@ public interface ISearchDatabase
     /// <param name="title"></param>
     void RefreshIndexForUrl(long urlID, string filteredBody);
 
+    void RemoveFileIndexEntry(long urlID);
+
+    void RefreshImageIndexForUrl(long urlID, string terms);
+
+    void RemoveImageIndexEntry(long urlID);
+
     /// <summary>
     /// Removes a document from the search index, based on its URL ID
     /// </summary>

@@ -1,100 +1,94 @@
-﻿using System.Collections.Generic;
-using Microsoft.Data.Sqlite;
+using System;
+using System.Linq;
+using Kennedy.SearchIndex.Models;
+using Kennedy.SearchIndex.Web;
+using Microsoft.EntityFrameworkCore;
 
 namespace Kennedy.SearchIndex.Search;
 
 internal class ImageIndexer
 {
-    Dictionary<long, string> imageTextContent;
-    PathTokenizer pathTokenizer;
-    SqliteConnection connection;
+    const int BatchSize = 500;
 
-    public ImageIndexer(string connectionString)
+    readonly string storageDirectory;
+    readonly ISearchDatabase searchDatabase;
+    readonly PathTokenizer pathTokenizer = new PathTokenizer();
+
+    public ImageIndexer(string storageDirectory, ISearchDatabase searchDatabase)
     {
-        connection = new SqliteConnection(connectionString);
-        pathTokenizer = new PathTokenizer();
-        imageTextContent = new Dictionary<long, string>();
+        this.storageDirectory = storageDirectory;
+        this.searchDatabase = searchDatabase;
     }
 
     public void IndexImages()
     {
-        RemoveOldIndex();
-        GetContent();
-        IndexText();
-    }
+        int indexed = 0;
+        int processed = 0;
 
-    private void RemoveOldIndex()
-    {
-        connection.Open();
-        //first delete all FTS entries for this
-        SqliteCommand cmd = new SqliteCommand(@"DELETE From ImageSearch", connection);
-        cmd.ExecuteNonQuery();
-        connection.Close();
-    }
-
-    private void GetContent()
-    {
-        connection.Open();
-        using (var cmd = new SqliteCommand(@"select Images.UrlID, LinkText, url from Images
-Inner Join Documents
-on Documents.UrlID = Images.UrlID
-INNER Join Links
-on Images.UrlID = Links.TargetUrlID
-where length(LinkText) >= 0", connection))
+        using (var db = GetContext())
         {
-            var r = cmd.ExecuteReader();
-            while (r.Read())
+            while (true)
             {
-                long urlID = r.GetInt64(r.GetOrdinal("UrlID"));
-                string url = r.GetString(r.GetOrdinal("Url"));
-                string linkText = r.GetString(r.GetOrdinal("LinkText"));
-                if (!imageTextContent.ContainsKey(urlID))
+                var workItems = db.IndexWorkItems
+                    .Where(x => (x.WorkTypes & IndexWorkType.Image) != 0)
+                    .OrderBy(x => x.UrlID)
+                    .Take(BatchSize)
+                    .ToList();
+
+                if (workItems.Count == 0)
                 {
-                    imageTextContent[urlID] = GetPathIndexText(url);
+                    break;
                 }
-                if (linkText.Length > 0)
+
+                var urlIDs = workItems.Select(x => x.UrlID).ToList();
+                var documents = db.Documents.Include(x => x.Image)
+                    .Where(x => urlIDs.Contains(x.UrlID))
+                    .ToDictionary(x => x.UrlID);
+                var linkText = db.Links
+                    .Where(x => urlIDs.Contains(x.TargetUrlID) && x.LinkText != null && x.LinkText != "")
+                    .ToList()
+                    .GroupBy(x => x.TargetUrlID)
+                    .ToDictionary(x => x.Key, x => x.Select(link => link.LinkText!).Distinct().ToList());
+
+                foreach (var workItem in workItems)
                 {
-                    imageTextContent[urlID] = CleanLinkText(linkText) + " " + imageTextContent[urlID];
+                    processed++;
+                    if (documents.TryGetValue(workItem.UrlID, out var document) && document.Image != null &&
+                        linkText.TryGetValue(workItem.UrlID, out var incomingText))
+                    {
+                        var terms = string.Join(' ', incomingText) + " " + GetPathIndexText(document.Url);
+                        searchDatabase.RefreshImageIndexForUrl(document.UrlID, terms);
+                        indexed++;
+                    }
+                    else
+                    {
+                        searchDatabase.RemoveImageIndexEntry(workItem.UrlID);
+                    }
+
+                    CompleteWork(db, workItem);
                 }
+
+                db.SaveChanges();
+                Console.WriteLine($"Image index: processed {processed:N0} dirty URLs ({indexed:N0} refreshed)");
             }
         }
-        connection.Close();
     }
 
-    private void IndexText()
+    private static void CompleteWork(WebDatabaseContext db, IndexWorkItem workItem)
     {
-        connection.Open();
-        using (var transaction = connection.BeginTransaction())
+        workItem.WorkTypes &= ~IndexWorkType.Image;
+        if (workItem.WorkTypes == IndexWorkType.None)
         {
-            var command = connection.CreateCommand();
-            //Insert into DocsFTS(ROWID, Title, Body) Values (1, 'BBC News', 'News of the world! People are happy and are living longer. Cat ownership is up!');
-            command.CommandText = @"INSERT INTO ImageSearch(ROWID, Terms) VALUES ($docid, $terms)";
-
-            SqliteParameter parameterDbDocID = command.CreateParameter();
-            parameterDbDocID.ParameterName = "$docid";
-            command.Parameters.Add(parameterDbDocID);
-
-            SqliteParameter parameterTerms = command.CreateParameter();
-            parameterTerms.ParameterName = "$terms";
-            command.Parameters.Add(parameterTerms);
-
-            foreach (var dbDocID in imageTextContent.Keys)
-            {
-                parameterDbDocID!.Value = dbDocID;
-                parameterTerms!.Value = imageTextContent[dbDocID];
-                command!.ExecuteNonQuery();
-            }
-            transaction.Commit();
+            db.IndexWorkItems.Remove(workItem);
         }
-        connection.Close();
     }
-
-    private string CleanLinkText(string s)
-        => s.Trim();
 
     private string GetPathIndexText(string url)
     {
         string[] tokens = pathTokenizer.GetTokens(url);
-        return (tokens != null) ? string.Join(' ', tokens) + " " : "";
+        return tokens != null ? string.Join(' ', tokens) + " " : "";
     }
+
+    private WebDatabaseContext GetContext()
+        => new WebDatabaseContext(storageDirectory);
 }

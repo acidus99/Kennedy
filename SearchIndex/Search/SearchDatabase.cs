@@ -84,6 +84,31 @@ public class SearchDatabase : ISearchDatabase
         }
     }
 
+    public void RemoveFileIndexEntry(long urlID)
+    {
+        using (var db = GetContext())
+        {
+            db.Database.ExecuteSql($"DELETE From FTS WHERE ROWID = {urlID}");
+        }
+    }
+
+    public void RefreshImageIndexForUrl(long urlID, string terms)
+    {
+        using (var db = GetContext())
+        {
+            db.Database.ExecuteSql($"DELETE From ImageSearch WHERE ROWID = {urlID}");
+            db.Database.ExecuteSql($"INSERT INTO ImageSearch(ROWID, Terms) VALUES ({urlID}, {terms})");
+        }
+    }
+
+    public void RemoveImageIndexEntry(long urlID)
+    {
+        using (var db = GetContext())
+        {
+            db.Database.ExecuteSql($"DELETE From ImageSearch WHERE ROWID = {urlID}");
+        }
+    }
+
     #endregion
 
     #region Index Images
@@ -93,7 +118,7 @@ public class SearchDatabase : ISearchDatabase
         FileIndexer fileIndexer = new FileIndexer(storageDirectory, this);
         fileIndexer.IndexFiles();
 
-        ImageIndexer imageIndexer = new ImageIndexer(connectionString);
+        ImageIndexer imageIndexer = new ImageIndexer(storageDirectory, this);
         imageIndexer.IndexImages();
     }
 
