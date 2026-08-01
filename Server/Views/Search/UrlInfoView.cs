@@ -18,6 +18,7 @@ internal class UrlInfoView : AbstractView
 
     WebDatabaseContext db = new WebDatabaseContext(Settings.Global.DataRoot);
     Document entry = null!;
+    string? favicon;
 
     public override void Render()
     {
@@ -30,25 +31,32 @@ internal class UrlInfoView : AbstractView
 
         Response.Success();
 
-        Document? possibleEntry = db.Documents
-            .Where(x => x.UrlID == url.ID)
-            .Include(x => x.Image!)
-            //.Include(x => x.Favicon)
-            .FirstOrDefault()!;
+        var possibleEntry = (
+            from document in db.Documents.Include(x => x.Image!)
+            join favicon in db.Favicons
+                on new { document.Protocol, document.Domain, document.Port }
+                equals new { favicon.Protocol, favicon.Domain, favicon.Port } into matchingFavicons
+            from favicon in matchingFavicons.DefaultIfEmpty()
+            where document.UrlID == url.ID
+            select new
+            {
+                Document = document,
+                Favicon = favicon == null ? null : favicon.Emoji
+            }).FirstOrDefault();
 
         if (possibleEntry == null)
         {
             RenderUnknownUrl(url);
             return;
         }
-        entry = possibleEntry;
+        entry = possibleEntry.Document;
+        favicon = possibleEntry.Favicon;
 
         Response.WriteLine($"# ℹ️ {FormatUrl(entry.GeminiUrl)}");
         Response.WriteLine($"=> {entry.Url} Visit Current Url");
         Response.WriteLine($"=> {RoutePaths.ViewMostRecentCached(entry.GeminiUrl)} View most recent cached version");
         Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(entry.GeminiUrl)} View all archived copies and history with 🏎 DeLorean Time Machine");
-        //var emoji = entry.Favicon?.Emoji + " " ?? "";
-        var emoji = "";
+        var emoji = favicon == null ? "" : favicon + " ";
         Response.WriteLine($"=> {entry.GeminiUrl.RootUrl} Capsule: {emoji}{entry.GeminiUrl.Hostname}");
         Response.WriteLine();
 

@@ -67,7 +67,7 @@ internal abstract class AbstractView
             size.ToString("N0") :
             size.ToString("N2");
 
-    protected string FormatUrl(GeminiUrl url)
+    protected string FormatUrl(GeminiUrl url, string? favicon = null)
     {
         var parts = (url.Hostname + url.Path).Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
@@ -76,7 +76,7 @@ internal abstract class AbstractView
         {
             ret = ret.Substring(0, 80) + '…';
         }
-        return ret;
+        return favicon == null ? ret : $"{favicon} {ret}";
     }
 
     protected string FormatFilename(GeminiUrl url)

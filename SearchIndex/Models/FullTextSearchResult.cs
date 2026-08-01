@@ -25,7 +25,6 @@ public class FullTextSearchResult
         }
     }
 
-    [NotMapped]
     public string? Favicon { get; set; }
 
     public required string Mimetype { get; set; }

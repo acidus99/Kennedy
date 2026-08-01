@@ -25,19 +25,29 @@ internal class KnownHostsView : AbstractView
 
         using (var db = new WebDatabaseContext(Settings.Global.DataRoot))
         {
-            var servers = db.Documents
-                //.Include(d => d.Favicon)
-                .Where(x => x.StatusCode != GeminiParser.ConnectionErrorStatusCode)
-                .GroupBy(d => new { d.Protocol, d.Domain, d.Port })
-                .Select(g => new
+            var servers = (
+                from document in db.Documents
+                join favicon in db.Favicons
+                    on new { document.Protocol, document.Domain, document.Port }
+                    equals new { favicon.Protocol, favicon.Domain, favicon.Port } into matchingFavicons
+                from favicon in matchingFavicons.DefaultIfEmpty()
+                where document.StatusCode != GeminiParser.ConnectionErrorStatusCode
+                group document by new
                 {
-                    g.Key.Protocol,
-                    g.Key.Domain,
-                    g.Key.Port,
-                    //g.First().Favicon,
-                    Pages = g.Count(),
-                    LastDate = g.Max(d => d.LastTimeUpdated)
-                });
+                    document.Protocol,
+                    document.Domain,
+                    document.Port,
+                    Favicon = favicon == null ? null : favicon.Emoji
+                } into capsuleGroup
+                select new
+                {
+                    capsuleGroup.Key.Protocol,
+                    capsuleGroup.Key.Domain,
+                    capsuleGroup.Key.Port,
+                    capsuleGroup.Key.Favicon,
+                    Pages = capsuleGroup.Count(),
+                    LastDate = capsuleGroup.Max(d => d.LastTimeUpdated)
+                }).ToList();
 
             Response.WriteLine($"## Known Capsules ({servers.Count()})");
 
@@ -45,7 +55,12 @@ internal class KnownHostsView : AbstractView
             foreach (var server in servers)
             {
                 counter++;
-                var label = $"{counter}. {FormatDomain(server.Domain, null)}";
+                var label = $"{counter}. ";
+                if (server.Favicon != null)
+                {
+                    label += server.Favicon + " ";
+                }
+                label += FormatDomain(server.Domain, null);
                 if (server.Port != 1965)
                 {
                     label += ":" + server.Port;

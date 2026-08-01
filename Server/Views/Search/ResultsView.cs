@@ -162,7 +162,7 @@ internal class ResultsView : AbstractView
             Response.Write($"{FormatSize(result.BodySize)}");
         }
         Response.WriteLine(")");
-        Response.WriteLine($"* {FormatUrl(result.GeminiUrl)}");
+        Response.WriteLine($"* {FormatUrl(result.GeminiUrl, result.Favicon)}");
 
         if (result.DetectedLanguage != null && result.DetectedLanguage != "en")
         {

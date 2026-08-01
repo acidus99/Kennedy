@@ -33,6 +33,5 @@ public class ImageSearchResult
     public required int Width { get; set; }
     public required int Height { get; set; }
 
-    [NotMapped]
     public string? Favicon { get; set; }
 }

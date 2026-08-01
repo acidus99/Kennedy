@@ -114,7 +114,7 @@ internal class ImageResultsView : AbstractView
             Response.Write($" • {FormatSize(result.BodySize)}");
         }
         Response.WriteLine(")");
-        Response.WriteLine($"* {FormatUrl(result.GeminiUrl)}");
+        Response.WriteLine($"* {FormatUrl(result.GeminiUrl, result.Favicon)}");
         Response.WriteLine(">" + FormatSnippet(result.Snippet));
         Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(result.GeminiUrl)} ℹ️ More Info / Archived Copy");
         Response.WriteLine("");
