@@ -162,19 +162,19 @@ public class SearchDatabase : ISearchDatabase
 
             if (userQuery.HasSiteScope)
             {
-                sqlQuery.AppendWhereCondition("domain = {} ");
+                sqlQuery.AppendWhereCondition("Documents.Domain = {} ");
                 sqlQuery.AddParameter("domain", userQuery.SiteScope);
             }
 
             if (userQuery.HasFileTypeScope)
             {
-                sqlQuery.AppendWhereCondition("FileExtension = {} ");
+                sqlQuery.AppendWhereCondition("Documents.FileExtension = {} ");
                 sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
             }
 
             if (userQuery.HasUrlScope)
             {
-                sqlQuery.AppendWhereCondition($"Path LIKE '%{userQuery.UrlScope}%' ");
+                sqlQuery.AppendWhereCondition($"Documents.Path LIKE '%{userQuery.UrlScope}%' ");
             }
 
             var sql = sqlQuery.GetFormattableString();
@@ -211,19 +211,19 @@ WHERE ");
 
         if (userQuery.HasSiteScope)
         {
-            sqlQuery.AppendWhereCondition("domain = {} ");
+            sqlQuery.AppendWhereCondition("doc.Domain = {} ");
             sqlQuery.AddParameter("domain", userQuery.SiteScope);
         }
 
         if (userQuery.HasFileTypeScope)
         {
-            sqlQuery.AppendWhereCondition("FileExtension = {} ");
+            sqlQuery.AppendWhereCondition("doc.FileExtension = {} ");
             sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
         }
 
         if (userQuery.HasUrlScope)
         {
-            sqlQuery.AppendWhereCondition($"Path LIKE '%{userQuery.UrlScope}%' ");
+            sqlQuery.AppendWhereCondition($"doc.Path LIKE '%{userQuery.UrlScope}%' ");
         }
 
         sqlQuery.Append("ORDER BY tot LIMIT {} OFFSET {}");
@@ -282,19 +282,19 @@ WHERE ");
 
             if (userQuery.HasSiteScope)
             {
-                sqlQuery.AppendWhereCondition("domain = {} ");
+                sqlQuery.AppendWhereCondition("Documents.Domain = {} ");
                 sqlQuery.AddParameter("domain", userQuery.SiteScope);
             }
 
             if (userQuery.HasFileTypeScope)
             {
-                sqlQuery.AppendWhereCondition("FileExtension = {} ");
+                sqlQuery.AppendWhereCondition("Documents.FileExtension = {} ");
                 sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
             }
 
             if (userQuery.HasUrlScope)
             {
-                sqlQuery.AppendWhereCondition($"Path LIKE '%{userQuery.UrlScope}%' ");
+                sqlQuery.AppendWhereCondition($"Documents.Path LIKE '%{userQuery.UrlScope}%' ");
             }
 
             var sql = sqlQuery.GetFormattableString();
@@ -349,19 +349,19 @@ Select Url, BodySize, IsBodyTruncated, doc.Title, UrlID, DetectedLanguage, LineC
 
         if (userQuery.HasSiteScope)
         {
-            sqlQuery.AppendWhereCondition("domain = {} ");
+            sqlQuery.AppendWhereCondition("doc.Domain = {} ");
             sqlQuery.AddParameter("domain", userQuery.SiteScope);
         }
 
         if (userQuery.HasFileTypeScope)
         {
-            sqlQuery.AppendWhereCondition("FileExtension = {} ");
+            sqlQuery.AppendWhereCondition("doc.FileExtension = {} ");
             sqlQuery.AddParameter("filetype", userQuery.FileTypeScope);
         }
 
         if (userQuery.HasUrlScope)
         {
-            sqlQuery.AppendWhereCondition($"Path LIKE '%{userQuery.UrlScope}%' ");
+            sqlQuery.AppendWhereCondition($"doc.Path LIKE '%{userQuery.UrlScope}%' ");
         }
 
         if (userQuery.HasFtsQuery)
