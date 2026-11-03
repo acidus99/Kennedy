@@ -4,6 +4,7 @@ using Kennedy.Data.Parsers;
 using Kennedy.Data.RobotsTxt;
 using Kennedy.Data.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Kennedy.Data.Services;
 
@@ -32,365 +33,137 @@ public sealed class ResponseStore
     /// Stores a single response. Opens its own DbContext and transaction.
     /// Prefer <see cref="StoreBatchAsync"/> for high-throughput ingestion.
     /// </summary>
-    public async Task StoreResponseAsync(GeminiResponse response, CancellationToken ct)
-    {
-        var visitTimeUtc = response.RequestSent ?? DateTime.UtcNow;
-        var parsedResponse = _responseParser.Parse(response);
+    public Task StoreResponseAsync(GeminiResponse response, CancellationToken ct)
+        => StoreBatchAsync([response], ct);
 
-        await using var db = await _dbFactory.CreateDbContextAsync(ct);
-        await using var tx = await db.Database.BeginTransactionAsync(ct);
+    private static bool IsTransient(GeminiResponse response)
+        => response.IsConnectionError || response.IsTempFail;
 
-        var url = await db.UrlRegistry.SingleOrDefaultAsync(u => u.NormalizedUrl == response.RequestUrl.NormalizedUrl, ct);
-        if (url == null)
-        {
-            url = new UrlRecord(response.RequestUrl.NormalizedUrl)
-            {
-                FirstSeen = visitTimeUtc,
-                Status = UrlStatus.New
-            };
-            db.UrlRegistry.Add(url);
-        }
-
-        bool shouldUpdateSpecialFiles = !url.LastVisit.HasValue || visitTimeUtc > url.LastVisit.Value;
-
-        ApplyUrlLifecycle(url, response, visitTimeUtc);
-        ApplyUrlComponents(url);
-        ApplyUrlMetadata(url, parsedResponse);
-        await db.SaveChangesAsync(ct);
-        if (shouldUpdateSpecialFiles)
-        {
-            UpdateSpecialFiles(db, url, parsedResponse);
-        }
-
-        var existingDoc = await db.Documents
-            .SingleOrDefaultAsync(d => d.UrlRegistryId == url.Id, ct);
-
-        var (doc, ftsText) = ApplyDocumentToContext(db, url, parsedResponse, visitTimeUtc, existingDoc);
-        long? ftsDeleteId = doc != null && db.Entry(doc).State == EntityState.Deleted ? doc.Id : null;
-
-        await db.SaveChangesAsync(ct);
-
-        if (ftsDeleteId.HasValue)
-        {
-            await db.Database.ExecuteSqlRawAsync($"DELETE FROM DocumentsFts WHERE rowid = {ftsDeleteId.Value}", ct);
-        }
-        else if (doc != null && ftsText != null)
-        {
-            await db.Database.ExecuteSqlRawAsync($"DELETE FROM DocumentsFts WHERE rowid = {doc.Id}", ct);
-            await db.Database.ExecuteSqlInterpolatedAsync(
-                $"INSERT INTO DocumentsFts(rowid, Title, Content, CanonicalUrl) VALUES ({doc.Id}, {doc.Title}, {ftsText}, {doc.CanonicalUrl})", ct);
-        }
-
-        await UpdateLinksAsync(db, url, parsedResponse, ct);
-
-        await tx.CommitAsync(ct);
-    }
-
-    /// <summary>
-    /// Stores a batch of responses in a single SQLite transaction using one shared DbContext.
-    /// This is the preferred path for WARC ingestion — it reduces commit overhead from O(N) to O(1).
-    ///
-    /// Write order respects foreign-key constraints:
-    /// 1. UrlRegistry rows for all source URLs (SaveChanges → IDs populated).
-    /// 2. Document rows + UrlRegistry rows for newly discovered link targets (SaveChanges → IDs populated).
-    /// 3. UrlLink rows, preceded by a raw SQL DELETE of stale links (SaveChanges).
-    /// 4. Single COMMIT.
-    /// </summary>
     public async Task StoreBatchAsync(IReadOnlyList<GeminiResponse> responses, CancellationToken ct)
     {
-        if (responses.Count == 0)
-        {
-            return;
-        }
-
-        // Parse all responses upfront (CPU work outside the transaction).
-        var parsed = responses
-            .Select(r => (response: r, parsed: _responseParser.Parse(r), visitTime: r.RequestSent ?? DateTime.UtcNow))
-            .ToList();
-
+        if (responses.Count == 0) return;
+        var groups = responses.GroupBy(r => r.RequestUrl.NormalizedUrl)
+            .ToDictionary(g => g.Key, g => g.OrderBy(r => r.RequestSent ?? DateTime.MinValue).ToList());
         await using var db = await _dbFactory.CreateDbContextAsync(ct);
         await using var tx = await db.Database.BeginTransactionAsync(ct);
-
-        // ── Phase 1: UrlRegistry for source URLs ──────────────────────────────
-        //
-        // One IN query loads any pre-existing records; everything else is a fresh INSERT.
-        // ApplyUrlLifecycle + ApplyUrlComponents + ApplyUrlMetadata run per record,
-        // all accumulated in the change tracker before a single SaveChanges.
-
-        var sourceUrls = parsed.Select(p => p.response.RequestUrl.NormalizedUrl).ToList();
-
-        var existingUrlMap = await db.UrlRegistry
-            .Where(u => sourceUrls.Contains(u.NormalizedUrl))
-            .ToDictionaryAsync(u => u.NormalizedUrl, ct);
-
-        var urlMap = new Dictionary<string, UrlRecord>(parsed.Count);
-        var sourceChanged = new Dictionary<string, bool>(parsed.Count);
-        var specialFileUpdates = new Dictionary<string, bool>(parsed.Count);
-
-        foreach (var (response, parsedResponse, visitTime) in parsed)
+        var urls = groups.Keys.ToList();
+        var urlMap = await db.UrlRegistry.Where(u => urls.Contains(u.NormalizedUrl)).ToDictionaryAsync(u => u.NormalizedUrl, ct);
+        var current = new List<(UrlRecord url, ParsedResponse parsed, DateTime time)>();
+        var dirty = new HashSet<long>();
+        var changedPayloads = new HashSet<string>();
+        foreach (var (key, visits) in groups)
         {
-            var normalizedUrl = response.RequestUrl.NormalizedUrl;
-
-            if (!existingUrlMap.TryGetValue(normalizedUrl, out var url))
+            if (!urlMap.TryGetValue(key, out var url))
             {
-                url = new UrlRecord(normalizedUrl) { FirstSeen = visitTime };
+                url = new UrlRecord(key) { FirstSeen = visits[0].RequestSent ?? DateTime.UtcNow };
                 db.UrlRegistry.Add(url);
+                urlMap[key] = url;
             }
-
-            sourceChanged[normalizedUrl] = url.LastStatusCode != response.StatusCode ||
-                !string.Equals(url.LastContentHash, response.Hash, StringComparison.Ordinal);
-            specialFileUpdates[normalizedUrl] = !url.LastVisit.HasValue || visitTime > url.LastVisit.Value;
-
-            ApplyUrlLifecycle(url, response, visitTime);
+            var policyStatus = url.Status;
+            foreach (var response in visits)
+            {
+                var time = response.RequestSent ?? DateTime.UtcNow;
+                if (time < url.FirstSeen) url.FirstSeen = time;
+                if (!url.LastVisit.HasValue || time > url.LastVisit)
+                    ApplyUrlLifecycle(url, response, time);
+            }
+            if (policyStatus is >= UrlStatus.ExcludedByRobots and <= UrlStatus.ManuallyDisabled) url.Status = policyStatus;
             ApplyUrlComponents(url);
-            ApplyUrlMetadata(url, parsedResponse);
-            urlMap[normalizedUrl] = url;
+            // Temporary failures update attempt information only. An older successful
+            // response may still supply last-good content, even if seen afterwards.
+            var candidate = visits.LastOrDefault(r => !IsTransient(r));
+            if (candidate == null) continue;
+            var captured = candidate.RequestSent ?? DateTime.UtcNow;
+            if (url.LastIndexedVisit.HasValue && (captured < url.LastIndexedVisit ||
+                (captured == url.LastIndexedVisit && url.LastIndexedHash != null && url.LastIndexedHash != candidate.Hash))) continue;
+            if (url.LastIndexedHash != candidate.Hash) changedPayloads.Add(key);
+            var parsed = _responseParser.Parse(candidate);
+            url.LastIndexedVisit = captured;
+            url.LastIndexedHash = candidate.Hash;
+            ApplyUrlMetadata(url, parsed);
+            if (candidate.IsSuccess)
+            {
+                url.LastSuccess = !url.LastSuccess.HasValue || captured > url.LastSuccess ? captured : url.LastSuccess;
+                url.BodySize = candidate.BodySize;
+                url.IsBodyTruncated = candidate.IsBodyTruncated;
+            }
+            current.Add((url, parsed, captured));
         }
-
-        // Flush all UrlRegistry rows — EF populates auto-generated IDs after this call.
         await db.SaveChangesAsync(ct);
-
-        foreach (var (_, parsedResponse, _) in parsed)
-        {
-            if (specialFileUpdates[parsedResponse.RequestUrl.NormalizedUrl])
-            {
-                UpdateSpecialFiles(db, urlMap[parsedResponse.RequestUrl.NormalizedUrl], parsedResponse);
-            }
-        }
-
-        var dirtyFileUrls = new HashSet<long>();
-        foreach (var (_, parsedResponse, _) in parsed)
-        {
-            var normalizedUrl = parsedResponse.RequestUrl.NormalizedUrl;
-            if (sourceChanged[normalizedUrl] && !parsedResponse.IsProactiveRequest)
-            {
-                dirtyFileUrls.Add(urlMap[normalizedUrl].Id);
-            }
-        }
-
-        // ── Phase 2: Documents + UrlRegistry for new link-target URLs ─────────
-        //
-        // Batch-load existing Documents and existing target UrlRecords in two IN queries.
-        // New link targets that don't exist yet are inserted here so their IDs are
-        // available when building UrlLink rows in Phase 3.
-
-        var sourceUrlIds = urlMap.Values.Select(u => (long?)u.Id).ToList();
-        var existingDocMap = await db.Documents
-            .Where(d => sourceUrlIds.Contains(d.UrlRegistryId))
+        if (current.Count == 0) { await tx.CommitAsync(ct); return; }
+        var hosts = current.Select(x => x.url.Host).Distinct().ToList();
+        var policies = await db.RobotsTxts.Where(r => hosts.Contains(r.Host)).ToListAsync(ct);
+        var rules = policies.ToDictionary(r => (r.Scheme,r.Host,r.Port), r => new RobotsTxtParser().Parse(r.Content));
+        foreach (var (url, parsed, _) in current)
+            url.IsRobotsExcluded = rules.TryGetValue((url.Scheme,url.Host,url.Port), out var robots) &&
+                !robots.IsPathAllowed("indexer", parsed.RequestUrl.Path);
+        var sourceIds = current.Select(x => x.url.Id).ToList();
+        var docs = await db.Documents.Where(d => d.UrlRegistryId != null && sourceIds.Contains(d.UrlRegistryId.Value))
             .ToDictionaryAsync(d => d.UrlRegistryId!.Value, ct);
-
-        // Collect every unique link target URL across the whole batch.
-        var allLinkTargets = new Dictionary<string, FoundLink>();
-        foreach (var (_, parsedResponse, _) in parsed)
+        var existingFts = new HashSet<long>();
+        await using (var command = db.Database.GetDbConnection().CreateCommand())
         {
-            foreach (var link in parsedResponse.Links.Distinct())
-            {
-                allLinkTargets.TryAdd(link.Url.NormalizedUrl, link);
-            }
+            command.Transaction = tx.GetDbTransaction();
+            command.CommandText = $"SELECT rowid FROM DocumentsFts WHERE rowid IN ({string.Join(',', docs.Values.Select(d => d.Id).DefaultIfEmpty(-1))});";
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct)) existingFts.Add(reader.GetInt64(0));
         }
-
-        // Apply document changes to the change tracker (no SaveChanges yet).
         var ftsDeletes = new List<long>();
         var ftsUpserts = new List<(DocumentRecord doc, string text)>();
-
-        foreach (var (response, parsedResponse, visitTime) in parsed)
+        foreach (var (url, parsed, captured) in current)
         {
-            var url = urlMap[response.RequestUrl.NormalizedUrl];
-            existingDocMap.TryGetValue(url.Id, out var existingDoc);
-            var (doc, ftsText) = ApplyDocumentToContext(db, url, parsedResponse, visitTime, existingDoc);
-            if (doc == null) continue;
-            if (db.Entry(doc).State == EntityState.Deleted)
-                ftsDeletes.Add(doc.Id);
-            else if (ftsText != null)
-                ftsUpserts.Add((doc, ftsText));
+            UpdateSpecialFiles(db, url, parsed);
+            if (UrlUtility.IsRobotsUrl(parsed.RequestUrl.Url))
+                await QueueFileIndexWorkAsync(db, [url.Id], ct, IndexWorkType.RobotsPolicy);
+            docs.TryGetValue(url.Id, out var existing);
+            var (doc, text) = ApplyDocumentToContext(db, url, parsed, captured, existing,
+                existing != null && !existingFts.Contains(existing.Id));
+            if (doc != null && db.Entry(doc).State == EntityState.Deleted) ftsDeletes.Add(doc.Id);
+            else if (doc != null && text != null) ftsUpserts.Add((doc, text));
+            if (!parsed.IsProactiveRequest && changedPayloads.Contains(url.NormalizedUrl)) dirty.Add(url.Id);
         }
-
-        // One IN query to find which link targets are already in the registry.
-        var targetUrlStrings = allLinkTargets.Keys.ToList();
-        var existingTargetMap = targetUrlStrings.Count > 0
-            ? await db.UrlRegistry
-                .Where(u => targetUrlStrings.Contains(u.NormalizedUrl))
-                .ToDictionaryAsync(u => u.NormalizedUrl, ct)
-            : new Dictionary<string, UrlRecord>();
-
-        // Insert UrlRegistry rows for link targets not yet seen.
-        // Skip URLs that are also source URLs in this batch (already in urlMap).
-        var newTargetMap = new Dictionary<string, UrlRecord>();
-        foreach (var (targetUrl, _) in allLinkTargets)
+        var targets = current.SelectMany(p => p.parsed.Links).Select(l => l.Url.NormalizedUrl).Distinct().ToList();
+        var targetMap = await db.UrlRegistry.Where(u => targets.Contains(u.NormalizedUrl)).ToDictionaryAsync(u => u.NormalizedUrl, ct);
+        foreach (var (key, value) in urlMap) targetMap.TryAdd(key, value);
+        foreach (var (url, parsed, captured) in current)
+        foreach (var link in parsed.Links)
         {
-            if (existingTargetMap.ContainsKey(targetUrl) || urlMap.ContainsKey(targetUrl))
-            {
-                continue;
-            }
-
-            var target = new UrlRecord(targetUrl) { FirstSeen = DateTime.UtcNow };
+            if (targetMap.ContainsKey(link.Url.NormalizedUrl)) continue;
+            var target = new UrlRecord(link.Url.NormalizedUrl) { FirstSeen = captured };
             ApplyUrlComponents(target);
             db.UrlRegistry.Add(target);
-            newTargetMap[targetUrl] = target;
+            targetMap[target.NormalizedUrl] = target;
         }
-
-        // Flush Documents + new target UrlRegistry rows — IDs populated after this call.
         await db.SaveChangesAsync(ct);
-
-        // FTS management — after SaveChanges so new Documents have their IDs populated.
-        if (ftsDeletes.Count > 0)
-        {
-            var idList = string.Join(",", ftsDeletes);
-            await db.Database.ExecuteSqlRawAsync($"DELETE FROM DocumentsFts WHERE rowid IN ({idList})", ct);
-        }
+        foreach (var id in ftsDeletes)
+            await db.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM DocumentsFts WHERE rowid={id}", ct);
         foreach (var (doc, text) in ftsUpserts)
         {
-            await db.Database.ExecuteSqlRawAsync($"DELETE FROM DocumentsFts WHERE rowid = {doc.Id}", ct);
+            await db.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM DocumentsFts WHERE rowid={doc.Id}", ct);
             await db.Database.ExecuteSqlInterpolatedAsync(
-                $"INSERT INTO DocumentsFts(rowid, Title, Content, CanonicalUrl) VALUES ({doc.Id}, {doc.Title}, {text}, {doc.CanonicalUrl})", ct);
+                $"INSERT INTO DocumentsFts(rowid,Title,Content,CanonicalUrl) VALUES({doc.Id},{doc.Title},{text},{doc.CanonicalUrl})", ct);
         }
-
-        // Build a unified lookup: source URLs + existing targets + newly created targets.
-        // A source URL can also appear as a link target, so urlMap is included.
-        var combinedTargetMap = new Dictionary<string, UrlRecord>(
-            existingTargetMap.Count + newTargetMap.Count + urlMap.Count);
-        foreach (var kv in existingTargetMap) combinedTargetMap.TryAdd(kv.Key, kv.Value);
-        foreach (var kv in newTargetMap)      combinedTargetMap.TryAdd(kv.Key, kv.Value);
-        foreach (var kv in urlMap)            combinedTargetMap.TryAdd(kv.Key, kv.Value);
-
-        var sourceIds = urlMap.Values.Select(u => u.Id).Distinct().ToList();
-        var oldLinksBySource = await db.UrlLinks
-            .AsNoTracking()
-            .Where(link => sourceIds.Contains(link.SourceUrlId))
-            .ToListAsync(ct);
-        var oldLinkMaps = oldLinksBySource
-            .GroupBy(link => link.SourceUrlId)
-            .ToDictionary(
-                group => group.Key,
-                group => group.GroupBy(link => link.TargetUrlId)
-                    .ToDictionary(linkGroup => linkGroup.Key, linkGroup =>
-                        (linkGroup.First().IsExternal, linkGroup.First().LinkText)));
-        var changedLinkSources = new List<long>();
-        var replacementLinks = new List<UrlLinkRecord>();
-
-        foreach (var (response, parsedResponse, _) in parsed)
+        var previous = await db.UrlLinks.AsNoTracking().Where(l => sourceIds.Contains(l.SourceUrlId)).ToListAsync(ct);
+        foreach (var (url, parsed, _) in current)
         {
-            var sourceUrl = urlMap[response.RequestUrl.NormalizedUrl];
-            var newLinks = new Dictionary<long, (bool IsExternal, string LinkText)>();
-            foreach (var link in parsedResponse.Links)
-            {
-                if (!combinedTargetMap.TryGetValue(link.Url.NormalizedUrl, out var target))
-                {
-                    continue;
-                }
-
-                newLinks.TryAdd(target.Id, (link.IsExternal, (link.LinkText ?? string.Empty).Trim()));
-            }
-
-            oldLinkMaps.TryGetValue(sourceUrl.Id, out var oldLinks);
-            oldLinks ??= new Dictionary<long, (bool IsExternal, string LinkText)>();
-            bool linksChanged = false;
-            foreach (var targetId in oldLinks.Keys.Union(newLinks.Keys))
-            {
-                bool hadOldLink = oldLinks.TryGetValue(targetId, out var oldLink);
-                bool hasNewLink = newLinks.TryGetValue(targetId, out var newLink);
-                if (hadOldLink != hasNewLink ||
-                    (hadOldLink && (oldLink.IsExternal != newLink.IsExternal || oldLink.LinkText != newLink.LinkText)))
-                {
-                    linksChanged = true;
-                }
-
-                if (hadOldLink != hasNewLink ||
-                    (hadOldLink && oldLink.LinkText != newLink.LinkText))
-                {
-                    dirtyFileUrls.Add(targetId);
-                }
-            }
-
-            if (!linksChanged)
-            {
-                continue;
-            }
-
-            changedLinkSources.Add(sourceUrl.Id);
-            foreach (var (targetId, link) in newLinks)
-            {
-                replacementLinks.Add(new UrlLinkRecord
-                {
-                    SourceUrlId = sourceUrl.Id,
-                    TargetUrlId = targetId,
-                    IsExternal = link.IsExternal,
-                    LinkText = link.LinkText
-                });
-            }
+            var oldLinks = previous.Where(l => l.SourceUrlId == url.Id).GroupBy(l => l.TargetUrlId)
+                .ToDictionary(g => g.Key, g => (g.First().IsExternal, g.First().LinkText));
+            var newLinks = (url.Status is >= UrlStatus.ExcludedByRobots and <= UrlStatus.ManuallyDisabled ? Enumerable.Empty<FoundLink>() : parsed.Links).GroupBy(l => targetMap[l.Url.NormalizedUrl].Id)
+                .ToDictionary(g => g.Key, g => (g.First().IsExternal, LinkText: (g.First().LinkText ?? "").Trim()));
+            if (oldLinks.Count == newLinks.Count && oldLinks.All(kv => newLinks.TryGetValue(kv.Key, out var link) && link == kv.Value)) continue;
+            foreach (long id in oldLinks.Keys.Union(newLinks.Keys)) dirty.Add(id);
+            await db.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM UrlLinks WHERE SourceUrlId={url.Id}", ct);
+            foreach (var (id, link) in newLinks)
+                db.UrlLinks.Add(new UrlLinkRecord { SourceUrlId=url.Id, TargetUrlId=id, IsExternal=link.IsExternal, LinkText=link.LinkText });
         }
-
-        if (changedLinkSources.Count > 0)
-        {
-            var sourceIdsCsv = string.Join(",", changedLinkSources);
-            await db.Database.ExecuteSqlRawAsync(
-                $"DELETE FROM UrlLinks WHERE SourceUrlId IN ({sourceIdsCsv})", ct);
-            db.UrlLinks.AddRange(replacementLinks);
-        }
-
-        await QueueFileIndexWorkAsync(db, dirtyFileUrls, ct);
+        await QueueFileIndexWorkAsync(db, dirty, ct);
         await db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
     }
 
-    /// <summary>
-    /// Stores a batch of responses into UrlRegistry only — no Documents, Images, FTS, or Links.
-    /// Uses "latest wins" semantics: a URL record is only updated when the WARC's visit time is
-    /// strictly newer than the existing <see cref="UrlRecord.LastVisit"/>, making this safe to
-    /// call with WARCs in any order.  Used by the Phase-1 bootstrap pass.
-    /// </summary>
-    public async Task StoreRegistryOnlyBatchAsync(IReadOnlyList<GeminiResponse> responses, CancellationToken ct)
-    {
-        if (responses.Count == 0) return;
-
-        var parsed = responses
-            .Select(r => (response: r, parsed: _responseParser.Parse(r), visitTime: r.RequestSent ?? DateTime.UtcNow))
-            .ToList();
-
-        await using var db = await _dbFactory.CreateDbContextAsync(ct);
-        await using var tx = await db.Database.BeginTransactionAsync(ct);
-
-        var sourceUrls = parsed.Select(p => p.response.RequestUrl.NormalizedUrl).ToList();
-
-        var existingUrlMap = await db.UrlRegistry
-            .Where(u => sourceUrls.Contains(u.NormalizedUrl))
-            .ToDictionaryAsync(u => u.NormalizedUrl, ct);
-        var specialFileUpdates = new HashSet<string>();
-
-        foreach (var (response, parsedResponse, visitTime) in parsed)
-        {
-            var normalizedUrl = response.RequestUrl.NormalizedUrl;
-
-            if (!existingUrlMap.TryGetValue(normalizedUrl, out var url))
-            {
-                url = new UrlRecord(normalizedUrl) { FirstSeen = visitTime };
-                db.UrlRegistry.Add(url);
-                existingUrlMap[normalizedUrl] = url;
-            }
-            else if (url.LastVisit.HasValue && visitTime <= url.LastVisit.Value)
-            {
-                continue; // already have newer data from a later WARC
-            }
-
-            ApplyUrlLifecycle(url, response, visitTime);
-            ApplyUrlComponents(url);
-            ApplyUrlMetadata(url, parsedResponse);
-            specialFileUpdates.Add(normalizedUrl);
-        }
-
-        await db.SaveChangesAsync(ct);
-
-        foreach (var (_, parsedResponse, _) in parsed)
-        {
-            if (specialFileUpdates.Contains(parsedResponse.RequestUrl.NormalizedUrl) &&
-                existingUrlMap.TryGetValue(parsedResponse.RequestUrl.NormalizedUrl, out var url))
-            {
-                UpdateSpecialFiles(db, url, parsedResponse);
-            }
-        }
-        await db.SaveChangesAsync(ct);
-        await tx.CommitAsync(ct);
-    }
+    // Kept for existing callers; a full import now has no time-based retention cutoff.
+    public Task StoreRegistryOnlyBatchAsync(IReadOnlyList<GeminiResponse> responses, CancellationToken ct)
+        => StoreBatchAsync(responses, ct);
 
     // ── Shared helpers ────────────────────────────────────────────────────────
 
@@ -408,6 +181,7 @@ public sealed class ResponseStore
 
     private static void ApplyUrlLifecycle(UrlRecord url, GeminiResponse response, DateTime visitTimeUtc)
     {
+        var policyStatus = url.Status;
         url.LastVisit = visitTimeUtc;
         url.LastStatusCode = response.StatusCode;
 
@@ -415,7 +189,7 @@ public sealed class ResponseStore
         {
             url.LastSuccess = visitTimeUtc;
             url.SuccessCount++;
-            url.Meta = string.Empty;
+            url.Meta = response.Meta;
 
             if (!string.IsNullOrEmpty(response.Hash)
                 && !string.Equals(url.LastContentHash, response.Hash, StringComparison.Ordinal))
@@ -424,7 +198,7 @@ public sealed class ResponseStore
                 url.LastContentChange = visitTimeUtc;
             }
 
-            url.Status = UrlStatus.Active;
+            url.Status = policyStatus is >= UrlStatus.DenyList and <= UrlStatus.ManuallyDisabled ? policyStatus : UrlStatus.Active;
             return;
         }
 
@@ -432,15 +206,15 @@ public sealed class ResponseStore
         {
             url.FailureCount++;
             url.Status = UrlStatus.ConnectionError;
-            url.Meta = string.Empty;
+            url.Meta = response.Meta;
             return;
         }
 
         if (GeminiParser.IsTempFailStatus(response.StatusCode) || GeminiParser.IsPermFailStatus(response.StatusCode))
         {
             url.FailureCount++;
-            url.Status = UrlStatus.TemporaryError;
-            url.Meta = string.Empty;
+            url.Status = response.StatusCode == 52 ? UrlStatus.Gone : response.IsPermFail ? UrlStatus.PermanentError : UrlStatus.TemporaryError;
+            url.Meta = response.Meta;
             return;
         }
 
@@ -463,7 +237,7 @@ public sealed class ResponseStore
         }
 
         url.Status = UrlStatus.UNKNOWN;
-        url.Meta = string.Empty;
+        url.Meta = response.Meta;
     }
 
     /// <summary>
@@ -473,6 +247,7 @@ public sealed class ResponseStore
     /// </summary>
     private static void ApplyUrlMetadata(UrlRecord url, ParsedResponse parsedResponse)
     {
+        if (!parsedResponse.IsSuccess) return;
         url.LastMimeType = parsedResponse.MimeType;
         url.LastDetectedMimeType = parsedResponse.DetectedMimeType;
 
@@ -482,7 +257,7 @@ public sealed class ResponseStore
     private static async Task QueueFileIndexWorkAsync(
         KennedyDbContext db,
         IEnumerable<long> urlIds,
-        CancellationToken ct)
+        CancellationToken ct, IndexWorkType workType = IndexWorkType.FileSearch)
     {
         foreach (var batch in urlIds.Distinct().Chunk(900))
         {
@@ -492,16 +267,18 @@ public sealed class ResponseStore
 
             foreach (var urlId in batch)
             {
+                var pending = db.IndexWorkItems.Local.FirstOrDefault(item => item.UrlRegistryId == urlId);
+                if (pending != null) { pending.WorkTypes |= workType; continue; }
                 if (existingItems.TryGetValue(urlId, out var item))
                 {
-                    item.WorkTypes |= IndexWorkType.FileSearch;
+                    item.WorkTypes |= workType;
                 }
                 else
                 {
                     db.IndexWorkItems.Add(new IndexWorkItem
                     {
                         UrlRegistryId = urlId,
-                        WorkTypes = IndexWorkType.FileSearch
+                        WorkTypes = workType
                     });
                 }
             }
@@ -616,25 +393,23 @@ public sealed class ResponseStore
         UrlRecord url,
         ParsedResponse parsedResponse,
         DateTime visitTimeUtc,
-        DocumentRecord? existing)
+        DocumentRecord? existing, bool repairFts = false)
     {
-        var isIndexableText = parsedResponse is ITextResponse textResponse && textResponse.HasIndexableText;
+        var suppressed = url.Status is >= UrlStatus.ExcludedByRobots and <= UrlStatus.ManuallyDisabled;
+        var isIndexableText = !suppressed && parsedResponse is ITextResponse textResponse && textResponse.HasIndexableText;
 
         if (!isIndexableText)
         {
             if (existing != null)
             {
                 // Older WARC: don't remove a more recently indexed Document.
-                if (visitTimeUtc <= existing.LastIndexedUtc)
+                if (visitTimeUtc < existing.LastIndexedUtc)
                     return (null, null);
 
-                var existingImage = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
-                if (existingImage != null) db.Images.Remove(existingImage);
                 db.Documents.Remove(existing);
-                return (existing, null);
             }
 
-            if (parsedResponse is ImageResponse imageResponse)
+            if (!suppressed && parsedResponse is ImageResponse imageResponse)
             {
                 var image = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
                 if (image == null)
@@ -642,7 +417,7 @@ public sealed class ResponseStore
                     image = new DocumentImageRecord { UrlRegistryId = url.Id };
                     db.Images.Add(image);
                 }
-                else if (visitTimeUtc <= image.LastIndexedUtc)
+                else if (visitTimeUtc < image.LastIndexedUtc)
                 {
                     return (null, null); // older WARC, don't overwrite image metadata
                 }
@@ -660,8 +435,11 @@ public sealed class ResponseStore
                     db.Images.Remove(existingImage);
             }
 
-            return (null, null);
+            return (existing, null);
         }
+
+        var oldImage = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
+        if (oldImage != null) db.Images.Remove(oldImage);
 
         // Indexable text path.
         if (existing == null)
@@ -674,7 +452,7 @@ public sealed class ResponseStore
             };
             db.Documents.Add(existing);
         }
-        else if (visitTimeUtc <= existing.LastIndexedUtc)
+        else if (visitTimeUtc < existing.LastIndexedUtc)
         {
             // Older WARC: don't overwrite a more recently indexed Document.
             return (null, null);
@@ -682,7 +460,7 @@ public sealed class ResponseStore
 
         // Skip rewriting unchanged payloads to avoid unnecessary FTS churn.
         // We still refresh mutable timeline fields.
-        if (existing.ResponseHash == parsedResponse.Hash)
+        if (existing.ResponseHash == parsedResponse.Hash && !repairFts)
         {
             existing.UrlRegistryId = url.Id;
             existing.LastIndexedUtc = visitTimeUtc;
@@ -724,76 +502,4 @@ public sealed class ResponseStore
         return (existing, ftsContent);
     }
 
-    /// <summary>
-    /// Replaces the outbound links for <paramref name="sourceUrl"/> in the single-record path.
-    /// Uses raw SQL DELETE (not EF RemoveRange) to avoid loading and individually deleting each row.
-    /// </summary>
-    private static async Task UpdateLinksAsync(
-        KennedyDbContext db,
-        UrlRecord sourceUrl,
-        ParsedResponse parsedResponse,
-        CancellationToken ct)
-    {
-        // Raw SQL is faster than EF's RemoveRange, which would load every row then issue
-        // individual DELETE statements.
-        await db.Database.ExecuteSqlRawAsync(
-            $"DELETE FROM UrlLinks WHERE SourceUrlId = {sourceUrl.Id}", ct);
-
-        var distinctLinks = parsedResponse.Links.Distinct().ToList();
-        var targetUrls = distinctLinks.Select(l => l.Url.NormalizedUrl).Distinct().ToList();
-
-        // Load all already-known target URLs in one batch query.
-        var existingTargets = await db.UrlRegistry
-            .Where(u => targetUrls.Contains(u.NormalizedUrl))
-            .ToDictionaryAsync(u => u.NormalizedUrl, ct);
-
-        // Also check the change tracker so we don't try to insert a URL that was already
-        // staged by a previous step in this same transaction (e.g. two links to the same new URL).
-        var trackedTargets = db.ChangeTracker
-            .Entries<UrlRecord>()
-            .Where(e => e.State != EntityState.Deleted)
-            .Select(e => e.Entity)
-            .GroupBy(e => e.NormalizedUrl)
-            .ToDictionary(g => g.Key, g => g.First());
-
-        // First pass: create UrlRegistry entries for newly discovered URLs.
-        foreach (var foundLink in distinctLinks)
-        {
-            if (existingTargets.ContainsKey(foundLink.Url.NormalizedUrl) || trackedTargets.ContainsKey(foundLink.Url.NormalizedUrl))
-            {
-                continue;
-            }
-
-            var target = new UrlRecord(foundLink.Url.NormalizedUrl)
-            {
-                FirstSeen = parsedResponse.RequestSent ?? DateTime.UtcNow
-            };
-            ApplyUrlComponents(target);
-            db.UrlRegistry.Add(target);
-            trackedTargets[target.NormalizedUrl] = target;
-        }
-
-        // Flush new UrlRegistry rows so their IDs are available for the link records.
-        await db.SaveChangesAsync(ct);
-
-        // Second pass: insert UrlLink rows now that all target IDs are known.
-        foreach (var foundLink in distinctLinks)
-        {
-            if (!existingTargets.TryGetValue(foundLink.Url.NormalizedUrl, out var target) &&
-                !trackedTargets.TryGetValue(foundLink.Url.NormalizedUrl, out target))
-            {
-                continue;
-            }
-
-            db.UrlLinks.Add(new UrlLinkRecord
-            {
-                SourceUrlId = sourceUrl.Id,
-                TargetUrlId = target.Id,
-                IsExternal = foundLink.IsExternal,
-                LinkText = (foundLink.LinkText ?? string.Empty).Trim()
-            });
-        }
-
-        await db.SaveChangesAsync(ct);
-    }
 }

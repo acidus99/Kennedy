@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using Kennedy.Data.Models;
+using Kennedy.Data.Utils;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,6 +39,7 @@ public sealed class FileSearchFtsRebuilder
                 return;
             }
 
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
             var urlIds = workItems.Select(item => item.UrlRegistryId).ToList();
             var urls = await db.UrlRegistry
                 .Where(url => urlIds.Contains(url.Id))
@@ -61,7 +63,8 @@ public sealed class FileSearchFtsRebuilder
                     $"DELETE FROM FilesFts WHERE rowid = {workItem.UrlRegistryId};", ct);
 
                 if (urls.TryGetValue(workItem.UrlRegistryId, out var url) &&
-                    url.LastStatusCode >= 20 && url.LastStatusCode < 30 &&
+                    url.Status is UrlStatus.Active or UrlStatus.TemporaryError or UrlStatus.ConnectionError &&
+                    url.LastMimeType != null && !UrlUtility.IsProactiveUrl(new Uri(url.NormalizedUrl)) &&
                     !textUrlIds.Contains(url.Id))
                 {
                     var terms = BuildBaseTerms(url.NormalizedUrl);
@@ -87,6 +90,8 @@ public sealed class FileSearchFtsRebuilder
             }
 
             await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+            db.ChangeTracker.Clear();
             Console.WriteLine($"File-search index: processed {processed:N0} dirty URLs ({indexed:N0} refreshed)");
         }
     }

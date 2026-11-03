@@ -42,6 +42,7 @@ public class ArchiveStats
     /// Total size if de-duplication was not used
     /// </summary>
     public long SizeWithoutDeDuplication { get; set; }
+    public long? PacksSizeOnDisk { get; set; }
 
 
     public DateTime OldestSnapshot { get; set; }

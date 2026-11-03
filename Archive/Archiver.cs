@@ -65,7 +65,12 @@ public class Archiver
             return false;
         }
 
-        response = TruncateIfNecessary(response);
+        // Archive size limits must not mutate the response still used by search.
+        response = TruncateIfNecessary(new GeminiResponse(response.RequestUrl, response.ResponseLine)
+        {
+            BodyBytes=response.BodyBytes, IsBodyTruncated=response.IsBodyTruncated,
+            RequestSent=response.RequestSent, ResponseReceived=response.ResponseReceived ?? response.RequestSent ?? DateTime.UtcNow
+        });
 
         using (var db = GetContext())
         {
@@ -254,7 +259,7 @@ public class Archiver
     /// <returns></returns>
     private bool ShouldArchiveStatus(GeminiResponse response)
     {
-        if (response.IsSuccess && response.HasBody)
+        if (response.IsSuccess || response.IsPermFail)
         {
             return true;
         }

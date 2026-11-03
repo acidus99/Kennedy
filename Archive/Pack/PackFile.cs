@@ -41,7 +41,7 @@ public class PackFile
     /// </summary>
     public PackRecord Read(long offset)
     {
-        using (var fin = new BinaryReader(new FileStream(FullPath, FileMode.Open)))
+        using (var fin = new BinaryReader(new FileStream(FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
         {
             fin.BaseStream.Seek(offset, SeekOrigin.Begin);
             string type = GetType(fin.ReadBytes(4));

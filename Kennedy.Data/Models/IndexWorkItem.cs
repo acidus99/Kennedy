@@ -7,7 +7,8 @@ namespace Kennedy.Data.Models;
 public enum IndexWorkType
 {
     None = 0,
-    FileSearch = 1
+    FileSearch = 1,
+    RobotsPolicy = 2
 }
 
 [Table("IndexWorkItems")]

@@ -168,6 +168,9 @@ namespace Kennedy.Data
 
         public async Task EnsureFtsAsync(CancellationToken ct)
         {
+            // Replace the old contentless-table deletion trigger: UrlSearch is a
+            // standalone FTS table and requires an ordinary DELETE.
+            await Database.ExecuteSqlRawAsync("DROP TRIGGER IF EXISTS UrlRegistry_ad;", ct);
             // Keep FTS schema setup explicit because EnsureCreated does not create virtual tables.
             // Standalone (not content=) so FTS rows are self-contained; ResponseStore manages inserts/deletes.
             // Both tables use porter unicode61 tokenization so that "cats" matches "cat" (stemming parity
@@ -227,18 +230,7 @@ namespace Kennedy.Data
             await Database.ExecuteSqlRawAsync(
                 """
                 CREATE TRIGGER IF NOT EXISTS UrlRegistry_ad AFTER DELETE ON UrlRegistry BEGIN
-                    INSERT INTO UrlSearch(UrlSearch, rowid, PathAndQuery) VALUES (
-                        'delete',
-                        old.Id,
-                        CASE
-                            WHEN instr(old.NormalizedUrl, '://') = 0 THEN old.NormalizedUrl
-                            WHEN instr(substr(old.NormalizedUrl, instr(old.NormalizedUrl, '://') + 3), '/') = 0 THEN '/'
-                            ELSE substr(
-                                old.NormalizedUrl,
-                                instr(old.NormalizedUrl, '://') + 2 + instr(substr(old.NormalizedUrl, instr(old.NormalizedUrl, '://') + 3), '/')
-                            )
-                        END
-                    );
+                    DELETE FROM UrlSearch WHERE rowid=old.Id;
                 END;
                 """,
                 ct);

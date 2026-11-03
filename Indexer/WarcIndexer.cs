@@ -38,126 +38,61 @@ namespace Kennedy.Indexer
         /// </summary>
         public const int BatchSize = 500;
 
-        private readonly ResponseStore _responseStore;
+        private readonly ResponseStore? _responseStore;
+        private readonly ArchiveImporter? _archive;
 
-        public WarcIndexer(ResponseStore responseStore)
+        public WarcIndexer(ResponseStore? responseStore, ArchiveImporter? archive = null)
         {
             _responseStore = responseStore;
+            _archive = archive;
         }
 
-        /// <summary>
-        /// Iterates every WARC record in <paramref name="warcPath"/>, accumulates Gemini
-        /// response records into batches, and flushes each batch via <see cref="ResponseStore.StoreBatchAsync"/>.
-        /// Non-Gemini records and records without a target URI or body are silently skipped.
-        /// A malformed WARC record logs a warning and halts processing of that file; any
-        /// accumulated partial batch is still flushed before returning.
-        /// </summary>
-        public async Task IndexFileAsync(string warcPath, CancellationToken ct)
+        public sealed record ImportSummary(long Records, long Responses, long Archived);
+
+        public async Task<ImportSummary> IndexFileAsync(string warcPath, CancellationToken ct)
         {
             var batch = new List<GeminiResponse>(BatchSize);
-
             using var reader = new WarcReader(warcPath);
-            var start = DateTime.Now;
-
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            double lastProgress = 0;
+            long responses = 0, archived = 0;
+            async Task Flush()
+            {
+                if (batch.Count == 0) return;
+                if (_responseStore != null) await _responseStore.StoreBatchAsync(batch, ct);
+                if (_archive != null) archived += _archive.StoreBatch(batch, ct);
+                batch.Clear();
+            }
             try
             {
-                foreach (WarcRecord record in reader)
+                foreach (var record in reader)
                 {
-                    if (reader.RecordsRead % 100 == 0)
+                    ct.ThrowIfCancellationRequested();
+                    if (record is ResponseRecord responseRecord)
                     {
-                        var elapsedSeconds = Math.Max(1, Math.Truncate(DateTime.Now.Subtract(start).TotalSeconds));
-                        var ratePerSecond = Math.Truncate(reader.RecordsRead / elapsedSeconds);
-                        Console.Write(
-                            $"{reader.Filename}\t{reader.RecordsRead}\t {elapsedSeconds} s ({ratePerSecond} / s)    \r");
+                        var response = GetGeminiResponse(responseRecord);
+                        if (response != null)
+                        {
+                            responses++;
+                            batch.Add(response);
+                            if (batch.Count >= BatchSize) await Flush();
+                        }
                     }
-
-                    if (record is not ResponseRecord respRecord)
+                    if (watch.Elapsed.TotalSeconds - lastProgress >= 5)
                     {
-                        continue;
-                    }
-
-                    var response = GetGeminiResponse(respRecord);
-                    if (response == null)
-                    {
-                        continue;
-                    }
-
-                    batch.Add(response);
-
-                    if (batch.Count >= BatchSize)
-                    {
-                        await _responseStore.StoreBatchAsync(batch, ct);
-                        batch.Clear();
+                        lastProgress = watch.Elapsed.TotalSeconds;
+                        Console.WriteLine($"{Path.GetFileName(warcPath)}: {reader.RecordsRead:N0} records, {responses:N0} responses ({responses / Math.Max(1,lastProgress):N0} responses/s)");
                     }
                 }
+                await Flush();
             }
             catch (WarcFormatException ex)
             {
-                Console.Error.WriteLine("\nMalformed WARC!");
-                Console.Error.WriteLine(ex.Message);
-                Console.Error.WriteLine("Assuming the rest of the WARC is bad and skipping the rest!");
+                await Flush();
+                throw new InvalidDataException($"Partial import of {warcPath}; malformed WARC after {reader.RecordsRead:N0} records. The file has NOT been marked complete.", ex);
             }
-
-            // Flush any remaining records that didn't fill a complete batch.
-            if (batch.Count > 0)
-            {
-                await _responseStore.StoreBatchAsync(batch, ct);
-            }
-
-            Console.WriteLine();
-        }
-
-        /// <summary>
-        /// Like <see cref="IndexFileAsync"/> but only updates UrlRegistry — skips Documents, Images, FTS, and Links.
-        /// Used for Phase-1 bootstrap: call this on every WARC (any order) so UrlRegistry reflects
-        /// the most recent known status for each URL before the full-index pass runs.
-        /// </summary>
-        public async Task IndexFileRegistryOnlyAsync(string warcPath, CancellationToken ct)
-        {
-            var batch = new List<GeminiResponse>(BatchSize);
-
-            using var reader = new WarcReader(warcPath);
-            var start = DateTime.Now;
-
-            try
-            {
-                foreach (WarcRecord record in reader)
-                {
-                    if (reader.RecordsRead % 100 == 0)
-                    {
-                        var elapsedSeconds = Math.Max(1, Math.Truncate(DateTime.Now.Subtract(start).TotalSeconds));
-                        var ratePerSecond = Math.Truncate(reader.RecordsRead / elapsedSeconds);
-                        Console.Write(
-                            $"{reader.Filename}\t{reader.RecordsRead}\t {elapsedSeconds} s ({ratePerSecond} / s)    \r");
-                    }
-
-                    if (record is not ResponseRecord respRecord) continue;
-
-                    var response = GetGeminiResponse(respRecord);
-                    if (response == null) continue;
-
-                    batch.Add(response);
-
-                    if (batch.Count >= BatchSize)
-                    {
-                        await _responseStore.StoreRegistryOnlyBatchAsync(batch, ct);
-                        batch.Clear();
-                    }
-                }
-            }
-            catch (WarcFormatException ex)
-            {
-                Console.Error.WriteLine("\nMalformed WARC!");
-                Console.Error.WriteLine(ex.Message);
-                Console.Error.WriteLine("Assuming the rest of the WARC is bad and skipping the rest!");
-            }
-
-            if (batch.Count > 0)
-            {
-                await _responseStore.StoreRegistryOnlyBatchAsync(batch, ct);
-            }
-
-            Console.WriteLine();
+            Console.WriteLine($"Imported {reader.RecordsRead:N0} records, {responses:N0} responses, {archived:N0} new archive captures in {watch.Elapsed.TotalSeconds:F1}s.");
+            return new ImportSummary(reader.RecordsRead, responses, archived);
         }
 
         public async Task WriteCertificateListCsvAsync(string warcPath, string outputCsvPath, CancellationToken ct)
@@ -250,7 +185,7 @@ namespace Kennedy.Indexer
             {
                 Console.Error.WriteLine("\nMalformed WARC!");
                 Console.Error.WriteLine(ex.Message);
-                Console.Error.WriteLine("Assuming the rest of the WARC is bad and skipping the rest!");
+                throw new InvalidDataException("Certificate export is incomplete because the WARC is malformed.", ex);
             }
 
             Console.WriteLine();
@@ -277,6 +212,7 @@ namespace Kennedy.Indexer
                 return null;
             }
 
+            using var ownedCertificate = certificate;
             var publicKeyHash = SHA256.HashData(certificate.PublicKey.ExportSubjectPublicKeyInfo());
             return new CertificateSummary
             {

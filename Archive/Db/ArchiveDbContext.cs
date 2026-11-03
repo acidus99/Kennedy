@@ -25,7 +25,7 @@ public class ArchiveDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        options.UseSqlite($"Data Source='{DatabasePath}'")
+        options.UseSqlite(new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder { DataSource=DatabasePath }.ToString())
             //.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information)
             //.EnableSensitiveDataLogging(true)
             ;

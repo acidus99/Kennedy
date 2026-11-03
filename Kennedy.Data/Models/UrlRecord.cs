@@ -60,6 +60,14 @@ namespace Kennedy.Data.Models;
         /// </summary>
         public DateTime? LastVisit { get; set; }
 
+        // Watermark for the last non-transient response applied to search state.
+        // Kept after removal so an older success cannot resurrect a deleted page.
+        public DateTime? LastIndexedVisit { get; set; }
+        public string? LastIndexedHash { get; set; }
+        public int BodySize { get; set; }
+        public bool IsBodyTruncated { get; set; }
+        public bool IsRobotsExcluded { get; set; }
+
         /// <summary>
         /// Last time we successfully fetched indexable content (UTC).
         /// </summary>

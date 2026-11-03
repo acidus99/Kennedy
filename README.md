@@ -17,6 +17,22 @@ Visit `gemini://kennedy.gemi.dev` with a [Gemini client](https://github.com/kr1s
 * Lines count: To help you sort quick articles from longer form content, search results tell you how many lines are in the content. If you want to be nerdy, I also include byte sizes.
 
 
+## Importing completed WARCs
+
+The indexer updates both Kennedy2 search and Delorean by default. It upgrades existing **Kennedy2** schemas automatically; legacy `main` search databases are not converted.
+
+```sh
+dotnet run --project Indexer -- --db /path/to/crawl-data/kennedy2.db /path/to/crawl.warc.gz
+```
+
+`archive.db`, `Packs/`, and `archive-stats.json` default to the search database directory. Use `--archive-dir` for a separate archive location. `--search-only` and `--archive-only` select one destination. `--warc-dir` imports a directory, including suffixed filenames; `--bootstrap` is an alias and has no age cutoff. Use `--config-dir` to select the directory containing `Core14.profile.xml`.
+
+Completed immutable files are tracked separately in each destination using their full path, size, and modification time. Repeating a command skips completed work and finishes any pending derived-index or visibility work. `--force` replays completed inputs for backfill. Older captures cannot undo newer content or removals; temporary failures retain the last good searchable content. Replays do not add duplicate archive captures.
+
+`--maintenance --search-only --db /path/to/kennedy2.db` updates the schema and finishes pending work without importing. Missing text bodies must be recovered by replaying their original WARCs; maintenance never invents content. Use `--smoke-query cat` to display a count and sample results after processing.
+
+Only one indexer may write a destination at a time. Interrupted or malformed files are not marked complete; rerun the same command to retry committed batches safely. Exit codes are 0 for completion, 1 for import/content-repair failures, 2 for setup errors, and 130 for cancellation. Existing databases and archive packs should be backed up before the first upgrade. Run `--help` for all options.
+
 ## Server smoke test
 
 `Kennedy.SmokeTests` is a small C# console app using Gemini.Net to make real TLS Gemini requests. It builds with the solution and runs separately against an existing Kennedy2 database. It does not import WARCs, index content, or change the schema.

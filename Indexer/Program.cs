@@ -1,351 +1,217 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading;
+using System.Security.Cryptography;
+using System.Text;
+using Gemini.Net;
 using Kennedy.Data;
-using Kennedy.Data.Services;
 using Kennedy.Data.Parsers;
-using System.Threading.Tasks;
+using Kennedy.Data.Services;
+using Kennedy.Search.Query;
+using Kennedy.Search.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Kennedy.Indexer
+namespace Kennedy.Indexer;
+
+internal static class Program
 {
-    internal static class Program
+    public static async Task<int> Main(string[] args)
     {
-        // WARCs older than this are skipped in Phase 2 (full index).
-        static readonly TimeSpan RecentWarcCutoff = TimeSpan.FromDays(180);
-
-        public static async Task<int> Main(string[] args)
+        using var cancellation = new CancellationTokenSource();
+        ConsoleCancelEventHandler cancel = (_,e) => { e.Cancel=true; cancellation.Cancel(); };
+        Console.CancelKeyPress += cancel;
+        var locks = new List<FileStream>();
+        try
         {
-            bool certListMode = args.Length >= 3 && args[0] == "--cert-list";
-            string? certListWarcPath = certListMode ? args[1] : null;
-            string? certListOutputPath = certListMode ? args[2] : null;
-
-            if (certListMode)
+            if (args.Length == 3 && args[0] == "--cert-list")
             {
-                if (!File.Exists(certListWarcPath))
-                {
-                    Console.Error.WriteLine($"WARC file not found: {certListWarcPath}");
-                    return 2;
-                }
-
-                var certListIndexer = new WarcIndexer(responseStore: null!);
-                Console.WriteLine($"Building certificate list: {certListWarcPath}");
-                await certListIndexer.WriteCertificateListCsvAsync(certListWarcPath!, certListOutputPath!, CancellationToken.None);
-                Console.WriteLine($"Wrote certificate CSV: {certListOutputPath}");
+                await new WarcIndexer(null).WriteCertificateListCsvAsync(args[1],args[2],cancellation.Token);
                 return 0;
             }
-
-            IndexerOptions options;
-            try
+            var options = Options.Parse(args);
+            if (options.Help) { Usage(); return 0; }
+            var inputs = options.ResolveInputs();
+            if (inputs.Count == 0 && !options.Maintenance) throw new ArgumentException("Supply WARC files, --warc-dir, or --maintenance.");
+            string archiveDirectory = options.ArchiveDirectory ?? Path.GetDirectoryName(options.Database)!;
+            var destinations = new List<string>();
+            if (options.Search) destinations.Add(options.Database);
+            if (options.Archive) destinations.Add(Path.Combine(archiveDirectory,"archive.db"));
+            foreach (string destination in destinations.Distinct().OrderBy(p=>p,StringComparer.Ordinal))
             {
-                options = ParseOptions(args);
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                locks.Add(new FileStream(destination+".indexer.lock",FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None));
             }
-            catch (ArgumentException ex)
-            {
-                Console.Error.WriteLine(ex.Message);
-                DisplayUsage();
-                return 2;
-            }
-            if (options.ShowHelp)
-            {
-                DisplayUsage();
-                return 0;
-            }
-
-            // Bootstrap mode: two-phase over a directory of WARCs.
-            //   indexer --bootstrap /Volumes/WARC-BACKUP/WARCs/
-            bool bootstrapMode = !string.IsNullOrWhiteSpace(options.BootstrapDir);
-            IReadOnlyList<string> warcFiles = [];
-            if (!bootstrapMode)
-            {
-                warcFiles = ResolveWarcInputs(options);
-                if (warcFiles.Count == 0)
-                {
-                    Console.Error.WriteLine("No WARC files provided.");
-                    DisplayUsage();
-                    return 2;
-                }
-            }
-
-            if (bootstrapMode && options.WarcFiles.Count > 0)
-            {
-                Console.Error.WriteLine("Do not combine --bootstrap with positional WARC files.");
-                return 2;
-            }
-
+            var ct = cancellation.Token;
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             var services = new ServiceCollection();
-            LanguageDetector.ConfigFileDirectory = options.LanguageConfigDir;
-
-            services.AddDbContextFactory<KennedyDbContext>(dbOptions =>
-                dbOptions.UseSqlite($"Data Source={options.SqlitePath}"));
-
+            LanguageDetector.ConfigFileDirectory=options.ConfigDirectory;
+            services.AddDbContextFactory<KennedyDbContext>(db => db.UseSqlite(ConnectionString(options.Database)));
             services.AddScoped<ResponseStore>();
             services.AddScoped<FileSearchFtsRebuilder>();
-
-            using var sp = services.BuildServiceProvider();
-            await EnsureDatabaseCreatedAsync(sp, CancellationToken.None);
-
-            await using var scope = sp.CreateAsyncScope();
-            var responseStore = scope.ServiceProvider.GetRequiredService<ResponseStore>();
-            var indexer = new WarcIndexer(responseStore);
-
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
-            if (bootstrapMode)
+            services.AddScoped<SearchPolicyUpdater>();
+            using var provider=services.BuildServiceProvider();
+            await using var scope=provider.CreateAsyncScope();
+            if (options.Search)
             {
-                await RunBootstrapAsync(indexer, options.BootstrapDir!, CancellationToken.None);
+                Console.WriteLine($"Preparing Kennedy2 database: {options.Database}");
+                await using var db=await scope.ServiceProvider.GetRequiredService<IDbContextFactory<KennedyDbContext>>().CreateDbContextAsync(ct);
+                await DatabaseMaintenance.InitializeAsync(db,ct);
             }
-            else
+            using var archive=options.Archive ? new ArchiveImporter(archiveDirectory) : null;
+            using var searchHistory=options.Search ? new ImportHistory(options.Database) : null;
+            using var archiveHistory=options.Archive ? new ImportHistory(Path.Combine(archiveDirectory,"archive.db")) : null;
+            Console.WriteLine($"Ready after {watch.Elapsed.TotalSeconds:F1}s. Search={options.Search}; archive={options.Archive}; {inputs.Count} input files.");
+            int imported=0, skipped=0, failed=0;
+            foreach (string input in inputs)
             {
-                Console.WriteLine($"Indexing {warcFiles.Count} WARC file(s).");
-                foreach (var warcFile in warcFiles)
+                ct.ThrowIfCancellationRequested();
+                var info=new FileInfo(input);
+                string identity=Identity(info);
+                bool search=options.Search && (options.Force || !searchHistory!.IsComplete(identity));
+                bool saveArchive=options.Archive && (options.Force || !archiveHistory!.IsComplete(identity));
+                if (!search && !saveArchive) { skipped++; Console.WriteLine($"Already complete: {input}"); continue; }
+                try
                 {
-                    Console.WriteLine($"Indexing: {warcFile}");
-                    await indexer.IndexFileAsync(warcFile, CancellationToken.None);
+                    Console.WriteLine($"Importing {input} (search={search}, archive={saveArchive})");
+                    var indexer=new WarcIndexer(search ? scope.ServiceProvider.GetRequiredService<ResponseStore>() : null,saveArchive ? archive : null);
+                    await indexer.IndexFileAsync(input,ct);
+                    if (Identity(new FileInfo(input))!=identity) throw new IOException("Input changed during import; use completed WARC files.");
+                    if (search) searchHistory!.Complete(identity,info);
+                    if (saveArchive) archiveHistory!.Complete(identity,info);
+                    imported++;
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    failed++;
+                    Console.Error.WriteLine($"FAILED {input}: {ex.Message}");
                 }
             }
-
-            Console.WriteLine("Global: rebuilding dirty file-search entries...");
-            var filesFtsRebuilder = scope.ServiceProvider.GetRequiredService<FileSearchFtsRebuilder>();
-            await filesFtsRebuilder.RebuildAsync(CancellationToken.None);
-
-            stopwatch.Stop();
-            Console.WriteLine($"Done. Elapsed {stopwatch.Elapsed.TotalSeconds:F1} seconds");
-
-            if (!string.IsNullOrWhiteSpace(options.SmokeQuery))
+            if (options.Search)
             {
-                await RunSmokeQueryAsync(options.SqlitePath, options.SmokeQuery, CancellationToken.None);
-            }
-
-            return 0;
-        }
-
-        private static async Task RunBootstrapAsync(WarcIndexer indexer, string warcDir, CancellationToken ct)
-        {
-            var allWarcs = GetWarcsSortedByDate(warcDir);
-            if (allWarcs.Count == 0)
-            {
-                Console.Error.WriteLine($"No dated WARC files (yyyy-MM-dd.warc.gz) found in: {warcDir}");
-                return;
-            }
-
-            var cutoff = DateTime.UtcNow - RecentWarcCutoff;
-            var recentWarcs = allWarcs.Where(w => w.date >= cutoff).ToList();
-
-            Console.WriteLine($"Bootstrap: {allWarcs.Count} total WARCs, {recentWarcs.Count} within the last 6 months");
-            Console.WriteLine($"Cutoff date: {cutoff:yyyy-MM-dd}");
-
-            // Phase 1: All WARCs → UrlRegistry only.
-            // Order doesn't matter — "latest wins" semantics prevent older WARCs from
-            // overwriting a more recent status already recorded by a later WARC.
-            Console.WriteLine();
-            Console.WriteLine("=== Phase 1: UrlRegistry (all WARCs) ===");
-            int p1 = 0;
-            foreach (var (path, date) in allWarcs)
-            {
-                Console.WriteLine($"[{++p1}/{allWarcs.Count}] {Path.GetFileName(path)} ({date:yyyy-MM-dd})");
-                await indexer.IndexFileRegistryOnlyAsync(path, ct);
-            }
-
-            // Phase 2: Recent WARCs → full index (Documents, Images, FTS, Links).
-            // Processed in chronological order so the most recent content wins.
-            Console.WriteLine();
-            Console.WriteLine("=== Phase 2: Full index (recent WARCs) ===");
-            int p2 = 0;
-            foreach (var (path, date) in recentWarcs)
-            {
-                Console.WriteLine($"[{++p2}/{recentWarcs.Count}] {Path.GetFileName(path)} ({date:yyyy-MM-dd})");
-                await indexer.IndexFileAsync(path, ct);
-            }
-        }
-
-        /// <summary>
-        /// Returns all *.warc.gz files in <paramref name="dir"/> whose name parses as yyyy-MM-dd,
-        /// sorted chronologically oldest-first.
-        /// </summary>
-        private static IReadOnlyList<(string path, DateTime date)> GetWarcsSortedByDate(string dir)
-        {
-            return Directory.EnumerateFiles(dir, "*.warc.gz", SearchOption.TopDirectoryOnly)
-                .Select(p =>
+                Console.WriteLine("Applying robots policy and finishing pending file-search work...");
+                await scope.ServiceProvider.GetRequiredService<SearchPolicyUpdater>().ApplyAsync(ct);
+                await scope.ServiceProvider.GetRequiredService<FileSearchFtsRebuilder>().RebuildAsync(ct);
+                await using var db=await scope.ServiceProvider.GetRequiredService<IDbContextFactory<KennedyDbContext>>().CreateDbContextAsync(ct);
+                await db.Database.OpenConnectionAsync(ct);
+                await using var check=db.Database.GetDbConnection().CreateCommand();
+                check.CommandText="SELECT COUNT(*) FROM Documents d WHERE NOT EXISTS(SELECT 1 FROM DocumentsFts f WHERE f.rowid=d.Id);";
+                long missing=Convert.ToInt64(await check.ExecuteScalarAsync(ct));
+                if (missing>0)
                 {
-                    var date = TryParseWarcDate(p) ?? default;
-                    return (path: p, date);
-                })
-                .Where(x => x.date != default)
-                .OrderBy(x => x.date)
-                .ThenBy(x => x.path, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-        }
-
-        private static IReadOnlyList<string> ResolveWarcInputs(IndexerOptions options)
-        {
-            var files = new List<string>();
-            files.AddRange(options.WarcFiles);
-
-            foreach (var dir in options.WarcDirs)
-            {
-                if (!Directory.Exists(dir))
-                {
-                    Console.Error.WriteLine($"WARC directory not found: {dir}");
-                    return [];
+                    Console.Error.WriteLine($"{missing:N0} text documents need their original WARC responses. Replay the relevant WARCs with --force to restore their missing full-text entries.");
+                    failed++;
                 }
-
-                files.AddRange(Directory.EnumerateFiles(dir, "*.warc", SearchOption.TopDirectoryOnly));
-                files.AddRange(Directory.EnumerateFiles(dir, "*.warc.gz", SearchOption.TopDirectoryOnly));
             }
-
-            var missing = files.Where(f => !File.Exists(f)).ToList();
-            if (missing.Count > 0)
+            archive?.Complete(ct);
+            if (options.SmokeQuery!=null && options.Search)
             {
-                foreach (var file in missing)
-                {
-                    Console.Error.WriteLine($"WARC file not found: {file}");
-                }
-                return [];
+                var query=new QueryParser().Parse(options.SmokeQuery);
+                var search=new SqliteSearchService(options.Database);
+                Console.WriteLine($"Search '{options.SmokeQuery}': {search.GetTextResultsCount(query):N0} results");
+                foreach (var result in search.SearchText(query,0,5)) Console.WriteLine($"- {result.Url} {result.Title}");
             }
-
-            return files
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(f => TryParseWarcDate(f) ?? DateTime.MaxValue)
-                .ThenBy(f => f, StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            Console.WriteLine($"Finished: {imported} imported, {skipped} skipped, {failed} failures; {watch.Elapsed.TotalSeconds:F1}s.");
+            return failed==0 ? 0 : 1;
         }
-
-        private static DateTime? TryParseWarcDate(string path)
+        catch (OperationCanceledException) { Console.Error.WriteLine("Interrupted. Committed batches and pending work are preserved; rerun the command to resume."); return 130; }
+        catch (Exception ex) { Console.Error.WriteLine(ex.Message); return 2; }
+        finally
         {
-            var fileName = Path.GetFileName(path);
-            if (fileName.Length < 10)
+            Console.CancelKeyPress -= cancel;
+            foreach (var file in locks) file.Dispose();
+        }
+    }
+
+    internal static string ConnectionString(string path) => new SqliteConnectionStringBuilder { DataSource=path }.ToString();
+    private static string Identity(FileInfo file) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"1|{file.FullName}|{file.Length}|{file.LastWriteTimeUtc.Ticks}")));
+    private static void Usage() => Console.WriteLine("""
+        Usage: dotnet run --project Indexer -- [options] <WARC> [WARC...]
+          --warc-dir <dir>      Import .warc and .warc.gz files, including suffixed names.
+          --bootstrap <dir>     Alias for --warc-dir; no age cutoff.
+          --db <path>           Kennedy2 search DB (default: ~/kennedy-capsule/crawl-data/kennedy2.db).
+          --archive-dir <dir>   archive.db and Packs location (default: search DB directory).
+          --both               Update search and archive (default).
+          --search-only        Update search only (--search is an alias).
+          --archive-only       Update archive only (--archive is an alias).
+          --config-dir <dir>    Directory containing Core14.profile.xml.
+          --maintenance        Repair schema and finish pending work; WARC inputs optional.
+          --force              Replay completed inputs, for backfill/repair.
+          --smoke-query <text>  Show search count and five results after processing.
+          --cert-list <warc> <csv>  Export captured certificates without importing.
+        Exit codes: 0 complete; 1 partial/import failures; 2 setup error; 130 interrupted.
+        """);
+
+    private sealed class Options
+    {
+        public string Database=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),"kennedy-capsule","crawl-data","kennedy2.db");
+        public string? ArchiveDirectory,SmokeQuery;
+        public string ConfigDirectory=Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"../../../../config-files"))+Path.DirectorySeparatorChar;
+        public bool Search=true,Archive=true,Force,Maintenance,Help;
+        private readonly List<string> _files=[],_directories=[];
+        public static Options Parse(string[] args)
+        {
+            var options=new Options();
+            for (int i=0;i<args.Length;i++)
             {
-                return null;
-            }
-
-            var dateText = fileName[..10];
-            return DateTime.TryParseExact(
-                dateText,
-                "yyyy-MM-dd",
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None,
-                out var date)
-                    ? date
-                    : null;
-        }
-
-        private static async Task EnsureDatabaseCreatedAsync(IServiceProvider sp, CancellationToken ct)
-        {
-            var dbFactory = sp.GetRequiredService<IDbContextFactory<KennedyDbContext>>();
-            await using var db = await dbFactory.CreateDbContextAsync(ct);
-            await db.Database.EnsureCreatedAsync(ct);
-            await db.EnsureSchemaCompatibilityAsync(ct);
-            await db.EnsureFtsAsync(ct);
-            await db.ApplyPerformancePragmasAsync(ct);
-        }
-
-        private static async Task RunSmokeQueryAsync(string sqlitePath, string query, CancellationToken ct)
-        {
-            Console.WriteLine($"FTS smoke query: {query}");
-
-            await using var connection = new SqliteConnection($"Data Source={sqlitePath}");
-            await connection.OpenAsync(ct);
-
-            await using var cmd = connection.CreateCommand();
-            cmd.CommandText =
-                """
-                SELECT d.CanonicalUrl, d.Title
-                FROM DocumentsFts
-                JOIN Documents d ON d.Id = DocumentsFts.rowid
-                WHERE DocumentsFts MATCH $query
-                LIMIT 5;
-                """;
-            cmd.Parameters.AddWithValue("$query", query);
-
-            await using var reader = await cmd.ExecuteReaderAsync(ct);
-            while (await reader.ReadAsync(ct))
-            {
-                var url = reader.GetString(0);
-                var title = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                Console.WriteLine($"- {title} [{url}]");
-            }
-        }
-
-        private static IndexerOptions ParseOptions(string[] args)
-        {
-            var options = new IndexerOptions();
-
-            for (int i = 0; i < args.Length; i++)
-            {
-                var arg = args[i];
+                string arg=args[i];
+                string Value() => i+1<args.Length && !args[i+1].StartsWith("--") ? args[++i] : throw new ArgumentException($"{arg} requires a value.");
                 switch (arg)
                 {
-                    case "-h":
-                    case "--help":
-                        options.ShowHelp = true;
-                        break;
-                    case "--bootstrap":
-                        options.BootstrapDir = RequireValue(args, ref i, arg);
-                        break;
-                    case "--warc-dir":
-                        options.WarcDirs.Add(RequireValue(args, ref i, arg));
-                        break;
-                    case "--db":
-                        options.SqlitePath = RequireValue(args, ref i, arg);
-                        break;
-                    case "--config-dir":
-                        options.LanguageConfigDir = RequireValue(args, ref i, arg);
-                        break;
-                    case "--smoke-query":
-                        options.SmokeQuery = RequireValue(args, ref i, arg);
-                        break;
+                    case "-h": case "--help": options.Help=true; break;
+                    case "--both": options.Search=options.Archive=true; break;
+                    case "--search": case "--search-only": options.Search=true;options.Archive=false;break;
+                    case "--archive": case "--archive-only": options.Archive=true;options.Search=false;break;
+                    case "--force": options.Force=true;break;
+                    case "--maintenance": options.Maintenance=true;break;
+                    case "--db": options.Database=Value();break;
+                    case "--archive-dir": options.ArchiveDirectory=Path.GetFullPath(Value());break;
+                    case "--config-dir": options.ConfigDirectory=Path.GetFullPath(Value())+Path.DirectorySeparatorChar;break;
+                    case "--smoke-query": options.SmokeQuery=Value();break;
+                    case "--bootstrap": case "--warc-dir": options._directories.Add(Value());break;
                     default:
-                        if (arg.StartsWith("--", StringComparison.Ordinal))
-                        {
-                            throw new ArgumentException($"Unknown option: {arg}");
-                        }
-                        options.WarcFiles.Add(arg);
-                        break;
+                        if (arg.StartsWith('-')) throw new ArgumentException($"Unknown option: {arg}");
+                        options._files.Add(arg);break;
                 }
             }
-
+            options.Database=Path.GetFullPath(options.Database);
+            if (Path.GetFileName(options.Database).Equals("archive.db",StringComparison.OrdinalIgnoreCase) && options.Search)
+                throw new ArgumentException("The search database cannot be archive.db.");
             return options;
         }
-
-        private static string RequireValue(string[] args, ref int index, string optionName)
+        public List<string> ResolveInputs()
         {
-            if (index + 1 >= args.Length)
+            var files=new List<string>(_files);
+            foreach (var dir in _directories)
             {
-                throw new ArgumentException($"{optionName} requires a value.");
+                if (!Directory.Exists(dir)) throw new DirectoryNotFoundException(dir);
+                files.AddRange(Directory.EnumerateFiles(dir).Where(f => f.EndsWith(".warc",StringComparison.OrdinalIgnoreCase)||f.EndsWith(".warc.gz",StringComparison.OrdinalIgnoreCase)));
             }
-
-            return args[++index];
+            var result=files.Select(Path.GetFullPath).Distinct(StringComparer.Ordinal).OrderBy(f=>Path.GetFileName(f),StringComparer.Ordinal).ToList();
+            foreach (var file in result) if (!File.Exists(file)) throw new FileNotFoundException("WARC not found",file);
+            return result;
         }
+    }
 
-        private static void DisplayUsage()
+    private sealed class ImportHistory : IDisposable
+    {
+        private readonly SqliteConnection _connection;
+        public ImportHistory(string path)
         {
-            Console.WriteLine("Usage:");
-            Console.WriteLine("  dotnet run --project Indexer -- [options] <warc-file> [warc-file...]");
-            Console.WriteLine("  dotnet run --project Indexer -- --warc-dir <directory>");
-            Console.WriteLine("  dotnet run --project Indexer -- --bootstrap <directory>");
-            Console.WriteLine();
-            Console.WriteLine("Options:");
-            Console.WriteLine("  --warc-dir <dir>       Add all .warc and .warc.gz files in a directory.");
-            Console.WriteLine("  --bootstrap <dir>      Two-phase import: all WARCs into UrlRegistry, recent WARCs into search.");
-            Console.WriteLine("  --db <path>            SQLite database path.");
-            Console.WriteLine("  --config-dir <dir>     Language profile config directory.");
-            Console.WriteLine("  --smoke-query <query>  Run a smoke FTS query after indexing.");
-            Console.WriteLine("  --cert-list <warc> <csv> remains available as a separate mode.");
+            _connection=new SqliteConnection(ConnectionString(path));_connection.Open();
+            using var command=_connection.CreateCommand();
+            command.CommandText="CREATE TABLE IF NOT EXISTS WarcImports(Identity TEXT PRIMARY KEY,Path TEXT NOT NULL,Length INTEGER NOT NULL,ModifiedUtc TEXT NOT NULL,CompletedUtc TEXT NOT NULL);";
+            command.ExecuteNonQuery();
         }
-
-        private sealed class IndexerOptions
+        public bool IsComplete(string identity)
         {
-            public string SqlitePath { get; set; } = "/Users/billy/kennedy-capsule/crawl-data/kennedy2.db";
-            public string LanguageConfigDir { get; set; } = "/Users/billy/Code/Kennedy/config-files/";
-            public string? BootstrapDir { get; set; }
-            public string? SmokeQuery { get; set; }
-            public bool ShowHelp { get; set; }
-            public List<string> WarcDirs { get; } = [];
-            public List<string> WarcFiles { get; } = [];
+            using var command=_connection.CreateCommand();command.CommandText="SELECT 1 FROM WarcImports WHERE Identity=$id;";command.Parameters.AddWithValue("$id",identity);
+            return command.ExecuteScalar()!=null;
         }
+        public void Complete(string identity,FileInfo file)
+        {
+            using var command=_connection.CreateCommand();command.CommandText="INSERT OR REPLACE INTO WarcImports VALUES($id,$path,$length,$modified,$completed);";
+            command.Parameters.AddWithValue("$id",identity);command.Parameters.AddWithValue("$path",file.FullName);command.Parameters.AddWithValue("$length",file.Length);
+            command.Parameters.AddWithValue("$modified",file.LastWriteTimeUtc.ToString("O"));command.Parameters.AddWithValue("$completed",DateTime.UtcNow.ToString("O"));command.ExecuteNonQuery();
+        }
+        public void Dispose()=>_connection.Dispose();
     }
 }
