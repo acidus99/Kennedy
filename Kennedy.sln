@@ -32,6 +32,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Tests", "Kennedy.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.Crawler", "Crawler\Kennedy.Crawler.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kennedy.SmokeTests", "Kennedy.SmokeTests\Kennedy.SmokeTests.csproj", "{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,18 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Debug|x64.Build.0 = Debug|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Debug|x86.Build.0 = Debug|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Release|x64.ActiveCfg = Release|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Release|x64.Build.0 = Release|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Release|x86.ActiveCfg = Release|Any CPU
+		{BF0C1814-DC22-4B91-9B24-A770A8CE2EF1}.Release|x86.Build.0 = Release|Any CPU
 		{524D863C-D4E0-4141-BF91-9CD3EEE73DA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{524D863C-D4E0-4141-BF91-9CD3EEE73DA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{524D863C-D4E0-4141-BF91-9CD3EEE73DA8}.Debug|x64.ActiveCfg = Debug|Any CPU

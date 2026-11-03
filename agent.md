@@ -173,6 +173,8 @@ Suggested next session starting points:
 
 ## Things to Know / Gotchas
 
+- **Server smoke checks:** `dotnet run --project Kennedy.SmokeTests -- --settings <server.json>` starts the real server on an available high port and checks the home page, text/image searches for `cat`, public tools, reports, stats, and capsule lists using Gemini.Net. `--base-url gemini://localhost:1966/` checks an existing server. This runner uses existing data and does not import, index, or upgrade databases. See README.md for options, network requirements, saved responses, and exit codes. It builds with the solution and runs only when invoked explicitly.
+
 - **Kennedy-1 is read-only reference.** Never modify `/Volumes/billy/Code/Kennedy-1`. It is the original codebase to port from, not to edit.
 - **EF Core uses `EnsureCreated`, not migrations.** Adding a field to a model requires either a fresh DB or a manual `ALTER TABLE` on existing DBs.
 - **The `UrlFrontierEntry` type** lives in `Kennedy.Crawler` namespace (not `Kennedy.Data`). It was moved during the Kennedy-1 → Kennedy-2 port.
