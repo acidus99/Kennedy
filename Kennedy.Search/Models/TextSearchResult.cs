@@ -11,6 +11,7 @@ public sealed class TextSearchResult
 {
     /// <summary>The canonical URL of the matching document.</summary>
     public required string Url { get; init; }
+    public DateTime? LastSuccess { get; init; }
 
     /// <summary>Extracted page title, or null when no heading or preformatted alt text was found.</summary>
     public string? Title { get; init; }

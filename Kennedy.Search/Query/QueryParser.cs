@@ -8,7 +8,7 @@ namespace Kennedy.Search.Query;
 /// Recognizes Google-style scope modifiers and strips them from the FTS term string:
 /// <list type="bullet">
 ///   <item><c>site:hostname</c> — restrict results to a specific host</item>
-///   <item><c>filetype:ext</c> — filter by MIME type substring</item>
+///   <item><c>filetype:ext</c> — filter by filename extension</item>
 ///   <item><c>intitle:word</c> or <c>intitle:"phrase"</c> — match within the document title</item>
 ///   <item><c>inurl:pattern</c> — match within the canonical URL</item>
 /// </list>
@@ -21,8 +21,8 @@ public sealed class QueryParser
     private static readonly Regex FileTypeScopeRegex = new(@"\bfiletype\:\s*([0-9a-z\-\.]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex[] TitleScopeRegexes =
     {
-        new Regex(@"\bintitle:\s*([^\""\s]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new Regex(@"\bintitle:\s*\""([^\""]+)\""", RegexOptions.IgnoreCase | RegexOptions.Compiled)
+        new Regex(@"\bintitle:\s*\""([^\""]+)\""", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new Regex(@"\bintitle:\s*([^\""\s]+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled)
     };
     private static readonly Regex UrlScopeRegex = new(@"\binurl:\s*\""?([^\s\""]+)\""?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 

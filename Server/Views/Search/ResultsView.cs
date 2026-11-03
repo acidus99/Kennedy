@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -69,6 +70,12 @@ internal class ResultsView : AbstractView
     private void RenderNoResults(UserQuery query)
     {
         Response.WriteLine("Sorry, no results for your search.");
+        var words = query.TermsQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (query.IsSimpleQuery && words.Length > 1 && !words.Any(w => w is "OR" or "AND" or "NOT") && !query.TermsQuery.Contains('"'))
+        {
+            string suggested = string.Join(" OR ", words);
+            Response.WriteLine($"=> {RoutePaths.Search(suggested)} Try searching \"{suggested}\" instead?");
+        }
 
         Response.WriteLine($"=> {RoutePaths.SearchRoute} New Search");
     }
@@ -167,6 +174,7 @@ internal class ResultsView : AbstractView
 
         // Write quote line with snippet.
         Response.WriteLine(">" + FormatSnippet(result.Snippet));
+        if (result.LastSuccess.HasValue) Response.WriteLine($"Last successful fetch: {result.LastSuccess.Value:yyyy-MM-dd}");
 
         // Write link line to archive/meta data.
         Response.WriteLine($"=> {RoutePaths.ViewUrlInfo(result.GeminiUrl)} ℹ️ More Info / Archived Copy");
