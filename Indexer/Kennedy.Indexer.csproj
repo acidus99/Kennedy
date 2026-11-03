@@ -20,6 +20,9 @@
     <ProjectReference Include="..\Warc\Kennedy.Warc.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="../config-files/Core14.profile.xml" Link="config/Core14.profile.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Mono.Options" Version="6.12.0.148" />
   </ItemGroup>
 </Project>

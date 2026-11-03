@@ -27,11 +27,13 @@ dotnet run --project Indexer -- --db /path/to/crawl-data/kennedy2.db /path/to/cr
 
 `archive.db`, `Packs/`, and `archive-stats.json` default to the search database directory. Use `--archive-dir` for a separate archive location. `--search-only` and `--archive-only` select one destination. `--warc-dir` imports a directory, including suffixed filenames; `--bootstrap` is an alias and has no age cutoff. Use `--config-dir` to select the directory containing `Core14.profile.xml`.
 
-Completed immutable files are tracked separately in each destination using their full path, size, and modification time. Repeating a command skips completed work and finishes any pending derived-index or visibility work. `--force` replays completed inputs for backfill. Older captures cannot undo newer content or removals; temporary failures retain the last good searchable content. Replays do not add duplicate archive captures.
+Completed immutable files are tracked separately in each destination using their full path, size, and modification time. Repeating a command skips completed work and finishes any pending derived-index or visibility work. If full-text entries are missing, supplied search inputs are replayed automatically. `--force` explicitly replays completed inputs for other backfill. Older captures cannot undo newer content or removals; temporary failures retain the last good searchable content. Replays do not add duplicate archive captures.
 
 `--maintenance --search-only --db /path/to/kennedy2.db` updates the schema and finishes pending work without importing. Missing text bodies must be recovered by replaying their original WARCs; maintenance never invents content. Use `--smoke-query cat` to display a count and sample results after processing.
 
-Only one indexer may write a destination at a time. Interrupted or malformed files are not marked complete; rerun the same command to retry committed batches safely. Exit codes are 0 for completion, 1 for import/content-repair failures, 2 for setup errors, and 130 for cancellation. Existing databases and archive packs should be backed up before the first upgrade. Run `--help` for all options.
+`--snapshot /path/to/new-directory` creates a consistent data snapshot after finishing maintenance and any supplied imports. It uses SQLite's backup API to include committed WAL data and copies archive packs and stats while holding the indexer writer locks. The destination appears only after the entire snapshot is ready. It must be a new directory and needs space for the data copy.
+
+Only one indexer may write a destination at a time. Interrupted or malformed files are not marked complete; rerun the same command to retry committed batches safely. Exit codes are 0 for completion, 1 for import/content-repair failures, 2 for setup errors, and 130 for cancellation. Existing databases and archive packs should be backed up before the first upgrade. Run `--help` for all options. See [OPERATIONS.md](OPERATIONS.md) for publication and rollback.
 
 ## Server smoke test
 

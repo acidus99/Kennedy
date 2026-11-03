@@ -46,10 +46,24 @@ public static class DatabaseMaintenance
                 string defaultValue = column.StoreType == "TEXT" ? "''" : "0";
                 if (column.PropertyMappings.Any(m => m.Property.ClrType == typeof(DateTime))) defaultValue = "'0001-01-01 00:00:00'";
                 string definition = column.IsNullable ? "" : $" NOT NULL DEFAULT {defaultValue}";
-                await db.Database.ExecuteSqlRawAsync($"ALTER TABLE {Quote(table.Name)} ADD COLUMN {Quote(column.Name)} {column.StoreType}{definition};", ct);
+                // Identifiers and store types come from the EF model, never user input.
+                string alter = $"ALTER TABLE {Quote(table.Name)} ADD COLUMN {Quote(column.Name)} {column.StoreType}{definition};";
+                await db.Database.ExecuteSqlRawAsync(alter, ct);
                 initializeWatermarks |= table.Name == "UrlRegistry" && column.Name == "LastIndexedVisit";
                 initializePolicies |= table.Name == "UrlRegistry" && column.Name == "IsRobotsExcluded";
             }
+        }
+        await using (var check = connection.CreateCommand())
+        {
+            check.Transaction = transaction.GetDbTransaction();
+            check.CommandText = "SELECT 1 FROM sqlite_master WHERE type='index' AND name='UX_Documents_UrlRegistryId';";
+            if (await check.ExecuteScalarAsync(ct) == null)
+                await db.Database.ExecuteSqlRawAsync("""
+                    DELETE FROM Documents WHERE Id IN (
+                        SELECT Id FROM (SELECT Id,ROW_NUMBER() OVER (
+                            PARTITION BY UrlRegistryId ORDER BY LastIndexedUtc DESC,Id DESC) AS Position
+                            FROM Documents WHERE UrlRegistryId IS NOT NULL) WHERE Position>1);
+                    """, ct);
         }
         foreach (Match statement in Regex.Matches(script, @"CREATE (?:UNIQUE )?INDEX .*?;", RegexOptions.Singleline))
             await db.Database.ExecuteSqlRawAsync(Regex.Replace(statement.Value, @"CREATE (UNIQUE )?INDEX ", "CREATE $1INDEX IF NOT EXISTS "), ct);

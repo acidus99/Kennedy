@@ -56,7 +56,7 @@ public sealed class ArchiveImporter : IDisposable
                 command.CommandText="""
                     INSERT INTO ArchiveRobotsPolicies VALUES($scheme,$host,$port,$captured,$content)
                     ON CONFLICT(Scheme,Host,Port) DO UPDATE SET Captured=excluded.Captured,Content=excluded.Content
-                    WHERE excluded.Captured>=ArchiveRobotsPolicies.Captured;
+                    WHERE excluded.Captured>ArchiveRobotsPolicies.Captured;
                     """;
                 command.Parameters.AddWithValue("$scheme",response.RequestUrl.Protocol);
                 command.Parameters.AddWithValue("$host",response.RequestUrl.Hostname);
@@ -85,6 +85,8 @@ public sealed class ArchiveImporter : IDisposable
             using var reader=command.ExecuteReader();
             while (reader.Read()) authorities.Add((reader.GetString(0),reader.GetString(1),reader.GetInt32(2)));
         }
+        int processed=0;
+        var progress=System.Diagnostics.Stopwatch.StartNew();
         foreach (var authority in authorities)
         {
             ct.ThrowIfCancellationRequested();
@@ -119,6 +121,12 @@ public sealed class ArchiveImporter : IDisposable
             done.CommandText="DELETE FROM ArchiveWorkItems WHERE Scheme=$scheme AND Host=$host AND Port=$port;";
             AddAuthority(done,authority);
             done.ExecuteNonQuery();
+            processed++;
+            if(progress.Elapsed.TotalSeconds>=5)
+            {
+                Console.WriteLine($"Archive visibility: {processed:N0}/{authorities.Count:N0} capsules.");
+                progress.Restart();
+            }
         }
         var stats=_archiver.GetArchiveStats();
         string packs=Path.Combine(_directory,"Packs");

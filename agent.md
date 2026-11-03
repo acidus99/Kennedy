@@ -8,13 +8,15 @@ This document is written for Claude Code. Read it at the start of every session 
 
 Kennedy 2.0 is a Gemini search engine and archiving system. It crawls Gemini capsules, stores responses in WARC archives, and builds a searchable SQLite/FTS5 index.
 
-Primary repo: `/Volumes/billy/Code/Kennedy` (branch: `kennedy2`)  
-Old reference codebase (do NOT modify): `/Volumes/billy/Code/Kennedy-1`  
-Historical WARCs (136 files, ~700 GB): `/Volumes/WARC-BACKUP/WARCs/` (network drive)  
-Live database: `/Users/billy/kennedy-capsule/crawl-data/kennedy2.db`  
+Primary repo: `/Users/billy/Code/Kennedy` (branch: `kennedy2`)
+Old reference codebase (do NOT modify): `/Users/billy/Code/Kennedy-1`
+Historical WARCs (136 files, ~700 GB): `/Volumes/WARC-BACKUP/WARCs/` (network drive)
+Live database: `/Users/billy/kennedy-capsule/crawl-data/kennedy2.db`
 Active crawler output: `/Users/billy/kennedy-capsule/crawler-out/warcs/`
 
 ---
+
+All work stays on `kennedy2`. Use the configured author and committer identity and ordinary change descriptions in commit messages.
 
 ## Solution Structure
 
@@ -69,27 +71,19 @@ Core fields: `Id`, `NormalizedUrl`, `Scheme`, `Host`, `Port`, `FirstSeen`, `Last
 
 ## Key Service: ResponseStore (`Kennedy.Data/Services/ResponseStore.cs`)
 
-Three public methods:
+`StoreResponseAsync` delegates to `StoreBatchAsync`, so single and bulk writes share the same rules. Batches group repeated source URLs, update attempt state monotonically, and apply the latest non-transient payload.
 
-**`StoreResponseAsync`** — single response, one transaction. For live crawler use.
+`LastIndexedVisit` and `LastIndexedHash` on UrlRegistry retain a watermark even after a document is removed. They prevent an older successful capture from undoing a newer permanent failure, redirect, or access restriction. Temporary failures preserve the last usable payload. Identical replay does not inflate visit counters; missing FTS entries can be reconstructed from matching WARC content.
 
-**`StoreBatchAsync`** — batch of responses, one transaction. Used by Indexer Phase 2. Processes: UrlRegistry → Documents/Images/FTS → UrlLinks. Contains "latest wins" guard in `ApplyDocumentToContext`: if the WARC's `visitTimeUtc <= existing.LastIndexedUtc`, the Document/Image is not overwritten.
+`IsRobotsExcluded` hides retained payloads without deleting them. SearchPolicyUpdater consumes durable robots work; lifting restrictions restores visibility and refreshes affected file-link text. FileSearchFtsRebuilder consumes dirty file work. Manual policy states also suppress public search.
 
-**`StoreRegistryOnlyBatchAsync`** — Phase 1 bootstrap only. Updates UrlRegistry with "latest wins" semantics: only updates a `UrlRecord` if `visitTimeUtc > url.LastVisit`. Skips Documents, Images, FTS, and Links entirely. Safe to call with WARCs in any order.
-
-### `ApplyDocumentToContext` guards (order-of-order safety)
-- Non-indexable response, existing Document: skip removal if WARC is older than `existing.LastIndexedUtc`
-- Image upsert: skip if WARC is older than `image.LastIndexedUtc`
-- Non-image, non-text (e.g. connection error) removing existing image: only removes if newer
-- Indexable text, existing Document: skip all updates if WARC is older than `existing.LastIndexedUtc`
+`StoreRegistryOnlyBatchAsync` remains a compatibility alias to the full batch writer. Bootstrap no longer separates registry and content or applies an age cutoff.
 
 ---
 
 ## Key Service: SqliteSearchService (`Kennedy.Search/Services/SqliteSearchService.cs`)
 
-Read-only. Two search paths:
-- **Document search** (line ~296): safe — joins through `Documents` table, dead URLs can't appear
-- **URL search / `inurl:` queries** (line ~327): fixed — now includes `AND u.Status = @active_status` to exclude dead URLs from FTS5 `UrlSearch` matches
+Read-only SQLite queries combine DocumentsFts and non-text FilesFts candidates. Text results retain BM25 ordering; snippets are generated only after pagination. Image results retain the rewrite's recency ordering. Filters use shared status/policy checks, filename-extension `filetype:` semantics, host-scoped `site:`, title matches, and URL-path/query substring matches. Non-default capsule ports work with host-scoped search.
 
 WAL mode is already enabled via `KennedyDbContext.ApplyPerformancePragmasAsync()` (journal_mode=WAL, synchronous=NORMAL, 64MB cache). FTS `optimize` writes don't block reads; only VACUUM blocks everything.
 
@@ -115,19 +109,13 @@ Key files:
 
 ## Indexer (`Indexer/`)
 
-**Single-WARC mode** (default): edit `singleWarcFiles` array in `Program.cs` and run normally.
+The indexer accepts positional WARCs, `--warc-dir`, and `--bootstrap` (an alias without an age cutoff). Default processing updates both search and archive; `--search-only` and `--archive-only` select one destination. `--db`, `--archive-dir`, and `--config-dir` select paths. The language profile is packaged in the output's config directory.
 
-**Bootstrap mode** (two-phase over a directory):
-```
-dotnet run --project Indexer -- --bootstrap /Volumes/WARC-BACKUP/WARCs/
-```
+DatabaseMaintenance creates missing Kennedy2 tables, columns, and indexes, consolidates duplicate document rows, and repairs derived structures. It rejects legacy main databases. Completion records are separate per destination and keyed by immutable file path/size/mtime. Interrupted or malformed files are not marked complete. `--force` replays completed inputs. Missing text entries cause automatic replay of supplied search inputs.
 
-Phase 1: All WARCs → `IndexFileRegistryOnlyAsync` → `StoreRegistryOnlyBatchAsync` (any order, latest-wins)  
-Phase 2: WARCs within last 6 months → `IndexFileAsync` → `StoreBatchAsync` (chronological order, oldest-first)
+`--maintenance` finishes pending work without new inputs. `--snapshot <new-directory>` uses SQLite backup plus archive pack copies while holding writer locks, producing a standalone publication snapshot. See OPERATIONS.md for publication, rollback, and exit codes.
 
-WARCs must be named `yyyy-MM-dd.warc.gz`. Files that don't match this pattern are silently skipped. The 6-month cutoff is `TimeSpan.FromDays(180)` in `Program.cs`.
-
-After both phases, `FileSearchFtsRebuilder.RebuildAsync()` repopulates the `UrlSearch` FTS table.
+ArchiveImporter persists captures and visibility work, applies the latest archiver robots policy, and refreshes archive-stats.json including actual pack size. Archived responses are cloned before size limiting so search receives the original payload. Older historical captures remain accessible. Cached/raw/reader/history/diff routes retain the existing archive layout.
 
 ---
 
@@ -175,8 +163,8 @@ Suggested next session starting points:
 
 - **Server smoke checks:** `dotnet run --project Kennedy.SmokeTests -- --settings <server.json>` starts the real server on an available high port and checks the home page, text/image searches for `cat`, public tools, reports, stats, and capsule lists using Gemini.Net. `--base-url gemini://localhost:1966/` checks an existing server. This runner uses existing data and does not import, index, or upgrade databases. See README.md for options, network requirements, saved responses, and exit codes. It builds with the solution and runs only when invoked explicitly.
 
-- **Kennedy-1 is read-only reference.** Never modify `/Volumes/billy/Code/Kennedy-1`. It is the original codebase to port from, not to edit.
-- **EF Core uses `EnsureCreated`, not migrations.** Adding a field to a model requires either a fresh DB or a manual `ALTER TABLE` on existing DBs.
+- **Kennedy-1 is read-only reference.** Never modify `/Users/billy/Code/Kennedy-1`. It is the original codebase to port from, not to edit.
+- **Schema maintenance is automatic for Kennedy2.** Use DatabaseMaintenance through the indexer; model additions do not require deleting the database or manual SQL. Raw response bodies still require their source WARCs for text reconstruction.
 - **The `UrlFrontierEntry` type** lives in `Kennedy.Crawler` namespace (not `Kennedy.Data`). It was moved during the Kennedy-1 → Kennedy-2 port.
 - **WAL mode is on.** `ApplyPerformancePragmasAsync` sets journal_mode=WAL, synchronous=NORMAL, cache_size=-65536 (64 MB), mmap_size=256 MB. Called at Indexer startup. Does NOT get called automatically during live crawling (Crawler doesn't use EF Core DbContext directly).
 - **FTS `UrlSearch` was returning dead URLs** before the fix at `SqliteSearchService.cs` line 327. The fix adds `AND u.Status = @active_status` to the inurl: filter.

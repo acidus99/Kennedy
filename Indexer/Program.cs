@@ -50,11 +50,16 @@ internal static class Program
             services.AddScoped<SearchPolicyUpdater>();
             using var provider=services.BuildServiceProvider();
             await using var scope=provider.CreateAsyncScope();
+            bool replayMissingText=false;
             if (options.Search)
             {
                 Console.WriteLine($"Preparing Kennedy2 database: {options.Database}");
                 await using var db=await scope.ServiceProvider.GetRequiredService<IDbContextFactory<KennedyDbContext>>().CreateDbContextAsync(ct);
                 await DatabaseMaintenance.InitializeAsync(db,ct);
+                await using var missing=db.Database.GetDbConnection().CreateCommand();
+                missing.CommandText="SELECT COUNT(*) FROM Documents d WHERE NOT EXISTS(SELECT 1 FROM DocumentsFts f WHERE f.rowid=d.Id);";
+                replayMissingText=Convert.ToInt64(await missing.ExecuteScalarAsync(ct))>0;
+                if(replayMissingText) Console.WriteLine("Missing full-text entries detected; supplied search inputs will be replayed automatically.");
             }
             using var archive=options.Archive ? new ArchiveImporter(archiveDirectory) : null;
             using var searchHistory=options.Search ? new ImportHistory(options.Database) : null;
@@ -66,7 +71,7 @@ internal static class Program
                 ct.ThrowIfCancellationRequested();
                 var info=new FileInfo(input);
                 string identity=Identity(info);
-                bool search=options.Search && (options.Force || !searchHistory!.IsComplete(identity));
+                bool search=options.Search && (options.Force || replayMissingText || !searchHistory!.IsComplete(identity));
                 bool saveArchive=options.Archive && (options.Force || !archiveHistory!.IsComplete(identity));
                 if (!search && !saveArchive) { skipped++; Console.WriteLine($"Already complete: {input}"); continue; }
                 try
@@ -97,7 +102,7 @@ internal static class Program
                 long missing=Convert.ToInt64(await check.ExecuteScalarAsync(ct));
                 if (missing>0)
                 {
-                    Console.Error.WriteLine($"{missing:N0} text documents need their original WARC responses. Replay the relevant WARCs with --force to restore their missing full-text entries.");
+                    Console.Error.WriteLine($"{missing:N0} text documents need their original WARC responses. Supply the relevant WARCs to restore their missing full-text entries.");
                     failed++;
                 }
             }
@@ -109,6 +114,8 @@ internal static class Program
                 Console.WriteLine($"Search '{options.SmokeQuery}': {search.GetTextResultsCount(query):N0} results");
                 foreach (var result in search.SearchText(query,0,5)) Console.WriteLine($"- {result.Url} {result.Title}");
             }
+            if (failed==0 && options.Snapshot!=null)
+                CreateSnapshot(options,archiveDirectory,ct);
             Console.WriteLine($"Finished: {imported} imported, {skipped} skipped, {failed} failures; {watch.Elapsed.TotalSeconds:F1}s.");
             return failed==0 ? 0 : 1;
         }
@@ -119,6 +126,51 @@ internal static class Program
             Console.CancelKeyPress -= cancel;
             foreach (var file in locks) file.Dispose();
         }
+    }
+
+    private static void CreateSnapshot(Options options,string archiveDirectory,CancellationToken ct)
+    {
+        string destination=options.Snapshot!;
+        string packs=Path.Combine(archiveDirectory,"Packs");
+        if (Directory.Exists(destination) || File.Exists(destination)) throw new IOException("Snapshot destination already exists; choose a new directory.");
+        if (destination.StartsWith(Path.GetFullPath(packs)+Path.DirectorySeparatorChar,StringComparison.Ordinal) ||
+            destination==Path.GetFullPath(packs)) throw new IOException("Snapshot destination cannot be inside the source Packs directory.");
+        string temporary=destination+".tmp-"+Guid.NewGuid().ToString("N");
+        Directory.CreateDirectory(temporary);
+        try
+        {
+            void Backup(string source,string name)
+            {
+                ct.ThrowIfCancellationRequested();
+                Console.WriteLine($"Backing up {name} including committed WAL data...");
+                using var input=new SqliteConnection(new SqliteConnectionStringBuilder { DataSource=source,Mode=SqliteOpenMode.ReadOnly }.ToString());
+                using var output=new SqliteConnection(ConnectionString(Path.Combine(temporary,name)));
+                input.Open();output.Open();input.BackupDatabase(output);
+            }
+            if (options.Search) Backup(options.Database,"kennedy2.db");
+            if (options.Archive)
+            {
+                Backup(Path.Combine(archiveDirectory,"archive.db"),"archive.db");
+                if(Directory.Exists(packs))
+                {
+                    int copied=0;
+                    foreach (string file in Directory.EnumerateFiles(packs,"*",SearchOption.AllDirectories))
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        string target=Path.Combine(temporary,"Packs",Path.GetRelativePath(packs,file));
+                        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                        File.Copy(file,target);
+                        if(++copied%1000==0) Console.WriteLine($"Snapshot: copied {copied:N0} pack files.");
+                    }
+                }
+                string stats=Path.Combine(archiveDirectory,"archive-stats.json");
+                if(File.Exists(stats)) File.Copy(stats,Path.Combine(temporary,"archive-stats.json"));
+            }
+            ct.ThrowIfCancellationRequested();
+            Directory.Move(temporary,destination);
+            Console.WriteLine($"Data snapshot ready: {destination}");
+        }
+        finally { if(Directory.Exists(temporary)) Directory.Delete(temporary,recursive:true); }
     }
 
     internal static string ConnectionString(string path) => new SqliteConnectionStringBuilder { DataSource=path }.ToString();
@@ -135,6 +187,7 @@ internal static class Program
           --config-dir <dir>    Directory containing Core14.profile.xml.
           --maintenance        Repair schema and finish pending work; WARC inputs optional.
           --force              Replay completed inputs, for backfill/repair.
+          --snapshot <dir>     Create a consistent data snapshot after maintenance/imports.
           --smoke-query <text>  Show search count and five results after processing.
           --cert-list <warc> <csv>  Export captured certificates without importing.
         Exit codes: 0 complete; 1 partial/import failures; 2 setup error; 130 interrupted.
@@ -143,8 +196,8 @@ internal static class Program
     private sealed class Options
     {
         public string Database=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),"kennedy-capsule","crawl-data","kennedy2.db");
-        public string? ArchiveDirectory,SmokeQuery;
-        public string ConfigDirectory=Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"../../../../config-files"))+Path.DirectorySeparatorChar;
+        public string? ArchiveDirectory,SmokeQuery,Snapshot;
+        public string ConfigDirectory=Path.Combine(AppContext.BaseDirectory,"config")+Path.DirectorySeparatorChar;
         public bool Search=true,Archive=true,Force,Maintenance,Help;
         private readonly List<string> _files=[],_directories=[];
         public static Options Parse(string[] args)
@@ -162,6 +215,7 @@ internal static class Program
                     case "--archive": case "--archive-only": options.Archive=true;options.Search=false;break;
                     case "--force": options.Force=true;break;
                     case "--maintenance": options.Maintenance=true;break;
+                    case "--snapshot": options.Snapshot=Path.GetFullPath(Value());options.Maintenance=true;break;
                     case "--db": options.Database=Value();break;
                     case "--archive-dir": options.ArchiveDirectory=Path.GetFullPath(Value());break;
                     case "--config-dir": options.ConfigDirectory=Path.GetFullPath(Value())+Path.DirectorySeparatorChar;break;

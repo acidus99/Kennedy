@@ -13,6 +13,7 @@ namespace Kennedy.Data.Models;
 [Table("Documents")]
 [Index(nameof(StatusCode))]
 [Index(nameof(Host))]
+[Index(nameof(UrlRegistryId), IsUnique = true, Name = "UX_Documents_UrlRegistryId")]
 public class DocumentRecord
 {
     [Key]
