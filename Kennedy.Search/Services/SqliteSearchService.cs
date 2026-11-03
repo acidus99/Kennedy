@@ -160,7 +160,7 @@ public sealed class SqliteSearchService : ISearchService
               AND u.NormalizedUrl NOT LIKE '%/.well-known/security.txt'
             {(query.HasFtsQuery ? "AND FilesFts MATCH @terms" : "")}
             {(query.HasTitleScope ? "AND 0" : "")}
-            {(images ? "AND LOWER(COALESCE(u.LastMimeType,u.LastDetectedMimeType,'')) LIKE 'image/%'" : "")}
+            {(images ? "AND (i.UrlRegistryId IS NOT NULL OR LOWER(COALESCE(u.LastDetectedMimeType,u.LastMimeType,'')) LIKE 'image/%')" : "")}
             """;
         return images ? files : text + " UNION ALL " + files;
     }

@@ -180,9 +180,12 @@ internal class DiffView : AbstractView
         //to create the DateTime. Check for explicit nulls instead
 
         GeminiUrl? url = GeminiUrl.MakeUrl(args["url"]!);
-        DateTime? previous = (args["pt"] != null) ? new DateTime(Convert.ToInt64(args["pt"]!)) : null;
-        DateTime? current = (args["t"] != null) ? new DateTime(Convert.ToInt64(args["t"]!)) : null;
-        bool showFull = (args["full"] != null) && Convert.ToBoolean(args["full"]);
+        static DateTime? Timestamp(string? value)
+            => long.TryParse(value, out var ticks) && ticks >= DateTime.MinValue.Ticks && ticks <= DateTime.MaxValue.Ticks
+                ? new DateTime(ticks) : null;
+        DateTime? previous = Timestamp(args["pt"]);
+        DateTime? current = Timestamp(args["t"]);
+        bool showFull = bool.TryParse(args["full"], out var full) && full;
 
         return (url, previous, current, showFull);
     }

@@ -71,7 +71,7 @@ internal class SearchStatsView : AbstractView
                 .LongCount();
 
             var totalUrls = db.UrlRegistry.LongCount();
-            var documents = db.Documents.LongCount();
+            var documents = db.Documents.LongCount(d => db.UrlRegistry.Any(u => u.Id==d.UrlRegistryId && !u.IsRobotsExcluded && (u.Status==Kennedy.Data.Models.UrlStatus.Active || u.Status==Kennedy.Data.Models.UrlStatus.TemporaryError || u.Status==Kennedy.Data.Models.UrlStatus.ConnectionError)));
             var lastUpdated = db.UrlRegistry
                 .Where(x => x.LastVisit != null)
                 .Select(x => x.LastVisit)

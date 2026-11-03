@@ -74,8 +74,9 @@ public sealed class ResponseStore
             var candidate = visits.LastOrDefault(r => !IsTransient(r));
             if (candidate == null) continue;
             var captured = candidate.RequestSent ?? DateTime.UtcNow;
-            if (url.LastIndexedVisit.HasValue && (captured < url.LastIndexedVisit ||
+            if (url.LastIndexedVisit.HasValue && ((captured < url.LastIndexedVisit && url.LastIndexedHash != candidate.Hash) ||
                 (captured == url.LastIndexedVisit && url.LastIndexedHash != null && url.LastIndexedHash != candidate.Hash))) continue;
+            if (url.LastIndexedVisit.HasValue && captured < url.LastIndexedVisit) captured=url.LastIndexedVisit.Value;
             if (url.LastIndexedHash != candidate.Hash) changedPayloads.Add(key);
             var parsed = _responseParser.Parse(candidate);
             url.LastIndexedVisit = captured;
@@ -93,10 +94,15 @@ public sealed class ResponseStore
         if (current.Count == 0) { await tx.CommitAsync(ct); return; }
         var hosts = current.Select(x => x.url.Host).Distinct().ToList();
         var policies = await db.RobotsTxts.Where(r => hosts.Contains(r.Host)).ToListAsync(ct);
+        var policyChangedSources = new HashSet<long>();
         var rules = policies.ToDictionary(r => (r.Scheme,r.Host,r.Port), r => new RobotsTxtParser().Parse(r.Content));
         foreach (var (url, parsed, _) in current)
-            url.IsRobotsExcluded = rules.TryGetValue((url.Scheme,url.Host,url.Port), out var robots) &&
+        {
+            bool excluded = rules.TryGetValue((url.Scheme,url.Host,url.Port), out var robots) &&
                 !robots.IsPathAllowed("indexer", parsed.RequestUrl.Path);
+            if(excluded!=url.IsRobotsExcluded) policyChangedSources.Add(url.Id);
+            url.IsRobotsExcluded=excluded;
+        }
         var sourceIds = current.Select(x => x.url.Id).ToList();
         var docs = await db.Documents.Where(d => d.UrlRegistryId != null && sourceIds.Contains(d.UrlRegistryId.Value))
             .ToDictionaryAsync(d => d.UrlRegistryId!.Value, ct);
@@ -144,6 +150,7 @@ public sealed class ResponseStore
                 $"INSERT INTO DocumentsFts(rowid,Title,Content,CanonicalUrl) VALUES({doc.Id},{doc.Title},{text},{doc.CanonicalUrl})", ct);
         }
         var previous = await db.UrlLinks.AsNoTracking().Where(l => sourceIds.Contains(l.SourceUrlId)).ToListAsync(ct);
+        foreach (var link in previous.Where(l=>policyChangedSources.Contains(l.SourceUrlId))) dirty.Add(link.TargetUrlId);
         foreach (var (url, parsed, _) in current)
         {
             var oldLinks = previous.Where(l => l.SourceUrlId == url.Id).GroupBy(l => l.TargetUrlId)
@@ -247,14 +254,15 @@ public sealed class ResponseStore
     /// </summary>
     private static void ApplyUrlMetadata(UrlRecord url, ParsedResponse parsedResponse)
     {
-        if (!parsedResponse.IsSuccess) return;
-        url.LastMimeType = parsedResponse.MimeType;
-        url.LastDetectedMimeType = parsedResponse.DetectedMimeType;
+        // Only an applied success supplies searchable file metadata. Clear it on
+        // redirects/removals so a later timeout cannot revive a former file.
+        url.LastMimeType = parsedResponse.IsSuccess ? parsedResponse.MimeType : null;
+        url.LastDetectedMimeType = parsedResponse.IsSuccess ? parsedResponse.DetectedMimeType : null;
 
         // UrlRegistry intentionally stores URL lifecycle and protocol metadata only.
     }
 
-    private static async Task QueueFileIndexWorkAsync(
+    internal static async Task QueueFileIndexWorkAsync(
         KennedyDbContext db,
         IEnumerable<long> urlIds,
         CancellationToken ct, IndexWorkType workType = IndexWorkType.FileSearch)
@@ -460,15 +468,7 @@ public sealed class ResponseStore
 
         // Skip rewriting unchanged payloads to avoid unnecessary FTS churn.
         // We still refresh mutable timeline fields.
-        if (existing.ResponseHash == parsedResponse.Hash && !repairFts)
-        {
-            existing.UrlRegistryId = url.Id;
-            existing.LastIndexedUtc = visitTimeUtc;
-            existing.StatusCode = parsedResponse.StatusCode;
-            existing.Host = url.Host;
-            existing.LastMimeType = url.LastMimeType;
-            return (existing, null);
-        }
+        bool unchanged = existing.ResponseHash == parsedResponse.Hash && !repairFts;
 
         existing.UrlRegistryId = url.Id;
         existing.CanonicalUrl = url.NormalizedUrl;
@@ -499,7 +499,7 @@ public sealed class ResponseStore
             ftsContent = textResponse2.IndexableText ?? string.Empty;
         }
 
-        return (existing, ftsContent);
+        return (existing, unchanged ? null : ftsContent);
     }
 
 }

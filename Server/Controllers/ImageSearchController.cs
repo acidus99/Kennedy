@@ -13,6 +13,6 @@ public static class ImageSearchController
             return;
         }
         var view = new ImageResultsView(request, response, app);
-        view.Render();
+        SearchController.RenderQuery(response, view.Render);
     }
 }

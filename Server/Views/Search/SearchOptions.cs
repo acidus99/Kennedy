@@ -33,7 +33,7 @@ internal class SearchOptions
             switch (parts[0].ToLower())
             {
                 case "p":
-                    SearchPage = Convert.ToInt32(parts[1]);
+                    SearchPage = Math.Clamp(Convert.ToInt32(parts[1]), 1, int.MaxValue / 15);
                     break;
                 case "a":
                     Algorithm = Convert.ToInt32(parts[1]);

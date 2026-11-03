@@ -78,7 +78,7 @@ internal class CertsCheckView : AbstractView
 
     private GeminiUrl? ParseInput()
     {
-        var input = Request.Url.Query;
+        var input = SanitizedQuery;
 
         if (input.StartsWith("gemini://"))
         {

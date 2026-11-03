@@ -44,7 +44,7 @@ public static class RoutePaths
         => $"gemini://kennedy.gemi.dev{SiteSearchRunRoute}{capsule}/";
 
     public static string ViewCached(GeminiUrl url)
-        => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={DateTime.Now}";
+        => $"{ViewCachedRoute}?url={HttpUtility.UrlEncode(url.NormalizedUrl)}&t={DateTime.UtcNow.Ticks}";
 
     public static string ViewCached(string url, DateTime snapshotTime)
         => ViewCached(new GeminiUrl(url), snapshotTime);

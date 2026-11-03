@@ -1,4 +1,6 @@
-﻿using Kennedy.Server.Views;
+﻿using System;
+using Microsoft.Data.Sqlite;
+using Kennedy.Server.Views;
 using Kennedy.Server.Views.Archive;
 using Kennedy.Server.Views.Search;
 using RocketForce;
@@ -7,6 +9,19 @@ namespace Kennedy.Server.Controllers;
 
 public static class SearchController
 {
+    internal static void RenderQuery(Response response, Action render)
+    {
+        try { render(); }
+        catch (SqliteException ex) when (ex.Message.Contains("fts5:", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("unterminated string", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("malformed MATCH", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!response.IsSending) response.Success();
+            response.WriteLine("Sorry, we could not understand that search query.");
+            response.WriteLine("=> /search Try another search");
+        }
+    }
+
     public static void Search(GeminiRequest request, Response response, GeminiServer app)
     {
         if (!request.Url.HasQuery)
@@ -15,7 +30,7 @@ public static class SearchController
             return;
         }
         var view = new ResultsView(request, response, app);
-        view.Render();
+        RenderQuery(response, view.Render);
     }
 
     public static void SiteSearchCreate(GeminiRequest request, Response response, GeminiServer app)
@@ -63,7 +78,7 @@ public static class SearchController
             return;
         }
         var view = new LuckyResultsView(request, response, app);
-        view.Render();
+        RenderQuery(response, view.Render);
     }
 
     public static void UrlInfo(GeminiRequest request, Response response, GeminiServer app)

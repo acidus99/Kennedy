@@ -35,6 +35,15 @@ internal class UrlInfoView : AbstractView
 
         using var db = new KennedyDbContext(options);
         _urlEntry = db.UrlRegistry.FirstOrDefault(x => x.NormalizedUrl == url.NormalizedUrl);
+        if (_urlEntry != null && (_urlEntry.IsRobotsExcluded ||
+            _urlEntry.Status is >= Kennedy.Data.Models.UrlStatus.ExcludedByRobots and <= Kennedy.Data.Models.UrlStatus.ManuallyDisabled))
+        {
+            Response.Success();
+            Response.WriteLine("# Page Information");
+            Response.WriteLine("This URL is excluded from the public search index.");
+            Response.WriteLine($"=> {RoutePaths.ViewUrlUniqueHistory(url)} Archive history (subject to archive visibility rules)");
+            return;
+        }
         _docEntry = _urlEntry != null
             ? db.Documents.FirstOrDefault(x => x.UrlRegistryId == _urlEntry.Id)
             : null;

@@ -123,8 +123,17 @@ public class Archiver
                 snapshot.Offset = first.Offset;
 
                 //does this hash exist for this URL id?
-                snapshot.IsDuplicate = previousSnapshots.Where(x => x.UrlId == snapshot.UrlId).Any();
-                snapshot.IsGlobalDuplicate = previousSnapshots.Where(x => x.UrlId != snapshot.UrlId).Any();
+                var firstForUrl = previousSnapshots.Where(x => x.UrlId == snapshot.UrlId).OrderBy(x => x.Captured).FirstOrDefault();
+                snapshot.IsDuplicate = firstForUrl != null && firstForUrl.Captured <= snapshot.Captured;
+                if (firstForUrl != null && firstForUrl.Captured > snapshot.Captured)
+                {
+                    // Preserve the earliest representative of each payload even
+                    // when older WARCs are imported after newer ones.
+                    snapshot.IsGlobalDuplicate = firstForUrl.IsGlobalDuplicate;
+                    firstForUrl.IsDuplicate = true;
+                }
+                if (firstForUrl == null || firstForUrl.Captured <= snapshot.Captured)
+                    snapshot.IsGlobalDuplicate = previousSnapshots.Where(x => x.UrlId != snapshot.UrlId).Any();
             }
             db.Snapshots.Add(snapshot);
             db.SaveChanges();

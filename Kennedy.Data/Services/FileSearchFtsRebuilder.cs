@@ -49,7 +49,9 @@ public sealed class FileSearchFtsRebuilder
                 .Select(document => document.UrlRegistryId!.Value)
                 .ToHashSetAsync(ct);
             var linkText = await db.UrlLinks
-                .Where(link => urlIds.Contains(link.TargetUrlId) && link.LinkText != "")
+                .Where(link => urlIds.Contains(link.TargetUrlId) && link.LinkText != "" &&
+                    db.UrlRegistry.Any(source => source.Id==link.SourceUrlId && !source.IsRobotsExcluded &&
+                        (source.Status==UrlStatus.Active || source.Status==UrlStatus.TemporaryError || source.Status==UrlStatus.ConnectionError)))
                 .GroupBy(link => link.TargetUrlId)
                 .ToDictionaryAsync(
                     group => group.Key,

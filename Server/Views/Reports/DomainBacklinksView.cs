@@ -76,7 +76,7 @@ internal class DomainBacklinksView : AbstractView
         return (from links in db.UrlLinks
                 join source in db.UrlRegistry on links.SourceUrlId equals source.Id
                 join target in db.UrlRegistry on links.TargetUrlId equals target.Id
-                where links.IsExternal && target.Scheme == protocol && target.Host == domain && target.Port == port
+                where links.IsExternal && !source.IsRobotsExcluded && (source.Status==Kennedy.Data.Models.UrlStatus.Active || source.Status==Kennedy.Data.Models.UrlStatus.TemporaryError || source.Status==Kennedy.Data.Models.UrlStatus.ConnectionError) && target.Scheme == protocol && target.Host == domain && target.Port == port
                 orderby target.NormalizedUrl
                 select new Backlink
                 {

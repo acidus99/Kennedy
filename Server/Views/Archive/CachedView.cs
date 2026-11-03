@@ -34,6 +34,11 @@ internal class CachedView : AbstractView
             RenderNoSnapshot(args.Url, args.Timestamp);
             return;
         }
+        else if (args.IsRaw)
+        {
+            Response.Write(reader.ReadBytes(snapshot));
+            return;
+        }
         else if (snapshot.IsSuccess)
         {
             //if in raw mode or its not next, just send the bytes of the snaphost, which includes the status line and meta
@@ -269,10 +274,15 @@ internal class CachedView : AbstractView
     /// </summary>
     /// <returns></returns>
     private Snapshot? GetSnapshot(GeminiUrl url, DateTime targetTime)
-        => archive.Snapshots
-            .Where(x => x.UrlId == url.ID)
-            .Include(x => x.Url)
-            .Where(x => x.Url != null && x.Url.IsPublic)
-            .OrderBy(x => Math.Abs(x.Captured.Ticks - targetTime.Ticks))
-            .FirstOrDefault();
+    {
+        // Use indexed date lookups rather than sorting every historical capture
+        // by a computed tick distance.
+        var query=archive.Snapshots.Include(x=>x.Url)
+            .Where(x=>x.UrlId==url.ID && x.Url!=null && x.Url.IsPublic);
+        var before=query.Where(x=>x.Captured<=targetTime).OrderByDescending(x=>x.Captured).FirstOrDefault();
+        var after=query.Where(x=>x.Captured>targetTime).OrderBy(x=>x.Captured).FirstOrDefault();
+        if (before==null) return after;
+        if (after==null) return before;
+        return targetTime-before.Captured <= after.Captured-targetTime ? before : after;
+    }
 }
