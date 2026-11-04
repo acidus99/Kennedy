@@ -66,11 +66,7 @@ public class Archiver
         }
 
         // Archive size limits must not mutate the response still used by search.
-        response = TruncateIfNecessary(new GeminiResponse(response.RequestUrl, response.ResponseLine)
-        {
-            BodyBytes=response.BodyBytes, IsBodyTruncated=response.IsBodyTruncated,
-            RequestSent=response.RequestSent, ResponseReceived=response.ResponseReceived ?? response.RequestSent ?? DateTime.UtcNow
-        });
+        response = CopyForArchive(response);
 
         using (var db = GetContext())
         {
@@ -156,26 +152,25 @@ public class Archiver
                 .Distinct()
                 .LongCount();
 
-            ret.UrlsPublic = db.Urls
-                .Where(x => x.IsPublic)
-                .LongCount();
-
-            ret.UrlsExcluded = db.Urls
-                .Where(x => !x.IsPublic)
-                .LongCount();
-
-            ret.Captures = db.Snapshots.LongCount();
-
-            ret.CapturesUnique = db.Snapshots
-                .Where(x => !x.IsDuplicate && !x.IsGlobalDuplicate)
-                .LongCount();
-
-            ret.Size = db.Snapshots
-                .Where(x => !x.IsDuplicate && !x.IsGlobalDuplicate)
-                .Sum(x => x.Size);
-
-            ret.SizeWithoutDeDuplication = db.Snapshots
-                .Sum(x => x.Size);
+            // One pass per table instead of repeating full scans for each total.
+            db.Database.OpenConnection();
+            using (var command=db.Database.GetDbConnection().CreateCommand())
+            {
+                command.CommandText="SELECT COALESCE(SUM(IsPublic=1),0),COALESCE(SUM(IsPublic=0),0) FROM Urls";
+                using var reader=command.ExecuteReader(); reader.Read();
+                ret.UrlsPublic=reader.GetInt64(0); ret.UrlsExcluded=reader.GetInt64(1);
+            }
+            using (var command=db.Database.GetDbConnection().CreateCommand())
+            {
+                command.CommandText="""
+                    SELECT COUNT(*),COALESCE(SUM(IsDuplicate=0 AND IsGlobalDuplicate=0),0),
+                        COALESCE(SUM(CASE WHEN IsDuplicate=0 AND IsGlobalDuplicate=0 THEN Size ELSE 0 END),0),
+                        COALESCE(SUM(Size),0) FROM Snapshots
+                    """;
+                using var reader=command.ExecuteReader(); reader.Read();
+                ret.Captures=reader.GetInt64(0); ret.CapturesUnique=reader.GetInt64(1);
+                ret.Size=reader.GetInt64(2); ret.SizeWithoutDeDuplication=reader.GetInt64(3);
+            }
 
             var captures = db.Snapshots.Select(x => x.Captured);
 
@@ -239,7 +234,7 @@ public class Archiver
     /// </summary>
     /// <param name="response"></param>
     /// <returns></returns>
-    private bool ShouldBeArchived(GeminiResponse response)
+    internal static bool ShouldBeArchived(GeminiResponse response)
     {
         if (!ShouldArchiveStatus(response))
         {
@@ -266,7 +261,7 @@ public class Archiver
     /// </summary>
     /// <param name="response"></param>
     /// <returns></returns>
-    private bool ShouldArchiveStatus(GeminiResponse response)
+    private static bool ShouldArchiveStatus(GeminiResponse response)
     {
         if (response.IsSuccess || response.IsPermFail)
         {
@@ -281,13 +276,14 @@ public class Archiver
         return false;
     }
 
-    private GeminiResponse TruncateIfNecessary(GeminiResponse response)
+    internal static GeminiResponse CopyForArchive(GeminiResponse response)
     {
-        if (response.BodySize > FileSizeLimit)
+        return new GeminiResponse(response.RequestUrl,response.ResponseLine)
         {
-            response.BodyBytes = response.BodyBytes!.Take(FileSizeLimit).ToArray();
-            response.IsBodyTruncated = true;
-        }
-        return response;
+            BodyBytes=response.BodySize > FileSizeLimit ? response.BodyBytes![..FileSizeLimit] : response.BodyBytes,
+            IsBodyTruncated=response.IsBodyTruncated || response.BodySize > FileSizeLimit,
+            RequestSent=response.RequestSent,
+            ResponseReceived=response.ResponseReceived ?? response.RequestSent ?? DateTime.UtcNow
+        };
     }
 }

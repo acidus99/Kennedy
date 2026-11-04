@@ -24,15 +24,21 @@ public class PackFile
     /// </summary>
     public long Append(PackRecord packRecord)
     {
-        var offset = GetOffset();
-        //ensure the path exists
-        Directory.CreateDirectory(Path);
-        using (var fout = new FileStream(FullPath, FileMode.Append))
+        using (var fout = OpenAppender())
         {
+            var offset = fout.Position;
             var data = PackRecordFactory.ToBytes(packRecord);
             fout.Write(data);
+            return offset;
         }
-        return offset;
+    }
+
+    internal FileStream OpenAppender()
+    {
+        Directory.CreateDirectory(Path);
+        var stream = new FileStream(FullPath,FileMode.OpenOrCreate,FileAccess.Write,FileShare.ReadWrite,64*1024);
+        stream.Seek(0,SeekOrigin.End);
+        return stream;
     }
 
     /// <summary>
@@ -54,19 +60,6 @@ public class PackFile
                 Data = data
             };
         }
-    }
-
-    private long GetOffset()
-    {
-        try
-        {
-            return (new FileInfo(FullPath)).Length;
-        }
-        catch (Exception)
-        {
-        }
-        //file doesn't exist, so the offset is zero
-        return 0;
     }
 
     private string GetType(byte[] type)

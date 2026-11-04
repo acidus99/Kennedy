@@ -14,6 +14,8 @@ public sealed class ArchiveImporter : IDisposable
     private readonly string _directory;
     private readonly Archiver _archiver;
     private readonly SqliteConnection _connection;
+    private readonly ArchiveBatchWriter _writer;
+    public long AlreadyArchived => _writer.AlreadyArchived;
 
     public ArchiveImporter(string directory)
     {
@@ -26,11 +28,17 @@ public sealed class ArchiveImporter : IDisposable
         using var command=_connection.CreateCommand();
         command.CommandText="""
             PRAGMA journal_mode=WAL;
+            PRAGMA synchronous=NORMAL;
+            PRAGMA cache_size=-65536;
+            PRAGMA temp_store=MEMORY;
+            CREATE INDEX IF NOT EXISTS IX_Urls_Protocol_Domain_Port ON Urls(Protocol,Domain,Port);
             CREATE INDEX IF NOT EXISTS IX_Snapshots_UrlId_Captured ON Snapshots(UrlId,Captured);
+            CREATE INDEX IF NOT EXISTS IX_Snapshots_DataHash_UrlId_Captured ON Snapshots(DataHash,UrlId,Captured);
             CREATE TABLE IF NOT EXISTS ArchiveWorkItems(Scheme TEXT,Host TEXT,Port INTEGER,PRIMARY KEY(Scheme,Host,Port));
             CREATE TABLE IF NOT EXISTS ArchiveRobotsPolicies(Scheme TEXT,Host TEXT,Port INTEGER,Captured TEXT NOT NULL,Content TEXT NOT NULL,PRIMARY KEY(Scheme,Host,Port));
             """;
         command.ExecuteNonQuery();
+        _writer=new ArchiveBatchWriter(_connection,Path.Combine(_directory,"Packs"));
     }
 
     public int StoreBatch(IReadOnlyList<GeminiResponse> responses, CancellationToken ct)
@@ -65,15 +73,10 @@ public sealed class ArchiveImporter : IDisposable
                 command.Parameters.AddWithValue("$content",response.IsSuccess ? response.BodyText ?? "" : "");
                 command.ExecuteNonQuery();
             }
+            int archived=_writer.StoreBatch(responses,transaction,ct);
             transaction.Commit();
+            return archived;
         }
-        int archived=0;
-        foreach (var response in responses)
-        {
-            ct.ThrowIfCancellationRequested();
-            if (_archiver.ArchiveResponse(response,isPublic:false)) archived++;
-        }
-        return archived;
     }
 
     public void Complete(CancellationToken ct)
@@ -104,18 +107,28 @@ public sealed class ArchiveImporter : IDisposable
                 content=_archiver.GetLatestResponse(robotsUrl.ID)?.BodyText ?? "";
             }
             var robots=new RobotsTxtParser().Parse(content);
-            using var db=_archiver.GetContext();
-            long lastId=long.MinValue;
-            while (true)
+            if (!robots.HasValidRules)
             {
-                var urls=db.Urls.Where(u => u.Protocol==authority.scheme && u.Domain==authority.host && u.Port==authority.port && u.Id>lastId)
-                    .OrderBy(u => u.Id).Take(500).ToList();
-                if (urls.Count==0) break;
-                foreach (var url in urls) url.IsPublic=robots.IsPathAllowed("archiver",url.GeminiUrl.Path);
-                lastId=urls[^1].Id;
-                db.SaveChanges();
-                db.ChangeTracker.Clear();
-                ct.ThrowIfCancellationRequested();
+                using var allow=_connection.CreateCommand();
+                allow.CommandText="UPDATE Urls SET IsPublic=1 WHERE Protocol=$scheme AND Domain=$host AND Port=$port AND IsPublic=0;";
+                AddAuthority(allow,authority);
+                allow.ExecuteNonQuery();
+            }
+            else
+            {
+                using var db=_archiver.GetContext();
+                long lastId=long.MinValue;
+                while (true)
+                {
+                    var urls=db.Urls.Where(u => u.Protocol==authority.scheme && u.Domain==authority.host && u.Port==authority.port && u.Id>lastId)
+                        .OrderBy(u => u.Id).Take(500).ToList();
+                    if (urls.Count==0) break;
+                    foreach (var url in urls) url.IsPublic=robots.IsPathAllowed("archiver",url.GeminiUrl.Path);
+                    lastId=urls[^1].Id;
+                    db.SaveChanges();
+                    db.ChangeTracker.Clear();
+                    ct.ThrowIfCancellationRequested();
+                }
             }
             using var done=_connection.CreateCommand();
             done.CommandText="DELETE FROM ArchiveWorkItems WHERE Scheme=$scheme AND Host=$host AND Port=$port;";
@@ -143,5 +156,5 @@ public sealed class ArchiveImporter : IDisposable
         command.Parameters.AddWithValue("$host",authority.host);
         command.Parameters.AddWithValue("$port",authority.port);
     }
-    public void Dispose() => _connection.Dispose();
+    public void Dispose() { _writer.Dispose(); _connection.Dispose(); }
 }

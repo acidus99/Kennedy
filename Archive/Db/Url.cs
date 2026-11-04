@@ -14,6 +14,7 @@ namespace Kennedy.Archive.Db;
 [Index(nameof(Domain))]
 [Index(nameof(Port))]
 [Index(nameof(Protocol))]
+[Index(nameof(Protocol), nameof(Domain), nameof(Port))]
 public class Url
 {
     /// <summary>PK — matches GeminiUrl.ID (a deterministic hash of the normalized URL string).</summary>
