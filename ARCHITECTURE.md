@@ -543,7 +543,8 @@ CREATE VIRTUAL TABLE IF NOT EXISTS FilesFts USING fts5(
 
 ### 5.2 archive.db — Archive Database
 
-Managed by `ArchiveDbContext` in `Kennedy.Archive`. Created with standard `EnsureCreated()`.
+Managed by `ArchiveDbContext` in `Kennedy.Archive`. Created with standard `EnsureCreated()`;
+the indexer applies existing-database index upgrades through `ArchiveSchemaMaintenance`.
 
 #### Urls (archive)
 
@@ -556,12 +557,12 @@ CREATE TABLE Urls (
     Port     INTEGER NOT NULL DEFAULT 1965,
     IsPublic INTEGER NOT NULL DEFAULT 1   -- BOOLEAN
 );
-CREATE INDEX IX_Urls_Domain   ON Urls (Domain);
-CREATE INDEX IX_Urls_Port     ON Urls (Port);
-CREATE INDEX IX_Urls_Protocol ON Urls (Protocol);
+CREATE INDEX IX_Urls_Protocol_Domain_Port ON Urls (Protocol, Domain, Port);
 ```
 
 Note: the `Url.Id` is seeded from `GeminiUrl.ID` (a hash), not an auto-increment.
+The capsule index locates URLs for archive robots visibility updates. SQLite's implicit
+row-ID suffix supports paging those matches by ID; separate component indexes are unnecessary.
 
 #### Snapshots
 
@@ -580,10 +581,16 @@ CREATE TABLE Snapshots (
     HasBodyContent  INTEGER NOT NULL DEFAULT 0,
     IsBodyTruncated INTEGER NOT NULL DEFAULT 0
 );
-CREATE INDEX IX_Snapshots_DataHash  ON Snapshots (DataHash);
+CREATE INDEX IX_Snapshots_DataHash_UrlId ON Snapshots (DataHash, UrlId);
 CREATE INDEX IX_Snapshots_UrlId     ON Snapshots (UrlId);
 CREATE INDEX IX_Snapshots_Captured  ON Snapshots (Captured);
+CREATE INDEX IX_Snapshots_UrlId_Captured ON Snapshots (UrlId, Captured);
 ```
+
+The hash/URL index supports both global hash-to-pack-offset reuse and same-URL duplicate
+classification. Earliest-capture queries sort the matching captures. It replaces the former
+hash-only and hash/URL/date indexes. The URL/date index probes already-imported capture keys.
+Input WARC containers are not tracked; replay is based on response and capture state.
 
 ---
 
