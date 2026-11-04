@@ -11,9 +11,6 @@ namespace Kennedy.Archive.Db;
 /// enabling cross-reference without a separate lookup.
 /// </summary>
 [Table("Urls")]
-[Index(nameof(Domain))]
-[Index(nameof(Port))]
-[Index(nameof(Protocol))]
 [Index(nameof(Protocol), nameof(Domain), nameof(Port))]
 public class Url
 {

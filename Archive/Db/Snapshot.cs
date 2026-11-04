@@ -12,7 +12,7 @@ namespace Kennedy.Archive.Db;
 /// Multiple snapshots can exist for the same URL (one per crawl that produced new content).
 /// </summary>
 [Table("Snapshots")]
-[Index(nameof(DataHash))]
+[Index(nameof(DataHash), nameof(UrlId))]
 [Index(nameof(UrlId))]
 [Index(nameof(Captured))]
 public class Snapshot

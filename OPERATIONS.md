@@ -12,17 +12,17 @@ Only the original options are supported: `-s`/`--search`, `-a`/`--archive`, `-o`
 
 The output contains `kennedy2.db` for search and `archive.db`, `Packs/`, and `archive-stats.json` for the archive. The language profile is packaged with the indexer. Schema repair and all selected post-processing run automatically after the supplied WARCs, including when those files have already been imported.
 
-The indexer creates missing Kennedy2 tables, columns, and indexes, consolidates duplicate document rows, and repairs derived entries where possible. It does not upgrade the legacy `doc-index.db`. Missing search text requires its original response bodies: supply the corresponding WARCs to reconstruct it. Completed inputs are replayed automatically during that repair.
+The indexer creates missing Kennedy2 tables, columns, and indexes, consolidates duplicate document rows, and repairs derived entries where possible. It does not upgrade the legacy `doc-index.db`. Missing search text requires its original response bodies: supply the corresponding WARCs to reconstruct it. All supplied records are reconsidered on every invocation; unchanged records can repair missing derived data.
 
 The search index retains the latest usable content across temporary failures, with the actual successful capture date. Newer permanent failures, redirects, interactive/authentication responses, and policy exclusions stop that content appearing in search. Robots exclusions retain the payload internally so lifting the restriction can restore it. Archive visibility follows the `archiver` robots rules independently.
 
-Files are considered immutable. Completion records use full path, length, and modification time and are stored separately in each destination. If a file fails or changes during import, it is not marked complete. Earlier committed batches remain safe to replay. Ctrl+C preserves completed batches and pending work. Writer lock files prevent overlapping indexers and can remain on disk after a successful run; the open file handle is the lock.
+Every invocation reads the supplied WARCs. The database does not track input containers; legacy `WarcImports` tables are removed automatically. Search uses URL/timestamp/payload watermarks and checks derived state before skipping an unchanged body. Archive capture identity remains URL plus capture timestamp, and identical payload bytes reuse their stored pack offsets.
 
-If interrupted during post-processing, rerun the same command: completed WARCs are skipped, but the durable search and archive queues still drain. They do not need the responses to be imported again. If interrupted while reading a WARC, its compressed stream is read again; unchanged search payloads skip body parsing and existing archive captures skip hashing/compression/storage. Missing document, image, or full-text entries still trigger reconstruction.
+If interrupted during import or post-processing, rerun the same command. Previously committed records are safe to replay and durable search/archive work queues still drain. Missing document, image, full-text, or special-file entries can be reconstructed from the supplied records. Ctrl+C preserves committed batches and pending work. Writer lock files prevent overlapping indexers and may remain after a run; the open file handle is the lock.
 
 The importer overlaps a buffered WARC reader with one writer for each database. At most two batches are queued, with batches capped at 500 responses or about 32 MiB of response bodies (a single oversized response can exceed that bound). Metadata records are drained without allocating their bodies. Progress reports WARC bytes read, skipped payloads/captures, and separate search/archive timings; those timings overlap. Language detection is unchanged.
 
-Existing databases receive capsule lookup indexes and an archive hash/URL/date index automatically. Creating those indexes can take time on the first run; later runs reuse them. Archive metadata is committed per batch with its visibility work, and pack streams are flushed before committing their offsets.
+Archive maintenance replaces the overlapping hash-only and hash/URL/date indexes with one `(DataHash,UrlId)` index. Hash-only queries use its leading column; earliest-capture queries sort the matching captures. Capsule robots-visibility queries use `(Protocol,Domain,Port)` with SQLite’s implicit row-ID suffix. Separate protocol/domain/port indexes are removed because current archive queries do not need them; the statistics projection is covered by the composite. Index upgrades are transactional, report creation progress, and use file-backed temporary storage. Dropped index pages become reusable space; this does not automatically compact the database file. Archive metadata is committed per batch with its visibility work, and pack streams are flushed before committing their offsets.
 
 ## Check the server
 
@@ -52,5 +52,5 @@ Before the first replacement, preserve the previous binary and the complete prev
 
 - **Indexer:** 0 complete; 1 import or unrecoverable-without-source-content failure; 2 setup/finalization error; 130 interrupted.
 - **Smoke runner:** 0 selected checks passed; 1 failed checks; 2 setup failure; 130 interrupted.
-- Rerun the same original command to finish queued work after interruption. Completed WARCs are skipped, and their durable post-processing queues still drain.
+- Rerun the same original command to finish queued work after interruption. Records are reconsidered safely, and durable post-processing queues still drain.
 - Missing archive packs must be restored from the matching archive backup. Missing search text can be recovered from its source WARCs. Do not discard the source data to hide an error.

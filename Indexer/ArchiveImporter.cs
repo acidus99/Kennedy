@@ -30,14 +30,12 @@ public sealed class ArchiveImporter : IDisposable
             PRAGMA journal_mode=WAL;
             PRAGMA synchronous=NORMAL;
             PRAGMA cache_size=-65536;
-            PRAGMA temp_store=MEMORY;
-            CREATE INDEX IF NOT EXISTS IX_Urls_Protocol_Domain_Port ON Urls(Protocol,Domain,Port);
-            CREATE INDEX IF NOT EXISTS IX_Snapshots_UrlId_Captured ON Snapshots(UrlId,Captured);
-            CREATE INDEX IF NOT EXISTS IX_Snapshots_DataHash_UrlId_Captured ON Snapshots(DataHash,UrlId,Captured);
+            PRAGMA temp_store=FILE;
             CREATE TABLE IF NOT EXISTS ArchiveWorkItems(Scheme TEXT,Host TEXT,Port INTEGER,PRIMARY KEY(Scheme,Host,Port));
             CREATE TABLE IF NOT EXISTS ArchiveRobotsPolicies(Scheme TEXT,Host TEXT,Port INTEGER,Captured TEXT NOT NULL,Content TEXT NOT NULL,PRIMARY KEY(Scheme,Host,Port));
             """;
         command.ExecuteNonQuery();
+        ArchiveSchemaMaintenance.Initialize(_connection,Console.WriteLine);
         _writer=new ArchiveBatchWriter(_connection,Path.Combine(_directory,"Packs"));
     }
 
