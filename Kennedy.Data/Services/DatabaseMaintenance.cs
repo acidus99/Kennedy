@@ -23,6 +23,8 @@ public static class DatabaseMaintenance
 
         await db.ApplyPerformancePragmasAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        // Input containers are not database identity. Retire the former file ledger.
+        await db.Database.ExecuteSqlRawAsync("DROP TABLE IF EXISTS WarcImports;", ct);
         string script = db.Database.GenerateCreateScript();
         foreach (Match statement in Regex.Matches(script, @"CREATE TABLE .*?;", RegexOptions.Singleline))
             await db.Database.ExecuteSqlRawAsync(statement.Value.Replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS "), ct);

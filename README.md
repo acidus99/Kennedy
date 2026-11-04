@@ -29,9 +29,9 @@ Only `-s`/`--search`, `-a`/`--archive`, `-o`/`--output`, and `-h`/`--help` are s
 
 Schema repair and all post-processing for the selected destinations run automatically. Existing **Kennedy2** databases are upgraded; legacy `main` search databases are not converted. Missing text bodies require their source WARCs.
 
-Completed immutable files are tracked separately in each destination using their full path, size, and modification time. Repeating a command skips completed files and finishes any pending derived-index or visibility work. If full-text entries are missing, supplied search inputs are replayed automatically. Older captures cannot undo newer content or removals; temporary failures retain the last good searchable content. Replays do not add duplicate archive captures.
+Every invocation reads every supplied WARC. Input filenames, paths, sizes, and modification times are not database identity, and the former input-file ledger is removed during schema maintenance. Idempotence is record-based: unchanged search responses skip body parsing unless derived data needs repair, and archive captures are deduplicated by URL and capture timestamp. Pending derived-index and visibility work persists independently of the input files. Older captures cannot undo newer content or removals; temporary failures retain the last good searchable content. Replays do not add duplicate archive captures.
 
-Only one indexer may write a destination at a time. Interrupted or malformed files are not marked complete; rerun the same command to retry committed batches safely. Exit codes are 0 for completion, 1 for import/content-repair failures, 2 for setup errors, and 130 for cancellation. Existing databases and archive packs should be backed up before the first upgrade. Run `--help` for all options. See [OPERATIONS.md](OPERATIONS.md) for publication and rollback.
+Only one indexer may write a destination at a time. If interrupted or given a malformed WARC, rerun the same command to replay committed records safely and finish pending post-processing. Exit codes are 0 for completion, 1 for import/content-repair failures, 2 for setup errors, and 130 for cancellation. Existing databases and archive packs should be backed up before the first upgrade. Run `--help` for all options. See [OPERATIONS.md](OPERATIONS.md) for publication and rollback.
 
 ## Server smoke test
 

@@ -132,7 +132,7 @@ namespace Kennedy.Indexer
             }
             catch (WarcFormatException ex)
             {
-                throw new InvalidDataException($"Partial import of {warcPath}; malformed WARC after {reader.RecordsRead:N0} records. The file has NOT been marked complete.",ex);
+                throw new InvalidDataException($"Partial import of {warcPath}; malformed WARC after {reader.RecordsRead:N0} records. Committed records are preserved and safe to replay.",ex);
             }
             finally
             {
