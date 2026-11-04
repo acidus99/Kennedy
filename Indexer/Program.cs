@@ -50,6 +50,7 @@ internal static class Program
             services.AddScoped<SearchPolicyUpdater>();
             using var provider=services.BuildServiceProvider();
             await using var scope=provider.CreateAsyncScope();
+            scope.ServiceProvider.GetRequiredService<ResponseStore>().ForceReparse=options.Force;
             bool replayMissingText=false;
             if (options.Search)
             {

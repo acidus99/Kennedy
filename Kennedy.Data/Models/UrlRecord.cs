@@ -13,6 +13,7 @@ namespace Kennedy.Data.Models;
     [Index(nameof(NormalizedUrl), IsUnique = true)]
     [Index(nameof(Status), nameof(PriorityScore))]
     [Index(nameof(Host))]
+    [Index(nameof(Scheme), nameof(Host), nameof(Port))]
     public class UrlRecord
     {
         public UrlRecord()

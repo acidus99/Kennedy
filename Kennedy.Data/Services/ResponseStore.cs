@@ -27,6 +27,11 @@ public sealed class ResponseStore
         _responseParser = new ResponseParser();
     }
 
+    public bool ForceReparse { get; set; }
+    public long ParsedResponses { get; private set; }
+    public long UnchangedResponses { get; private set; }
+    public long RepairedDocuments { get; private set; }
+
     // ── Public API ────────────────────────────────────────────────────────────
 
     /// <summary>
@@ -45,9 +50,25 @@ public sealed class ResponseStore
         var groups = responses.GroupBy(r => r.RequestUrl.NormalizedUrl)
             .ToDictionary(g => g.Key, g => g.OrderBy(r => r.RequestSent ?? DateTime.MinValue).ToList());
         await using var db = await _dbFactory.CreateDbContextAsync(ct);
+        await db.Database.OpenConnectionAsync(ct);
+        await db.ApplyPerformancePragmasAsync(ct);
         await using var tx = await db.Database.BeginTransactionAsync(ct);
         var urls = groups.Keys.ToList();
         var urlMap = await db.UrlRegistry.Where(u => urls.Contains(u.NormalizedUrl)).ToDictionaryAsync(u => u.NormalizedUrl, ct);
+        // Check replay and repair requirements before doing expensive body parsing.
+        var knownIds = urlMap.Values.Select(u => u.Id).ToArray();
+        var docs = await db.Documents.Where(d => d.UrlRegistryId != null && knownIds.Contains(d.UrlRegistryId.Value))
+            .ToDictionaryAsync(d => d.UrlRegistryId!.Value, ct);
+        var images = await db.Images.Where(i => knownIds.Contains(i.UrlRegistryId))
+            .ToDictionaryAsync(i => i.UrlRegistryId, ct);
+        var existingFts = new HashSet<long>();
+        await using (var command = db.Database.GetDbConnection().CreateCommand())
+        {
+            command.Transaction = tx.GetDbTransaction();
+            command.CommandText = $"SELECT rowid FROM DocumentsFts WHERE rowid IN ({string.Join(',', docs.Values.Select(d => d.Id).DefaultIfEmpty(-1))});";
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct)) existingFts.Add(reader.GetInt64(0));
+        }
         var current = new List<(UrlRecord url, ParsedResponse parsed, DateTime time)>();
         var dirty = new HashSet<long>();
         var changedPayloads = new HashSet<string>();
@@ -77,8 +98,30 @@ public sealed class ResponseStore
             if (url.LastIndexedVisit.HasValue && ((captured < url.LastIndexedVisit && url.LastIndexedHash != candidate.Hash) ||
                 (captured == url.LastIndexedVisit && url.LastIndexedHash != null && url.LastIndexedHash != candidate.Hash))) continue;
             if (url.LastIndexedVisit.HasValue && captured < url.LastIndexedVisit) captured=url.LastIndexedVisit.Value;
-            if (url.LastIndexedHash != candidate.Hash) changedPayloads.Add(key);
+            bool samePayload = url.LastIndexedHash == candidate.Hash;
+            docs.TryGetValue(url.Id, out var previousDocument);
+            bool repairFts = previousDocument != null && !existingFts.Contains(previousDocument.Id);
+            bool suppressed = url.Status is >= UrlStatus.ExcludedByRobots and <= UrlStatus.ManuallyDisabled;
+            bool missingText = !suppressed && previousDocument == null && candidate.HasBody &&
+                !UrlUtility.IsProactiveUrl(candidate.RequestUrl.Url) &&
+                url.LastDetectedMimeType is "text/gemini" or "text/plain";
+            bool missingImage = !suppressed && candidate.HasBody &&
+                url.LastDetectedMimeType?.StartsWith("image/", StringComparison.Ordinal) == true && !images.ContainsKey(url.Id);
+            bool needsPolicyRemoval = suppressed && (previousDocument != null || images.ContainsKey(url.Id));
+            bool mismatchedDocument = previousDocument != null && previousDocument.ResponseHash != candidate.Hash;
+            if (!ForceReparse && samePayload && !repairFts && !missingText && !missingImage &&
+                !needsPolicyRemoval && !mismatchedDocument && !UrlUtility.IsProactiveUrl(candidate.RequestUrl.Url))
+            {
+                url.LastIndexedVisit = captured;
+                if (previousDocument != null) previousDocument.LastIndexedUtc = captured;
+                if (images.TryGetValue(url.Id, out var previousImage)) previousImage.LastIndexedUtc = captured;
+                UnchangedResponses++;
+                continue;
+            }
+            if (!samePayload) changedPayloads.Add(key);
             var parsed = _responseParser.Parse(candidate);
+            ParsedResponses++;
+            if (repairFts) RepairedDocuments++;
             url.LastIndexedVisit = captured;
             url.LastIndexedHash = candidate.Hash;
             ApplyUrlMetadata(url, parsed);
@@ -104,16 +147,6 @@ public sealed class ResponseStore
             url.IsRobotsExcluded=excluded;
         }
         var sourceIds = current.Select(x => x.url.Id).ToList();
-        var docs = await db.Documents.Where(d => d.UrlRegistryId != null && sourceIds.Contains(d.UrlRegistryId.Value))
-            .ToDictionaryAsync(d => d.UrlRegistryId!.Value, ct);
-        var existingFts = new HashSet<long>();
-        await using (var command = db.Database.GetDbConnection().CreateCommand())
-        {
-            command.Transaction = tx.GetDbTransaction();
-            command.CommandText = $"SELECT rowid FROM DocumentsFts WHERE rowid IN ({string.Join(',', docs.Values.Select(d => d.Id).DefaultIfEmpty(-1))});";
-            await using var reader = await command.ExecuteReaderAsync(ct);
-            while (await reader.ReadAsync(ct)) existingFts.Add(reader.GetInt64(0));
-        }
         var ftsDeletes = new List<long>();
         var ftsUpserts = new List<(DocumentRecord doc, string text)>();
         foreach (var (url, parsed, captured) in current)
@@ -122,7 +155,8 @@ public sealed class ResponseStore
             if (UrlUtility.IsRobotsUrl(parsed.RequestUrl.Url))
                 await QueueFileIndexWorkAsync(db, [url.Id], ct, IndexWorkType.RobotsPolicy);
             docs.TryGetValue(url.Id, out var existing);
-            var (doc, text) = ApplyDocumentToContext(db, url, parsed, captured, existing,
+            images.TryGetValue(url.Id, out var existingImage);
+            var (doc, text) = ApplyDocumentToContext(db, url, parsed, captured, existing, existingImage,
                 existing != null && !existingFts.Contains(existing.Id));
             if (doc != null && db.Entry(doc).State == EntityState.Deleted) ftsDeletes.Add(doc.Id);
             else if (doc != null && text != null) ftsUpserts.Add((doc, text));
@@ -141,19 +175,39 @@ public sealed class ResponseStore
             targetMap[target.NormalizedUrl] = target;
         }
         await db.SaveChangesAsync(ct);
-        foreach (var id in ftsDeletes)
-            await db.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM DocumentsFts WHERE rowid={id}", ct);
-        foreach (var (doc, text) in ftsUpserts)
+        // Reuse prepared commands across all FTS changes in this transaction.
+        await using (var delete = db.Database.GetDbConnection().CreateCommand())
+        await using (var insert = db.Database.GetDbConnection().CreateCommand())
         {
-            await db.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM DocumentsFts WHERE rowid={doc.Id}", ct);
-            await db.Database.ExecuteSqlInterpolatedAsync(
-                $"INSERT INTO DocumentsFts(rowid,Title,Content,CanonicalUrl) VALUES({doc.Id},{doc.Title},{text},{doc.CanonicalUrl})", ct);
+            delete.Transaction = insert.Transaction = tx.GetDbTransaction();
+            delete.CommandText = "DELETE FROM DocumentsFts WHERE rowid=$id";
+            var deleteId = delete.CreateParameter(); deleteId.ParameterName="$id"; deleteId.Value=0L; delete.Parameters.Add(deleteId);
+            insert.CommandText = "INSERT INTO DocumentsFts(rowid,Title,Content,CanonicalUrl) VALUES($id,$title,$text,$url)";
+            foreach (string name in new[] { "$id", "$title", "$text", "$url" })
+            {
+                var parameter=insert.CreateParameter(); parameter.ParameterName=name; parameter.Value=""; insert.Parameters.Add(parameter);
+            }
+            delete.Prepare(); insert.Prepare();
+            foreach (var id in ftsDeletes)
+            {
+                deleteId.Value=id; await delete.ExecuteNonQueryAsync(ct);
+            }
+            foreach (var (doc, text) in ftsUpserts)
+            {
+                deleteId.Value=doc.Id; await delete.ExecuteNonQueryAsync(ct);
+                insert.Parameters["$id"].Value=doc.Id;
+                insert.Parameters["$title"].Value=(object?)doc.Title ?? DBNull.Value;
+                insert.Parameters["$text"].Value=text;
+                insert.Parameters["$url"].Value=doc.CanonicalUrl;
+                await insert.ExecuteNonQueryAsync(ct);
+            }
         }
         var previous = await db.UrlLinks.AsNoTracking().Where(l => sourceIds.Contains(l.SourceUrlId)).ToListAsync(ct);
         foreach (var link in previous.Where(l=>policyChangedSources.Contains(l.SourceUrlId))) dirty.Add(link.TargetUrlId);
+        var previousBySource = previous.ToLookup(l => l.SourceUrlId);
         foreach (var (url, parsed, _) in current)
         {
-            var oldLinks = previous.Where(l => l.SourceUrlId == url.Id).GroupBy(l => l.TargetUrlId)
+            var oldLinks = previousBySource[url.Id].GroupBy(l => l.TargetUrlId)
                 .ToDictionary(g => g.Key, g => (g.First().IsExternal, g.First().LinkText));
             var newLinks = (url.Status is >= UrlStatus.ExcludedByRobots and <= UrlStatus.ManuallyDisabled ? Enumerable.Empty<FoundLink>() : parsed.Links).GroupBy(l => targetMap[l.Url.NormalizedUrl].Id)
                 .ToDictionary(g => g.Key, g => (g.First().IsExternal, LinkText: (g.First().LinkText ?? "").Trim()));
@@ -267,6 +321,8 @@ public sealed class ResponseStore
         IEnumerable<long> urlIds,
         CancellationToken ct, IndexWorkType workType = IndexWorkType.FileSearch)
     {
+        // Accessing Local runs DetectChanges. Do it once, not once per URL.
+        var pendingItems = db.IndexWorkItems.Local.ToDictionary(item => item.UrlRegistryId);
         foreach (var batch in urlIds.Distinct().Chunk(900))
         {
             var existingItems = await db.IndexWorkItems
@@ -275,19 +331,20 @@ public sealed class ResponseStore
 
             foreach (var urlId in batch)
             {
-                var pending = db.IndexWorkItems.Local.FirstOrDefault(item => item.UrlRegistryId == urlId);
-                if (pending != null) { pending.WorkTypes |= workType; continue; }
+                if (pendingItems.TryGetValue(urlId, out var pending)) { pending.WorkTypes |= workType; continue; }
                 if (existingItems.TryGetValue(urlId, out var item))
                 {
                     item.WorkTypes |= workType;
                 }
                 else
                 {
-                    db.IndexWorkItems.Add(new IndexWorkItem
+                    var added = new IndexWorkItem
                     {
                         UrlRegistryId = urlId,
                         WorkTypes = workType
-                    });
+                    };
+                    db.IndexWorkItems.Add(added);
+                    pendingItems[urlId] = added;
                 }
             }
         }
@@ -401,7 +458,7 @@ public sealed class ResponseStore
         UrlRecord url,
         ParsedResponse parsedResponse,
         DateTime visitTimeUtc,
-        DocumentRecord? existing, bool repairFts = false)
+        DocumentRecord? existing, DocumentImageRecord? existingImage, bool repairFts = false)
     {
         var suppressed = url.Status is >= UrlStatus.ExcludedByRobots and <= UrlStatus.ManuallyDisabled;
         var isIndexableText = !suppressed && parsedResponse is ITextResponse textResponse && textResponse.HasIndexableText;
@@ -419,7 +476,7 @@ public sealed class ResponseStore
 
             if (!suppressed && parsedResponse is ImageResponse imageResponse)
             {
-                var image = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
+                var image = existingImage;
                 if (image == null)
                 {
                     image = new DocumentImageRecord { UrlRegistryId = url.Id };
@@ -438,7 +495,6 @@ public sealed class ResponseStore
             }
             else
             {
-                var existingImage = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
                 if (existingImage != null && visitTimeUtc > existingImage.LastIndexedUtc)
                     db.Images.Remove(existingImage);
             }
@@ -446,8 +502,7 @@ public sealed class ResponseStore
             return (existing, null);
         }
 
-        var oldImage = db.Images.SingleOrDefault(i => i.UrlRegistryId == url.Id);
-        if (oldImage != null) db.Images.Remove(oldImage);
+        if (existingImage != null) db.Images.Remove(existingImage);
 
         // Indexable text path.
         if (existing == null)

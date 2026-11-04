@@ -4,6 +4,7 @@ using Kennedy.Data.Models;
 using Kennedy.Data.Utils;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Kennedy.Data.Services;
 
@@ -24,6 +25,9 @@ public sealed class FileSearchFtsRebuilder
     public async Task RebuildAsync(CancellationToken ct)
     {
         await using var db = await _dbFactory.CreateDbContextAsync(ct);
+        await db.Database.OpenConnectionAsync(ct);
+        await db.ApplyPerformancePragmasAsync(ct);
+        var progress = System.Diagnostics.Stopwatch.StartNew();
         int processed = 0;
         int indexed = 0;
 
@@ -36,6 +40,7 @@ public sealed class FileSearchFtsRebuilder
                 .ToListAsync(ct);
             if (workItems.Count == 0)
             {
+                Console.WriteLine($"File-search index: processed {processed:N0} dirty URLs ({indexed:N0} refreshed)");
                 return;
             }
 
@@ -48,8 +53,14 @@ public sealed class FileSearchFtsRebuilder
                 .Where(document => document.UrlRegistryId != null && urlIds.Contains(document.UrlRegistryId.Value))
                 .Select(document => document.UrlRegistryId!.Value)
                 .ToHashSetAsync(ct);
+            // Text pages never enter FilesFts; don't gather their incoming link labels.
+            var eligible = urls.Values.Where(url =>
+                    url.Status is UrlStatus.Active or UrlStatus.TemporaryError or UrlStatus.ConnectionError &&
+                    url.LastMimeType != null && !UrlUtility.IsProactiveUrl(new Uri(url.NormalizedUrl)) &&
+                    !textUrlIds.Contains(url.Id)).ToDictionary(url => url.Id);
+            var fileIds = eligible.Keys.ToArray();
             var linkText = await db.UrlLinks
-                .Where(link => urlIds.Contains(link.TargetUrlId) && link.LinkText != "" &&
+                .Where(link => fileIds.Contains(link.TargetUrlId) && link.LinkText != "" &&
                     db.UrlRegistry.Any(source => source.Id==link.SourceUrlId && !source.IsRobotsExcluded &&
                         (source.Status==UrlStatus.Active || source.Status==UrlStatus.TemporaryError || source.Status==UrlStatus.ConnectionError)))
                 .GroupBy(link => link.TargetUrlId)
@@ -58,16 +69,22 @@ public sealed class FileSearchFtsRebuilder
                     group => group.Select(link => link.LinkText).Distinct().ToList(),
                     ct);
 
+            await using var delete = db.Database.GetDbConnection().CreateCommand();
+            await using var insert = db.Database.GetDbConnection().CreateCommand();
+            delete.Transaction = insert.Transaction = transaction.GetDbTransaction();
+            delete.CommandText="DELETE FROM FilesFts WHERE rowid=$id";
+            var deleteId=delete.CreateParameter(); deleteId.ParameterName="$id"; deleteId.Value=0L; delete.Parameters.Add(deleteId);
+            insert.CommandText="INSERT INTO FilesFts(rowid,UrlRegistryId,SearchText) VALUES($id,$id,$text)";
+            var insertId=insert.CreateParameter(); insertId.ParameterName="$id"; insertId.Value=0L; insert.Parameters.Add(insertId);
+            var insertText=insert.CreateParameter(); insertText.ParameterName="$text"; insertText.Value=""; insert.Parameters.Add(insertText);
+            delete.Prepare(); insert.Prepare();
             foreach (var workItem in workItems)
             {
                 processed++;
-                await db.Database.ExecuteSqlInterpolatedAsync(
-                    $"DELETE FROM FilesFts WHERE rowid = {workItem.UrlRegistryId};", ct);
+                deleteId.Value=workItem.UrlRegistryId;
+                await delete.ExecuteNonQueryAsync(ct);
 
-                if (urls.TryGetValue(workItem.UrlRegistryId, out var url) &&
-                    url.Status is UrlStatus.Active or UrlStatus.TemporaryError or UrlStatus.ConnectionError &&
-                    url.LastMimeType != null && !UrlUtility.IsProactiveUrl(new Uri(url.NormalizedUrl)) &&
-                    !textUrlIds.Contains(url.Id))
+                if (eligible.TryGetValue(workItem.UrlRegistryId, out var url))
                 {
                     var terms = BuildBaseTerms(url.NormalizedUrl);
                     if (linkText.TryGetValue(url.Id, out var incomingText))
@@ -78,8 +95,8 @@ public sealed class FileSearchFtsRebuilder
 
                     if (terms.Length > 0)
                     {
-                        await db.Database.ExecuteSqlInterpolatedAsync(
-                            $"INSERT INTO FilesFts(rowid, UrlRegistryId, SearchText) VALUES ({url.Id}, {url.Id}, {terms});", ct);
+                        insertId.Value=url.Id; insertText.Value=terms;
+                        await insert.ExecuteNonQueryAsync(ct);
                         indexed++;
                     }
                 }
@@ -94,7 +111,11 @@ public sealed class FileSearchFtsRebuilder
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
             db.ChangeTracker.Clear();
-            Console.WriteLine($"File-search index: processed {processed:N0} dirty URLs ({indexed:N0} refreshed)");
+            if (progress.Elapsed.TotalSeconds >= 5)
+            {
+                Console.WriteLine($"File-search index: processed {processed:N0} dirty URLs ({indexed:N0} refreshed)");
+                progress.Restart();
+            }
         }
     }
 
