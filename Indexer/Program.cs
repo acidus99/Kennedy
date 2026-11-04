@@ -1,14 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
-using Gemini.Net;
 using Kennedy.Data;
 using Kennedy.Data.Parsers;
 using Kennedy.Data.Services;
-using Kennedy.Search.Query;
-using Kennedy.Search.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Mono.Options;
 
 namespace Kennedy.Indexer;
 
@@ -22,16 +20,10 @@ internal static class Program
         var locks = new List<FileStream>();
         try
         {
-            if (args.Length == 3 && args[0] == "--cert-list")
-            {
-                await new WarcIndexer(null).WriteCertificateListCsvAsync(args[1],args[2],cancellation.Token);
-                return 0;
-            }
             var options = Options.Parse(args);
             if (options.Help) { Usage(); return 0; }
             var inputs = options.ResolveInputs();
-            if (inputs.Count == 0 && !options.Maintenance) throw new ArgumentException("Supply WARC files, --warc-dir, or --maintenance.");
-            string archiveDirectory = options.ArchiveDirectory ?? Path.GetDirectoryName(options.Database)!;
+            string archiveDirectory = options.OutputDirectory;
             var destinations = new List<string>();
             if (options.Search) destinations.Add(options.Database);
             if (options.Archive) destinations.Add(Path.Combine(archiveDirectory,"archive.db"));
@@ -43,14 +35,13 @@ internal static class Program
             var ct = cancellation.Token;
             var watch = System.Diagnostics.Stopwatch.StartNew();
             var services = new ServiceCollection();
-            LanguageDetector.ConfigFileDirectory=options.ConfigDirectory;
+            LanguageDetector.ConfigFileDirectory=Path.Combine(AppContext.BaseDirectory,"config")+Path.DirectorySeparatorChar;
             services.AddDbContextFactory<KennedyDbContext>(db => db.UseSqlite(ConnectionString(options.Database)));
             services.AddScoped<ResponseStore>();
             services.AddScoped<FileSearchFtsRebuilder>();
             services.AddScoped<SearchPolicyUpdater>();
             using var provider=services.BuildServiceProvider();
             await using var scope=provider.CreateAsyncScope();
-            scope.ServiceProvider.GetRequiredService<ResponseStore>().ForceReparse=options.Force;
             bool replayMissingText=false;
             if (options.Search)
             {
@@ -72,8 +63,8 @@ internal static class Program
                 ct.ThrowIfCancellationRequested();
                 var info=new FileInfo(input);
                 string identity=Identity(info);
-                bool search=options.Search && (options.Force || replayMissingText || !searchHistory!.IsComplete(identity));
-                bool saveArchive=options.Archive && (options.Force || !archiveHistory!.IsComplete(identity));
+                bool search=options.Search && (replayMissingText || !searchHistory!.IsComplete(identity));
+                bool saveArchive=options.Archive && !archiveHistory!.IsComplete(identity);
                 if (!search && !saveArchive) { skipped++; Console.WriteLine($"Already complete: {input}"); continue; }
                 try
                 {
@@ -108,15 +99,6 @@ internal static class Program
                 }
             }
             archive?.Complete(ct);
-            if (options.SmokeQuery!=null && options.Search)
-            {
-                var query=new QueryParser().Parse(options.SmokeQuery);
-                var search=new SqliteSearchService(options.Database);
-                Console.WriteLine($"Search '{options.SmokeQuery}': {search.GetTextResultsCount(query):N0} results");
-                foreach (var result in search.SearchText(query,0,5)) Console.WriteLine($"- {result.Url} {result.Title}");
-            }
-            if (failed==0 && options.Snapshot!=null)
-                CreateSnapshot(options,archiveDirectory,ct);
             Console.WriteLine($"Finished: {imported} imported, {skipped} skipped, {failed} failures; {watch.Elapsed.TotalSeconds:F1}s.");
             return failed==0 ? 0 : 1;
         }
@@ -129,120 +111,51 @@ internal static class Program
         }
     }
 
-    private static void CreateSnapshot(Options options,string archiveDirectory,CancellationToken ct)
-    {
-        string destination=options.Snapshot!;
-        string packs=Path.Combine(archiveDirectory,"Packs");
-        if (Directory.Exists(destination) || File.Exists(destination)) throw new IOException("Snapshot destination already exists; choose a new directory.");
-        if (destination.StartsWith(Path.GetFullPath(packs)+Path.DirectorySeparatorChar,StringComparison.Ordinal) ||
-            destination==Path.GetFullPath(packs)) throw new IOException("Snapshot destination cannot be inside the source Packs directory.");
-        string temporary=destination+".tmp-"+Guid.NewGuid().ToString("N");
-        Directory.CreateDirectory(temporary);
-        try
-        {
-            void Backup(string source,string name)
-            {
-                ct.ThrowIfCancellationRequested();
-                Console.WriteLine($"Backing up {name} including committed WAL data...");
-                using var input=new SqliteConnection(new SqliteConnectionStringBuilder { DataSource=source,Mode=SqliteOpenMode.ReadOnly }.ToString());
-                using var output=new SqliteConnection(ConnectionString(Path.Combine(temporary,name)));
-                input.Open();output.Open();input.BackupDatabase(output);
-            }
-            if (options.Search) Backup(options.Database,"kennedy2.db");
-            if (options.Archive)
-            {
-                Backup(Path.Combine(archiveDirectory,"archive.db"),"archive.db");
-                if(Directory.Exists(packs))
-                {
-                    int copied=0;
-                    foreach (string file in Directory.EnumerateFiles(packs,"*",SearchOption.AllDirectories))
-                    {
-                        ct.ThrowIfCancellationRequested();
-                        string target=Path.Combine(temporary,"Packs",Path.GetRelativePath(packs,file));
-                        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-                        File.Copy(file,target);
-                        if(++copied%1000==0) Console.WriteLine($"Snapshot: copied {copied:N0} pack files.");
-                    }
-                }
-                string stats=Path.Combine(archiveDirectory,"archive-stats.json");
-                if(File.Exists(stats)) File.Copy(stats,Path.Combine(temporary,"archive-stats.json"));
-            }
-            ct.ThrowIfCancellationRequested();
-            Directory.Move(temporary,destination);
-            Console.WriteLine($"Data snapshot ready: {destination}");
-        }
-        finally { if(Directory.Exists(temporary)) Directory.Delete(temporary,recursive:true); }
-    }
-
     internal static string ConnectionString(string path) => new SqliteConnectionStringBuilder { DataSource=path }.ToString();
     private static string Identity(FileInfo file) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"1|{file.FullName}|{file.Length}|{file.LastWriteTimeUtc.Ticks}")));
     private static void Usage() => Console.WriteLine("""
-        Usage: dotnet run --project Indexer -- [options] <WARC> [WARC...]
-          --warc-dir <dir>      Import .warc and .warc.gz files, including suffixed names.
-          --bootstrap <dir>     Alias for --warc-dir; no age cutoff.
-          --db <path>           Kennedy2 search DB (default: ~/kennedy-capsule/crawl-data/kennedy2.db).
-          --archive-dir <dir>   archive.db and Packs location (default: search DB directory).
-          --both               Update search and archive (default).
-          --search-only        Update search only (--search is an alias).
-          --archive-only       Update archive only (--archive is an alias).
-          --config-dir <dir>    Directory containing Core14.profile.xml.
-          --maintenance        Repair schema and finish pending work; WARC inputs optional.
-          --force              Replay completed inputs, for backfill/repair.
-          --snapshot <dir>     Create a consistent data snapshot after maintenance/imports.
-          --smoke-query <text>  Show search count and five results after processing.
-          --cert-list <warc> <csv>  Export captured certificates without importing.
-        Exit codes: 0 complete; 1 partial/import failures; 2 setup error; 130 interrupted.
+        Usage: dotnet run --project Indexer -c Release -- [options] <WARC> [WARC...]
+          -a, --archive        Index input into the archive.
+          -s, --search         Index input into search.
+          -o, --output <dir>   Output directory (required).
+          -h, --help           Show this message and exit.
+        Combine -s and -a to update both. All selected post-processing runs automatically.
         """);
 
     private sealed class Options
     {
-        public string Database=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),"kennedy-capsule","crawl-data","kennedy2.db");
-        public string? ArchiveDirectory,SmokeQuery,Snapshot;
-        public string ConfigDirectory=Path.Combine(AppContext.BaseDirectory,"config")+Path.DirectorySeparatorChar;
-        public bool Search=true,Archive=true,Force,Maintenance,Help;
-        private readonly List<string> _files=[],_directories=[];
+        public string OutputDirectory="";
+        public string Database => Path.Combine(OutputDirectory,"kennedy2.db");
+        public bool Search,Archive,Help;
+        private readonly List<string> _files=[];
         public static Options Parse(string[] args)
         {
             var options=new Options();
-            for (int i=0;i<args.Length;i++)
+            var parser=new OptionSet
             {
-                string arg=args[i];
-                string Value() => i+1<args.Length && !args[i+1].StartsWith("--") ? args[++i] : throw new ArgumentException($"{arg} requires a value.");
-                switch (arg)
-                {
-                    case "-h": case "--help": options.Help=true; break;
-                    case "--both": options.Search=options.Archive=true; break;
-                    case "--search": case "--search-only": options.Search=true;options.Archive=false;break;
-                    case "--archive": case "--archive-only": options.Archive=true;options.Search=false;break;
-                    case "--force": options.Force=true;break;
-                    case "--maintenance": options.Maintenance=true;break;
-                    case "--snapshot": options.Snapshot=Path.GetFullPath(Value());options.Maintenance=true;break;
-                    case "--db": options.Database=Value();break;
-                    case "--archive-dir": options.ArchiveDirectory=Path.GetFullPath(Value());break;
-                    case "--config-dir": options.ConfigDirectory=Path.GetFullPath(Value())+Path.DirectorySeparatorChar;break;
-                    case "--smoke-query": options.SmokeQuery=Value();break;
-                    case "--bootstrap": case "--warc-dir": options._directories.Add(Value());break;
-                    default:
-                        if (arg.StartsWith('-')) throw new ArgumentException($"Unknown option: {arg}");
-                        options._files.Add(arg);break;
-                }
-            }
-            options.Database=Path.GetFullPath(options.Database);
-            if (Path.GetFileName(options.Database).Equals("archive.db",StringComparison.OrdinalIgnoreCase) && options.Search)
-                throw new ArgumentException("The search database cannot be archive.db.");
+                { "a|archive", "index input into the archive", _ => options.Archive=true },
+                { "s|search", "index input into search", _ => options.Search=true },
+                { "o|output=", "output location", value => options.OutputDirectory=value ?? "" },
+                { "h|help", "show help", value => options.Help=value!=null }
+            };
+            options._files.AddRange(parser.Parse(args));
+            var unknown=options._files.FirstOrDefault(file=>file.StartsWith('-'));
+            if (unknown!=null) throw new ArgumentException($"Unknown option: {unknown}");
             return options;
         }
         public List<string> ResolveInputs()
         {
-            var files=new List<string>(_files);
-            foreach (var dir in _directories)
-            {
-                if (!Directory.Exists(dir)) throw new DirectoryNotFoundException(dir);
-                files.AddRange(Directory.EnumerateFiles(dir).Where(f => f.EndsWith(".warc",StringComparison.OrdinalIgnoreCase)||f.EndsWith(".warc.gz",StringComparison.OrdinalIgnoreCase)));
-            }
-            var result=files.Select(Path.GetFullPath).Distinct(StringComparer.Ordinal).OrderBy(f=>Path.GetFileName(f),StringComparer.Ordinal).ToList();
-            foreach (var file in result) if (!File.Exists(file)) throw new FileNotFoundException("WARC not found",file);
-            return result;
+            if (!Search && !Archive)
+                throw new ArgumentException("Select search (-s or --search), archive (-a or --archive), or both.");
+            if (string.IsNullOrEmpty(OutputDirectory))
+                throw new ArgumentException("Specify the output directory (-o DIRECTORY or --output DIRECTORY).");
+            OutputDirectory=Path.GetFullPath(OutputDirectory);
+            if (!Directory.Exists(OutputDirectory))
+                throw new DirectoryNotFoundException($"Cannot read output directory '{OutputDirectory}'.");
+            if (_files.Count==0) throw new ArgumentException("Supply at least one WARC file.");
+            var files=_files.Select(Path.GetFullPath).ToList();
+            foreach (var file in files) if (!File.Exists(file)) throw new FileNotFoundException("WARC not found",file);
+            return files;
         }
     }
 

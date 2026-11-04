@@ -27,7 +27,6 @@ public sealed class ResponseStore
         _responseParser = new ResponseParser();
     }
 
-    public bool ForceReparse { get; set; }
     public long ParsedResponses { get; private set; }
     public long UnchangedResponses { get; private set; }
     public long RepairedDocuments { get; private set; }
@@ -119,7 +118,7 @@ public sealed class ResponseStore
                 url.LastDetectedMimeType?.StartsWith("image/", StringComparison.Ordinal) == true && !images.ContainsKey(url.Id);
             bool needsPolicyRemoval = suppressed && (previousDocument != null || images.ContainsKey(url.Id));
             bool mismatchedDocument = previousDocument != null && previousDocument.ResponseHash != candidate.Hash;
-            if (!ForceReparse && samePayload && !repairFts && !missingText && !missingImage &&
+            if (samePayload && !repairFts && !missingText && !missingImage &&
                 !needsPolicyRemoval && !mismatchedDocument && !missingSpecial)
             {
                 url.LastIndexedVisit = captured;

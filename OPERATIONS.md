@@ -5,20 +5,20 @@ Work on the `kennedy2` branch. `Kennedy-1` remains the old reference checkout. B
 ## Import completed WARCs locally
 
 ```sh
-dotnet run --project Indexer -- --db /path/to/crawl-data/kennedy2.db /path/to/new-crawl.warc.gz
+dotnet run --project Indexer -c Release -- -s -a -o /path/to/crawl-data /path/to/new-crawl.warc.gz
 ```
 
-By default this updates both search and the archive. `archive.db`, `Packs/`, and `archive-stats.json` are placed beside `kennedy2.db`; `--archive-dir` selects another archive directory. The language profile is packaged with the indexer. `--config-dir` overrides it.
+Only the original options are supported: `-s`/`--search`, `-a`/`--archive`, `-o`/`--output`, and `-h`/`--help`. Search and archive flags combine in either order. Select at least one and supply an existing output directory. WARC files are positional arguments; use a shell glob to supply multiple files.
 
-Use `--warc-dir /path/to/WARCs` to select a directory, `--search-only` or `--archive-only` for one destination, and `--smoke-query cat` to print a post-import search sample. `--bootstrap` selects a directory with no filename-date requirement or age cutoff.
+The output contains `kennedy2.db` for search and `archive.db`, `Packs/`, and `archive-stats.json` for the archive. The language profile is packaged with the indexer. Schema repair and all selected post-processing run automatically after the supplied WARCs, including when those files have already been imported.
 
-First run the new code against copies of the existing Kennedy2 data and archive packs. Do not substitute the legacy `doc-index.db`. The indexer creates missing Kennedy2 tables, columns, and indexes, consolidates duplicate document rows, repairs derived entries where possible, and finishes pending visibility/index work. It never rebuilds missing text without original response bodies: supply the corresponding WARCs when it reports missing text. Completed inputs are replayed automatically during that repair. `--force` handles other deliberate backfill.
+The indexer creates missing Kennedy2 tables, columns, and indexes, consolidates duplicate document rows, and repairs derived entries where possible. It does not upgrade the legacy `doc-index.db`. Missing search text requires its original response bodies: supply the corresponding WARCs to reconstruct it. Completed inputs are replayed automatically during that repair.
 
 The search index retains the latest usable content across temporary failures, with the actual successful capture date. Newer permanent failures, redirects, interactive/authentication responses, and policy exclusions stop that content appearing in search. Robots exclusions retain the payload internally so lifting the restriction can restore it. Archive visibility follows the `archiver` robots rules independently.
 
 Files are considered immutable. Completion records use full path, length, and modification time and are stored separately in each destination. If a file fails or changes during import, it is not marked complete. Earlier committed batches remain safe to replay. Ctrl+C preserves completed batches and pending work. Writer lock files prevent overlapping indexers and can remain on disk after a successful run; the open file handle is the lock.
 
-If interrupted during post-processing, rerun the same command: completed WARCs are skipped, but the durable search and archive queues still drain. They do not need the responses to be imported again. If interrupted while reading a WARC, its compressed stream is read again; unchanged search payloads skip body parsing and existing archive captures skip hashing/compression/storage. Missing document, image, or full-text entries still trigger reconstruction. `--force` deliberately reparses supplied responses, including unchanged content.
+If interrupted during post-processing, rerun the same command: completed WARCs are skipped, but the durable search and archive queues still drain. They do not need the responses to be imported again. If interrupted while reading a WARC, its compressed stream is read again; unchanged search payloads skip body parsing and existing archive captures skip hashing/compression/storage. Missing document, image, or full-text entries still trigger reconstruction.
 
 The importer overlaps a buffered WARC reader with one writer for each database. At most two batches are queued, with batches capped at 500 responses or about 32 MiB of response bodies (a single oversized response can exceed that bound). Metadata records are drained without allocating their bodies. Progress reports WARC bytes read, skipped payloads/captures, and separate search/archive timings; those timings overlap. Language detection is unchanged.
 
@@ -36,11 +36,7 @@ The JSON settings must point to the copied data, public root, certificate, and k
 
 ## Publish consistent data
 
-```sh
-dotnet run --project Indexer -- --db /path/to/crawl-data/kennedy2.db --snapshot /path/to/new-snapshot
-```
-
-This finishes maintenance and produces a standalone copy of both databases, archive packs, and archive stats. It includes committed SQLite WAL data. It does not copy the public root, server configuration, or certificates; continue managing those with the existing publication workflow. Do not publish a `.tmp-…` directory.
+Let indexing and post-processing finish, then stop all writers before preparing the publication copy. Use SQLite's backup API or `.backup` command to copy both databases, including committed WAL data, and copy `Packs/` and `archive-stats.json` from the same stopped dataset. Continue managing the public root, server settings, and certificates through the existing publication workflow.
 
 Run the smoke test with settings pointing to the snapshot. Build/publish the server using the current host's existing architecture and deployment method. The existing Linux x64 self-contained build remains:
 
@@ -56,5 +52,5 @@ Before the first replacement, preserve the previous binary and the complete prev
 
 - **Indexer:** 0 complete; 1 import or unrecoverable-without-source-content failure; 2 setup/finalization error; 130 interrupted.
 - **Smoke runner:** 0 selected checks passed; 1 failed checks; 2 setup failure; 130 interrupted.
-- Use `--maintenance` to finish queued work without new input. Scope it with `--search-only` or `--archive-only` when appropriate.
+- Rerun the same original command to finish queued work after interruption. Completed WARCs are skipped, and their durable post-processing queues still drain.
 - Missing archive packs must be restored from the matching archive backup. Missing search text can be recovered from its source WARCs. Do not discard the source data to hide an error.

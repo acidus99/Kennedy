@@ -19,19 +19,17 @@ Visit `gemini://kennedy.gemi.dev` with a [Gemini client](https://github.com/kr1s
 
 ## Importing completed WARCs
 
-The indexer updates both Kennedy2 search and Delorean by default. It upgrades existing **Kennedy2** schemas automatically; legacy `main` search databases are not converted.
+The indexer keeps the original command line. Select search with `-s`, archive with `-a`, or both, and provide the output directory with `-o`:
 
 ```sh
-dotnet run --project Indexer -- --db /path/to/crawl-data/kennedy2.db /path/to/crawl.warc.gz
+dotnet run --project Indexer -c Release -- -s -a -o /path/to/crawl-data /path/to/crawl.warc.gz
 ```
 
-`archive.db`, `Packs/`, and `archive-stats.json` default to the search database directory. Use `--archive-dir` for a separate archive location. `--search-only` and `--archive-only` select one destination. `--warc-dir` imports a directory, including suffixed filenames; `--bootstrap` is an alias and has no age cutoff. Use `--config-dir` to select the directory containing `Core14.profile.xml`.
+Only `-s`/`--search`, `-a`/`--archive`, `-o`/`--output`, and `-h`/`--help` are supported. WARC files are positional arguments; shell globs can select several files. The output directory must exist. Search writes `kennedy2.db`; archive writes `archive.db`, `Packs/`, and `archive-stats.json` in the same directory. The language profile is packaged with the indexer.
 
-Completed immutable files are tracked separately in each destination using their full path, size, and modification time. Repeating a command skips completed work and finishes any pending derived-index or visibility work. If full-text entries are missing, supplied search inputs are replayed automatically. `--force` explicitly replays completed inputs for other backfill. Older captures cannot undo newer content or removals; temporary failures retain the last good searchable content. Replays do not add duplicate archive captures.
+Schema repair and all post-processing for the selected destinations run automatically. Existing **Kennedy2** databases are upgraded; legacy `main` search databases are not converted. Missing text bodies require their source WARCs.
 
-`--maintenance --search-only --db /path/to/kennedy2.db` updates the schema and finishes pending work without importing. Missing text bodies must be recovered by replaying their original WARCs; maintenance never invents content. Use `--smoke-query cat` to display a count and sample results after processing.
-
-`--snapshot /path/to/new-directory` creates a consistent data snapshot after finishing maintenance and any supplied imports. It uses SQLite's backup API to include committed WAL data and copies archive packs and stats while holding the indexer writer locks. The destination appears only after the entire snapshot is ready. It must be a new directory and needs space for the data copy.
+Completed immutable files are tracked separately in each destination using their full path, size, and modification time. Repeating a command skips completed files and finishes any pending derived-index or visibility work. If full-text entries are missing, supplied search inputs are replayed automatically. Older captures cannot undo newer content or removals; temporary failures retain the last good searchable content. Replays do not add duplicate archive captures.
 
 Only one indexer may write a destination at a time. Interrupted or malformed files are not marked complete; rerun the same command to retry committed batches safely. Exit codes are 0 for completion, 1 for import/content-repair failures, 2 for setup errors, and 130 for cancellation. Existing databases and archive packs should be backed up before the first upgrade. Run `--help` for all options. See [OPERATIONS.md](OPERATIONS.md) for publication and rollback.
 
