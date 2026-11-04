@@ -5,13 +5,12 @@ using Microsoft.Data.Sqlite;
 
 namespace Kennedy.Archive;
 
-/// <summary>A single archive writer with prepared SQL and bounded open pack handles.</summary>
+/// <summary>A single archive writer with prepared SQL and per-append pack streams.</summary>
 public sealed class ArchiveBatchWriter : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly PackManager _packs;
     private readonly Dictionary<string, SqliteCommand> _commands = new();
-    private readonly Dictionary<string, FileStream> _openPacks = new();
     public long AlreadyArchived { get; private set; }
 
     public ArchiveBatchWriter(SqliteConnection connection, string packsDirectory)
@@ -98,27 +97,16 @@ public sealed class ArchiveBatchWriter : IDisposable
                 ("$body",response.HasBody),("$truncated",response.IsBodyTruncated)).ExecuteNonQuery();
             added++;
         }
-        // Make bytes visible before committing their offsets. Failed transactions may
-        // leave unreferenced append-only bytes; replay never references unwritten data.
-        foreach (var stream in _openPacks.Values) stream.Flush();
         return added;
     }
 
     private long Append(string hash, byte[] bytes)
     {
-        int prefix=hash.IndexOf(':')+1;
-        string key = hash.Substring(prefix,4); // Keep the existing hex-prefix pack routing.
-        if (!_openPacks.TryGetValue(key,out var stream))
-        {
-            if (_openPacks.Count >= 64)
-            {
-                var first = _openPacks.First();
-                first.Value.Dispose(); _openPacks.Remove(first.Key);
-            }
-            stream = _packs.GetPack(hash).OpenAppender();
-            _openPacks.Add(key,stream);
-        }
         var record = PackRecordFactory.MakeOptimalRecord(bytes);
+        // Hash prefixes have negligible locality. Close each append to flush its
+        // bytes before the metadata transaction commits. A failed transaction may
+        // leave unreferenced bytes, but replay never references unwritten data.
+        using var stream = _packs.GetPack(hash).OpenAppender();
         long offset = stream.Position;
         Span<byte> header = stackalloc byte[8];
         System.Text.Encoding.ASCII.GetBytes(record.Type.PadRight(4),header[..4]);
@@ -145,6 +133,5 @@ public sealed class ArchiveBatchWriter : IDisposable
     public void Dispose()
     {
         foreach (var command in _commands.Values) command.Dispose();
-        foreach (var stream in _openPacks.Values) stream.Dispose();
     }
 }
