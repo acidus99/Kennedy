@@ -115,6 +115,10 @@ DatabaseMaintenance creates missing Kennedy2 tables, columns, and indexes, conso
 
 `--maintenance` finishes pending work without new inputs. `--snapshot <new-directory>` uses SQLite backup plus archive pack copies while holding writer locks, producing a standalone publication snapshot. See OPERATIONS.md for publication, rollback, and exit codes.
 
+Imports now skip unchanged search payloads before body parsing, while checking for missing document/image/FTS and special-file entries. `--force` deliberately reparses them. File completion is independent of durable post-processing queues: a WARC interrupted during finalization is skipped on rerun, and its queued work still drains without response replay.
+
+The WARC response reader buffers decompressed headers and skips allocating unrelated metadata bodies. A bounded channel overlaps reading and the two independent database writers; classification is unchanged. Search batches preload images, reuse FTS statements, and enqueue dirty URLs with prepared SQL upserts instead of tracking a work-item entity per URL. ArchiveBatchWriter probes capture keys before serialization, uses prepared SQL in one transaction per batch, and reuses bounded pack handles. Bytes are flushed before their offsets commit. Capsule and archive hash/URL/date indexes are installed automatically. Empty robots policies use set-based visibility updates.
+
 ArchiveImporter persists captures and visibility work, applies the latest archiver robots policy, and refreshes archive-stats.json including actual pack size. Archived responses are cloned before size limiting so search receives the original payload. Older historical captures remain accessible. Cached/raw/reader/history/diff routes retain the existing archive layout.
 
 ---

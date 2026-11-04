@@ -6,6 +6,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Channels;
+using System.Diagnostics;
 using Gemini.Net;
 using Kennedy.Data.Services;
 using WarcDotNet;
@@ -51,49 +53,99 @@ namespace Kennedy.Indexer
 
         public async Task<ImportSummary> IndexFileAsync(string warcPath, CancellationToken ct)
         {
-            var batch = new List<GeminiResponse>(BatchSize);
-            using var reader = new WarcReader(warcPath);
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            double lastProgress = 0;
-            long responses = 0, archived = 0;
-            async Task Flush()
+            // One reader overlaps decompression with two independent database writers.
+            // Bodies and order are preserved; parsing/classification itself is unchanged.
+            using var cancellation=CancellationTokenSource.CreateLinkedTokenSource(ct);
+            var token=cancellation.Token;
+            var channel=Channel.CreateBounded<ImportBatch>(new BoundedChannelOptions(2)
             {
-                if (batch.Count == 0) return;
-                if (_responseStore != null) await _responseStore.StoreBatchAsync(batch, ct);
-                if (_archive != null) archived += _archive.StoreBatch(batch, ct);
-                batch.Clear();
-            }
-            try
+                SingleReader=true, SingleWriter=true, FullMode=BoundedChannelFullMode.Wait
+            });
+            using var reader=new WarcResponseReader(warcPath);
+            var watch=Stopwatch.StartNew();
+            long responses=0,archived=0,records=0;
+            double searchSeconds=0,archiveSeconds=0,lastProgress=0;
+            long parsedBefore=_responseStore?.ParsedResponses ?? 0;
+            long unchangedBefore=_responseStore?.UnchangedResponses ?? 0;
+            long archiveSeenBefore=_archive?.AlreadyArchived ?? 0;
+            var producer=Task.Run(async () =>
             {
-                foreach (var record in reader)
+                var batch=new List<GeminiResponse>(BatchSize);
+                long bytes=0,count=0;
+                try
                 {
-                    ct.ThrowIfCancellationRequested();
-                    if (record is ResponseRecord responseRecord)
+                    foreach (var record in reader.ReadResponses(token))
                     {
-                        var response = GetGeminiResponse(responseRecord);
-                        if (response != null)
+                        var response=GetGeminiResponse(record);
+                        if (response==null) continue;
+                        // Hash once before either consumer touches the shared response.
+                        if (_responseStore!=null) _=response.Hash;
+                        count++; bytes+=response.BodySize; batch.Add(response);
+                        if (batch.Count>=BatchSize || bytes>=32L*1024*1024)
                         {
-                            responses++;
-                            batch.Add(response);
-                            if (batch.Count >= BatchSize) await Flush();
+                            await channel.Writer.WriteAsync(new(batch,reader.RecordsRead,count,reader.CompressedBytesRead),token);
+                            batch=new(BatchSize); bytes=0;
                         }
                     }
-                    if (watch.Elapsed.TotalSeconds - lastProgress >= 5)
+                    if (batch.Count>0) await channel.Writer.WriteAsync(new(batch,reader.RecordsRead,count,reader.CompressedBytesRead),token);
+                    channel.Writer.TryComplete();
+                }
+                catch (Exception ex)
+                {
+                    // Commit the valid prefix even when a later record is malformed.
+                    if (ex is WarcFormatException && batch.Count>0)
                     {
-                        lastProgress = watch.Elapsed.TotalSeconds;
-                        Console.WriteLine($"{Path.GetFileName(warcPath)}: {reader.RecordsRead:N0} records, {responses:N0} responses ({responses / Math.Max(1,lastProgress):N0} responses/s)");
+                        try { await channel.Writer.WriteAsync(new(batch,reader.RecordsRead,count,reader.CompressedBytesRead),token); }
+                        catch (OperationCanceledException) { }
+                    }
+                    channel.Writer.TryComplete(ex);
+                }
+            },token);
+            try
+            {
+                await foreach (var batch in channel.Reader.ReadAllAsync(token))
+                {
+                    var archiveTask=_archive==null ? Task.CompletedTask : Task.Run(() =>
+                    {
+                        var stage=Stopwatch.StartNew();
+                        archived+=_archive.StoreBatch(batch.Responses,token);
+                        archiveSeconds+=stage.Elapsed.TotalSeconds;
+                    },token);
+                    try
+                    {
+                        if (_responseStore!=null)
+                        {
+                            var stage=Stopwatch.StartNew();
+                            await _responseStore.StoreBatchAsync(batch.Responses,token);
+                            searchSeconds+=stage.Elapsed.TotalSeconds;
+                        }
+                    }
+                    finally { await archiveTask; }
+                    responses=batch.Count; records=batch.Records;
+                    if (watch.Elapsed.TotalSeconds-lastProgress>=5)
+                    {
+                        lastProgress=watch.Elapsed.TotalSeconds;
+                        Console.WriteLine($"{Path.GetFileName(warcPath)}: {records:N0} records, {responses:N0} responses ({responses / Math.Max(1,lastProgress):N0} responses/s), {100.0*batch.Bytes/Math.Max(1,reader.FileLength):F1}% of WARC bytes read; skipped {_responseStore?.UnchangedResponses-unchangedBefore ?? 0:N0} unchanged search, {_archive?.AlreadyArchived-archiveSeenBefore ?? 0:N0} existing captures");
                     }
                 }
-                await Flush();
+                await producer;
             }
             catch (WarcFormatException ex)
             {
-                await Flush();
-                throw new InvalidDataException($"Partial import of {warcPath}; malformed WARC after {reader.RecordsRead:N0} records. The file has NOT been marked complete.", ex);
+                throw new InvalidDataException($"Partial import of {warcPath}; malformed WARC after {reader.RecordsRead:N0} records. The file has NOT been marked complete.",ex);
             }
-            Console.WriteLine($"Imported {reader.RecordsRead:N0} records, {responses:N0} responses, {archived:N0} new archive captures in {watch.Elapsed.TotalSeconds:F1}s.");
-            return new ImportSummary(reader.RecordsRead, responses, archived);
+            finally
+            {
+                cancellation.Cancel();
+                try { await producer; } catch (OperationCanceledException) { }
+            }
+            records=reader.RecordsRead;
+            Console.WriteLine($"Imported {records:N0} records, {responses:N0} responses, {archived:N0} new archive captures in {watch.Elapsed.TotalSeconds:F1}s.");
+            Console.WriteLine($"Search: {_responseStore?.ParsedResponses-parsedBefore ?? 0:N0} parsed, {_responseStore?.UnchangedResponses-unchangedBefore ?? 0:N0} unchanged skipped; {searchSeconds:F1}s. Archive: {_archive?.AlreadyArchived-archiveSeenBefore ?? 0:N0} existing captures skipped; {archiveSeconds:F1}s. Stages overlap.");
+            return new ImportSummary(records,responses,archived);
         }
+
+        private sealed record ImportBatch(List<GeminiResponse> Responses,long Records,long Count,long Bytes);
 
         public async Task WriteCertificateListCsvAsync(string warcPath, string outputCsvPath, CancellationToken ct)
         {

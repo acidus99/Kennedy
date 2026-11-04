@@ -61,6 +61,11 @@ public sealed class ResponseStore
             .ToDictionaryAsync(d => d.UrlRegistryId!.Value, ct);
         var images = await db.Images.Where(i => knownIds.Contains(i.UrlRegistryId))
             .ToDictionaryAsync(i => i.UrlRegistryId, ct);
+        var specialIds=urlMap.Values.Where(u=>UrlUtility.IsProactiveUrl(new Uri(u.NormalizedUrl))).Select(u=>u.Id).ToArray();
+        var specialEntries=specialIds.Length==0 ? new HashSet<long>() : await db.Favicons
+            .Where(f=>specialIds.Contains(f.SourceUrlRegistryId)).Select(f=>f.SourceUrlRegistryId)
+            .Union(db.RobotsTxts.Where(r=>specialIds.Contains(r.SourceUrlRegistryId)).Select(r=>r.SourceUrlRegistryId))
+            .Union(db.SecurityTxts.Where(r=>specialIds.Contains(r.SourceUrlRegistryId)).Select(r=>r.SourceUrlRegistryId)).ToHashSetAsync(ct);
         var existingFts = new HashSet<long>();
         await using (var command = db.Database.GetDbConnection().CreateCommand())
         {
@@ -102,17 +107,27 @@ public sealed class ResponseStore
             docs.TryGetValue(url.Id, out var previousDocument);
             bool repairFts = previousDocument != null && !existingFts.Contains(previousDocument.Id);
             bool suppressed = url.Status is >= UrlStatus.ExcludedByRobots and <= UrlStatus.ManuallyDisabled;
+            bool proactive=UrlUtility.IsProactiveUrl(candidate.RequestUrl.Url);
             bool missingText = !suppressed && previousDocument == null && candidate.HasBody &&
-                !UrlUtility.IsProactiveUrl(candidate.RequestUrl.Url) &&
-                url.LastDetectedMimeType is "text/gemini" or "text/plain";
+                (url.LastDetectedMimeType=="text/gemini" || url.LastDetectedMimeType=="text/plain" && !proactive);
+            bool specialExpected=proactive && candidate.IsSuccess &&
+                (UrlUtility.IsFaviconUrl(candidate.RequestUrl.Url) ? FaviconValidator.IsValidEmoji(candidate.BodyText.Trim()) :
+                 UrlUtility.IsRobotsUrl(candidate.RequestUrl.Url) ? new RobotsTxtParser().Parse(candidate.BodyText).HasValidRules :
+                 candidate.BodyText.Contains("contact:",StringComparison.OrdinalIgnoreCase));
+            bool missingSpecial=proactive && specialExpected!=specialEntries.Contains(url.Id);
             bool missingImage = !suppressed && candidate.HasBody &&
                 url.LastDetectedMimeType?.StartsWith("image/", StringComparison.Ordinal) == true && !images.ContainsKey(url.Id);
             bool needsPolicyRemoval = suppressed && (previousDocument != null || images.ContainsKey(url.Id));
             bool mismatchedDocument = previousDocument != null && previousDocument.ResponseHash != candidate.Hash;
             if (!ForceReparse && samePayload && !repairFts && !missingText && !missingImage &&
-                !needsPolicyRemoval && !mismatchedDocument && !UrlUtility.IsProactiveUrl(candidate.RequestUrl.Url))
+                !needsPolicyRemoval && !mismatchedDocument && !missingSpecial)
             {
                 url.LastIndexedVisit = captured;
+                if (candidate.IsSuccess)
+                {
+                    url.BodySize=candidate.BodySize;
+                    url.IsBodyTruncated=candidate.IsBodyTruncated;
+                }
                 if (previousDocument != null) previousDocument.LastIndexedUtc = captured;
                 if (images.TryGetValue(url.Id, out var previousImage)) previousImage.LastIndexedUtc = captured;
                 UnchangedResponses++;
@@ -321,32 +336,28 @@ public sealed class ResponseStore
         IEnumerable<long> urlIds,
         CancellationToken ct, IndexWorkType workType = IndexWorkType.FileSearch)
     {
-        // Accessing Local runs DetectChanges. Do it once, not once per URL.
-        var pendingItems = db.IndexWorkItems.Local.ToDictionary(item => item.UrlRegistryId);
-        foreach (var batch in urlIds.Distinct().Chunk(900))
+        // Keep tracked items consistent, but persist the queue with a prepared upsert.
+        // Large link pages can dirty tens of thousands of targets; tracking all those
+        // work items just to OR two flags wastes memory and change-detection time.
+        var local=db.IndexWorkItems.Local.ToDictionary(item=>item.UrlRegistryId);
+        await using var command=db.Database.GetDbConnection().CreateCommand();
+        command.Transaction=db.Database.CurrentTransaction?.GetDbTransaction();
+        command.CommandText="""
+            INSERT INTO IndexWorkItems(UrlRegistryId,WorkTypes) VALUES($id,$types)
+            ON CONFLICT(UrlRegistryId) DO UPDATE SET WorkTypes=WorkTypes|excluded.WorkTypes
+            """;
+        var idParameter=command.CreateParameter(); idParameter.ParameterName="$id"; idParameter.Value=0L; command.Parameters.Add(idParameter);
+        var typesParameter=command.CreateParameter(); typesParameter.ParameterName="$types"; typesParameter.Value=(int)workType; command.Parameters.Add(typesParameter);
+        command.Prepare();
+        foreach (var urlId in urlIds.Distinct())
         {
-            var existingItems = await db.IndexWorkItems
-                .Where(item => batch.Contains(item.UrlRegistryId))
-                .ToDictionaryAsync(item => item.UrlRegistryId, ct);
-
-            foreach (var urlId in batch)
+            if (local.TryGetValue(urlId,out var pending))
             {
-                if (pendingItems.TryGetValue(urlId, out var pending)) { pending.WorkTypes |= workType; continue; }
-                if (existingItems.TryGetValue(urlId, out var item))
-                {
-                    item.WorkTypes |= workType;
-                }
-                else
-                {
-                    var added = new IndexWorkItem
-                    {
-                        UrlRegistryId = urlId,
-                        WorkTypes = workType
-                    };
-                    db.IndexWorkItems.Add(added);
-                    pendingItems[urlId] = added;
-                }
+                pending.WorkTypes |= workType;
+                if (db.Entry(pending).State==EntityState.Added) continue;
             }
+            idParameter.Value=urlId;
+            await command.ExecuteNonQueryAsync(ct);
         }
     }
 

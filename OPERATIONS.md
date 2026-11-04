@@ -18,6 +18,12 @@ The search index retains the latest usable content across temporary failures, wi
 
 Files are considered immutable. Completion records use full path, length, and modification time and are stored separately in each destination. If a file fails or changes during import, it is not marked complete. Earlier committed batches remain safe to replay. Ctrl+C preserves completed batches and pending work. Writer lock files prevent overlapping indexers and can remain on disk after a successful run; the open file handle is the lock.
 
+If interrupted during post-processing, rerun the same command: completed WARCs are skipped, but the durable search and archive queues still drain. They do not need the responses to be imported again. If interrupted while reading a WARC, its compressed stream is read again; unchanged search payloads skip body parsing and existing archive captures skip hashing/compression/storage. Missing document, image, or full-text entries still trigger reconstruction. `--force` deliberately reparses supplied responses, including unchanged content.
+
+The importer overlaps a buffered WARC reader with one writer for each database. At most two batches are queued, with batches capped at 500 responses or about 32 MiB of response bodies (a single oversized response can exceed that bound). Metadata records are drained without allocating their bodies. Progress reports WARC bytes read, skipped payloads/captures, and separate search/archive timings; those timings overlap. Language detection is unchanged.
+
+Existing databases receive capsule lookup indexes and an archive hash/URL/date index automatically. Creating those indexes can take time on the first run; later runs reuse them. Archive metadata is committed per batch with its visibility work, and pack streams are flushed before committing their offsets.
+
 ## Check the server
 
 ```sh
