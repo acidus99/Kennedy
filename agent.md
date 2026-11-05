@@ -56,6 +56,8 @@ Core fields: `Id`, `NormalizedUrl`, `Scheme`, `Host`, `Port`, `FirstSeen`, `Last
 `ResponseHash` covers status+meta+body. When it matches on re-ingestion, only timeline fields are updated — FTS is NOT rewritten. The user explicitly prefers treating any changed response hash as changed content and rewriting FTS, even if only META changed; do not add body-hash/semantic-MIME caching.
 
 ### Images (`Kennedy.Data/Models/DocumentImageRecord.cs`)
+
+`BinaryParser` uses MetadataExtractor 2.9.3 for image dimensions, format, and available transparency metadata; ImageSharp was removed to resolve its security advisories without requiring a Six Labors license. Format names and the image schema are retained. Metadata extraction does not decode pixels; unavailable transparency flags default to false, and unreadable images retain the generic binary fallback.
 `UrlRegistryId` (shared PK/FK), `Width`, `Height`, `ImageType`, `IsTransparent`, `LastIndexedUtc`
 
 `LastIndexedUtc` was added to support out-of-order WARC processing guard (older WARCs don't overwrite newer image metadata).

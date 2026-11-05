@@ -15,7 +15,7 @@ public sealed class ImageSearchResult
     /// <summary>Context snippet from the FilesFts index (link text / path tokens around the match).</summary>
     public string Snippet { get; init; } = string.Empty;
 
-    /// <summary>Image format name (e.g. "Png", "Jpeg") detected by ImageSharp.</summary>
+    /// <summary>Image format name (e.g. "PNG", "JPEG") read from the image header.</summary>
     public string? ImageType { get; init; }
 
     /// <summary>Image width in pixels.</summary>

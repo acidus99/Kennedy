@@ -6,7 +6,7 @@ namespace Kennedy.Data.Models;
 /// <summary>
 /// Stores decoded image metadata for a URL whose response body is an image.
 /// One-to-one with <see cref="UrlRecord"/>; the PK is also the FK.
-/// Populated by <see cref="Kennedy.Data.Parsers.BinaryParser"/> via ImageSharp.
+/// Populated by <see cref="Kennedy.Data.Parsers.BinaryParser"/> via MetadataExtractor.
 /// </summary>
 [Table("Images")]
 public class DocumentImageRecord
@@ -22,12 +22,12 @@ public class DocumentImageRecord
     /// <summary>Image height in pixels.</summary>
     public int Height { get; set; }
 
-    /// <summary>Format name as reported by ImageSharp (e.g. "Png", "Jpeg", "Gif").</summary>
+    /// <summary>Image format name (e.g. "PNG", "JPEG", "GIF").</summary>
     [MaxLength(64)]
     [Required]
     public string ImageType { get; set; } = "";
 
-    /// <summary>True when the image has an alpha channel (non-None PixelAlphaRepresentation).</summary>
+    /// <summary>True when available metadata declares an alpha channel or transparent colors.</summary>
     public bool IsTransparent { get; set; }
 
     /// <summary>UTC timestamp of the WARC record that last wrote this image row. Used for out-of-order WARC guard.</summary>

@@ -74,7 +74,7 @@ at the expected relative paths.
 | Package | Use |
 |---|---|
 | `Microsoft.EntityFrameworkCore.Sqlite` 9.x | ORM for the search SQLite database |
-| `SixLabors.ImageSharp` 3.x | Image dimension and alpha channel detection |
+| `MetadataExtractor` 2.9.3 | Image dimension and alpha channel detection |
 | `FileSignatures` 5.x | Magic-byte format detection (detects images, PDFs, ZIP, etc.) |
 | `NTextCat` 0.3.65 | Language detection using n-gram models (Core14 language profile) |
 
@@ -161,7 +161,7 @@ search queries. Read it top-to-bottom.
   │  3. BinaryParser.Parse                                                │
   │     FileSignatures.FileFormatInspector (magic bytes)                 │
   │         │                                                             │
-  │         ├─ image detected ──► ImageSharp.Image.Identify              │
+  │         ├─ image detected ──► Read metadata (MetadataExtractor)              │
   │         │                     ──► ImageResponse (Width, Height,       │
   │         │                          ImageType, IsTransparent)          │
   │         │                                                             │
@@ -647,9 +647,9 @@ ResponseParser.Parse(GeminiResponse)
 │    │    return null → TextParser gets a chance
 │    │
 │    ├─ FileSignatures.Formats.Image
-│    │    Image.Identify(BodyBytes)             ← ImageSharp
+│    │    ImageMetadataReader.ReadMetadata(stream)  ← MetadataExtractor
 │    │    return ImageResponse { Width, Height, ImageType, IsTransparent }
-│    │    (on ImageSharp error: fall back to generic binary ParsedResponse)
+│    │    (on metadata-reader error: fall back to generic binary ParsedResponse)
 │    │
 │    └─ other known binary format
 │         return ParsedResponse { FormatType=Binary, DetectedMimeType=format.MediaType }
@@ -1535,7 +1535,7 @@ Use this checklist to implement Kennedy 2.0 from scratch. Steps are roughly in d
 - [ ] **1.2** Create solution `Kennedy.sln` with projects: `Kennedy.Data`, `Kennedy.Search`,
   `Kennedy.Archive`, `Kennedy.Warc`, `Kennedy.Indexer` (console app), `Kennedy.Server` (console app).
 - [ ] **1.3** Add project references per the dependency graph in Section 3. Add NuGet references:
-  - `Kennedy.Data`: EF Core Sqlite 9.x, SixLabors.ImageSharp 3.x, FileSignatures 5.x, NTextCat 0.3.65
+  - `Kennedy.Data`: EF Core Sqlite 9.x, MetadataExtractor 2.9.3, FileSignatures 5.x, NTextCat 0.3.65
   - `Kennedy.Search`: EF Core Sqlite 9.x
   - `Kennedy.Server`: RocketForce, Microsoft.Extensions.Configuration.Json, Newtonsoft.Json, DiffPlex
 
