@@ -113,6 +113,8 @@ Key files:
 
 The indexer supports **only the original CLI**: `-s`/`--search`, `-a`/`--archive`, `-o`/`--output`, and `-h`/`--help`, plus positional WARC files. This is an explicit user requirement; do not add new flags. Select at least one destination and an existing output directory. Search writes `kennedy2.db`; archive writes `archive.db`, `Packs/`, and stats into that directory. The language profile is packaged with the indexer.
 
+Gzip input headers are checked before database setup, so mislabeled or overwritten inputs fail immediately. Never include terminal continuation prompts (`>`) when copying commands: the shell treats them as output redirection and can overwrite a WARC.
+
 DatabaseMaintenance creates missing Kennedy2 tables, columns, and indexes, consolidates duplicate document rows, and repairs derived structures. It rejects legacy main databases. There is no WARC input-file tracking or skipping. Each invocation reads every supplied WARC; legacy `WarcImports` tables are dropped. Idempotence and repair are based on response/capture state, not the container.
 
 Imports skip unchanged search payloads before body parsing, while checking for missing document/image/FTS and special-file entries. Post-processing queues are durable and independent of input files. A retry reconsiders records and drains the remaining queues. All selected schema repair and post-processing run automatically; there is no separate maintenance mode. Publication uses the existing workflow after writers stop. See OPERATIONS.md.

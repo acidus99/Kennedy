@@ -136,7 +136,11 @@ internal static class Program
                 throw new DirectoryNotFoundException($"Cannot read output directory '{OutputDirectory}'.");
             if (_files.Count==0) throw new ArgumentException("Supply at least one WARC file.");
             var files=_files.Select(Path.GetFullPath).ToList();
-            foreach (var file in files) if (!File.Exists(file)) throw new FileNotFoundException("WARC not found",file);
+            foreach (var file in files)
+            {
+                if (!File.Exists(file)) throw new FileNotFoundException("WARC not found",file);
+                WarcResponseReader.ValidateInput(file);
+            }
             return files;
         }
     }

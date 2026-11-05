@@ -22,10 +22,21 @@ internal sealed class WarcResponseReader : IDisposable
 
     public WarcResponseReader(string path)
     {
+        ValidateInput(path);
         _file = new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read,64*1024,FileOptions.SequentialScan);
         Stream content = path.EndsWith(".gz",StringComparison.OrdinalIgnoreCase)
             ? new GZipStream(_file,CompressionMode.Decompress) : _file;
         _input = new BufferedStream(content,128*1024);
+    }
+
+    internal static void ValidateInput(string path)
+    {
+        if (!path.EndsWith(".gz",StringComparison.OrdinalIgnoreCase)) return;
+        using var file = File.OpenRead(path);
+        Span<byte> header = stackalloc byte[3];
+        if (file.ReadAtLeast(header,header.Length,throwOnEndOfStream:false) != header.Length ||
+            header[0] != 0x1f || header[1] != 0x8b || header[2] != 8)
+            throw new InvalidDataException($"Expected a gzip-compressed WARC, but the gzip header is missing or unsupported: {path}");
     }
 
     public IEnumerable<ResponseRecord> ReadResponses(CancellationToken ct)

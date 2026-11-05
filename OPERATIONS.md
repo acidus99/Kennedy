@@ -10,6 +10,8 @@ dotnet run --project Indexer -c Release -- -s -a -o /path/to/crawl-data /path/to
 
 Only the original options are supported: `-s`/`--search`, `-a`/`--archive`, `-o`/`--output`, and `-h`/`--help`. Search and archive flags combine in either order. Select at least one and supply an existing output directory. WARC files are positional arguments; use a shell glob to supply multiple files.
 
+Copy commands without terminal prompt characters (`$` or continuation `>`). The shell interprets `>` as output redirection and can overwrite a WARC input with command output. Gzip inputs are checked for the expected header before opening or upgrading either database.
+
 The output contains `kennedy2.db` for search and `archive.db`, `Packs/`, and `archive-stats.json` for the archive. The language profile is packaged with the indexer. Schema repair and all selected post-processing run automatically after the supplied WARCs, including when those files have already been imported.
 
 The indexer creates missing Kennedy2 tables, columns, and indexes, consolidates duplicate document rows, and repairs derived entries where possible. It does not upgrade the legacy `doc-index.db`. Missing search text requires its original response bodies: supply the corresponding WARCs to reconstruct it. All supplied records are reconsidered on every invocation; unchanged records can repair missing derived data.
