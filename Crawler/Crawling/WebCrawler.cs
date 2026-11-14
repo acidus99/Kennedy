@@ -228,6 +228,13 @@ public class WebCrawler : IWebCrawler
 
     private void FinalizeCrawl()
     {
+        // Drain directly: GetUrl() stops returning entries after a stop request or URL limit.
+        UrlFrontierEntry? entry;
+        while ((entry = UrlFrontier.DrainQueue()) != null)
+        {
+            remainingUrlLogger.LogRemainingUrl(entry);
+        }
+
         //flush and close our logs
         rejectionLogger.Close();
         remainingUrlLogger.Close();
